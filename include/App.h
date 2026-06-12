@@ -1,8 +1,8 @@
 #pragma once
 #include <SFML/Graphics.hpp>
 #include <memory>
-#include "SceneManager.h"
-#include "SceneFactory.h"
+#include "Scene/SceneManager.h"
+#include "Scene/SceneFactory.h"
 
 class App {
 private:

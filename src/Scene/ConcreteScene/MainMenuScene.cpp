@@ -1,7 +1,7 @@
-#include "MainMenuScene.h"
-#include "FunctionalCommand.h"
+#include "Scene/ConcreteScene/MainMenuScene.h"
+#include "Commands/FunctionalCommand.h"
 #include "ResourceManager.h"
-#include "SceneManager.h"
+#include "Scene/SceneManager.h"
 
 MainMenuScene::MainMenuScene()
     : _name("MainMenuScene"),

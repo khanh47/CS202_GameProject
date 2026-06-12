@@ -4,7 +4,7 @@
 #include <vector>
 #include <string>
 #include "Button.h"
-#include "ICommand.h"
+#include "Commands/ICommand.h"
 
 namespace UI {
 class ButtonMenu {

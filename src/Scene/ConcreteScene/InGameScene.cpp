@@ -1,6 +1,6 @@
-#include "InGameScene.h"
+#include "Scene/ConcreteScene/InGameScene.h"
 #include "ResourceManager.h"
-#include "SceneManager.h"
+#include "Scene/SceneManager.h"
 
 InGameScene::InGameScene(const std::string& name)
     : _name(name) {

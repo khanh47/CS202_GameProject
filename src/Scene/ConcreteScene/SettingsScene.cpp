@@ -1,6 +1,6 @@
-#include "SettingsScene.h"
+#include "Scene/ConcreteScene/SettingsScene.h"
 #include "ResourceManager.h"
-#include "SceneManager.h"
+#include "Scene/SceneManager.h"
 
 SettingsScene::SettingsScene()
     : _name("SettingsScene") {
