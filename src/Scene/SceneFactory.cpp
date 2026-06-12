@@ -1,7 +1,7 @@
-#include "SceneFactory.h"
-#include "InGameScene.h"
-#include "MainMenuScene.h"
-#include "SettingsScene.h"
+#include "Scene/SceneFactory.h"
+#include "Scene/ConcreteScene/InGameScene.h"
+#include "Scene/ConcreteScene/MainMenuScene.h"
+#include "Scene/ConcreteScene/SettingsScene.h"
 #include <iostream>
 
 SceneFactory::SceneFactory() {

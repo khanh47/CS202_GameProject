@@ -3,7 +3,7 @@
 #include <SFML/Graphics.hpp>
 #include <memory>
 #include <functional>
-#include "ICommand.h"
+#include "Commands/ICommand.h"
 #include <optional>
 
 namespace UI {

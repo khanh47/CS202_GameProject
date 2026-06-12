@@ -1,6 +1,6 @@
-#include "SceneManager.h"
-#include "Scene.h"
-#include "SceneFactory.h"
+#include "Scene/SceneManager.h"
+#include "Scene/Scene.h"
+#include "Scene/SceneFactory.h"
 #include <iostream>
 
 SceneManager::SceneManager(SceneFactory *factory)
