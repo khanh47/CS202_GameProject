@@ -8,7 +8,7 @@ SceneFactory::SceneFactory() {
     registerScene("MAIN_MENU", []() { return std::make_unique<MainMenuScene>(); });
     //registerScene("GAME_DATA", []() { return std::make_unique<MenuScene>("Load Game"); });
     registerScene("SETTINGS", []() { return std::make_unique<SettingsScene>(); });
-    registerScene("IN_GAME", []() { return std::make_unique<InGameScene>("NONE"); });
+    registerScene("IN_GAME", []() { return std::make_unique<InGameScene>("IN_GAME"); });
 }
 
 void SceneFactory::registerScene(const std::string& stateName, std::function<std::unique_ptr<Scene>()> factory) {

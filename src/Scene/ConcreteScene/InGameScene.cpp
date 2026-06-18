@@ -2,6 +2,8 @@
 #include "ResourceManager.h"
 #include "Scene/SceneManager.h"
 
+#include <iostream>
+
 InGameScene::InGameScene(const std::string& name)
     : _name(name) {
 }
@@ -30,7 +32,12 @@ void InGameScene::handleInput(const sf::Event& event) {
     }
 }
 
-void InGameScene::update(float deltaTime) {
+void InGameScene::updateSimulation(const float &fixedDt, const int &subSteps) {
+    // update the game, physics and stuff here
+    // std::cout << "FUNNY EH?" << std::endl;
+}
+
+void InGameScene::updateVisuals(float deltaTime) {
     (void)deltaTime;
 }
 

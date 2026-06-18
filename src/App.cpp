@@ -1,5 +1,10 @@
 #include "App.h"
 
+namespace {
+    constexpr double fixedDt = 1.0 / 60.0;
+    constexpr int subSteps = 4;
+}
+
 App::App() : window(sf::VideoMode({1920, 1080}), "SUPER MARIO") {
     factory = std::make_unique<SceneFactory>();
     manager = std::make_unique<SceneManager>(factory.get());
@@ -9,10 +14,15 @@ App::App() : window(sf::VideoMode({1920, 1080}), "SUPER MARIO") {
 }
 
 void App::run() {
+    dtClock.restart();
     while (window.isOpen()) {
         float deltaTime = dtClock.restart().asSeconds();
+        if(manager->getSceneName() == "IN_GAME")
+            accumulatedTime += std::min(deltaTime, 0.25f); // min to prevent too many physics updates at once => feel glitchy, not smooth LOL
+
         processEvents();
-        update(deltaTime);
+        updateSimulation(fixedDt, subSteps);
+        updateVisuals(deltaTime);
         render();
     }
 }
@@ -26,8 +36,18 @@ void App::processEvents() {
     }
 }
 
-void App::update(float deltaTime) {
-    manager->update(deltaTime);
+void App::updateSimulation(const float &fixedDt, const int &subSteps){
+    while(accumulatedTime >= fixedDt){
+        if(manager->getSceneName() == "IN_GAME"){
+            manager->updateSimulation(fixedDt, subSteps);
+        }
+        accumulatedTime -= fixedDt;
+    }
+}
+
+// Visual update
+void App::updateVisuals(float deltaTime) {
+    manager->updateVisuals(deltaTime);
 }
 
 void App::render() {

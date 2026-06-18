@@ -10,8 +10,10 @@ private:
     std::unique_ptr<SceneFactory> factory;
     sf::RenderWindow window;
     sf::Clock dtClock;
+    double accumulatedTime = 0.0f;
     void render();
-    void update(float deltaTime);
+    void updateSimulation(const float &fixedDt, const int &subSteps);
+    void updateVisuals(float deltaTime); // Visuals
     void processEvents();
 
 public:

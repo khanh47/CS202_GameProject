@@ -77,11 +77,20 @@ void SceneManager::processEvents(const sf::Event& event) {
     }
 }
 
-void SceneManager::update(float deltaTime) {
+void SceneManager::updateSimulation(const float &fixedDt, const int &subSteps) {
     if (!_sceneStack.empty()) {
         auto &currentScene = _sceneStack.top();
         if (currentScene->isActive()) {
-            currentScene->update(deltaTime);
+            currentScene->updateSimulation(fixedDt, subSteps);
+        }
+    }
+}
+
+void SceneManager::updateVisuals(float deltaTime) {
+    if (!_sceneStack.empty()) {
+        auto &currentScene = _sceneStack.top();
+        if (currentScene->isActive()) {
+            currentScene->updateVisuals(deltaTime);
         }
     }
 }
@@ -102,6 +111,11 @@ Scene *SceneManager::getCurrentScene() const {
         return _sceneStack.top().get();
     }
     return nullptr;
+}
+
+std::string SceneManager::getSceneName() const {
+    if (isEmpty()) return "NONE";
+    return getCurrentScene()->getName();
 }
 
 bool SceneManager::isEmpty() const {

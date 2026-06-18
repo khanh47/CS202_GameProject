@@ -45,7 +45,10 @@ void MainMenuScene::handleInput(const sf::Event& event) {
     _buttonMenu.processEvent(event);
 }
 
-void MainMenuScene::update(float deltaTime) {
+void MainMenuScene::updateSimulation(const float &fixedDt, const int &subSteps) {
+}
+
+void MainMenuScene::updateVisuals(float deltaTime) {
     (void)deltaTime;
 }
 

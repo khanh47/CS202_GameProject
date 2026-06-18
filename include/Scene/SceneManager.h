@@ -4,6 +4,7 @@
 #include <memory>
 #include <queue>
 #include <stack>
+#include <string>
 
 // Forward declaration
 class Scene;
@@ -21,11 +22,13 @@ public:
 
     // Main loop
     void processEvents(const sf::Event& event);
-    void update(float deltaTime);
+    void updateSimulation(const float &fixedDt, const int &subSteps);
+    void updateVisuals(float deltaTime);
     void render(sf::RenderTarget& target);
 
     // Queries
     Scene *getCurrentScene() const;
+    std::string getSceneName() const;
     bool isEmpty() const;
 
     // Scene factory

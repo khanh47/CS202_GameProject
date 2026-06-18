@@ -16,7 +16,8 @@ public:
 
     // Per-frame
     virtual void handleInput(const sf::Event& event) = 0;
-    virtual void update(float deltaTime) = 0;
+    virtual void updateSimulation(const float &fixedDt, const int &substeps) = 0;
+    virtual void updateVisuals(float deltaTime) = 0;
     virtual void render(sf::RenderTarget& target) = 0;
 
     // Queries
@@ -26,6 +27,9 @@ public:
     // Scene manager access (for scene transitions)
     void setSceneManager(SceneManager* manager) { _sceneManager = manager; }
     SceneManager* getSceneManager() const { return _sceneManager; }
+
+private:
+    std::string _name;
 
 protected:
     bool _isActive = false;

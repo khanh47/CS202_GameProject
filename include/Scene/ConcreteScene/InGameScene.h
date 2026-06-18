@@ -13,7 +13,8 @@ public:
     void cleanup() override;
 
     void handleInput(const sf::Event& event) override;
-    void update(float deltaTime) override;
+    void updateSimulation(const float &fixedDt, const int &subSteps) override;
+    void updateVisuals(float deltaTime) override;
     void render(sf::RenderTarget& target) override;
 
     std::string getName() const override { return _name; }
