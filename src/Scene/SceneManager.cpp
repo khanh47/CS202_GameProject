@@ -44,6 +44,7 @@ void SceneManager::popScene() {
 void SceneManager::replaceScene(std::unique_ptr<Scene> scene) {
     if (!scene) return;
 
+    scene->setSceneManager(this);
     if (!_sceneStack.empty()) {
         auto &top = _sceneStack.top();
         top->onExit();
