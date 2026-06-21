@@ -30,9 +30,6 @@ void SettingsScene::handleInput(const sf::Event& event) {
     }
 }
 
-void SettingsScene::updateSimulation(const float &fixedDt, const int &subSteps) {
-}
-
 void SettingsScene::updateVisuals(float deltaTime) {
     (void)deltaTime;
 }

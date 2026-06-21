@@ -16,7 +16,7 @@ public:
 
     // Per-frame
     virtual void handleInput(const sf::Event& event) = 0;
-    virtual void updateSimulation(const float &fixedDt, const int &substeps) = 0;
+    virtual void updateSimulation(const float &fixedDt) {};
     virtual void updateVisuals(float deltaTime) = 0;
     virtual void render(sf::RenderTarget& target) = 0;
 

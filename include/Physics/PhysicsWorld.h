@@ -1,0 +1,23 @@
+#pragma once
+
+#include <box2d/box2d.h>
+
+class PhysicsWorld {
+public:
+    PhysicsWorld();
+    ~PhysicsWorld();
+
+    PhysicsWorld(const PhysicsWorld&) = delete;
+    PhysicsWorld operator = (const PhysicsWorld&) = delete;
+
+    // queries
+    b2WorldId getId() const { return _worldId; }
+    bool isValid() const { return b2World_IsValid(_worldId); }
+
+    // update simulation
+    void step(const float &fixedDt);
+
+private:
+    static const int subSteps = 4;
+    b2WorldId _worldId = b2_nullWorldId;
+};

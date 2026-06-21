@@ -1,6 +1,13 @@
 #pragma once
-#include "Scene/Scene.h"
+
 #include <string>
+#include <vector>
+
+#include "Scene/Scene.h"
+#include "Physics/PhysicsWorld.h"
+#include "Game/GameObject.h"
+
+
 
 class InGameScene : public Scene {
 public:
@@ -13,7 +20,7 @@ public:
     void cleanup() override;
 
     void handleInput(const sf::Event& event) override;
-    void updateSimulation(const float &fixedDt, const int &subSteps) override;
+    void updateSimulation(const float &fixedDt) override;
     void updateVisuals(float deltaTime) override;
     void render(sf::RenderTarget& target) override;
 
@@ -22,4 +29,7 @@ public:
 
 private:
     std::string _name;
+    
+    std::shared_ptr<PhysicsWorld> _gameWorld = std::make_shared<PhysicsWorld>();
+    std::vector<std::shared_ptr<GameObject>> _objects;
 };

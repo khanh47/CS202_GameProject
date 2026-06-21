@@ -2,7 +2,6 @@
 
 namespace {
     constexpr double fixedDt = 1.0 / 60.0;
-    constexpr int subSteps = 4;
 }
 
 App::App() : window(sf::VideoMode({1920, 1080}), "SUPER MARIO") {
@@ -21,7 +20,7 @@ void App::run() {
             accumulatedTime += std::min(deltaTime, 0.25f); // min to prevent too many physics updates at once => feel glitchy, not smooth LOL
 
         processEvents();
-        updateSimulation(fixedDt, subSteps);
+        updateSimulation(fixedDt);
         updateVisuals(deltaTime);
         render();
     }
@@ -36,10 +35,10 @@ void App::processEvents() {
     }
 }
 
-void App::updateSimulation(const float &fixedDt, const int &subSteps){
+void App::updateSimulation(const float &fixedDt){
     while(accumulatedTime >= fixedDt){
         if(manager->getSceneName() == "IN_GAME"){
-            manager->updateSimulation(fixedDt, subSteps);
+            manager->updateSimulation(fixedDt);
         }
         accumulatedTime -= fixedDt;
     }

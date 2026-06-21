@@ -77,11 +77,11 @@ void SceneManager::processEvents(const sf::Event& event) {
     }
 }
 
-void SceneManager::updateSimulation(const float &fixedDt, const int &subSteps) {
+void SceneManager::updateSimulation(const float &fixedDt) {
     if (!_sceneStack.empty()) {
         auto &currentScene = _sceneStack.top();
         if (currentScene->isActive()) {
-            currentScene->updateSimulation(fixedDt, subSteps);
+            currentScene->updateSimulation(fixedDt);
         }
     }
 }
