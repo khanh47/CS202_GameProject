@@ -2,6 +2,7 @@
 
 #include <SFML/Graphics.hpp>
 #include <optional>
+#include <memory>
 
 #include "Physics/PhysicsBody.h"
 #include "Physics/PhysicsWorld.h"
@@ -21,6 +22,6 @@ public:
 
 protected:
     std::optional<sf::Sprite> _sprite;
-    PhysicsBody* _body = nullptr;
+    std::shared_ptr<PhysicsBody> _body = nullptr;
     bool _pendingDestroy = false;
 };

@@ -3,7 +3,7 @@
 PhysicsWorld::PhysicsWorld() {
     b2WorldDef worldDef = b2DefaultWorldDef();
 
-    worldDef.gravity = {0.0f, 0.36f};
+    worldDef.gravity = {0.0f, 9.8f};
 
     _worldId = b2CreateWorld(&worldDef);
 }

@@ -3,14 +3,14 @@
 #include <box2d/box2d.h>
 #include <SFML/System.hpp>
 
-#include "Game/GameObject.h"
+#include "Game/Objects/GameObject.h"
 #include "Physics/PhysicsWorld.h"
 
-class Player: public GameObject {
+class Block: public GameObject {
 public:
-    Player();
-    Player(sf::Texture &texture);
-    ~Player();
+    Block();
+    Block(sf::Texture &texture);
+    ~Block();
 
     void spawn(PhysicsWorld* physicsWorld, sf::Vector2f spawnPixels, sf::Vector2f hitboxPixels) override;
 private:

@@ -1,11 +1,13 @@
 #pragma once
 
+#include <cstddef>
 #include <string>
 #include <vector>
 
 #include "Scene/Scene.h"
 #include "Physics/PhysicsWorld.h"
-#include "Game/GameObject.h"
+#include "Game/Objects/GameObject.h"
+#include "Game/Objects/GameObjectFactory.h"
 
 
 
@@ -29,7 +31,7 @@ public:
 
 private:
     std::string _name;
-    
+
+    GameObjectFactory _objectFactory;
     std::shared_ptr<PhysicsWorld> _gameWorld = std::make_shared<PhysicsWorld>();
-    std::vector<std::shared_ptr<GameObject>> _objects;
 };

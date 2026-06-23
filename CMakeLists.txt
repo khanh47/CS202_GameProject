@@ -12,7 +12,7 @@ find_package(SFML 3 REQUIRED COMPONENTS Graphics Window System)
 
 include_directories(include)
 
-file(GLOB_RECURSE SRC_FILES "src/*.cpp")
+file(GLOB_RECURSE SRC_FILES CONFIGURE_DEPENDS "src/*.cpp")
 
 add_executable(${PROJECT_NAME} ${SRC_FILES})
 set_property(TARGET ${PROJECT_NAME} PROPERTY WIN32_EXECUTABLE FALSE) #Set TRUE in the final product
