@@ -15,7 +15,7 @@ public:
     virtual void updateVisuals(float deltaTime);
     virtual void render(sf::RenderTarget &target);
 
-    virtual void spawn(PhysicsWorld* physicsWorld, sf::Vector2f spawnPixels, sf::Vector2f hitboxPixels) = 0;
+    virtual void spawn(const PhysicsWorld &physicsWorld, sf::Vector2f spawnPixels, sf::Vector2f hitboxPixels) = 0;
     void destroy() { _pendingDestroy = true; }
     
     bool isPendingDestroy() { return _pendingDestroy; }

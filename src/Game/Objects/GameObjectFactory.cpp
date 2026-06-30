@@ -11,7 +11,6 @@ GameObjectFactory::GameObjectFactory() {
             returned_player = std::make_shared<Player>(*texture);
         }
         returned_player = std::make_shared<Player>();
-        _objects.push_back(returned_player);
         return returned_player;
     });
 
@@ -21,7 +20,6 @@ GameObjectFactory::GameObjectFactory() {
             returned_block = std::make_shared<Block>(*texture);
         }
         returned_block = std::make_shared<Block>();
-        _objects.push_back(returned_block);
         return returned_block;
     });
 }
@@ -50,8 +48,4 @@ std::shared_ptr<GameObject> GameObjectFactory::createBlock(const std::string& ke
     }
 
     return it->second(texture);
-}
-
-void GameObjectFactory::render(sf::RenderTarget& target) {
-    for(std::shared_ptr<GameObject> object: _objects) object->render(target);
 }

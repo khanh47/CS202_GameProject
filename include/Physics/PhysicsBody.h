@@ -2,11 +2,13 @@
 
 #include <box2d/box2d.h>
 
+#include "Physics/PhysicsWorld.h"
+
 class PhysicsBody {
 public:
     // constructors and destructors
     PhysicsBody() = default;
-    PhysicsBody(b2WorldId worldId, const b2BodyDef &bodyDef);
+    PhysicsBody(const PhysicsWorld &physicsWorld, const b2BodyDef &bodyDef);
     
     PhysicsBody(const PhysicsBody&) = delete;
     PhysicsBody& operator = (const PhysicsBody&) = delete;

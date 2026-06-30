@@ -9,6 +9,7 @@
 #include <SFML/Graphics.hpp>
 
 #include "Game/Objects/GameObject.h"
+#include "Physics/PhysicsWorld.h"
 
 class GameObjectFactory {
 public:
@@ -21,11 +22,7 @@ public:
 
     std::shared_ptr<GameObject> createPlayer(const std::string& key = "Player", sf::Texture* texture = nullptr) const;
     std::shared_ptr<GameObject> createBlock(const std::string& key = "Block", sf::Texture* texture = nullptr) const;
-
-    void render(sf::RenderTarget& target);
-
 private:
-    std::vector<std::shared_ptr<GameObject>> _objects;
     std::unordered_map<std::string, Creator> _playerCreators;
     std::unordered_map<std::string, Creator> _blockCreators;
 };

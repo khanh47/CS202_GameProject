@@ -9,15 +9,7 @@ InGameScene::InGameScene(const std::string& name)
 }
 
 void InGameScene::init() {
-    auto player1 = _objectFactory.createPlayer();
-    player1->spawn(_gameWorld.get(), {500, 500}, {64, 123});
-
-    auto player2 = _objectFactory.createPlayer();
-    player2->spawn(_gameWorld.get(), {625, 555}, {36, 36});
-
-    auto& brickTexture = ResourceManager::getInstance().getTexture("brick");
-    auto brickBlock = _objectFactory.createBlock("Block", &brickTexture);
-    brickBlock->spawn(_gameWorld.get(), {666, 666}, {32, 32});
+    _gameWorld.test();
 }
 
 void InGameScene::onEnter() {
@@ -42,9 +34,7 @@ void InGameScene::handleInput(const sf::Event& event) {
 }
 
 void InGameScene::updateSimulation(const float &fixedDt) {
-    // update the game, physics and stuff here
-    // std::cout << "FUNNY EH?" << std::endl;
-    _gameWorld->step(fixedDt);
+    _gameWorld.updateSimulation(fixedDt);
 }
 
 void InGameScene::updateVisuals(float deltaTime) {
@@ -58,5 +48,5 @@ void InGameScene::render(sf::RenderTarget& target) {
     text.setFillColor(sf::Color::Black);
     target.draw(text);
 
-    _objectFactory.render(target);
+    _gameWorld.render(target);
 }
