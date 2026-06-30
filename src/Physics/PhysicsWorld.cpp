@@ -15,6 +15,6 @@ PhysicsWorld::~PhysicsWorld() {
     }
 }
 
-void PhysicsWorld::step(const float &fixedDt){
+void PhysicsWorld::updateSimulation(const float &fixedDt){
     b2World_Step(_worldId, fixedDt, subSteps);
 }

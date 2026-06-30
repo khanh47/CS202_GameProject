@@ -5,9 +5,7 @@
 #include <vector>
 
 #include "Scene/Scene.h"
-#include "Physics/PhysicsWorld.h"
-#include "Game/Objects/GameObject.h"
-#include "Game/Objects/GameObjectFactory.h"
+#include "Game/World/GameWorld.h"
 
 
 
@@ -32,6 +30,5 @@ public:
 private:
     std::string _name;
 
-    GameObjectFactory _objectFactory;
-    std::shared_ptr<PhysicsWorld> _gameWorld = std::make_shared<PhysicsWorld>();
+    GameWorld _gameWorld;
 };

@@ -1,7 +1,7 @@
 #include "Physics/PhysicsBody.h"
 
-PhysicsBody::PhysicsBody(b2WorldId worldId, const b2BodyDef &bodyDef): _worldId(worldId) {
-    _bodyId = b2CreateBody(worldId, &bodyDef);
+PhysicsBody::PhysicsBody(const PhysicsWorld &physicsWorld, const b2BodyDef &bodyDef): _worldId(physicsWorld.getId()) {
+    _bodyId = b2CreateBody(physicsWorld.getId(), &bodyDef);
 }
 
 PhysicsBody::PhysicsBody(PhysicsBody&& other) {

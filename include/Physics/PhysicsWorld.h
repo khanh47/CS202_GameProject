@@ -15,7 +15,7 @@ public:
     bool isValid() const { return b2World_IsValid(_worldId); }
 
     // update simulation
-    void step(const float &fixedDt);
+    void updateSimulation(const float &fixedDt);
 
 private:
     static const int subSteps = 4;

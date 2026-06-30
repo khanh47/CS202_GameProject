@@ -23,8 +23,8 @@ Player::~Player() {
 }
 
 
-void Player::spawn(PhysicsWorld* physicsWorld, sf::Vector2f spawnPixels, sf::Vector2f hitboxPixels) {
-    if (!physicsWorld || !physicsWorld->isValid())
+void Player::spawn(const PhysicsWorld &physicsWorld, sf::Vector2f spawnPixels, sf::Vector2f hitboxPixels) {
+    if (!physicsWorld.isValid())
         throw std::runtime_error("Invalid World!");
     if(_body && _body->isValid())
         throw std::runtime_error("The player has already been spawned!");
@@ -33,13 +33,13 @@ void Player::spawn(PhysicsWorld* physicsWorld, sf::Vector2f spawnPixels, sf::Vec
     createHitbox(hitboxPixels);
 }
 
-void Player::createBody(PhysicsWorld* physicsWorld, sf::Vector2f spawnPixels) {
+void Player::createBody(const PhysicsWorld &physicsWorld, sf::Vector2f spawnPixels) {
     b2BodyDef bodyDef = b2DefaultBodyDef();
     bodyDef.type = b2_dynamicBody;
     bodyDef.position = PhysicsUnits::toMeters(spawnPixels);
     bodyDef.userData = this;
 
-    _body = std::make_shared<PhysicsBody>(physicsWorld->getId(), bodyDef);
+    _body = std::make_shared<PhysicsBody>(physicsWorld, bodyDef);
 }
 
 void Player::createHitbox(sf::Vector2f hitboxPixels) {

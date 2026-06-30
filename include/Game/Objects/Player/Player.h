@@ -14,8 +14,8 @@ public:
     Player(sf::Texture &texture);
     ~Player();
 
-    void spawn(PhysicsWorld* physicsWorld, sf::Vector2f spawnPixels, sf::Vector2f hitboxPixels) override;
+    void spawn(const PhysicsWorld &physicsWorld, sf::Vector2f spawnPixels, sf::Vector2f hitboxPixels) override;
 private:
-    void createBody(PhysicsWorld* physicsWorld, sf::Vector2f spawnPixels);
+    void createBody(const PhysicsWorld &physicsWorld, sf::Vector2f spawnPixels);
     void createHitbox(sf::Vector2f hitboxPixels);
 };
