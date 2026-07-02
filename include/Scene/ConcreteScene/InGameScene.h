@@ -6,6 +6,7 @@
 
 #include "Scene/Scene.h"
 #include "Game/World/GameWorld.h"
+#include "Game/Camera.h"
 
 
 
@@ -31,4 +32,5 @@ private:
     std::string _name;
 
     GameWorld _gameWorld;
+    Camera _camera;
 };

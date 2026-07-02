@@ -1,12 +1,17 @@
 #include "Scene/ConcreteScene/SettingsScene.h"
 #include "ResourceManager.h"
 #include "Scene/SceneManager.h"
+#include "Commands/ToggleDebugCommands.h"
 
 SettingsScene::SettingsScene()
     : _name("SettingsScene") {
 }
 
 void SettingsScene::init() {
+    _menu.setLayoutProperties({1920.f / 2.f - 150.f, 400.f}, {300.f, 60.f}, 80.f, false, sf::Color(100, 149, 237), 24);
+    
+    _menu.addButtonAuto("Toggle Grid", std::make_unique<ToggleGridCommand>());
+    _menu.addButtonAuto("Toggle Coordinates", std::make_unique<ToggleCoordinatesCommand>());
 }
 
 void SettingsScene::onEnter() {
@@ -28,6 +33,7 @@ void SettingsScene::handleInput(const sf::Event& event) {
             }
         }
     }
+    _menu.processEvent(event);
 }
 
 void SettingsScene::updateVisuals(float deltaTime) {
@@ -35,9 +41,11 @@ void SettingsScene::updateVisuals(float deltaTime) {
 }
 
 void SettingsScene::render(sf::RenderTarget& target) {
-    (void)target;
     const sf::Font& font = ResourceManager::getInstance().getFont("Roboto");
-    sf::Text text(font, "Settings scene", 24);
+    sf::Text text(font, "Settings scene", 48);
     text.setFillColor(sf::Color::Black);
+    text.setPosition({1920.f / 2.f - text.getLocalBounds().size.x / 2.f, 200.f});
     target.draw(text);
+    
+    _menu.render(target);
 }

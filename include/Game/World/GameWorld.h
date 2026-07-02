@@ -21,4 +21,17 @@ private:
     PhysicsWorld _physicsWorld;
     GameObjectFactory _objectFactory;
     std::vector<std::shared_ptr<GameObject>> _objects;
+
+    // Grid system
+    static constexpr float CELL_SIZE = 64.0f;
+    int _gridWidth = 500;
+    int _gridHeight = 60;
+    std::vector<std::vector<std::shared_ptr<GameObject>>> _grid;
+
+public:
+    int getGridWidth() const { return _gridWidth; }
+    int getGridHeight() const { return _gridHeight; }
+    float getCellSize() const { return CELL_SIZE; }
+
+private:
 };

@@ -19,6 +19,7 @@ public:
     void destroy() { _pendingDestroy = true; }
     
     bool isPendingDestroy() { return _pendingDestroy; }
+    sf::Vector2f getPosition() const;
 
 protected:
     std::optional<sf::Sprite> _sprite;
