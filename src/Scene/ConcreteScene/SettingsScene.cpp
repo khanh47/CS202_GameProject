@@ -12,6 +12,7 @@ void SettingsScene::init() {
     
     _menu.addButtonAuto("Toggle Grid", std::make_unique<ToggleGridCommand>());
     _menu.addButtonAuto("Toggle Coordinates", std::make_unique<ToggleCoordinatesCommand>());
+    _menu.addButtonAuto("Toggle Camera Move", std::make_unique<ToggleFreeCameraCommand>());
 }
 
 void SettingsScene::onEnter() {
