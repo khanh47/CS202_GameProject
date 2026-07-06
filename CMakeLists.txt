@@ -34,5 +34,3 @@ add_custom_target(copy_assets ALL
 )
 
 add_dependencies(${PROJECT_NAME} copy_assets)
-
-target_compile_options(${PROJECT_NAME} PRIVATE -O2)

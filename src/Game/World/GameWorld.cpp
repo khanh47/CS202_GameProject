@@ -1,7 +1,17 @@
 #include "Game/World/GameWorld.h"
+#include "Game/Behaviours/Controllable.h"
 
 GameWorld::GameWorld() {
 
+}
+
+void GameWorld::handleInput(const sf::Event& event) {
+    for (auto& obj : _objects) {
+        auto* controllable = dynamic_cast<Controllable*>(obj.get());
+        if (controllable) {
+            controllable->onInput(event);
+        }
+    }
 }
 
 void GameWorld::updateSimulation(const float &fixedDt) {
@@ -24,11 +34,11 @@ void GameWorld::test() {
     auto player2 = _objectFactory.createPlayer();
     player2->spawn(_physicsWorld, {625, 555}, {36, 36});
 
-    auto& brickTexture = ResourceManager::getInstance().getTexture("brick");
-    auto brickBlock = _objectFactory.createBlock("Block", &brickTexture);
-    brickBlock->spawn(_physicsWorld, {666, 666}, {32, 32});
+    auto& tilesTexture = ResourceManager::getInstance().getTexture("brick");
+    auto tileBlock = _objectFactory.createBlock("Block", &tilesTexture);
+    tileBlock->spawn(_physicsWorld, {666, 666}, {32, 32});
 
     _objects.push_back(player1);
     _objects.push_back(player2);
-    _objects.push_back(brickBlock);
+    _objects.push_back(tileBlock);
 }
