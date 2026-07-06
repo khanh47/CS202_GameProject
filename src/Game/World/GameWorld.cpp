@@ -1,7 +1,17 @@
 #include "Game/World/GameWorld.h"
+#include "Game/Behaviours/Controllable.h"
 
 GameWorld::GameWorld() {
 
+}
+
+void GameWorld::handleInput(const sf::Event& event) {
+    for (auto& obj : _objects) {
+        auto* controllable = dynamic_cast<Controllable*>(obj.get());
+        if (controllable) {
+            controllable->onInput(event);
+        }
+    }
 }
 
 void GameWorld::updateSimulation(const float &fixedDt) {
