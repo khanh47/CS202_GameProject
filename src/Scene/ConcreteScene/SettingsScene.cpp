@@ -31,6 +31,7 @@ void SettingsScene::handleInput(const sf::Event& event) {
         if (keyEvent->code == sf::Keyboard::Key::Escape) {
             if (auto mgr = getSceneManager()) {
                 mgr->popScene();
+                return;
             }
         }
     }
