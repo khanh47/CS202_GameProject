@@ -9,3 +9,5 @@ cmake-build-*/
 *.exe
 *.so
 *.dylib
+/.agents/
+/.antigravityignore

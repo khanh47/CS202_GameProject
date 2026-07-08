@@ -10,6 +10,7 @@ InGameScene::InGameScene(const std::string& name)
 
 void InGameScene::init() {
     _gameWorld.test();
+    _camera.setCenter({1920.f / 2.f, _gameWorld.getGridHeight() * _gameWorld.getCellSize() - 1080.f / 2.f});
 }
 
 void InGameScene::onEnter() {
@@ -28,6 +29,7 @@ void InGameScene::handleInput(const sf::Event& event) {
         if (keyEvent->code == sf::Keyboard::Key::Escape) {
             if (auto mgr = getSceneManager()) {
                 mgr->popScene();
+                return;
             }
         }
     }
@@ -40,15 +42,19 @@ void InGameScene::updateSimulation(const float &fixedDt) {
 }
 
 void InGameScene::updateVisuals(float deltaTime) {
-    (void)deltaTime;
+    _camera.update(deltaTime);
 }
 
 void InGameScene::render(sf::RenderTarget& target) {
-    (void)target;
+    sf::View defaultView = target.getDefaultView();
+    target.setView(_camera.getView());
+
+    _gameWorld.render(target);
+
+    target.setView(defaultView);
+
     const sf::Font& font = ResourceManager::getInstance().getFont("Roboto");
     sf::Text text(font, "InGame scene", 24);
     text.setFillColor(sf::Color::Black);
     target.draw(text);
-
-    _gameWorld.render(target);
 }

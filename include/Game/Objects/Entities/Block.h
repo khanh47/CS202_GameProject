@@ -11,4 +11,7 @@ public:
     Block();
     Block(sf::Texture &texture);
     ~Block();
+
+protected:
+    void onCreateShapeDef(b2ShapeDef& def) override;
 };

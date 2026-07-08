@@ -1,6 +1,7 @@
 #pragma once
 #include "Scene/Scene.h"
 #include <string>
+#include "Button/ButtonMenu.h"
 
 class SettingsScene : public Scene {
 public:
@@ -21,4 +22,5 @@ public:
 
 private:
     std::string _name;
+    UI::ButtonMenu _menu;
 };

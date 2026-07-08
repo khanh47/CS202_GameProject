@@ -19,6 +19,7 @@ public:
     void destroy() { _pendingDestroy = true; }
     
     bool isPendingDestroy() { return _pendingDestroy; }
+    sf::Vector2f getPosition() const;
 
 protected:
     virtual void onCreateBodyDef(b2BodyDef& def);
