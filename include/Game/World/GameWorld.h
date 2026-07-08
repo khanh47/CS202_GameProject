@@ -17,6 +17,7 @@ public:
     void render(sf::RenderTarget &target);
 
     void test();
+    void loadMap(const std::vector<std::vector<int>>& mapData);
 
 private:
     PhysicsWorld _physicsWorld;

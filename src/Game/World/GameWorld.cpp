@@ -71,37 +71,68 @@ void GameWorld::render(sf::RenderTarget &target) {
     }
 }
 
-void GameWorld::test() {
-    // Generate floor
+void GameWorld::loadMap(const std::vector<std::vector<int>>& mapData) {
     auto& brickTexture = ResourceManager::getInstance().getTexture("brick");
-    for (int x = 0; x < _gridWidth; ++x) {
-        int y = 1; // Floor is 1 block from the bottom logic-wise
-        int screenY = _gridHeight - 1 - y;
-        auto brickBlock = _objectFactory.createBlock("Block", &brickTexture);
-        brickBlock->spawn(_physicsWorld, {x * CELL_SIZE + CELL_SIZE / 2.f, screenY * CELL_SIZE + CELL_SIZE / 2.f}, {CELL_SIZE, CELL_SIZE});
-        _grid[y][x] = brickBlock;
-        _objects.push_back(brickBlock);
+
+    // Re-initialize grid based on GameWorld dimensions (500x60 default)
+    _grid.assign(_gridHeight, std::vector<std::shared_ptr<GameObject>>(_gridWidth, nullptr));
+
+    int rows = std::min(static_cast<int>(mapData.size()), _gridHeight);
+    for (int mapY = 0; mapY < rows; ++mapY) {
+        int cols = std::min(static_cast<int>(mapData[mapY].size()), _gridWidth);
+        for (int x = 0; x < cols; ++x) {
+            int blockId = mapData[mapY][x];
+            if (blockId == 0) continue;
+
+            // Map data uses standard Y-down row indexing (0 is top row of the loaded matrix).
+            // Logic Y is distance from the bottom. Let's assume the provided matrix bottom row 
+            // maps to logic y=1 (so it's sitting on the bottom).
+            int logicY = rows - 1 - mapY + 1; // +1 to put floor 1 cell above the bottom abyss
+            int screenY = _gridHeight - 1 - logicY;
+
+            sf::Vector2f spawnPos = {
+                x * CELL_SIZE + CELL_SIZE / 2.f, 
+                screenY * CELL_SIZE + CELL_SIZE / 2.f
+            };
+
+            if (blockId == 1) {
+                // Brick block (ID 1)
+                auto brickBlock = _objectFactory.createBlock("Block", &brickTexture);
+                // We pass CELL_SIZE because GameObject::createHitbox now correctly halves the dimensions.
+                brickBlock->spawn(_physicsWorld, spawnPos, {CELL_SIZE, CELL_SIZE});
+                _grid[logicY][x] = brickBlock;
+                _objects.push_back(brickBlock);
+            } 
+            else if (blockId == 2) {
+                // Player 1
+                auto player1 = _objectFactory.createPlayer();
+                player1->spawn(_physicsWorld, spawnPos, {64, 123});
+                _objects.push_back(player1);
+            }
+            else if (blockId == 3) {
+                // Player 2
+                auto player2 = _objectFactory.createPlayer();
+                player2->spawn(_physicsWorld, spawnPos, {36, 36});
+                _objects.push_back(player2);
+            }
+        }
     }
+}
 
-    // Generate some scattered platforms
-    for (int i = 0; i < 5; ++i) {
-        int x = 5 + i * 4;
-        int y = 4 + (i % 2) * 2;
-        int screenY = _gridHeight - 1 - y;
-        auto platformBlock = _objectFactory.createBlock("Block", &brickTexture);
-        platformBlock->spawn(_physicsWorld, {x * CELL_SIZE + CELL_SIZE / 2.f, screenY * CELL_SIZE + CELL_SIZE / 2.f}, {CELL_SIZE, CELL_SIZE});
-        _grid[y][x] = platformBlock;
-        _objects.push_back(platformBlock);
-    }
+void GameWorld::test() {
+    // 0 = empty, 1 = brick, 2 = player1, 3 = player2
+    // A small 10x15 map slice. Bottom row is all 1s (floor).
+    std::vector<std::vector<int>> mapData = {
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+        {0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0},
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0},
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+        {0, 0, 2, 0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0},
+        {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}
+    };
 
-    // Spawn players
-    auto player1 = _objectFactory.createPlayer();
-    int p1LogicY = 3;
-    player1->spawn(_physicsWorld, {300, (_gridHeight - 1 - p1LogicY) * CELL_SIZE + CELL_SIZE / 2.f}, {64, 123});
-    _objects.push_back(player1);
-
-    auto player2 = _objectFactory.createPlayer();
-    int p2LogicY = 3;
-    player2->spawn(_physicsWorld, {500, (_gridHeight - 1 - p2LogicY) * CELL_SIZE + CELL_SIZE / 2.f}, {36, 36});
-    _objects.push_back(player2);
+    loadMap(mapData);
 }
