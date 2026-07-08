@@ -118,8 +118,8 @@ void GameObject::createHitbox(sf::Vector2f hitboxPixels) {
     onCreateShapeDef(shapeDef);
 
     b2Polygon box = b2MakeBox(
-        PhysicsUnits::toMeters(hitboxPixels.x),
-        PhysicsUnits::toMeters(hitboxPixels.y)
+        PhysicsUnits::toMeters(hitboxPixels.x / 2.0f),
+        PhysicsUnits::toMeters(hitboxPixels.y / 2.0f)
     );
 
     b2ShapeId hitbox = b2CreatePolygonShape(_body->getId(), &shapeDef, &box);
