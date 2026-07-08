@@ -11,6 +11,7 @@ public:
     GameWorld();
     ~GameWorld() = default;
 
+    void handleInput(const sf::Event& event);
     void updateSimulation(const float &fixedDt);
     void updateVisuals(float deltaTime);
     void render(sf::RenderTarget &target);

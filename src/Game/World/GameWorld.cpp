@@ -1,8 +1,18 @@
 #include "Game/World/GameWorld.h"
 #include "Game/GameSettings.h"
+#include "Game/Behaviours/Controllable.h"
 
 GameWorld::GameWorld() {
     _grid.resize(_gridHeight, std::vector<std::shared_ptr<GameObject>>(_gridWidth, nullptr));
+}
+
+void GameWorld::handleInput(const sf::Event& event) {
+    for (auto& obj : _objects) {
+        auto* controllable = dynamic_cast<Controllable*>(obj.get());
+        if (controllable) {
+            controllable->onInput(event);
+        }
+    }
 }
 
 void GameWorld::updateSimulation(const float &fixedDt) {

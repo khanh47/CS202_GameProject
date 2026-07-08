@@ -32,6 +32,8 @@ void InGameScene::handleInput(const sf::Event& event) {
             }
         }
     }
+
+    _gameWorld.handleInput(event);
 }
 
 void InGameScene::updateSimulation(const float &fixedDt) {
