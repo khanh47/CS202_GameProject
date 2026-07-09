@@ -12,13 +12,15 @@ void GameObject::updateVisuals(float deltaTime) {
         return;
     }
 
-    while (deltaTime >= _animator.getCurrentFrameDuration()) {
-        float frameDuration = _animator.getCurrentFrameDuration();
-        if (frameDuration <= 0.f) {
-            break;
-        }
+    float frameDuration = _animator.getCurrentFrameDuration();
+    if (frameDuration <= 0.f) {
+        return;
+    }
 
-        deltaTime -= frameDuration;
+    _animationAccumulator += deltaTime;
+
+    while (_animationAccumulator >= frameDuration) {
+        _animationAccumulator -= frameDuration;
         _animator.step();
 
         if (_sprite) {
@@ -73,7 +75,7 @@ void GameObject::render(sf::RenderTarget &target) { // DEFINITELY NEEDS TO BE RE
             float ratio = (sizePixels.x / texSize.x + sizePixels.y / texSize.y) / 2;
             sprite.setScale({sizePixels.x / texSize.x, sizePixels.y / texSize.y});
 
-            drawPos.x += PhysicsUnits::toMeters(sizePixels.x - texSize.x) / 4;
+            // drawPos.x += PhysicsUnits::toMeters(sizePixels.x - texSize.x) / 4;
 
             //rect
             sf::RectangleShape fallbackRect(sizePixels);

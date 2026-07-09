@@ -17,7 +17,7 @@ AnimationClip Animation::createClip(sf::IntRect rect, sf::Vector2i offsets, cons
             {rect.size.x - offsets.x, rect.size.y - offsets.y}
         );
 
-        frames.push_back(AnimationFrame(pos,  100.0f));
+        frames.push_back(AnimationFrame(pos,  1.0f / 8));
     }
 
     return AnimationClip(frames, true);

@@ -33,6 +33,7 @@ protected:
 
     std::shared_ptr<sf::Texture> _spritesheet;
     Animator _animator;
+    float _animationAccumulator = 0.f;
 
     std::optional<sf::Sprite> _sprite;
 
