@@ -4,7 +4,10 @@ cmake-build-*/
 
 *.code-workspace
 .vscode/
+.agents/
+.cache
 .idea/
+.clangd
 
 *.exe
 *.so

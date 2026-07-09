@@ -1,5 +1,6 @@
 #include "Game/World/GameWorld.h"
 #include "Game/Behaviours/Controllable.h"
+#include "ResourceManager.h"
 
 GameWorld::GameWorld() {
 
@@ -19,7 +20,8 @@ void GameWorld::updateSimulation(const float &fixedDt) {
 }
 
 void GameWorld::updateVisuals(float deltaTime) {
-
+    for(auto object: _objects)
+        object->updateVisuals(deltaTime);
 }
 
 void GameWorld::render(sf::RenderTarget &target) {
@@ -28,15 +30,17 @@ void GameWorld::render(sf::RenderTarget &target) {
 }
 
 void GameWorld::test() {
-    auto player1 = _objectFactory.createPlayer();
-    player1->spawn(_physicsWorld, {500, 500}, {64, 123});
+    auto& marioTexture = ResourceManager::getInstance().getTexture("mario_spritesheet");
+    auto player1 = _objectFactory.createPlayer("Player", &marioTexture);
+    player1->spawn(_physicsWorld, {500, 500}, {90, 90});
 
-    auto player2 = _objectFactory.createPlayer();
+    auto& luigiTexture = ResourceManager::getInstance().getTexture("luigi_spritesheet");
+    auto player2 = _objectFactory.createPlayer("Player", &luigiTexture);
     player2->spawn(_physicsWorld, {625, 555}, {36, 36});
 
     auto& brickTexture = ResourceManager::getInstance().getTexture("brick");
     auto brickBlock = _objectFactory.createBlock("Block", &brickTexture);
-    brickBlock->spawn(_physicsWorld, {666, 666}, {32, 32});
+    brickBlock->spawn(_physicsWorld, {0, 888}, {999, 32});
 
     _objects.push_back(player1);
     _objects.push_back(player2);

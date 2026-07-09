@@ -6,7 +6,6 @@
 #include "Game/Behaviours/Controllable.h"
 #include "Game/Behaviours/Damageable.h"
 #include "Game/Objects/GameObject.h"
-#include "Physics/PhysicsWorld.h"
 
 class Player: public GameObject,
               public Damageable,

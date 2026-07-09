@@ -12,6 +12,7 @@ private:
     sf::Clock dtClock;
     double accumulatedTime = 0.0f;
     void render();
+    void update(const float &fixedDt);
     void updateSimulation(const float &fixedDt);
     void updateVisuals(float deltaTime); // Visuals
     void processEvents();

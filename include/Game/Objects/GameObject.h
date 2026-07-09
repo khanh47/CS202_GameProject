@@ -1,11 +1,14 @@
 #pragma once
 
 #include <SFML/Graphics.hpp>
+#include <SFML/Graphics/Text.hpp>
 #include <optional>
 #include <memory>
 
+#include "Animation/Animator.h"
 #include "Physics/PhysicsBody.h"
 #include "Physics/PhysicsWorld.h"
+#include "Animation/Animator.h"
 
 class GameObject {
 public:
@@ -27,7 +30,12 @@ protected:
     void createBody(const PhysicsWorld &physicsWorld, sf::Vector2f spawnPixels);
     void createHitbox(sf::Vector2f hitboxPixels);
 
+
+    std::shared_ptr<sf::Texture> _spritesheet;
+    Animator _animator;
+
     std::optional<sf::Sprite> _sprite;
+
     std::shared_ptr<PhysicsBody> _body = nullptr;
     bool _pendingDestroy = false;
 };

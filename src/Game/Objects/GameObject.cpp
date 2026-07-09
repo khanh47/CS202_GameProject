@@ -1,66 +1,50 @@
 #include "Game/Objects/GameObject.h"
 #include "Physics/PhysicsUnits.h"
+#include "box2d/math_functions.h"
+#include <SFML/System/Vector2.hpp>
 
 void GameObject::updateSimulation(const float &fixedDt) {
 
 }
 
 void GameObject::updateVisuals(float deltaTime) {
+    if (!_animator.hasActiveAnimation()) {
+        return;
+    }
 
+    while (deltaTime >= _animator.getCurrentFrameDuration()) {
+        float frameDuration = _animator.getCurrentFrameDuration();
+        if (frameDuration <= 0.f) {
+            break;
+        }
+
+        deltaTime -= frameDuration;
+        _animator.step();
+
+        if (_sprite) {
+            _sprite->setTextureRect(_animator.getCurrentTextureRect());
+        }
+    }
 }
 
 void GameObject::render(sf::RenderTarget &target) { // DEFINITELY NEEDS TO BE REFRACTORED
     if(!_body->isValid()) return;
 
     b2Vec2 position = b2Body_GetPosition(_body->getId());
+    b2Vec2 drawPos = position;
     b2Rot rotation = b2Body_GetRotation(_body->getId());
     float angleDegrees = b2Rot_GetAngle(rotation) * (180.f / 3.14159265f);
 
     b2ShapeId shape = _body->getHitbox();
     b2ShapeType type = b2Shape_GetType(shape);
 
-    if (_sprite.has_value()) {
-        sf::Sprite& sprite = _sprite.value();
-        
+
+    //temp
+    // rect
         if (type == b2_polygonShape) {
-            b2Polygon polygon = b2Shape_GetPolygon(shape);
-            float widthMeters = std::abs(polygon.vertices[0].x - polygon.vertices[2].x);
-            float heightMeters = std::abs(polygon.vertices[0].y - polygon.vertices[2].y);
-            sf::Vector2f sizePixels = PhysicsUnits::toPixels({widthMeters, heightMeters});
             
-            sf::Vector2u texSize = sprite.getTexture().getSize(); 
-            sprite.setScale({sizePixels.x / texSize.x, sizePixels.y / texSize.y});
-        } 
-        else if (type == b2_circleShape) {
-            b2Circle circle = b2Shape_GetCircle(shape);
-            float radiusPixels = PhysicsUnits::toPixels(circle.radius);
-            float diameterPixels = radiusPixels * 2.f;
-            
-            sf::Vector2u texSize = sprite.getTexture().getSize();
-            sprite.setScale({diameterPixels / texSize.x, diameterPixels / texSize.y});
-        }
 
-        sprite.setOrigin({sprite.getLocalBounds().size.x / 2.f, sprite.getLocalBounds().size.y / 2.f});
-        sprite.setPosition(PhysicsUnits::toPixels(position));
-        sprite.setRotation(sf::degrees(angleDegrees));
-        target.draw(sprite);
-    } 
-    else {
-        // rect
-        if (type == b2_polygonShape) {
-            b2Polygon polygon = b2Shape_GetPolygon(shape);
-            
-            float widthMeters = std::abs(polygon.vertices[0].x - polygon.vertices[2].x);
-            float heightMeters = std::abs(polygon.vertices[0].y - polygon.vertices[2].y);
-            sf::Vector2f sizePixels = PhysicsUnits::toPixels({widthMeters, heightMeters});
 
-            sf::RectangleShape fallbackRect(sizePixels);
-            fallbackRect.setOrigin({sizePixels.x / 2.f, sizePixels.y / 2.f});
-            fallbackRect.setPosition(PhysicsUnits::toPixels(position));
-            fallbackRect.setRotation(sf::degrees(angleDegrees));
-            fallbackRect.setFillColor(sf::Color::Magenta);
-
-            target.draw(fallbackRect);
         } 
         // circle
         else if (type == b2_circleShape) {
@@ -74,6 +58,48 @@ void GameObject::render(sf::RenderTarget &target) { // DEFINITELY NEEDS TO BE RE
 
             target.draw(fallbackCircle);
         }
+    // end temp
+
+    if (_sprite.has_value()) {
+        sf::Sprite& sprite = *_sprite;
+        
+        if (type == b2_polygonShape) {
+            b2Polygon polygon = b2Shape_GetPolygon(shape);
+            float widthMeters = std::abs(polygon.vertices[0].x - polygon.vertices[2].x);
+            float heightMeters = std::abs(polygon.vertices[0].y - polygon.vertices[2].y);
+            sf::Vector2f sizePixels = PhysicsUnits::toPixels({widthMeters, heightMeters});
+            
+            sf::Vector2i texSize = sprite.getTextureRect().size; 
+            float ratio = (sizePixels.x / texSize.x + sizePixels.y / texSize.y) / 2;
+            sprite.setScale({sizePixels.x / texSize.x, sizePixels.y / texSize.y});
+
+            drawPos.x += PhysicsUnits::toMeters(sizePixels.x - texSize.x) / 4;
+
+            //rect
+            sf::RectangleShape fallbackRect(sizePixels);
+            fallbackRect.setOrigin({sizePixels.x / 2.f, sizePixels.y / 2.f});
+            fallbackRect.setPosition(PhysicsUnits::toPixels(position));
+            fallbackRect.setRotation(sf::degrees(angleDegrees));
+            fallbackRect.setFillColor(sf::Color::Magenta);
+
+            target.draw(fallbackRect);
+        } 
+        else if (type == b2_circleShape) {
+            b2Circle circle = b2Shape_GetCircle(shape);
+            float radiusPixels = PhysicsUnits::toPixels(circle.radius);
+            float diameterPixels = radiusPixels * 2.f;
+            
+            sf::Vector2u texSize = sprite.getTexture().getSize();
+            sprite.setScale({diameterPixels / texSize.x, diameterPixels / texSize.y});
+        }
+
+        sprite.setOrigin({sprite.getLocalBounds().size.x / 2.f, sprite.getLocalBounds().size.y / 2.f});
+        sprite.setPosition(PhysicsUnits::toPixels(drawPos));
+        sprite.setRotation(sf::degrees(angleDegrees));
+        target.draw(sprite);
+    } 
+    else {
+        
     }
 }
 

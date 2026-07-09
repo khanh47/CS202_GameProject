@@ -41,6 +41,7 @@ void InGameScene::updateSimulation(const float &fixedDt) {
 
 void InGameScene::updateVisuals(float deltaTime) {
     (void)deltaTime;
+    _gameWorld.updateVisuals(deltaTime);
 }
 
 void InGameScene::render(sf::RenderTarget& target) {
