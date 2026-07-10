@@ -2,6 +2,7 @@
 #include "Animation/AnimationFrame.h"
 #include <SFML/Graphics/Rect.hpp>
 #include <SFML/System/Vector2.hpp>
+#include <utility>
 #include <vector>
 
 AnimationClip::AnimationClip(std::vector<AnimationFrame> frames,bool looping):
@@ -9,16 +10,18 @@ frames(std::move(frames)), looping(looping) {
 
 }
 
-AnimationClip Animation::createClip(sf::IntRect rect, sf::Vector2i offsets, const int& frameCount) {
+AnimationClip Animation::createClip(sf::IntRect rect, sf::Vector2i offsets, int frameCount, float frameDuration, bool looping) {
     std::vector<AnimationFrame> frames;
-    for(int i = 0; i < frameCount; i++){
+    frames.reserve(frameCount);
+
+    for (int i = 0; i < frameCount; i++) {
         sf::IntRect pos = sf::IntRect(
             {rect.position.x + i * rect.size.x + offsets.x, rect.position.y + offsets.y},
             {rect.size.x - offsets.x, rect.size.y - offsets.y}
         );
 
-        frames.push_back(AnimationFrame(pos,  1.0f / 8));
+        frames.push_back(AnimationFrame(pos, frameDuration));
     }
 
-    return AnimationClip(frames, true);
+    return AnimationClip(frames, looping);
 }

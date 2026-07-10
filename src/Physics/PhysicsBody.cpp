@@ -1,4 +1,5 @@
 #include "Physics/PhysicsBody.h"
+#include "box2d/id.h"
 
 PhysicsBody::PhysicsBody(const PhysicsWorld &physicsWorld, const b2BodyDef &bodyDef): _worldId(physicsWorld.getId()) {
     _bodyId = b2CreateBody(physicsWorld.getId(), &bodyDef);
@@ -42,4 +43,25 @@ void PhysicsBody::setHibox(b2ShapeId shapeId) {
 
 b2ShapeId PhysicsBody::getHitbox() const {
     return _shapeId;
+}
+
+b2Vec2 PhysicsBody::getHitboxSize() {
+    if (B2_IS_NULL(_shapeId)) return {0, 0};
+
+    b2Polygon polygon = b2Shape_GetPolygon(_shapeId);
+    b2Vec2 minV = polygon.vertices[0];
+    b2Vec2 maxV = polygon.vertices[0];
+
+    for (int i = 1; i < polygon.count; ++i) {
+        if (polygon.vertices[i].x < minV.x) minV.x = polygon.vertices[i].x;
+        if (polygon.vertices[i].y < minV.y) minV.y = polygon.vertices[i].y;
+        
+        if (polygon.vertices[i].x > maxV.x) maxV.x = polygon.vertices[i].x;
+        if (polygon.vertices[i].y > maxV.y) maxV.y = polygon.vertices[i].y;
+    }
+
+    float width = maxV.x - minV.x;
+    float height = maxV.y - minV.y;
+
+    return {width, height};
 }

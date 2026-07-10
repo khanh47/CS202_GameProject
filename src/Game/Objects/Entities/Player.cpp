@@ -20,13 +20,15 @@ Player::Player(sf::Texture &texture) : GameObject(), Damageable(100) {
                 {256, 256}
             ), 
             sf::Vector2i(0, 0),
-            8
+            8,
+            1.0f / 8.0f,
+            true
         );
     
     _animator.addAnimation("idle", idle);
     _animator.play("idle");
 
-    _sprite->setTextureRect(sf::IntRect({0, 0}, {37, 45}));
+    _sprite->setTextureRect(_animator.getCurrentTextureRect());
 
     sf::FloatRect bounds = _sprite->getLocalBounds();
     _sprite->setOrigin({bounds.size.x / 2.f, bounds.size.y / 2.f});

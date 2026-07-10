@@ -2,107 +2,35 @@
 #include "Physics/PhysicsUnits.h"
 #include "box2d/math_functions.h"
 #include <SFML/System/Vector2.hpp>
+#include <stdexcept>
 
 void GameObject::updateSimulation(const float &fixedDt) {
 
 }
 
 void GameObject::updateVisuals(float deltaTime) {
-    if (!_animator.hasActiveAnimation()) {
-        return;
-    }
+    const bool frameChanged = _animator.update(deltaTime);
 
-    float frameDuration = _animator.getCurrentFrameDuration();
-    if (frameDuration <= 0.f) {
-        return;
-    }
-
-    _animationAccumulator += deltaTime;
-
-    while (_animationAccumulator >= frameDuration) {
-        _animationAccumulator -= frameDuration;
-        _animator.step();
-
-        if (_sprite) {
-            _sprite->setTextureRect(_animator.getCurrentTextureRect());
+    if (_sprite && _animator.hasActiveAnimation()) {
+        const sf::IntRect currentRect = _animator.getCurrentTextureRect();
+        if (frameChanged || _sprite->getTextureRect() != currentRect) {
+            _sprite->setTextureRect(currentRect);
+            updateSpriteLayout();
         }
     }
 }
 
 void GameObject::render(sf::RenderTarget &target) { // DEFINITELY NEEDS TO BE REFRACTORED
-    if(!_body->isValid()) return;
+    if (!_body || !_body->isValid() || !_sprite.has_value()) return;
 
     b2Vec2 position = b2Body_GetPosition(_body->getId());
-    b2Vec2 drawPos = position;
     b2Rot rotation = b2Body_GetRotation(_body->getId());
     float angleDegrees = b2Rot_GetAngle(rotation) * (180.f / 3.14159265f);
 
-    b2ShapeId shape = _body->getHitbox();
-    b2ShapeType type = b2Shape_GetType(shape);
-
-
-    //temp
-    // rect
-        if (type == b2_polygonShape) {
-            
-
-
-        } 
-        // circle
-        else if (type == b2_circleShape) {
-            b2Circle circle = b2Shape_GetCircle(shape);
-            float radiusPixels = PhysicsUnits::toPixels(circle.radius);
-
-            sf::CircleShape fallbackCircle(radiusPixels);
-            fallbackCircle.setOrigin({radiusPixels, radiusPixels});
-            fallbackCircle.setPosition(PhysicsUnits::toPixels(position));
-            fallbackCircle.setFillColor(sf::Color::Magenta);
-
-            target.draw(fallbackCircle);
-        }
-    // end temp
-
-    if (_sprite.has_value()) {
-        sf::Sprite& sprite = *_sprite;
-        
-        if (type == b2_polygonShape) {
-            b2Polygon polygon = b2Shape_GetPolygon(shape);
-            float widthMeters = std::abs(polygon.vertices[0].x - polygon.vertices[2].x);
-            float heightMeters = std::abs(polygon.vertices[0].y - polygon.vertices[2].y);
-            sf::Vector2f sizePixels = PhysicsUnits::toPixels({widthMeters, heightMeters});
-            
-            sf::Vector2i texSize = sprite.getTextureRect().size; 
-            float ratio = (sizePixels.x / texSize.x + sizePixels.y / texSize.y) / 2;
-            sprite.setScale({sizePixels.x / texSize.x, sizePixels.y / texSize.y});
-
-            // drawPos.x += PhysicsUnits::toMeters(sizePixels.x - texSize.x) / 4;
-
-            //rect
-            sf::RectangleShape fallbackRect(sizePixels);
-            fallbackRect.setOrigin({sizePixels.x / 2.f, sizePixels.y / 2.f});
-            fallbackRect.setPosition(PhysicsUnits::toPixels(position));
-            fallbackRect.setRotation(sf::degrees(angleDegrees));
-            fallbackRect.setFillColor(sf::Color::Magenta);
-
-            target.draw(fallbackRect);
-        } 
-        else if (type == b2_circleShape) {
-            b2Circle circle = b2Shape_GetCircle(shape);
-            float radiusPixels = PhysicsUnits::toPixels(circle.radius);
-            float diameterPixels = radiusPixels * 2.f;
-            
-            sf::Vector2u texSize = sprite.getTexture().getSize();
-            sprite.setScale({diameterPixels / texSize.x, diameterPixels / texSize.y});
-        }
-
-        sprite.setOrigin({sprite.getLocalBounds().size.x / 2.f, sprite.getLocalBounds().size.y / 2.f});
-        sprite.setPosition(PhysicsUnits::toPixels(drawPos));
-        sprite.setRotation(sf::degrees(angleDegrees));
-        target.draw(sprite);
-    } 
-    else {
-        
-    }
+    sf::Sprite& sprite = *_sprite;
+    sprite.setPosition(PhysicsUnits::toPixels(position));
+    sprite.setRotation(sf::degrees(angleDegrees));
+    target.draw(sprite);
 }
 
 void GameObject::spawn(const PhysicsWorld &physicsWorld, sf::Vector2f spawnPixels, sf::Vector2f hitboxPixels) {
@@ -113,6 +41,7 @@ void GameObject::spawn(const PhysicsWorld &physicsWorld, sf::Vector2f spawnPixel
 
     createBody(physicsWorld, spawnPixels);
     createHitbox(hitboxPixels);
+    updateSpriteLayout();
 }
 
 void GameObject::onCreateBodyDef(b2BodyDef& def) {
@@ -133,6 +62,8 @@ void GameObject::createBody(const PhysicsWorld &physicsWorld, sf::Vector2f spawn
 }
 
 void GameObject::createHitbox(sf::Vector2f hitboxPixels) {
+    _hitboxPixels = hitboxPixels;
+
     b2ShapeDef shapeDef = b2DefaultShapeDef();
     shapeDef.enableContactEvents = true;
     shapeDef.userData = this;
@@ -142,7 +73,22 @@ void GameObject::createHitbox(sf::Vector2f hitboxPixels) {
         PhysicsUnits::toMeters(hitboxPixels.x),
         PhysicsUnits::toMeters(hitboxPixels.y)
     );
-
+    
     b2ShapeId hitbox = b2CreatePolygonShape(_body->getId(), &shapeDef, &box);
     _body->setHibox(hitbox);
+}
+
+void GameObject::updateSpriteLayout() {
+    if (!_sprite || _hitboxPixels.x <= 0.f || _hitboxPixels.y <= 0.f) {
+        return;
+    }
+
+    const sf::Vector2i frameSize = _sprite->getTextureRect().size;
+    if (frameSize.x <= 0 || frameSize.y <= 0) {
+        return;
+    }
+
+    _sprite->setOrigin({frameSize.x / 2.f, frameSize.y / 2.f});
+    _sprite->setScale({_hitboxPixels.x / 1.0f * frameSize.x,
+                       _hitboxPixels.y / 1.0f * frameSize.y});
 }

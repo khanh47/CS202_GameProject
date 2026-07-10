@@ -8,7 +8,6 @@
 #include "Animation/Animator.h"
 #include "Physics/PhysicsBody.h"
 #include "Physics/PhysicsWorld.h"
-#include "Animation/Animator.h"
 
 class GameObject {
 public:
@@ -29,13 +28,14 @@ protected:
 
     void createBody(const PhysicsWorld &physicsWorld, sf::Vector2f spawnPixels);
     void createHitbox(sf::Vector2f hitboxPixels);
+    void updateSpriteLayout();
 
 
     std::shared_ptr<sf::Texture> _spritesheet;
     Animator _animator;
-    float _animationAccumulator = 0.f;
 
     std::optional<sf::Sprite> _sprite;
+    sf::Vector2f _hitboxPixels{0.f, 0.f};
 
     std::shared_ptr<PhysicsBody> _body = nullptr;
     bool _pendingDestroy = false;
