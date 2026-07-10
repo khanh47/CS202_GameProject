@@ -26,11 +26,6 @@ protected:
     virtual void onCreateBodyDef(b2BodyDef& def);
     virtual void onCreateShapeDef(b2ShapeDef& def);
 
-    void createBody(const PhysicsWorld &physicsWorld, sf::Vector2f spawnPixels);
-    void createHitbox(sf::Vector2f hitboxPixels);
-    void updateSpriteLayout();
-
-
     std::shared_ptr<sf::Texture> _spritesheet;
     Animator _animator;
 
@@ -39,4 +34,10 @@ protected:
 
     std::shared_ptr<PhysicsBody> _body = nullptr;
     bool _pendingDestroy = false;
+
+private:
+    void createBody(const PhysicsWorld &physicsWorld, sf::Vector2f spawnPixels);
+    void createHitbox(sf::Vector2f hitboxPixels);
+    void updateSpriteLayout();
+    void drawFallbackRect(sf::RenderTarget& target) const; // debugging
 };

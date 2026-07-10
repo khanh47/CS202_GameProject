@@ -16,12 +16,12 @@ Player::Player(sf::Texture &texture) : GameObject(), Damageable(100) {
 
     AnimationClip idle = Animation::createClip(
             sf::IntRect(
-                {0, 256 * 2},
-                {256, 256}
+                {48, 32},
+                {32, 32}
             ), 
             sf::Vector2i(0, 0),
-            8,
-            1.0f / 8.0f,
+            4,
+            1.0f / 4.0f,
             true
         );
     

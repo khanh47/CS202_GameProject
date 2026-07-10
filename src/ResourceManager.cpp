@@ -98,6 +98,6 @@ ResourceManager::~ResourceManager() {
 ResourceManager::ResourceManager() {
 	_preLoadFont("assets/fonts/Roboto-VariableFont_wdth,wght.ttf", "Roboto");
 	_preLoadTexture("assets/sprites/Brick.png", "brick");
-	_preLoadTexture("assets/spritesheets/lgbt_mario.png", "mario_spritesheet");
-	_preLoadTexture("assets/spritesheets/Luigi.png", "luigi_spritesheet");
+	_preLoadTexture("assets/spritesheets/mario_spritesheet.png", "mario_spritesheet");
+	_preLoadTexture("assets/spritesheets/luigi_spritesheet.png", "luigi_spritesheet");
 }
