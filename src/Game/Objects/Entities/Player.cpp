@@ -19,7 +19,7 @@ Player::Player(sf::Texture &texture, const std::string& animationSetId) : GameOb
     _spritesheet.reset(&texture, [](sf::Texture*){});
     _sprite = sf::Sprite(*_spritesheet);
 
-    auto animationSet = std::make_shared<AnimationSet>(
+    std::shared_ptr<AnimationSet> animationSet = std::make_shared<AnimationSet>(
         AnimationLibrary::getInstance().getAnimationSet(animationSetId)
     );
     _animator = Animator(animationSet);
@@ -40,4 +40,9 @@ void Player::onInput(const sf::Event& event) {
 
 void Player::onCreateBodyDef(b2BodyDef& def) {
     def.type = b2_dynamicBody;
+}
+
+void Player::onCreateShapeDef(b2ShapeDef& def) {
+    def.density = 1.0f;
+    def.material.friction = 0.0f;
 }

@@ -1,10 +1,17 @@
 #include "App.h"
 
+#ifdef _WIN32
+#include <windows.h>
+#endif
+
 namespace {
     constexpr double fixedDt = 1.0 / 60.0;
 }
 
 App::App() : window(sf::VideoMode({1920, 1080}), "SUPER MARIO") {
+#ifdef _WIN32
+    ShowWindow((HWND)window.getNativeHandle(), SW_MAXIMIZE); //to maximize window
+#endif
     factory = std::make_unique<SceneFactory>();
     manager = std::make_unique<SceneManager>(factory.get());
     manager->setRenderWindow(&window);

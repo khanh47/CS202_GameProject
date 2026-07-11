@@ -21,4 +21,5 @@ public:
 
 protected:
     void onCreateBodyDef(b2BodyDef& def) override;
+    void onCreateShapeDef(b2ShapeDef& def) override;
 };
