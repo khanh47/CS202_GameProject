@@ -3,6 +3,7 @@
 #include <box2d/box2d.h>
 
 #include "Physics/PhysicsWorld.h"
+#include "box2d/math_functions.h"
 
 class PhysicsBody {
 public:
@@ -26,6 +27,7 @@ public:
 
     void setHibox(b2ShapeId shapeId);
     b2ShapeId getHitbox() const;
+    b2Vec2 getHitboxSize();
 
     
 

@@ -68,6 +68,12 @@ void SceneManager::pushSceneByName(const std::string &sceneName) {
     }
 }
 
+void SceneManager::requestPopScene() {
+    requestDeferredAction([this]() {
+        popScene();
+    });
+}
+
 void SceneManager::processEvents(const sf::Event& event) {
     if (!_sceneStack.empty()) {
         auto &currentScene = _sceneStack.top();
@@ -75,6 +81,7 @@ void SceneManager::processEvents(const sf::Event& event) {
             currentScene->handleInput(event);
         }
     }
+    processDeferredActions();
 }
 
 void SceneManager::updateSimulation(const float &fixedDt) {
@@ -84,6 +91,7 @@ void SceneManager::updateSimulation(const float &fixedDt) {
             currentScene->updateSimulation(fixedDt);
         }
     }
+    processDeferredActions();
 }
 
 void SceneManager::updateVisuals(float deltaTime) {
@@ -93,6 +101,7 @@ void SceneManager::updateVisuals(float deltaTime) {
             currentScene->updateVisuals(deltaTime);
         }
     }
+    processDeferredActions();
 }
 
 void SceneManager::render(sf::RenderTarget& target) {
@@ -104,6 +113,7 @@ void SceneManager::render(sf::RenderTarget& target) {
     } else {
         std::cerr << "Warning: No scene to render." << std::endl;
     }
+    processDeferredActions();
 }
 
 Scene *SceneManager::getCurrentScene() const {
@@ -126,6 +136,12 @@ void SceneManager::processDeferredActions() {
     while (!_deferredActions.empty()) {
         _deferredActions.front()();
         _deferredActions.pop();
+    }
+}
+
+void SceneManager::requestDeferredAction(std::function<void()> action) {
+    if (action) {
+        _deferredActions.push(std::move(action));
     }
 }
 

@@ -1,6 +1,7 @@
 #include "Game/World/GameWorld.h"
 #include "Game/GameSettings.h"
 #include "Game/Behaviours/Controllable.h"
+#include "ResourceManager.h"
 
 GameWorld::GameWorld() {
     _grid.resize(_gridHeight, std::vector<std::shared_ptr<GameObject>>(_gridWidth, nullptr));
@@ -20,13 +21,33 @@ void GameWorld::updateSimulation(const float &fixedDt) {
 }
 
 void GameWorld::updateVisuals(float deltaTime) {
-
+    for(auto object: _objects)
+        object->updateVisuals(deltaTime);
 }
 
 void GameWorld::render(sf::RenderTarget &target) {
     for(auto object: _objects)
         object->render(target);
 
+void GameWorld::test() {
+  /*
+    auto& marioTexture = ResourceManager::getInstance().getTexture("mario_spritesheet");
+    auto player1 = _objectFactory.createPlayer("Player", &marioTexture, "mario");
+    player1->spawn(_physicsWorld, {500, 500}, {128, 128});
+
+    auto& luigiTexture = ResourceManager::getInstance().getTexture("luigi_spritesheet");
+    auto player2 = _objectFactory.createPlayer("Player", &luigiTexture, "luigi");
+    player2->spawn(_physicsWorld, {625, 555}, {128, 128});
+    
+    auto brickBlock = _objectFactory.createBlock("Block", &brickTexture);
+    brickBlock->spawn(_physicsWorld, {0, 888}, {9999, 32});
+
+    _objects.push_back(player1);
+    _objects.push_back(player2);
+    _objects.push_back(brickBlock);
+    */
+  
+  
     auto& settings = GameSettings::getInstance();
     if (settings.debugDrawGrid || settings.debugDrawCoordinates) {
         sf::View view = target.getView();

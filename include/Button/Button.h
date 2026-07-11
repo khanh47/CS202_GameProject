@@ -2,7 +2,6 @@
 
 #include <SFML/Graphics.hpp>
 #include <memory>
-#include <functional>
 #include "Commands/ICommand.h"
 #include <optional>
 

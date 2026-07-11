@@ -28,7 +28,7 @@ void App::run() {
 
         processEvents();
         updateSimulation(fixedDt);
-        updateVisuals(deltaTime);
+        // updateVisuals(std::min(deltaTime, 0.25f));
         render();
     }
 }
@@ -46,6 +46,7 @@ void App::updateSimulation(const float &fixedDt){
     while(accumulatedTime >= fixedDt){
         if(manager->getSceneName() == "IN_GAME"){
             manager->updateSimulation(fixedDt);
+            manager->updateVisuals(fixedDt);
         }
         accumulatedTime -= fixedDt;
     }
@@ -53,7 +54,7 @@ void App::updateSimulation(const float &fixedDt){
 
 // Visual update
 void App::updateVisuals(float deltaTime) {
-    manager->updateVisuals(deltaTime);
+    manager->updateVisuals(deltaTime); //not controlled => 19283012 updates a second -> crash
 }
 
 void App::render() {

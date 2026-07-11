@@ -19,6 +19,7 @@ public:
     void pushScene(std::unique_ptr<Scene> scene);
     void popScene();
     void replaceScene(std::unique_ptr<Scene> scene);
+    void requestPopScene();
 
     // Main loop
     void processEvents(const sf::Event& event);
@@ -45,5 +46,6 @@ private:
     SceneFactory *_factory;
     sf::RenderWindow* _window = nullptr;
 
+    void requestDeferredAction(std::function<void()> action);
     void processDeferredActions();
 };

@@ -7,10 +7,10 @@
 #include "Game/Objects/Entities/Player.h"
 
 GameObjectFactory::GameObjectFactory() {
-    registerPlayer("Player", [this](sf::Texture* texture) -> std::shared_ptr<GameObject> {
+    registerPlayer("Player", [this](sf::Texture* texture, const std::string& animationSetId) -> std::shared_ptr<GameObject> {
         std::shared_ptr<Player> returned_player;
         if (texture) {
-            returned_player = std::make_shared<Player>(*texture);
+            returned_player = std::make_shared<Player>(*texture, animationSetId);
         } else {
             returned_player = std::make_shared<Player>();
         }
@@ -48,7 +48,7 @@ GameObjectFactory::GameObjectFactory() {
     });
 }
 
-void GameObjectFactory::registerPlayer(const std::string& key, Creator creator) {
+void GameObjectFactory::registerPlayer(const std::string& key, PlayerCreator creator) {
     _playerCreators[key] = std::move(creator);
 }
 
@@ -64,13 +64,13 @@ void GameObjectFactory::registerItem(const std::string& key, Creator creator) {
     _itemCreators[key] = std::move(creator);
 }
 
-std::shared_ptr<GameObject> GameObjectFactory::createPlayer(const std::string& key, sf::Texture* texture) const {
+std::shared_ptr<GameObject> GameObjectFactory::createPlayer(const std::string& key, sf::Texture* texture, const std::string& animationSetId) const {
     const auto it = _playerCreators.find(key);
     if (it == _playerCreators.end()) {
         throw std::runtime_error("Unknown player type: " + key);
     }
 
-    return it->second(texture);
+    return it->second(texture, animationSetId);
 }
 
 std::shared_ptr<GameObject> GameObjectFactory::createBlock(const std::string& key, sf::Texture* texture) const {
