@@ -1,7 +1,6 @@
 #include "Game/World/GameWorld.h"
 #include "Game/GameSettings.h"
 #include "Game/Behaviours/Controllable.h"
-#include "ResourceManager.h"
 
 GameWorld::GameWorld() {
     _grid.resize(_gridHeight, std::vector<std::shared_ptr<GameObject>>(_gridWidth, nullptr));
@@ -29,25 +28,6 @@ void GameWorld::render(sf::RenderTarget &target) {
     for(auto object: _objects)
         object->render(target);
 
-void GameWorld::test() {
-  /*
-    auto& marioTexture = ResourceManager::getInstance().getTexture("mario_spritesheet");
-    auto player1 = _objectFactory.createPlayer("Player", &marioTexture, "mario");
-    player1->spawn(_physicsWorld, {500, 500}, {128, 128});
-
-    auto& luigiTexture = ResourceManager::getInstance().getTexture("luigi_spritesheet");
-    auto player2 = _objectFactory.createPlayer("Player", &luigiTexture, "luigi");
-    player2->spawn(_physicsWorld, {625, 555}, {128, 128});
-    
-    auto brickBlock = _objectFactory.createBlock("Block", &brickTexture);
-    brickBlock->spawn(_physicsWorld, {0, 888}, {9999, 32});
-
-    _objects.push_back(player1);
-    _objects.push_back(player2);
-    _objects.push_back(brickBlock);
-    */
-  
-  
     auto& settings = GameSettings::getInstance();
     if (settings.debugDrawGrid || settings.debugDrawCoordinates) {
         sf::View view = target.getView();
@@ -94,6 +74,8 @@ void GameWorld::test() {
 
 void GameWorld::loadMap(const std::vector<std::vector<int>>& mapData) {
     auto& brickTexture = ResourceManager::getInstance().getTexture("brick");
+    auto& marioTexture = ResourceManager::getInstance().getTexture("mario_spritesheet");
+    auto& luigiTexture = ResourceManager::getInstance().getTexture("luigi_spritesheet");
 
     // Re-initialize grid based on GameWorld dimensions (500x60 default)
     _grid.assign(_gridHeight, std::vector<std::shared_ptr<GameObject>>(_gridWidth, nullptr));
@@ -126,14 +108,14 @@ void GameWorld::loadMap(const std::vector<std::vector<int>>& mapData) {
             } 
             else if (blockId == 2) {
                 // Player 1
-                auto player1 = _objectFactory.createPlayer();
-                player1->spawn(_physicsWorld, spawnPos, {64, 123});
+                auto player1 = _objectFactory.createPlayer("Player", &marioTexture, "mario");
+                player1->spawn(_physicsWorld, {spawnPos.x + 10, spawnPos.y}, {80, 80});
                 _objects.push_back(player1);
             }
             else if (blockId == 3) {
                 // Player 2
-                auto player2 = _objectFactory.createPlayer();
-                player2->spawn(_physicsWorld, spawnPos, {36, 36});
+                auto player2 = _objectFactory.createPlayer("Player", &luigiTexture, "luigi");
+                player2->spawn(_physicsWorld, {spawnPos.x + 10, spawnPos.y}, {80, 80});
                 _objects.push_back(player2);
             }
         }
