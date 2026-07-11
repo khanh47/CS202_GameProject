@@ -2,6 +2,7 @@
 
 #include <box2d/box2d.h>
 #include <SFML/System.hpp>
+#include <string>
 
 #include "Game/Behaviours/Controllable.h"
 #include "Game/Behaviours/Damageable.h"
@@ -13,6 +14,7 @@ class Player: public GameObject,
 public:
     Player();
     Player(sf::Texture &texture);
+    Player(sf::Texture &texture, const std::string& animationSetId);
     ~Player();
 
     void onInput(const sf::Event& event) override;

@@ -24,6 +24,3 @@ private:
     bool looping = true;
 };
 
-namespace Animation {
-    AnimationClip createClip(sf::IntRect rect, sf::Vector2i offsets, int frameCount, float frameDuration, bool looping = true);
-}

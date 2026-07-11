@@ -1,8 +1,14 @@
 #include "Game/Objects/GameObject.h"
+#include "Animation/Animator.h"
 #include "Physics/PhysicsUnits.h"
 #include "box2d/math_functions.h"
 #include <SFML/System/Vector2.hpp>
+#include <memory>
 #include <stdexcept>
+
+GameObject::GameObject() {
+    _animator = Animator();
+}
 
 void GameObject::updateSimulation(const float &fixedDt) {
 

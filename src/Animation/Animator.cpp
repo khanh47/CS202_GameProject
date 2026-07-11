@@ -1,16 +1,25 @@
 #include "Animation/Animator.h"
 #include "Animation/AnimationClip.h"
-#include <SFML/Graphics/Rect.hpp>
-#include <cstddef>
-#include <string>
-#include <utility>
+#include "Animation/AnimationSet.h"
 
-void Animator::addAnimation(const std::string& name, AnimationClip animation) {
-    _animations[name] = std::move(animation);
+#include <SFML/Graphics/Rect.hpp>
+
+#include <memory>
+#include <string>
+
+Animator::Animator() {
+    _animations = std::make_shared<AnimationSet>();
+}
+
+Animator::Animator(std::shared_ptr<AnimationSet> animationSet): _animations(animationSet) {
+    if (!_animations) {
+        _animations = std::make_shared<AnimationSet>();
+    }
 }
 
 void Animator::play(const std::string& name) {
-    if (_animations.find(name) == _animations.end()) return;
+    if (!_animations) return;
+    if (_animations->clips.find(name) == _animations->clips.end()) return;
 
     _currentAnimationName = name;
     _currentFrameId = 0;
@@ -38,11 +47,12 @@ void Animator::resume() {
 }
 
 bool Animator::update(float deltaTime) {
+    if (!_animations) return false;
     if (!isPlaying() || deltaTime <= 0.f) {
         return false;
     }
 
-    AnimationClip& animation = _animations.at(_currentAnimationName);
+    AnimationClip& animation = _animations->clips.at(_currentAnimationName);
     if (animation.isEmpty()) {
         return false;
     }
@@ -81,11 +91,15 @@ bool Animator::update(float deltaTime) {
 }
 
 sf::IntRect Animator::getCurrentTextureRect() const {
+    if (!_animations) {
+        return {};
+    }
+
     if (!hasActiveAnimation()) {
         return {};
     }
 
-    const AnimationClip& animation = _animations.at(_currentAnimationName);
+    const AnimationClip& animation = _animations->clips.at(_currentAnimationName);
     if (animation.isEmpty()) {
         return {};
     }
@@ -94,7 +108,7 @@ sf::IntRect Animator::getCurrentTextureRect() const {
 }
 
 bool Animator::hasActiveAnimation() const {
-    return !_currentAnimationName.empty() && _animations.find(_currentAnimationName) != _animations.end();
+    return _animations && !_currentAnimationName.empty() && _animations->clips.find(_currentAnimationName) != _animations->clips.end();
 }
 
 bool Animator::isPlaying() const {

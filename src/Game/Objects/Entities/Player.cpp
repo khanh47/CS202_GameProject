@@ -1,7 +1,9 @@
 #include "Game/Objects/Entities/Player.h"
-#include "Animation/AnimationClip.h"
+#include "Animation/AnimationLibrary.h"
+#include "Game/Objects/GameObject.h"
 #include <SFML/Graphics/Texture.hpp>
 #include <SFML/System/Vector2.hpp>
+#include <memory>
 
 Player::Player() : GameObject(), Damageable(100) {
     if (_sprite.has_value()) {
@@ -10,29 +12,23 @@ Player::Player() : GameObject(), Damageable(100) {
     }
 }
 
-Player::Player(sf::Texture &texture) : GameObject(), Damageable(100) {
+Player::Player(sf::Texture &texture) : Player(texture, "mario") {
+}
+
+Player::Player(sf::Texture &texture, const std::string& animationSetId) : GameObject(), Damageable(100) {
     _spritesheet.reset(&texture, [](sf::Texture*){});
     _sprite = sf::Sprite(*_spritesheet);
 
-    AnimationClip idle = Animation::createClip(
-            sf::IntRect(
-                {48, 32},
-                {32, 32}
-            ), 
-            sf::Vector2i(0, 0),
-            4,
-            1.0f / 4.0f,
-            true
-        );
-    
-    _animator.addAnimation("idle", idle);
-    _animator.play("idle");
+    auto animationSet = std::make_shared<AnimationSet>(
+        AnimationLibrary::getInstance().getAnimationSet(animationSetId)
+    );
+    _animator = Animator(animationSet);
 
+    _animator.play(animationSet->defaultClip);
     _sprite->setTextureRect(_animator.getCurrentTextureRect());
 
     sf::FloatRect bounds = _sprite->getLocalBounds();
     _sprite->setOrigin({bounds.size.x / 2.f, bounds.size.y / 2.f});
-    // _sprite->setOrigin({100.0f, 100.0f});
 }
 
 Player::~Player() {

@@ -1,16 +1,17 @@
 #pragma once
 
-#include "Animation/AnimationClip.h"
+#include "Animation/AnimationSet.h"
+
 #include <SFML/Graphics/Rect.hpp>
-#include <unordered_map>
+#include <memory>
 #include <string>
 
 class Animator {
 public:
-    Animator() = default;
+    Animator();
+    Animator(std::shared_ptr<AnimationSet> animationSet);
     ~Animator() = default;
 
-    void addAnimation(const std::string& name, AnimationClip animation);
     void play(const std::string& name);
     void stop();
     void pause();
@@ -24,7 +25,7 @@ public:
     bool isPaused() const;
 
 private:
-    std::unordered_map<std::string, AnimationClip> _animations;
+    std::shared_ptr<AnimationSet> _animations;
 
     std::string _currentAnimationName;
     std::size_t _currentFrameId = 0;

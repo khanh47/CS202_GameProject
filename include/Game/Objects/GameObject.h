@@ -11,6 +11,7 @@
 
 class GameObject {
 public:
+    GameObject();
     virtual ~GameObject() = default;
 
     virtual void updateSimulation(const float &fixedDt);

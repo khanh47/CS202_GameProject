@@ -31,11 +31,11 @@ void GameWorld::render(sf::RenderTarget &target) {
 
 void GameWorld::test() {
     auto& marioTexture = ResourceManager::getInstance().getTexture("mario_spritesheet");
-    auto player1 = _objectFactory.createPlayer("Player", &marioTexture);
+    auto player1 = _objectFactory.createPlayer("Player", &marioTexture, "mario");
     player1->spawn(_physicsWorld, {500, 500}, {128, 128});
 
     auto& luigiTexture = ResourceManager::getInstance().getTexture("luigi_spritesheet");
-    auto player2 = _objectFactory.createPlayer("Player", &luigiTexture);
+    auto player2 = _objectFactory.createPlayer("Player", &luigiTexture, "luigi");
     player2->spawn(_physicsWorld, {625, 555}, {128, 128});
 
     auto& brickTexture = ResourceManager::getInstance().getTexture("brick");
