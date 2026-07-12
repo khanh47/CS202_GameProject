@@ -1,4 +1,4 @@
-#include "Game/Objects/Entities/Block.h"
+#include "Game/Objects/Block/Block.h"
 #include "ResourceManager.h"
 
 Block::Block() : GameObject() {

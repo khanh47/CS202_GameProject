@@ -1,4 +1,4 @@
-#include "Game/Objects/Entities/Player.h"
+#include "Game/Objects/Player/Player.h"
 #include "Animation/AnimationLibrary.h"
 #include "Game/Objects/GameObject.h"
 #include <SFML/Graphics/Texture.hpp>

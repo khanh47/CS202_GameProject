@@ -1,4 +1,4 @@
-#include "Game/Objects/Entities/Item.h"
+#include "Game/Objects/Item/Item.h"
 
 Item::Item() : GameObject() {
 }
