@@ -1,4 +1,4 @@
-#include "Game/Objects/Entities/Enemy.h"
+#include "Game/Objects/Enemy/Enemy.h"
 
 Enemy::Enemy() : GameObject(), Damageable(50) {
 }

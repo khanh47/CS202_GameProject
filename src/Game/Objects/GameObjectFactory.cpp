@@ -1,10 +1,10 @@
 #include <stdexcept>
 
 #include "Game/Objects/GameObjectFactory.h"
-#include "Game/Objects/Entities/Block.h"
-#include "Game/Objects/Entities/Enemy.h"
-#include "Game/Objects/Entities/Item.h"
-#include "Game/Objects/Entities/Player.h"
+#include "Game/Objects/Block/Block.h"
+#include "Game/Objects/Enemy/Enemy.h"
+#include "Game/Objects/Item/Item.h"
+#include "Game/Objects/Player/Player.h"
 
 GameObjectFactory::GameObjectFactory() {
     registerPlayer("Player", [this](sf::Texture* texture, const std::string& animationSetId) -> std::shared_ptr<GameObject> {
