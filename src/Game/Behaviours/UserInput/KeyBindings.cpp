@@ -1,6 +1,6 @@
 #include <iostream>
-#include "Game\Behaviours\UserInput\Action.h"
-#include "Game\Behaviours\UserInput\KeyBindings.h"
+#include "Game/Behaviours/UserInput/Action.h"
+#include "Game/Behaviours/UserInput/KeyBindings.h"
 
 using namespace std;
 
