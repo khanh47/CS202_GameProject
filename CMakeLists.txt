@@ -6,9 +6,13 @@ project(Mario LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-set(SFML_STATIC_LIBRARIES TRUE)
-
-set(SFML_DIR "${CMAKE_SOURCE_DIR}/external/SFML-3.0.2/lib/cmake/SFML")
+if(WIN32)
+    set(SFML_STATIC_LIBRARIES TRUE)
+    set(SFML_DIR "${CMAKE_SOURCE_DIR}/external/SFML-3.0.2/lib/cmake/SFML")
+elseif(UNIX)
+    set(SFML_STATIC_LIBRARIES FALSE)
+    set(SFML_DIR "/home/linuxbrew/.linuxbrew/lib/cmake/SFML")
+endif()
 
 find_package(SFML 3 REQUIRED COMPONENTS Graphics Window System)
 
