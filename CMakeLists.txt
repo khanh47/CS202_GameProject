@@ -23,6 +23,12 @@ file(GLOB_RECURSE SRC_FILES CONFIGURE_DEPENDS "src/*.cpp")
 add_executable(${PROJECT_NAME} ${SRC_FILES})
 set_property(TARGET ${PROJECT_NAME} PROPERTY WIN32_EXECUTABLE FALSE) #Set TRUE in the final product
 
+target_include_directories(${PROJECT_NAME}
+    PRIVATE
+        ${CMAKE_SOURCE_DIR}/include
+        ${CMAKE_SOURCE_DIR}/external
+)
+
 add_subdirectory(external/Box2D-3.1.1)
 target_link_libraries(${PROJECT_NAME} PRIVATE box2d::box2d)
 
