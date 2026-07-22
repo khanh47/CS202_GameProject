@@ -4,11 +4,13 @@
 #include <SFML/System.hpp>
 #include <string>
 
+#include "Game/Behaviours/Animatable.h"
 #include "Game/Behaviours/Controllable.h"
 #include "Game/Behaviours/Damageable.h"
 #include "Game/Objects/GameObject.h"
 
 class Player: public GameObject,
+              public Animatable,
               public Damageable,
               public Controllable {
 public:
@@ -22,4 +24,6 @@ public:
 protected:
     void onCreateBodyDef(b2BodyDef& def) override;
     void onCreateShapeDef(b2ShapeDef& def) override;
+    void onUpdateVisuals(float deltaTime) override;
+    void onRenderVisual(sf::RenderTarget& target, const sf::Vector2f& position, float angleDegrees) override;
 };

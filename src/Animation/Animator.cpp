@@ -12,9 +12,9 @@ Animator::Animator() {
 }
 
 Animator::Animator(std::shared_ptr<AnimationSet> animationSet): _animations(animationSet) {
-    // if (!_animations) {
-    //     _animations = std::make_shared<AnimationSet>();
-    // }
+    if (!_animations) {
+        _animations = std::make_shared<AnimationSet>();
+    }
 }
 
 void Animator::play(const std::string& name) {

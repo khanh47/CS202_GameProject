@@ -9,8 +9,8 @@
 #include "Physics/PhysicsWorld.h"
 
 class Enemy : public GameObject,
-              public Damageable,
-              public Animatable {
+              public Animatable,
+              public Damageable {
 public:
     Enemy();
     Enemy(sf::Texture& texture);
@@ -18,4 +18,6 @@ public:
 
 protected:
     void onCreateBodyDef(b2BodyDef& def) override;
+    void onUpdateVisuals(float deltaTime) override;
+    void onRenderVisual(sf::RenderTarget& target, const sf::Vector2f& position, float angleDegrees) override;
 };
