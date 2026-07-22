@@ -80,9 +80,12 @@ bool Animator::update(float deltaTime) {
             continue;
         }
 
-        _currentFrameId = animation.getFrameCount() - 1;
-        _paused = true;
-        _elapsedTime = 0.f;
+        if (_animations->clips.find(_animations->defaultClip) != _animations->clips.end()) {
+            play(_animations->defaultClip);
+        } else {
+            stop();
+        }
+
         frameChanged = true;
         break;
     }

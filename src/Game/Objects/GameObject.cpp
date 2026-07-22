@@ -1,54 +1,39 @@
 #include "Game/Objects/GameObject.h"
-#include "Animation/Animator.h"
 #include "Physics/PhysicsUnits.h"
 #include "box2d/math_functions.h"
 #include <SFML/System/Vector2.hpp>
 #include <memory>
 #include <stdexcept>
 
-GameObject::GameObject() {
-    _animator = Animator();
+namespace {
+constexpr bool drawFallbackCollisionRect = true;
 }
+
+GameObject::GameObject() = default;
 
 void GameObject::updateSimulation(const float &fixedDt) {
 
 }
 
 sf::Vector2f GameObject::getPosition() const {
-    if(_body && _body->isValid()) {
-        return PhysicsUnits::toPixels(b2Body_GetPosition(_body->getId()));
-    }
-    return {0.f, 0.f};
+    return getBodyPositionPixels();
 }
 
 void GameObject::updateVisuals(float deltaTime) {
-    const bool frameChanged = _animator.update(deltaTime);
-
-    if (_sprite && _animator.hasActiveAnimation()) {
-        const sf::IntRect currentRect = _animator.getCurrentTextureRect();
-        if (frameChanged || _sprite->getTextureRect() != currentRect) {
-            _sprite->setTextureRect(currentRect);
-            updateSpriteLayout();
-        }
-    }
+    onUpdateVisuals(deltaTime);
 }
 
 void GameObject::render(sf::RenderTarget &target) { // DEFINITELY NEEDS TO BE REFRACTORED
-    if (!_body || !_body->isValid()) return;
+    if (!hasValidBody()) return;
 
-    b2Vec2 position = b2Body_GetPosition(_body->getId());
-    b2Rot rotation = b2Body_GetRotation(_body->getId());
-    float angleDegrees = b2Rot_GetAngle(rotation) * (180.f / 3.14159265f);
+    const sf::Vector2f position = getBodyPositionPixels();
+    const float angleDegrees = getBodyAngleDegrees();
 
-    drawFallbackRect(target); // for debugging
-    if (!_sprite.has_value()) {
-        return;
+    if (drawFallbackCollisionRect) {
+        drawFallbackRect(target);
     }
 
-    sf::Sprite& sprite = *_sprite;
-    sprite.setPosition(PhysicsUnits::toPixels(position));
-    sprite.setRotation(sf::degrees(angleDegrees));
-    target.draw(sprite);
+    onRenderVisual(target, position, angleDegrees);
 }
 
 void GameObject::spawn(const PhysicsWorld &physicsWorld, sf::Vector2f spawnPixels, sf::Vector2f hitboxPixels) {
@@ -59,7 +44,7 @@ void GameObject::spawn(const PhysicsWorld &physicsWorld, sf::Vector2f spawnPixel
 
     createBody(physicsWorld, spawnPixels);
     createHitbox(hitboxPixels);
-    updateSpriteLayout();
+    updateVisuals(0.f);
 }
 
 void GameObject::onCreateBodyDef(b2BodyDef& def) {
@@ -68,6 +53,36 @@ void GameObject::onCreateBodyDef(b2BodyDef& def) {
 
 void GameObject::onCreateShapeDef(b2ShapeDef& def) {
     (void)def;
+}
+
+void GameObject::onUpdateVisuals(float deltaTime) {
+    (void)deltaTime;
+}
+
+void GameObject::onRenderVisual(sf::RenderTarget& target, const sf::Vector2f& position, float angleDegrees) {
+    (void)target;
+    (void)position;
+    (void)angleDegrees;
+}
+
+bool GameObject::hasValidBody() const {
+    return _body && _body->isValid();
+}
+
+sf::Vector2f GameObject::getBodyPositionPixels() const {
+    if (hasValidBody()) {
+        return PhysicsUnits::toPixels(b2Body_GetPosition(_body->getId()));
+    }
+    return {0.f, 0.f};
+}
+
+float GameObject::getBodyAngleDegrees() const {
+    if (!hasValidBody()) {
+        return 0.f;
+    }
+
+    const b2Rot rotation = b2Body_GetRotation(_body->getId());
+    return b2Rot_GetAngle(rotation) * (180.f / 3.14159265f);
 }
 
 void GameObject::createBody(const PhysicsWorld &physicsWorld, sf::Vector2f spawnPixels) {
@@ -94,24 +109,6 @@ void GameObject::createHitbox(sf::Vector2f hitboxPixels) {
     
     b2ShapeId hitbox = b2CreatePolygonShape(_body->getId(), &shapeDef, &box);
     _body->setHibox(hitbox);
-}
-
-void GameObject::updateSpriteLayout() {
-    if (!_sprite || _hitboxPixels.x <= 0.f || _hitboxPixels.y <= 0.f) {
-        return;
-    }
-
-    const sf::Vector2i frameSize = _sprite->getTextureRect().size;
-    if (frameSize.x <= 0 || frameSize.y <= 0) {
-        return;
-    }
-
-    _sprite->setOrigin({frameSize.x / 2.f, frameSize.y / 2.f});
-
-    // if (_animator.hasActiveAnimation()) {
-        _sprite->setScale({_hitboxPixels.x / static_cast<float>(frameSize.x),
-                           _hitboxPixels.y / static_cast<float>(frameSize.y)});
-    // }
 }
 
 void GameObject::drawFallbackRect(sf::RenderTarget& target) const {
