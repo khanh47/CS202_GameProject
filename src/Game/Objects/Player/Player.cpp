@@ -25,6 +25,7 @@ Player::Player(sf::Texture &texture, const std::string& animationSetId) : GameOb
     _animator = Animator(animationSet);
 
     _animator.play(animationSet->defaultClip);
+    _animator.play("knockout");
     _sprite->setTextureRect(_animator.getCurrentTextureRect());
 
     sf::FloatRect bounds = _sprite->getLocalBounds();
