@@ -1,4 +1,5 @@
 #include "Button/ButtonMenu.h"
+#include "Button/ToggleButton.h"
 
 namespace UI {
 
@@ -55,6 +56,19 @@ void ButtonMenu::addButtonAuto(const std::string& text, unsigned int charSize,
     addButton(button);
 }
 
+void ButtonMenu::addToggleButtonAuto(const std::string& text, bool initialState, std::unique_ptr<ICommand> command, const std::string& iconAlias) {
+    const float offset = static_cast<float>(_buttonMenu.size()) * _layout.spacing;
+    const sf::Vector2f position = _layout.horizontal
+        ? sf::Vector2f(_layout.startPosition.x + offset, _layout.startPosition.y)
+        : sf::Vector2f(_layout.startPosition.x, _layout.startPosition.y + offset);
+
+    auto toggleButton = std::make_shared<ToggleButton>(
+        position, _layout.buttonSize, _layout.defaultColor, text, _layout.defaultCharSize, initialState, 20.0f, iconAlias
+    );
+    toggleButton->setCommand(std::move(command));
+    addButton(toggleButton);
+}
+
 void ButtonMenu::processEvent(const sf::Event& event) {
     for (const std::shared_ptr<Button>& button : _buttonMenu) {
         button->processEvent(event);
@@ -93,6 +107,14 @@ void ButtonMenu::processEvent(const sf::Event& event) {
                 syncFocus();
                 break;
             }
+        }
+    }
+}
+
+void ButtonMenu::updateVisuals(float deltaTime) {
+    for (const std::shared_ptr<Button>& button : _buttonMenu) {
+        if (button) {
+            button->updateVisuals(deltaTime);
         }
     }
 }

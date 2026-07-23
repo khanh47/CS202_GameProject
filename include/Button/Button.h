@@ -12,18 +12,22 @@ public:
     Button(const sf::Vector2f& position, const sf::Vector2f& size, const sf::Color& color, 
            const std::string& text, unsigned int charSize, 
            float cornerRadius = 10.0f, const std::string& iconAlias = "");
+    virtual ~Button() = default;
 
     void setCommand(std::unique_ptr<ICommand> command);
-    void execute();
+    virtual void execute();
     void setPosition(const sf::Vector2f& position);
     void setSize(const sf::Vector2f& size);
     void setFocused(bool focused);
     bool isHovered() const { return _isHovered; }
-    void processEvent(const sf::Event& event);
-    void render(sf::RenderTarget& target);
+    virtual void processEvent(const sf::Event& event);
+    virtual void updateVisuals(float deltaTime) { (void)deltaTime; }
+    virtual void render(sf::RenderTarget& target);
 
-private:
+    void setText(const std::string& text);
+    std::string getText() const;
 
+protected:
     sf::ConvexShape shape;
     sf::Text label;
     std::optional<sf::Sprite> icon;

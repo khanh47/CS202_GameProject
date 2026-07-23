@@ -19,7 +19,28 @@ void Camera::update(float deltaTime) {
         return;
     }
 
-    if (_target) {
+    if (GameSettings::getInstance().freeCameraMove) {
+        // Free camera movement (manual WASD / Arrow keys control)
+        float offsetX = 0.0f;
+        float offsetY = 0.0f;
+
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Left) || sf::Keyboard::isKeyPressed(sf::Keyboard::Key::A)) {
+            offsetX -= _freeMoveSpeed * deltaTime;
+        }
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Right) || sf::Keyboard::isKeyPressed(sf::Keyboard::Key::D)) {
+            offsetX += _freeMoveSpeed * deltaTime;
+        }
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Up) || sf::Keyboard::isKeyPressed(sf::Keyboard::Key::W)) {
+            offsetY -= _freeMoveSpeed * deltaTime;
+        }
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Down) || sf::Keyboard::isKeyPressed(sf::Keyboard::Key::S)) {
+            offsetY += _freeMoveSpeed * deltaTime;
+        }
+
+        _currentCenter += sf::Vector2f(offsetX, offsetY);
+        _currentCenter = clampToBounds(_currentCenter);
+        _view.setCenter(_currentCenter);
+    } else if (_target) {
         const sf::Vector2f targetPos = _target->getPosition();
         const sf::Vector2f targetVel = _target->getVelocity();
 
@@ -49,27 +70,6 @@ void Camera::update(float deltaTime) {
         // 5. Boundary Clamping: Restrict view center to level boundaries
         _currentCenter = clampToBounds(_currentCenter);
 
-        _view.setCenter(_currentCenter);
-    } else if (GameSettings::getInstance().freeCameraMove) {
-        // Fallback for manual free camera movement (useful for debugging/editing)
-        float offsetX = 0.0f;
-        float offsetY = 0.0f;
-
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Left) || sf::Keyboard::isKeyPressed(sf::Keyboard::Key::A)) {
-            offsetX -= _freeMoveSpeed * deltaTime;
-        }
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Right) || sf::Keyboard::isKeyPressed(sf::Keyboard::Key::D)) {
-            offsetX += _freeMoveSpeed * deltaTime;
-        }
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Up) || sf::Keyboard::isKeyPressed(sf::Keyboard::Key::W)) {
-            offsetY -= _freeMoveSpeed * deltaTime;
-        }
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Down) || sf::Keyboard::isKeyPressed(sf::Keyboard::Key::S)) {
-            offsetY += _freeMoveSpeed * deltaTime;
-        }
-
-        _currentCenter += sf::Vector2f(offsetX, offsetY);
-        _currentCenter = clampToBounds(_currentCenter);
         _view.setCenter(_currentCenter);
     }
 }

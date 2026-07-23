@@ -12,6 +12,10 @@ GameWorld::GameWorld() {
 GameWorld::~GameWorld() = default;
 
 void GameWorld::handleInput(const sf::Event& event) {
+    if (GameSettings::getInstance().freeCameraMove) {
+        return;
+    }
+
     for (auto& controller : _controllers) {
         if (controller && controller->handleEvent(event)) {
             break;
@@ -20,6 +24,17 @@ void GameWorld::handleInput(const sf::Event& event) {
 }
 
 void GameWorld::updateSimulation(const float &fixedDt) {
+    if (GameSettings::getInstance().freeCameraMove) {
+        // Lock character controls and movement when free camera mode is active
+        for (auto& object : _objects) {
+            if (auto player = std::dynamic_pointer_cast<Player>(object)) {
+                player->stopMoveLeft();
+                player->stopMoveRight();
+                player->stopJump();
+            }
+        }
+    }
+
     for (auto& object : _objects) {
         object->updateSimulation(fixedDt);
     }
