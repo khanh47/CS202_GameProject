@@ -1,21 +1,28 @@
 #include "Game/World/GameWorld.h"
 #include "Game/GameSettings.h"
-#include "Game/Behaviours/Controllable.h"
+#include "Game/Objects/Player/Player.h"
+#include "Game/UserInput/PlayerController.h"
+#include "ResourceManager.h"
 
 GameWorld::GameWorld() {
     _grid.resize(_gridHeight, std::vector<std::shared_ptr<GameObject>>(_gridWidth, nullptr));
 }
 
+GameWorld::~GameWorld() = default;
+
 void GameWorld::handleInput(const sf::Event& event) {
-    for (auto& obj : _objects) {
-        auto* controllable = dynamic_cast<Controllable*>(obj.get());
-        if (controllable) {
-            controllable->onInput(event);
+    for (auto& controller : _controllers) {
+        if (controller && controller->handleEvent(event)) {
+            break;
         }
     }
 }
 
 void GameWorld::updateSimulation(const float &fixedDt) {
+    for (auto& object : _objects) {
+        object->updateSimulation(fixedDt);
+    }
+
     _physicsWorld.updateSimulation(fixedDt);
 }
 
@@ -77,6 +84,9 @@ void GameWorld::loadMap(const std::vector<std::vector<int>>& mapData) {
     auto& marioTexture = ResourceManager::getInstance().getTexture("mario_spritesheet");
     auto& luigiTexture = ResourceManager::getInstance().getTexture("luigi_spritesheet");
 
+    _controllers.clear();
+    _objects.clear();
+
     // Re-initialize grid based on GameWorld dimensions (500x60 default)
     _grid.assign(_gridHeight, std::vector<std::shared_ptr<GameObject>>(_gridWidth, nullptr));
 
@@ -110,12 +120,18 @@ void GameWorld::loadMap(const std::vector<std::vector<int>>& mapData) {
                 // Player 1
                 auto player1 = _objectFactory.createPlayer("Player", &marioTexture, "mario");
                 player1->spawn(_physicsWorld, {spawnPos.x + 10, spawnPos.y}, {80, 80});
+                if (auto mario = std::dynamic_pointer_cast<Player>(player1)) {
+                    _controllers.emplace_back(std::make_unique<PlayerController>(*mario, PlayerController::ControlScheme::Wasd));
+                }
                 _objects.push_back(player1);
             }
             else if (blockId == 3) {
                 // Player 2
                 auto player2 = _objectFactory.createPlayer("Player", &luigiTexture, "luigi");
                 player2->spawn(_physicsWorld, {spawnPos.x + 10, spawnPos.y}, {80, 80});
+                if (auto luigi = std::dynamic_pointer_cast<Player>(player2)) {
+                    _controllers.emplace_back(std::make_unique<PlayerController>(*luigi, PlayerController::ControlScheme::ArrowKeys));
+                }
                 _objects.push_back(player2);
             }
         }

@@ -2,7 +2,7 @@
 #include <fstream>
 #include <filesystem>
 #include <nlohmann/json.hpp>
-#include "Game/Behaviours/SaveLoadGame/SaveLoadGame.h"
+#include "Game/Snapshot/SaveLoadGame.h"
 
 using namespace std;
 

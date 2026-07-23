@@ -1,6 +1,7 @@
 #pragma once
 
 #include <SFML/Graphics.hpp>
+#include <SFML/System/Angle.hpp>
 #include <memory>
 #include <optional>
 #include <string>
@@ -18,8 +19,8 @@ protected:
     void configureVisuals(sf::Texture& texture);
     void configureVisuals(sf::Texture& texture, const std::string& animationSetId);
 
-    void updateVisualState(float deltaTime, const sf::Vector2f& hitboxPixels);
-    void renderVisualState(sf::RenderTarget& target, const sf::Vector2f& position, float angleDegrees) const;
+    void updateVisualState(float deltaTime, const sf::Vector2f& hitboxPixels, bool facingLeft = false);
+    void renderVisualState(sf::RenderTarget& target, const sf::Vector2f& position, float angleDegrees = 0) const;
 
     void playAnimation(const std::string& name);
     void stopAnimation();
@@ -28,7 +29,7 @@ protected:
 
 private:
     void bindTexture(sf::Texture& texture);
-    void syncSpriteLayout(const sf::Vector2f& hitboxPixels);
+    void syncSpriteLayout(const sf::Vector2f& hitboxPixels, bool facingLeft = false);
 
     std::shared_ptr<sf::Texture> _spritesheet;
     Animator _animator;
