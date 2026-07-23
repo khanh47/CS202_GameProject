@@ -1,15 +1,17 @@
 #pragma once
 
 #include <SFML/Graphics.hpp>
+#include <memory>
 
 #include "Physics/PhysicsWorld.h"
 #include "Game/Objects/GameObjectFactory.h"
-#include "ResourceManager.h"
+
+class PlayerController;
 
 class GameWorld {
 public:
     GameWorld();
-    ~GameWorld() = default;
+    ~GameWorld();
 
     void handleInput(const sf::Event& event);
     void updateSimulation(const float &fixedDt);
@@ -23,6 +25,7 @@ private:
     PhysicsWorld _physicsWorld;
     GameObjectFactory _objectFactory;
     std::vector<std::shared_ptr<GameObject>> _objects;
+    std::vector<std::unique_ptr<PlayerController>> _controllers;
 
     // Grid system
     static constexpr float CELL_SIZE = 64.0f;

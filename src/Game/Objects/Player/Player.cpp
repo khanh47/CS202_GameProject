@@ -22,12 +22,44 @@ Player::Player(sf::Texture &texture, const std::string& animationSetId) : GameOb
 Player::~Player() {
 }
 
-void Player::onInput(const sf::Event& event) {
-    (void)event;
+void Player::updateSimulation(const float &fixedDt) {
+    (void)fixedDt;
+
+    if (!_body || !_body->isValid()) {
+        return;
+    }
+
+    b2Vec2 velocity = b2Body_GetLinearVelocity(_body->getId());
+
+    if (isMovingLeft() && !isMovingRight()) {
+        velocity.x = -_moveSpeed;
+    }
+    else if (isMovingRight() && !isMovingLeft()) {
+        velocity.x = _moveSpeed;
+    }
+    else if (!isMovingLeft() && !isMovingRight()) {
+        velocity.x = 0.f;
+    }
+
+    if (isJumping()) {
+        velocity.y = -_jumpSpeed;
+        if (velocity.y > 0) {
+            b2Body_SetGravityScale(_body->getId(), 1.0f);
+        } 
+        else {
+            b2Body_SetGravityScale(_body->getId(), 3.0f);
+        }
+
+        playAnimation("jump");
+    }
+    else b2Body_SetGravityScale(_body->getId(), 4.0f);
+
+    b2Body_SetLinearVelocity(_body->getId(), velocity);
 }
 
 void Player::onCreateBodyDef(b2BodyDef& def) {
     def.type = b2_dynamicBody;
+    def.motionLocks.angularZ = true;
 }
 
 void Player::onCreateShapeDef(b2ShapeDef& def) {
@@ -36,9 +68,9 @@ void Player::onCreateShapeDef(b2ShapeDef& def) {
 }
 
 void Player::onUpdateVisuals(float deltaTime) {
-    updateVisualState(deltaTime, _hitboxPixels);
+    updateVisualState(deltaTime, _hitboxPixels, isFacingLeft());
 }
 
 void Player::onRenderVisual(sf::RenderTarget& target, const sf::Vector2f& position, float angleDegrees) {
-    renderVisualState(target, position, angleDegrees);
+    renderVisualState(target, position);
 }

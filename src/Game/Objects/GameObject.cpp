@@ -1,9 +1,9 @@
 #include "Game/Objects/GameObject.h"
 #include "Physics/PhysicsUnits.h"
-#include "box2d/math_functions.h"
 #include <SFML/System/Vector2.hpp>
 #include <memory>
 #include <stdexcept>
+#include "box2d/box2d.h"
 
 namespace {
 constexpr bool drawFallbackCollisionRect = true;

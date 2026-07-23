@@ -1,7 +1,9 @@
 #include "Game/Behaviours/Animatable.h"
 
 #include "Animation/AnimationLibrary.h"
+#include "Physics/PhysicsUnits.h"
 
+#include <SFML/System/Angle.hpp>
 #include <memory>
 
 Animatable::Animatable(sf::Texture &texture) {
@@ -36,7 +38,7 @@ void Animatable::configureVisuals(sf::Texture& texture, const std::string& anima
     }
 }
 
-void Animatable::updateVisualState(float deltaTime, const sf::Vector2f& hitboxPixels) {
+void Animatable::updateVisualState(float deltaTime, const sf::Vector2f& hitboxPixels, bool facingLeft) {
     const bool frameChanged = _animator.update(deltaTime);
 
     if (_sprite && _animator.hasActiveAnimation()) {
@@ -46,7 +48,7 @@ void Animatable::updateVisualState(float deltaTime, const sf::Vector2f& hitboxPi
         }
     }
 
-    syncSpriteLayout(hitboxPixels);
+    syncSpriteLayout(hitboxPixels, facingLeft);
 }
 
 void Animatable::renderVisualState(sf::RenderTarget& target, const sf::Vector2f& position, float angleDegrees) const {
@@ -81,7 +83,7 @@ void Animatable::bindTexture(sf::Texture& texture) {
     _sprite = sf::Sprite(*_spritesheet);
 }
 
-void Animatable::syncSpriteLayout(const sf::Vector2f& hitboxPixels) {
+void Animatable::syncSpriteLayout(const sf::Vector2f& hitboxPixels, bool facingLeft) {
     if (!_sprite || hitboxPixels.x <= 0.f || hitboxPixels.y <= 0.f) {
         return;
     }
@@ -91,9 +93,13 @@ void Animatable::syncSpriteLayout(const sf::Vector2f& hitboxPixels) {
         return;
     }
 
+
     _sprite->setOrigin({frameSize.x / 2.f, frameSize.y / 2.f});
+
+    float xOrientation = 1.0f;
+    if(facingLeft) xOrientation = -1.0f;
     _sprite->setScale({
-        hitboxPixels.x / static_cast<float>(frameSize.x),
+        xOrientation * hitboxPixels.x / static_cast<float>(frameSize.x),
         hitboxPixels.y / static_cast<float>(frameSize.y)
     });
 }

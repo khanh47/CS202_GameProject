@@ -28,6 +28,7 @@ protected:
     virtual void onUpdateVisuals(float deltaTime);
     virtual void onRenderVisual(sf::RenderTarget& target, const sf::Vector2f& position, float angleDegrees);
 
+    
     bool hasValidBody() const;
     sf::Vector2f getBodyPositionPixels() const;
     float getBodyAngleDegrees() const;
