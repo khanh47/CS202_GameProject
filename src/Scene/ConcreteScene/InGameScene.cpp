@@ -54,9 +54,4 @@ void InGameScene::render(sf::RenderTarget& target) {
     _gameWorld.render(target);
 
     target.setView(defaultView);
-
-    const sf::Font& font = ResourceManager::getInstance().getFont("Roboto");
-    sf::Text text(font, "InGame scene", 24);
-    text.setFillColor(sf::Color::Black);
-    target.draw(text);
 }

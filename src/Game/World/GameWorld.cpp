@@ -1,8 +1,10 @@
 #include "Game/World/GameWorld.h"
 #include "Game/GameSettings.h"
+#include "Game/Objects/GameObject.h"
 #include "Game/Objects/Player/Player.h"
 #include "Game/UserInput/PlayerController.h"
 #include "ResourceManager.h"
+#include <memory>
 
 GameWorld::GameWorld() {
     _grid.resize(_gridHeight, std::vector<std::shared_ptr<GameObject>>(_gridWidth, nullptr));
@@ -11,7 +13,7 @@ GameWorld::GameWorld() {
 GameWorld::~GameWorld() = default;
 
 void GameWorld::handleInput(const sf::Event& event) {
-    for (auto& controller : _controllers) {
+    for (std::unique_ptr<PlayerController>& controller : _controllers) {
         if (controller && controller->handleEvent(event)) {
             break;
         }
@@ -19,7 +21,7 @@ void GameWorld::handleInput(const sf::Event& event) {
 }
 
 void GameWorld::updateSimulation(const float &fixedDt) {
-    for (auto& object : _objects) {
+    for (std::shared_ptr<GameObject>& object : _objects) {
         object->updateSimulation(fixedDt);
     }
 
@@ -27,12 +29,12 @@ void GameWorld::updateSimulation(const float &fixedDt) {
 }
 
 void GameWorld::updateVisuals(float deltaTime) {
-    for(auto object: _objects)
+    for(std::shared_ptr<GameObject> object: _objects)
         object->updateVisuals(deltaTime);
 }
 
 void GameWorld::render(sf::RenderTarget &target) {
-    for(auto object: _objects)
+    for(std::shared_ptr<GameObject> object: _objects)
         object->render(target);
 
     auto& settings = GameSettings::getInstance();

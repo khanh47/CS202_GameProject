@@ -121,3 +121,7 @@ bool Animator::isPlaying() const {
 bool Animator::isPaused() const {
     return hasActiveAnimation() && _paused;
 }
+
+std::string Animator::getActiveAnimationName() const {
+    return _currentAnimationName;
+}
