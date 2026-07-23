@@ -5,6 +5,7 @@
 
 #include "Physics/PhysicsWorld.h"
 #include "Game/Objects/GameObjectFactory.h"
+#include "Game/World/TileMap.h"
 
 class PlayerController;
 
@@ -26,6 +27,9 @@ private:
     GameObjectFactory _objectFactory;
     std::vector<std::shared_ptr<GameObject>> _objects;
     std::vector<std::unique_ptr<PlayerController>> _controllers;
+
+    // TileMap system for batch vertex array rendering and tile culling
+    TileMap _tileMap;
 
     // Grid system
     static constexpr float CELL_SIZE = 64.0f;
