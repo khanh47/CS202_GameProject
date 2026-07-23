@@ -19,6 +19,16 @@ sf::Vector2f GameObject::getPosition() const {
     return getBodyPositionPixels();
 }
 
+sf::Vector2f GameObject::getVelocity() const {
+    // Converts Box2D linear velocity (MKS meters/sec) to SFML pixel coordinates (pixels/sec)
+    // for camera tracking and motion anticipation.
+    if (hasValidBody()) {
+        const b2Vec2 velocityMeters = b2Body_GetLinearVelocity(_body->getId());
+        return PhysicsUnits::toPixels(velocityMeters);
+    }
+    return {0.0f, 0.0f};
+}
+
 void GameObject::updateVisuals(float deltaTime) {
     onUpdateVisuals(deltaTime);
 }

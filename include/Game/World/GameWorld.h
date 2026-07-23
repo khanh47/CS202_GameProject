@@ -31,12 +31,17 @@ private:
     static constexpr float CELL_SIZE = 64.0f;
     int _gridWidth = 500;
     int _gridHeight = 60;
+    int _loadedCols = 0;
+    int _loadedRows = 0;
     std::vector<std::vector<std::shared_ptr<GameObject>>> _grid;
 
 public:
     int getGridWidth() const { return _gridWidth; }
     int getGridHeight() const { return _gridHeight; }
     float getCellSize() const { return CELL_SIZE; }
+
+    std::shared_ptr<GameObject> getPrimaryPlayer() const;
+    sf::FloatRect getBounds() const;
 
 private:
 };

@@ -21,6 +21,7 @@ public:
     
     bool isPendingDestroy() { return _pendingDestroy; }
     sf::Vector2f getPosition() const;
+    virtual sf::Vector2f getVelocity() const;
 
 protected:
     virtual void onCreateBodyDef(b2BodyDef& def);
