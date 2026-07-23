@@ -3,6 +3,7 @@
 #include "Scene/ConcreteScene/InGameScene.h"
 #include "ResourceManager.h"
 #include "Scene/SceneManager.h"
+#include "Game/GameSettings.h"
 
 InGameScene::InGameScene(const std::string& name)
     : _name(name) {
@@ -10,7 +11,27 @@ InGameScene::InGameScene(const std::string& name)
 
 void InGameScene::init() {
     _gameWorld.test();
-    _camera.setCenter({1920.f / 2.f, _gameWorld.getGridHeight() * _gameWorld.getCellSize() - 1080.f / 2.f});
+
+    // Configure 2D Platformer Camera System parameters
+    CameraConfig config;
+    config.deadzoneSize = {250.0f, 180.0f};          // Invisible rectangular deadzone box
+    config.lookaheadDistance = 160.0f;               // Forward anticipation distance
+    config.lookaheadSpeed = 3.5f;                    // Interpolation speed for lookahead transitions
+    config.dampingX = 6.0f;                          // Horizontal smooth damping factor
+    config.dampingY = 4.5f;                          // Vertical smooth damping factor
+    config.yStabilizationEnabled = true;             // Ignore minor vertical hops/jumps
+    config.yThreshold = 140.0f;                      // Vertical displacement threshold for Y tracking
+    config.levelBounds = _gameWorld.getBounds();     // Clamp view within level limits
+    config.useBounds = true;
+
+    _camera.setConfig(config);
+
+    // Bind camera tracking target to player
+    if (auto player = _gameWorld.getPrimaryPlayer()) {
+        _camera.setTarget(player);
+    } else {
+        _camera.setCenter({1920.f / 2.f, _gameWorld.getGridHeight() * _gameWorld.getCellSize() - 1080.f / 2.f});
+    }
 }
 
 void InGameScene::onEnter() {
@@ -42,7 +63,6 @@ void InGameScene::updateSimulation(const float &fixedDt) {
 }
 
 void InGameScene::updateVisuals(float deltaTime) {
-    (void)deltaTime;
     _gameWorld.updateVisuals(deltaTime);
     _camera.update(deltaTime);
 }
@@ -52,6 +72,11 @@ void InGameScene::render(sf::RenderTarget& target) {
     target.setView(_camera.getView());
 
     _gameWorld.render(target);
+
+    // Render camera debug overlays (deadzone, lookahead line, level bounds) when debug grid is enabled
+    if (GameSettings::getInstance().debugDrawGrid) {
+        _camera.renderDebug(target);
+    }
 
     target.setView(defaultView);
 
