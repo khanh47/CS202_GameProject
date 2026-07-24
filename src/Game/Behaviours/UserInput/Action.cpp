@@ -23,6 +23,9 @@ void Action::PerformAction(const ActionType& action) {
         case ActionType::Decelerate:
             Decelerate();
             break;
+        case ActionType::Shoot:
+            Shoot();
+            break;
         default:
             cout << "Unknown action type!" << endl;
             break;

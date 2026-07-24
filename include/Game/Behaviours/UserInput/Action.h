@@ -2,13 +2,16 @@
 
 #pragma once
 
+using namespace std;
+
 enum class ActionType {
     MoveLeft,
     MoveRight,
     MoveUp,
     MoveDown,
     Accelerate,
-    Decelerate
+    Decelerate,
+    Shoot
 };
 
 class Action {
@@ -26,4 +29,5 @@ public:
     virtual void MoveDown() = 0;
     virtual void Accelerate() = 0;
     virtual void Decelerate() = 0;
+    virtual void Shoot() = 0;
 };
