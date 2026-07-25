@@ -27,10 +27,10 @@ GameObjectFactory::GameObjectFactory() {
         return returned_block;
     });
 
-    registerEnemy("Enemy", [this](sf::Texture* texture) -> std::shared_ptr<GameObject> {
+    registerEnemy("Enemy", [this](sf::Texture* texture, const std::string& animationSetId) -> std::shared_ptr<GameObject> {
         std::shared_ptr<Enemy> returned_enemy;
         if (texture) {
-            returned_enemy = std::make_shared<Enemy>(*texture);
+            returned_enemy = std::make_shared<Enemy>(*texture, animationSetId);
         } else {
             returned_enemy = std::make_shared<Enemy>();
         }
@@ -56,7 +56,7 @@ void GameObjectFactory::registerBlock(const std::string& key, Creator creator) {
     _blockCreators[key] = std::move(creator);
 }
 
-void GameObjectFactory::registerEnemy(const std::string& key, Creator creator) {
+void GameObjectFactory::registerEnemy(const std::string& key, PlayerCreator creator) {
     _enemyCreators[key] = std::move(creator);
 }
 
@@ -82,13 +82,13 @@ std::shared_ptr<GameObject> GameObjectFactory::createBlock(const std::string& ke
     return it->second(texture);
 }
 
-std::shared_ptr<GameObject> GameObjectFactory::createEnemy(const std::string& key, sf::Texture* texture) const {
+std::shared_ptr<GameObject> GameObjectFactory::createEnemy(const std::string& key, sf::Texture* texture, const std::string& animationSetId) const {
     const auto it = _enemyCreators.find(key);
     if (it == _enemyCreators.end()) {
         throw std::runtime_error("Unknown enemy type: " + key);
     }
 
-    return it->second(texture);
+    return it->second(texture, animationSetId);
 }
 
 std::shared_ptr<GameObject> GameObjectFactory::createItem(const std::string& key, sf::Texture* texture) const {
