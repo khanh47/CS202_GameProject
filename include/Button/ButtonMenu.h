@@ -39,7 +39,9 @@ public:
     void addButtonAuto(const std::string& text, unsigned int charSize, 
                        std::unique_ptr<ICommand> command, 
                        const sf::Color& color = sf::Color(100, 149, 237), const std::string& iconAlias = "");
+    void addToggleButtonAuto(const std::string& text, bool initialState, std::unique_ptr<ICommand> command, const std::string& iconAlias = "");
     void processEvent(const sf::Event& event);
+    void updateVisuals(float deltaTime);
     void render(sf::RenderTarget& target);
 
     void setFocusedIndex(int index);

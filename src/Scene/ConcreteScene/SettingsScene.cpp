@@ -2,6 +2,7 @@
 #include "ResourceManager.h"
 #include "Scene/SceneManager.h"
 #include "Commands/ToggleDebugCommands.h"
+#include "Game/GameSettings.h"
 
 SettingsScene::SettingsScene()
     : _name("SettingsScene") {
@@ -10,9 +11,11 @@ SettingsScene::SettingsScene()
 void SettingsScene::init() {
     _menu.setLayoutProperties({1920.f / 2.f - 150.f, 400.f}, {300.f, 60.f}, 80.f, false, sf::Color(100, 149, 237), 24);
     
-    _menu.addButtonAuto("Toggle Grid", std::make_unique<ToggleGridCommand>());
-    _menu.addButtonAuto("Toggle Coordinates", std::make_unique<ToggleCoordinatesCommand>());
-    _menu.addButtonAuto("Toggle Camera Move", std::make_unique<ToggleFreeCameraCommand>());
+    auto& settings = GameSettings::getInstance();
+
+    _menu.addToggleButtonAuto("Grid", settings.debugDrawGrid, std::make_unique<ToggleGridCommand>());
+    _menu.addToggleButtonAuto("Coordinates", settings.debugDrawCoordinates, std::make_unique<ToggleCoordinatesCommand>());
+    _menu.addToggleButtonAuto("Camera Move", settings.freeCameraMove, std::make_unique<ToggleFreeCameraCommand>());
 }
 
 void SettingsScene::onEnter() {
@@ -39,7 +42,7 @@ void SettingsScene::handleInput(const sf::Event& event) {
 }
 
 void SettingsScene::updateVisuals(float deltaTime) {
-    (void)deltaTime;
+    _menu.updateVisuals(deltaTime);
 }
 
 void SettingsScene::render(sf::RenderTarget& target) {

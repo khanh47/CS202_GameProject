@@ -199,4 +199,13 @@ void Button::render(sf::RenderTarget& target) {
     shape.setPosition(basePosition);
 }
 
+void Button::setText(const std::string& text) {
+    label.setString(text);
+    updateLayout(shape.getPosition(), baseSize);
+}
+
+std::string Button::getText() const {
+    return label.getString().toAnsiString();
+}
+
 } // namespace UI
