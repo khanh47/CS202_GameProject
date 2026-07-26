@@ -23,6 +23,7 @@ public:
     bool hasActiveAnimation() const;
     bool isPlaying() const;
     bool isPaused() const;
+    std::string getActiveAnimationName() const;
 
 private:
     std::shared_ptr<AnimationSet> _animations;
