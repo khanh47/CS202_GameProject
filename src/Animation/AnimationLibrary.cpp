@@ -26,8 +26,11 @@ void AnimationLibrary::preloadPlayerAnimationSets() {
 }
 
 void AnimationLibrary::preloadEnemyAnimationSets() {
-    const AnimationSet enemySet = Animation::makeGoombaAnimationSet();
-    registerAnimationSet("goomba", enemySet);
+    const AnimationSet goombaSet = Animation::makeGoombaAnimationSet();
+    registerAnimationSet("goomba", goombaSet);
+
+    const AnimationSet koopaSet = Animation::makeKoopaAnimationSet();
+    registerAnimationSet("koopa", koopaSet);
 }
 
 const AnimationSet& AnimationLibrary::getAnimationSet(const std::string& name) const {
