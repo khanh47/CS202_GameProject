@@ -15,13 +15,13 @@ public:
     Animatable(sf::Texture &texture, const std::string& animationSetId);
     virtual ~Animatable() = default;
 
-protected:
     void configureVisuals(sf::Texture& texture);
     void configureVisuals(sf::Texture& texture, const std::string& animationSetId);
 
     void updateVisualState(float deltaTime, const sf::Vector2f& hitboxPixels, bool facingLeft = false);
     void renderVisualState(sf::RenderTarget& target, const sf::Vector2f& position, float angleDegrees = 0) const;
 
+protected:
     void playAnimation(const std::string& name);
     void stopAnimation();
 

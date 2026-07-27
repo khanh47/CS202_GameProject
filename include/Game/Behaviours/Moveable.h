@@ -16,7 +16,6 @@ public:
 
 private:
     bool _facingLeft = false;
-
     bool _movingLeft = false;
     bool _movingRight = false;
     bool _jumping = false;

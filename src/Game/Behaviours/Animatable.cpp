@@ -30,12 +30,7 @@ void Animatable::configureVisuals(sf::Texture& texture, const std::string& anima
         _animator.play(animationSet->defaultClip);
 
         if (_sprite.has_value() && _animator.hasActiveAnimation()) {
-            auto rect = _animator.getCurrentTextureRect();
-            std::cout << "Animation OK: set " << animationSetId 
-                      << " clip " << animationSet->defaultClip
-                      << " rect=" << rect.position.x << "," << rect.position.y 
-                      << " " << rect.size.x << "x" << rect.size.y << std::endl;
-            _sprite->setTextureRect(rect);
+            _sprite->setTextureRect(_animator.getCurrentTextureRect());
         } else {
             std::cout << "Animation FAILED: no active animation for " << animationSetId << std::endl;
         }

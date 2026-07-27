@@ -2,15 +2,13 @@
 
 #include <box2d/box2d.h>
 #include <SFML/System.hpp>
+#include <memory>
 
 #include "Game/Behaviours/Animatable.h"
 #include "Game/Behaviours/Damageable.h"
 #include "Game/Objects/GameObject.h"
-#include "Physics/PhysicsWorld.h"
 
-class Enemy : public GameObject,
-              public Animatable,
-              public Damageable {
+class Enemy : public GameObject {
 public:
     Enemy();
     Enemy(sf::Texture& texture);
@@ -18,7 +16,12 @@ public:
     ~Enemy();
 
 protected:
-    void onCreateBodyDef(b2BodyDef& def) override;
-    void onUpdateVisuals(float deltaTime) override;
-    void onRenderVisual(sf::RenderTarget& target, const sf::Vector2f& position, float angleDegrees) override;
+    std::unique_ptr<Animatable> animatable;
+    std::unique_ptr<Damageable> damageable;
+
+    virtual void onCreateBodyDef(b2BodyDef& def) override;
+    virtual void onCreateShapeDef(b2ShapeDef& def) override;
+    virtual void onUpdateVisuals(float deltaTime) override;
+    virtual void onRenderVisual(sf::RenderTarget& target, const sf::Vector2f& position, float angleDegrees) override;
+    virtual void updateSimulation(const float &fixedDt) override;
 };
