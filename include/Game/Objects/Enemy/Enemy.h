@@ -14,6 +14,7 @@ class Enemy : public GameObject,
 public:
     Enemy();
     Enemy(sf::Texture& texture);
+    Enemy(sf::Texture &texture, const std::string& animationSetId);
     ~Enemy();
 
 protected:

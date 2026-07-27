@@ -7,6 +7,10 @@ Enemy::Enemy(sf::Texture& texture) : GameObject(), Animatable(), Damageable(50) 
     configureVisuals(texture);
 }
 
+Enemy::Enemy(sf::Texture &texture, const std::string& animationSetId) : GameObject(), Animatable(), Damageable(50) {
+    configureVisuals(texture, animationSetId);
+}
+
 Enemy::~Enemy() {
 }
 

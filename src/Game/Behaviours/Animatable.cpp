@@ -1,4 +1,5 @@
 #include "Game/Behaviours/Animatable.h"
+#include  "iostream"
 
 #include "Animation/AnimationLibrary.h"
 #include "Physics/PhysicsUnits.h"
@@ -21,19 +22,25 @@ void Animatable::configureVisuals(sf::Texture& texture) {
 
 void Animatable::configureVisuals(sf::Texture& texture, const std::string& animationSetId) {
     bindTexture(texture);
-
     try {
         std::shared_ptr<AnimationSet> animationSet = std::make_shared<AnimationSet>(
             AnimationLibrary::getInstance().getAnimationSet(animationSetId)
         );
-
         _animator = Animator(animationSet);
         _animator.play(animationSet->defaultClip);
 
         if (_sprite.has_value() && _animator.hasActiveAnimation()) {
-            _sprite->setTextureRect(_animator.getCurrentTextureRect());
+            auto rect = _animator.getCurrentTextureRect();
+            std::cout << "Animation OK: set " << animationSetId 
+                      << " clip " << animationSet->defaultClip
+                      << " rect=" << rect.position.x << "," << rect.position.y 
+                      << " " << rect.size.x << "x" << rect.size.y << std::endl;
+            _sprite->setTextureRect(rect);
+        } else {
+            std::cout << "Animation FAILED: no active animation for " << animationSetId << std::endl;
         }
-    } catch (const std::exception&) {
+    } catch (const std::exception& e) {
+        std::cout << "Animation EXCEPTION: " << e.what() << std::endl;
         _animator = Animator();
     }
 }

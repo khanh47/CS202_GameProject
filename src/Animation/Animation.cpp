@@ -126,3 +126,34 @@ AnimationSet Animation::makeDefaultPlayerAnimationSet() {
 
     return animationSet;
 }
+
+AnimationSet Animation::makeGoombaAnimationSet() {
+    AnimationSet animationSet;
+    animationSet.defaultClip = "walk";
+
+    animationSet.clips.emplace(
+        "walk",
+        Animation::createLinearClip(
+            {2, 42},       // startPosition: Top-left pixel of the very first Goomba frame
+            {16, 19},      // frameSize: Width and Height of the bounding b
+            4,            // frameCount: 12 frames total (3x4 grid)
+            {17, 0},      // frameStride: Pixel distance from top-left of Frame 1 to top-left of Frame 2 (X and Y)
+            1.0f / 4.0f,  // frameDuration: 12 frames per second
+            true           // looping
+        )
+    );
+
+    animationSet.clips.emplace(
+        "dead",
+        Animation::createLinearClip(
+            {4, 450},      // startPosition: Placeholder for the top-left pixel of the squished Goomba
+            {32, 16},      // frameSize: Bounding box (notice the height is smaller since it's flat!)
+            1,             // frameCount: Only 1 frame
+            {0, 0},        // frameStride: 0, since there are no other frames to move to
+            1.0f,          // frameDuration: Doesn't matter much for 1 frame, but 1.0f is safe
+            false          // looping: FALSE! We want it to stay dead, not restart.
+        )
+    );
+
+    return animationSet;
+}

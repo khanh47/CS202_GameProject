@@ -12,6 +12,7 @@ AnimationLibrary& AnimationLibrary::getInstance() {
 
 AnimationLibrary::AnimationLibrary() {
     preloadPlayerAnimationSets();
+    preloadEnemyAnimationSets();
 }
 
 void AnimationLibrary::registerAnimationSet(const std::string& name, AnimationSet animationSet) {
@@ -22,6 +23,11 @@ void AnimationLibrary::preloadPlayerAnimationSets() {
     const AnimationSet playerSet = Animation::makeDefaultPlayerAnimationSet();
     registerAnimationSet("mario", playerSet);
     registerAnimationSet("luigi", playerSet);
+}
+
+void AnimationLibrary::preloadEnemyAnimationSets() {
+    const AnimationSet enemySet = Animation::makeGoombaAnimationSet();
+    registerAnimationSet("goomba", enemySet);
 }
 
 const AnimationSet& AnimationLibrary::getAnimationSet(const std::string& name) const {
