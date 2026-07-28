@@ -7,6 +7,7 @@ public:
     bool debugDrawGrid = false;
     bool debugDrawCoordinates = false;
     bool freeCameraMove = false;
+    bool useFireMario = false;
 
 private:
     GameSettings() = default;

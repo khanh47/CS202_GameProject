@@ -22,6 +22,7 @@ void AnimationLibrary::registerAnimationSet(const std::string& name, AnimationSe
 void AnimationLibrary::preloadPlayerAnimationSets() {
     const AnimationSet playerSet = Animation::makeDefaultPlayerAnimationSet();
     registerAnimationSet("mario", playerSet);
+    registerAnimationSet("fire_mario", playerSet);
     registerAnimationSet("luigi", playerSet);
 }
 

@@ -27,6 +27,8 @@ void GameWorld::handleInput(const sf::Event& event) {
 }
 
 void GameWorld::updateSimulation(const float &fixedDt) {
+    const bool useFireSetting = GameSettings::getInstance().useFireMario;
+
     if (GameSettings::getInstance().freeCameraMove) {
         // Lock character controls and movement when free camera mode is active
         for (std::shared_ptr<GameObject>& object : _objects) {
@@ -39,6 +41,16 @@ void GameWorld::updateSimulation(const float &fixedDt) {
     }
 
     for (std::shared_ptr<GameObject>& object : _objects) {
+        if (std::shared_ptr<Player> player = std::dynamic_pointer_cast<Player>(object)) {
+            if (player->getState()) {
+                const bool isFireState = (player->getState()->getAnimationSetId() == "fire_mario");
+                if (useFireSetting && !isFireState) {
+                    player->changeToFireState();
+                } else if (!useFireSetting && isFireState) {
+                    player->changeToNormalState();
+                }
+            }
+        }
         object->updateSimulation(fixedDt);
     }
 
@@ -174,9 +186,19 @@ void GameWorld::loadMap(const std::vector<std::vector<int>>& mapData) {
             } 
             else if (blockId == 2) {
                 // Player 1
-                auto player1 = _objectFactory.createPlayer("Player", &marioTexture, "mario");
+                const bool useFire = GameSettings::getInstance().useFireMario;
+                const std::string animId = useFire ? "fire_mario" : "mario";
+                sf::Texture& playerTex = useFire ? ResourceManager::getInstance().getTexture("fire_mario_spritesheet")
+                                                : marioTexture;
+
+                auto player1 = _objectFactory.createPlayer("Player", &playerTex, animId);
                 player1->spawn(_physicsWorld, {spawnPos.x + 10, spawnPos.y}, {80, 80});
                 if (auto mario = std::dynamic_pointer_cast<Player>(player1)) {
+                    if (useFire) {
+                        mario->changeToFireState();
+                    } else {
+                        mario->changeToNormalState();
+                    }
                     _controllers.emplace_back(std::make_unique<PlayerController>(*mario, PlayerController::ControlScheme::Wasd));
                 }
                 _objects.push_back(player1);
