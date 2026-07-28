@@ -17,6 +17,7 @@ public:
 
     void configureVisuals(sf::Texture& texture);
     void configureVisuals(sf::Texture& texture, const std::string& animationSetId);
+    void setTextureRect(const sf::IntRect& rect);
 
     void updateVisualState(float deltaTime, const sf::Vector2f& hitboxPixels, bool facingLeft = false);
     void renderVisualState(sf::RenderTarget& target, const sf::Vector2f& position, float angleDegrees = 0) const;

@@ -1,0 +1,27 @@
+#include "Game/Objects/Item/FireFlower.h"
+#include "Game/Objects/Player/Player.h"
+
+FireFlower::FireFlower() : Item() {
+}
+
+FireFlower::FireFlower(sf::Texture& texture) : Item() {
+    configureVisuals(texture, "fire_flower");
+}
+
+void FireFlower::onPickup(Player& player) {
+    player.changeToFireState();
+    destroy();
+}
+
+void FireFlower::onCreateBodyDef(b2BodyDef& def) {
+    def.type = b2_staticBody;
+}
+
+void FireFlower::onCreateShapeDef(b2ShapeDef& def) {
+    def.isSensor = true;
+    def.density = 0.0f;
+}
+
+void FireFlower::onUpdateVisuals(float deltaTime) {
+    Item::onUpdateVisuals(deltaTime);
+}

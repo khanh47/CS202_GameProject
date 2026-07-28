@@ -20,6 +20,12 @@ void Animatable::configureVisuals(sf::Texture& texture) {
     _animator = Animator();
 }
 
+void Animatable::setTextureRect(const sf::IntRect& rect) {
+    if (_sprite) {
+        _sprite->setTextureRect(rect);
+    }
+}
+
 void Animatable::configureVisuals(sf::Texture& texture, const std::string& animationSetId) {
     bindTexture(texture);
     try {

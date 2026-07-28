@@ -2,7 +2,6 @@
 #include "ResourceManager.h"
 #include "Scene/SceneManager.h"
 #include "Commands/ToggleDebugCommands.h"
-#include "Commands/ToggleFireMarioCommand.h"
 #include "Game/GameSettings.h"
 
 SettingsScene::SettingsScene()
@@ -17,7 +16,6 @@ void SettingsScene::init() {
     _menu.addToggleButtonAuto("Grid", settings.debugDrawGrid, std::make_unique<ToggleGridCommand>());
     _menu.addToggleButtonAuto("Coordinates", settings.debugDrawCoordinates, std::make_unique<ToggleCoordinatesCommand>());
     _menu.addToggleButtonAuto("Camera Move", settings.freeCameraMove, std::make_unique<ToggleFreeCameraCommand>());
-    _menu.addToggleButtonAuto("Fire Mario", settings.useFireMario, std::make_unique<ToggleFireMarioCommand>());
 }
 
 void SettingsScene::onEnter() {

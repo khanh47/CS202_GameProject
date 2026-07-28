@@ -3,6 +3,7 @@
 #include "Game/Objects/GameObject.h"
 #include "Game/Objects/Player/Player.h"
 #include "Game/Objects/Block/Block.h"
+#include "Game/Objects/Item/FireFlower.h"
 #include "Game/UserInput/PlayerController.h"
 #include "ResourceManager.h"
 #include <SFML/Graphics/Texture.hpp>
@@ -27,8 +28,6 @@ void GameWorld::handleInput(const sf::Event& event) {
 }
 
 void GameWorld::updateSimulation(const float &fixedDt) {
-    const bool useFireSetting = GameSettings::getInstance().useFireMario;
-
     if (GameSettings::getInstance().freeCameraMove) {
         // Lock character controls and movement when free camera mode is active
         for (std::shared_ptr<GameObject>& object : _objects) {
@@ -41,20 +40,38 @@ void GameWorld::updateSimulation(const float &fixedDt) {
     }
 
     for (std::shared_ptr<GameObject>& object : _objects) {
-        if (std::shared_ptr<Player> player = std::dynamic_pointer_cast<Player>(object)) {
-            if (player->getState()) {
-                const bool isFireState = (player->getState()->getAnimationSetId() == "fire_mario");
-                if (useFireSetting && !isFireState) {
-                    player->changeToFireState();
-                } else if (!useFireSetting && isFireState) {
-                    player->changeToNormalState();
-                }
-            }
-        }
         object->updateSimulation(fixedDt);
     }
 
     _physicsWorld.updateSimulation(fixedDt);
+
+    // Check item pickup collisions (e.g. FireFlower & Player)
+    std::shared_ptr<Player> primaryPlayer = std::dynamic_pointer_cast<Player>(getPrimaryPlayer());
+    if (primaryPlayer) {
+        sf::Vector2f playerPos = primaryPlayer->getPosition();
+        for (auto& obj : _objects) {
+            if (!obj || obj->isPendingDestroy()) continue;
+            if (auto fireFlower = std::dynamic_pointer_cast<FireFlower>(obj)) {
+                sf::Vector2f flowerPos = fireFlower->getPosition();
+                float dx = playerPos.x - flowerPos.x;
+                float dy = playerPos.y - flowerPos.y;
+                float distSq = dx * dx + dy * dy;
+                // Pickup radius of 45 pixels
+                if (distSq < 45.0f * 45.0f) {
+                    fireFlower->onPickup(*primaryPlayer);
+                }
+            }
+        }
+    }
+
+    // Clean up destroyed game objects
+    _objects.erase(
+        std::remove_if(_objects.begin(), _objects.end(),
+            [](const std::shared_ptr<GameObject>& obj) {
+                return !obj || obj->isPendingDestroy();
+            }),
+        _objects.end()
+    );
 }
 
 void GameWorld::updateVisuals(float deltaTime) {
@@ -186,19 +203,10 @@ void GameWorld::loadMap(const std::vector<std::vector<int>>& mapData) {
             } 
             else if (blockId == 2) {
                 // Player 1
-                const bool useFire = GameSettings::getInstance().useFireMario;
-                const std::string animId = useFire ? "fire_mario" : "mario";
-                sf::Texture& playerTex = useFire ? ResourceManager::getInstance().getTexture("fire_mario_spritesheet")
-                                                : marioTexture;
-
-                auto player1 = _objectFactory.createPlayer("Player", &playerTex, animId);
+                auto player1 = _objectFactory.createPlayer("Player", &marioTexture, "mario");
                 player1->spawn(_physicsWorld, {spawnPos.x + 10, spawnPos.y}, {80, 80});
                 if (auto mario = std::dynamic_pointer_cast<Player>(player1)) {
-                    if (useFire) {
-                        mario->changeToFireState();
-                    } else {
-                        mario->changeToNormalState();
-                    }
+                    mario->changeToNormalState();
                     _controllers.emplace_back(std::make_unique<PlayerController>(*mario, PlayerController::ControlScheme::Wasd));
                 }
                 _objects.push_back(player1);
@@ -222,12 +230,23 @@ void GameWorld::loadMap(const std::vector<std::vector<int>>& mapData) {
                 koopa->spawn(_physicsWorld, spawnPos, sf::Vector2f(64.0f, 80.0f));
                 _objects.push_back(koopa);
             }
+            else if (blockId == 6) {
+                sf::Texture& itemsTexture = ResourceManager::getInstance().getTexture("mario_and_items");
+                std::shared_ptr<GameObject> fireFlower = _objectFactory.createItem("FireFlower", &itemsTexture);
+                const sf::Vector2f flowerSize(54.0f, 54.0f);
+                const sf::Vector2f flowerPos = {
+                    spawnPos.x,
+                    spawnPos.y + (CELL_SIZE - flowerSize.y) * 0.5f
+                };
+                fireFlower->spawn(_physicsWorld, flowerPos, flowerSize);
+                _objects.push_back(fireFlower);
+            }
         }
     }
 }
 
 void GameWorld::test() {
-    // 0 = empty, 1 = brick, 2 = player1, 3 = player2, 4 = goomba, 5 = koopa, 
+    // 0 = empty, 1 = brick, 2 = player1, 3 = player2, 4 = goomba, 5 = koopa, 6 = fire flower
     // Extended 60-column map slice with ground floor, platforms, and stairs
     std::vector<std::vector<int>> mapData = {
         {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,00,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,00,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
@@ -236,7 +255,7 @@ void GameWorld::test() {
         {0,0,0,0,1,1,1,0,0,0,0,0,0,0,0,0,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,1,1,1,0,0,0,0,0,0,0,0,0,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,1,1,1,0,0,0,0,0,0,0,0,0,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,1,1,1,0,0,0,0,0,0,0,0,0,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,1,1,1,0,0,0,0,0,0,0,0,0,0,0,00,0,0,0,1,1,1,0,0,0,0,0,0,0,0,0,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,1,1,1,0,0,0,0,0,0,0,0,0,0,0,00,0,0,0,1,1,1,0,0,0,0,0,0,0,0,0,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0},
         {0,0,0,0,0,0,0,0,0,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,1,1,1,1,0,0,00,0,0,0,0,0,0,0,0,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,1,1,1,1,0,0,00,0,0,0,0,0,0,0,0,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0},
         {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,00,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,00,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-        {0,0,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,5,0,0,0,0,0,1,1,1,1,1,0,0,0,0,0,0,0,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,0,0,0,0,0,0,0,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,0,0,0,0,0,0,0,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,0,0,0,0,0,0,0,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,00,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,0,0,0,0,0,0,0,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,00,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,0,0,0,0,0,0,0,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+        {0,0,2,0,0,0,6,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,5,0,0,0,0,0,1,1,1,1,1,0,0,0,0,0,0,0,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,0,0,0,0,0,0,0,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,0,0,0,0,0,0,0,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,0,0,0,0,0,0,0,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,00,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,0,0,0,0,0,0,0,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,00,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,0,0,0,0,0,0,0,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
         {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,11,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,11,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1}
     };
 

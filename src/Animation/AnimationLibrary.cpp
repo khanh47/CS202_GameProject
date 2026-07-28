@@ -32,6 +32,9 @@ void AnimationLibrary::preloadEnemyAnimationSets() {
 
     const AnimationSet koopaSet = Animation::makeKoopaAnimationSet();
     registerAnimationSet("koopa", koopaSet);
+
+    const AnimationSet fireFlowerSet = Animation::makeFireFlowerAnimationSet();
+    registerAnimationSet("fire_flower", fireFlowerSet);
 }
 
 const AnimationSet& AnimationLibrary::getAnimationSet(const std::string& name) const {

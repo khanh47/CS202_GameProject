@@ -200,3 +200,22 @@ animationSet.clips.emplace(
 
     return animationSet;
 }
+
+AnimationSet Animation::makeFireFlowerAnimationSet() {
+    AnimationSet animationSet;
+    animationSet.defaultClip = "idle";
+
+    animationSet.clips.emplace(
+        "idle",
+        Animation::createLinearClip(
+            {0, 109},
+            {18, 17},
+            4,
+            {18, 0},
+            1.0f / 6.0f,
+            true
+        )
+    );
+
+    return animationSet;
+}
