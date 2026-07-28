@@ -100,4 +100,6 @@ ResourceManager::ResourceManager() {
 	_preLoadTexture("assets/sprites/Brick.png", "brick");
 	_preLoadTexture("assets/spritesheets/mario_spritesheet.png", "mario_spritesheet");
 	_preLoadTexture("assets/spritesheets/luigi_spritesheet.png", "luigi_spritesheet");
+	_preLoadTexture("assets/spritesheets/goomba_spritesheet.png", "goomba_spritesheet");
+	_preLoadTexture("assets/spritesheets/koopa_spritesheet.png", "koopa_spritesheet");
 }
