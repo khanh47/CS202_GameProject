@@ -109,7 +109,7 @@ void GameObject::createHitbox(sf::Vector2f hitboxPixels) {
 
     b2ShapeDef shapeDef = b2DefaultShapeDef();
     shapeDef.enableContactEvents = true;
-    shapeDef.userData = this;
+    shapeDef.userData = new std::weak_ptr<GameObject>(shared_from_this());
     onCreateShapeDef(shapeDef);
 
     b2Polygon box = b2MakeBox(
