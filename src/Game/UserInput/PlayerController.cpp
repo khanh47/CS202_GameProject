@@ -45,9 +45,11 @@ void PlayerController::bindControls(ControlScheme controlScheme) {
 void PlayerController::applyPressAction(ActionType action) {
     switch (action) {
         case ActionType::MoveLeft:
+            _player.stopMoveRight();
             _player.startMoveLeft();
             break;
         case ActionType::MoveRight:
+            _player.stopMoveLeft();
             _player.startMoveRight();
             break;
         case ActionType::MoveUp:

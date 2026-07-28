@@ -31,28 +31,24 @@ void Player::updateSimulation(const float &fixedDt) {
 
     b2Vec2 velocity = b2Body_GetLinearVelocity(_body->getId());
 
-    if (isMovingLeft() && !isMovingRight()) {
-        velocity.x = -_moveSpeed;
-    }
-    else if (isMovingRight() && !isMovingLeft()) {
-        velocity.x = _moveSpeed;
-    }
-    else if (!isMovingLeft() && !isMovingRight()) {
-        velocity.x = 0.f;
-    }
+    b2Body_SetGravityScale(_body->getId(), 4.0f);
 
     if (isJumping()) {
         velocity.y = -_jumpSpeed;
-        if (velocity.y > 0) {
-            b2Body_SetGravityScale(_body->getId(), 1.0f);
-        } 
-        else {
-            b2Body_SetGravityScale(_body->getId(), 3.0f);
-        }
-
         playAnimation("jump");
     }
-    else b2Body_SetGravityScale(_body->getId(), 4.0f);
+    else if (isMovingLeft() && !isMovingRight()) {
+        velocity.x = -_moveSpeed;
+        playAnimation("walk");
+    }
+    else if (isMovingRight() && !isMovingLeft()) {
+        velocity.x = _moveSpeed;
+        playAnimation("walk");
+    }
+    else if (!isMovingLeft() && !isMovingRight()) {
+        velocity.x = 0.f;
+        playAnimation("idle");
+    } 
 
     b2Body_SetLinearVelocity(_body->getId(), velocity);
 }

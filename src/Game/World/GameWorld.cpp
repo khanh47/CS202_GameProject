@@ -1,9 +1,12 @@
 #include "Game/World/GameWorld.h"
 #include "Game/GameSettings.h"
+#include "Game/Objects/GameObject.h"
 #include "Game/Objects/Player/Player.h"
 #include "Game/Objects/Block/Block.h"
 #include "Game/UserInput/PlayerController.h"
 #include "ResourceManager.h"
+#include <SFML/Graphics/Texture.hpp>
+#include <memory>
 
 GameWorld::GameWorld() {
     _grid.resize(_gridHeight, std::vector<std::shared_ptr<GameObject>>(_gridWidth, nullptr));
@@ -16,7 +19,7 @@ void GameWorld::handleInput(const sf::Event& event) {
         return;
     }
 
-    for (auto& controller : _controllers) {
+    for (std::unique_ptr<PlayerController>& controller : _controllers) {
         if (controller && controller->handleEvent(event)) {
             break;
         }
@@ -26,8 +29,8 @@ void GameWorld::handleInput(const sf::Event& event) {
 void GameWorld::updateSimulation(const float &fixedDt) {
     if (GameSettings::getInstance().freeCameraMove) {
         // Lock character controls and movement when free camera mode is active
-        for (auto& object : _objects) {
-            if (auto player = std::dynamic_pointer_cast<Player>(object)) {
+        for (std::shared_ptr<GameObject>& object : _players) {
+            if (std::shared_ptr<Player> player = std::dynamic_pointer_cast<Player>(object)) {
                 player->stopMoveLeft();
                 player->stopMoveRight();
                 player->stopJump();
@@ -35,7 +38,7 @@ void GameWorld::updateSimulation(const float &fixedDt) {
         }
     }
 
-    for (auto& object : _objects) {
+    for (std::shared_ptr<GameObject>& object : _players) {
         object->updateSimulation(fixedDt);
     }
 
@@ -43,7 +46,7 @@ void GameWorld::updateSimulation(const float &fixedDt) {
 }
 
 void GameWorld::updateVisuals(float deltaTime) {
-    for(auto object: _objects)
+    for(std::shared_ptr<GameObject> object: _players)
         object->updateVisuals(deltaTime);
 }
 
@@ -62,7 +65,7 @@ void GameWorld::render(sf::RenderTarget &target) {
         {viewBounds.size.x + margin * 2.f, viewBounds.size.y + margin * 2.f}
     );
 
-    for (auto object : _objects) {
+    for (std::shared_ptr<GameObject> object : _players) {
         if (!object) continue;
 
         // Visual rendering for static environment blocks is handled by _tileMap in batch
@@ -76,7 +79,7 @@ void GameWorld::render(sf::RenderTarget &target) {
         }
     }
 
-    auto& settings = GameSettings::getInstance();
+    GameSettings& settings = GameSettings::getInstance();
     if (settings.debugDrawGrid || settings.debugDrawCoordinates) {
         sf::FloatRect viewBounds(view.getCenter() - view.getSize() / 2.f, view.getSize());
         
@@ -120,14 +123,14 @@ void GameWorld::render(sf::RenderTarget &target) {
 }
 
 void GameWorld::loadMap(const std::vector<std::vector<int>>& mapData) {
-    auto& brickTexture = ResourceManager::getInstance().getTexture("brick");
-    auto& marioTexture = ResourceManager::getInstance().getTexture("mario_spritesheet");
-    auto& luigiTexture = ResourceManager::getInstance().getTexture("luigi_spritesheet");
-    auto& goombaTexture = ResourceManager::getInstance().getTexture("goomba_spritesheet");
-    auto& koopaTexture = ResourceManager::getInstance().getTexture("koopa_spritesheet");
+    sf::Texture& brickTexture = ResourceManager::getInstance().getTexture("brick");
+    sf::Texture& marioTexture = ResourceManager::getInstance().getTexture("mario_spritesheet");
+    sf::Texture& luigiTexture = ResourceManager::getInstance().getTexture("luigi_spritesheet");
+    sf::Texture& goombaTexture = ResourceManager::getInstance().getTexture("goomba_spritesheet");
+    sf::Texture& koopaTexture = ResourceManager::getInstance().getTexture("koopa_spritesheet");
 
     _controllers.clear();
-    _objects.clear();
+    _players.clear();
 
     _loadedRows = std::min(static_cast<int>(mapData.size()), _gridHeight);
     _loadedCols = 0;
@@ -168,7 +171,7 @@ void GameWorld::loadMap(const std::vector<std::vector<int>>& mapData) {
                 // We pass CELL_SIZE because GameObject::createHitbox now correctly halves the dimensions.
                 brickBlock->spawn(_physicsWorld, spawnPos, {CELL_SIZE, CELL_SIZE});
                 _grid[logicY][x] = brickBlock;
-                _objects.push_back(brickBlock);
+                _players.push_back(brickBlock);
             } 
             else if (blockId == 2) {
                 // Player 1
@@ -177,7 +180,7 @@ void GameWorld::loadMap(const std::vector<std::vector<int>>& mapData) {
                 if (auto mario = std::dynamic_pointer_cast<Player>(player1)) {
                     _controllers.emplace_back(std::make_unique<PlayerController>(*mario, PlayerController::ControlScheme::Wasd));
                 }
-                _objects.push_back(player1);
+                _players.push_back(player1);
             }
             // else if (blockId == 3) {
             //     // Player 2
@@ -186,7 +189,7 @@ void GameWorld::loadMap(const std::vector<std::vector<int>>& mapData) {
             //     if (auto luigi = std::dynamic_pointer_cast<Player>(player2)) {
             //         _controllers.emplace_back(std::make_unique<PlayerController>(*luigi, PlayerController::ControlScheme::ArrowKeys));
             //     }
-            //     _objects.push_back(player2);
+            //     _players.push_back(player2);
             // }
             else if (blockId == 4) {
                 std::shared_ptr<GameObject> goomba = _objectFactory.createEnemy("Goomba", &goombaTexture, "goomba");
@@ -221,7 +224,7 @@ void GameWorld::test() {
 
 std::shared_ptr<GameObject> GameWorld::getPrimaryPlayer() const {
     // Finds and returns the first player instance in the world objects vector
-    for (const auto& object : _objects) {
+    for (const auto& object : _players) {
         if (std::dynamic_pointer_cast<Player>(object)) {
             return object;
         }

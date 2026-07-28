@@ -65,6 +65,7 @@ void Animatable::renderVisualState(sf::RenderTarget& target, const sf::Vector2f&
 }
 
 void Animatable::playAnimation(const std::string& name) {
+    if (_animator.getActiveAnimationName() == name) return;
     _animator.play(name);
 
     if (_sprite && _animator.hasActiveAnimation()) {

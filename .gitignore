@@ -8,6 +8,7 @@ cmake-build-*/
 .cache
 .idea/
 .clangd
+.clang-tidy
 
 *.exe
 *.so

@@ -7,7 +7,7 @@
 #include "Physics/PhysicsBody.h"
 #include "Physics/PhysicsWorld.h"
 
-class GameObject {
+class GameObject: public std::enable_shared_from_this<GameObject> {
 public:
     GameObject();
     virtual ~GameObject() = default;
