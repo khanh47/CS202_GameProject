@@ -1,10 +1,12 @@
 #include "Game/World/GameWorld.h"
+#include "Game/Behaviours/Moveable.h"
 #include "Game/GameSettings.h"
 #include "Game/Objects/GameObject.h"
 #include "Game/Objects/Player/Player.h"
 #include "Game/Objects/Block/Block.h"
 #include "Game/UserInput/PlayerController.h"
 #include "ResourceManager.h"
+#include "box2d/types.h"
 #include <SFML/Graphics/Texture.hpp>
 #include <memory>
 
@@ -15,6 +17,8 @@ GameWorld::GameWorld() {
 GameWorld::~GameWorld() = default;
 
 void GameWorld::handleInput(const sf::Event& event) {
+    finalizePendingSensors();
+
     if (GameSettings::getInstance().freeCameraMove) {
         return;
     }
@@ -27,9 +31,10 @@ void GameWorld::handleInput(const sf::Event& event) {
 }
 
 void GameWorld::updateSimulation(const float &fixedDt) {
+    finalizePendingSensors();
+
     if (GameSettings::getInstance().freeCameraMove) {
-        // Lock character controls and movement when free camera mode is active
-        for (std::shared_ptr<GameObject>& object : _players) {
+        for (std::shared_ptr<GameObject>& object : _objects) {
             if (std::shared_ptr<Player> player = std::dynamic_pointer_cast<Player>(object)) {
                 player->stopMoveLeft();
                 player->stopMoveRight();
@@ -38,15 +43,86 @@ void GameWorld::updateSimulation(const float &fixedDt) {
         }
     }
 
-    for (std::shared_ptr<GameObject>& object : _players) {
+    for (std::shared_ptr<GameObject>& object : _objects) {
         object->updateSimulation(fixedDt);
     }
 
     _physicsWorld.updateSimulation(fixedDt);
+
+    b2ContactEvents contactEvents = _physicsWorld.getContactEvents();
+    b2SensorEvents sensorEvents = _physicsWorld.getSensorEvents();
+
+    handleSensors(sensorEvents);
+    handleContacts(contactEvents);
+}
+
+void GameWorld::handleContacts(b2ContactEvents contactEvents) {
+    for (int i = 0; i < contactEvents.beginCount; ++i)
+    {
+        b2ContactBeginTouchEvent* event = &contactEvents.beginEvents[i];
+        
+        b2ShapeId shapeA = event->shapeIdA;
+        b2ShapeId shapeB = event->shapeIdB;
+
+        GameObject* objA = static_cast<GameObject*>(b2Shape_GetUserData(shapeA));
+        GameObject* objB = static_cast<GameObject*>(b2Shape_GetUserData(shapeB));
+    }
+
+    for (int i = 0; i < contactEvents.endCount; ++i)
+    {
+        b2ContactEndTouchEvent* event = &contactEvents.endEvents[i];
+        b2ShapeId shapeA = event->shapeIdA;
+        b2ShapeId shapeB = event->shapeIdB;
+
+        GameObject* objA = static_cast<GameObject*>(b2Shape_GetUserData(shapeA));
+        GameObject* objB = static_cast<GameObject*>(b2Shape_GetUserData(shapeB));
+    }   
+}
+
+void GameWorld::handleSensors(b2SensorEvents sensorEvents) {
+    for (int i = 0; i < sensorEvents.endCount; ++i)
+    {
+        b2SensorEndTouchEvent* event = &sensorEvents.endEvents[i];
+        
+        b2ShapeId shapeA = event->sensorShapeId;
+        b2ShapeId shapeB = event->visitorShapeId;
+
+        GameObject* feetOwner = static_cast<GameObject*>(b2Shape_GetUserData(shapeA));
+        GameObject* visitor = static_cast<GameObject*>(b2Shape_GetUserData(shapeB));
+        (void)visitor;
+
+        if (Moveable* movingComponent = dynamic_cast<Moveable*>(feetOwner)) {
+            movingComponent->queueSensorVisitorRemoval(shapeB);
+        }
+    }
+
+    for (int i = 0; i < sensorEvents.beginCount; ++i)
+    {
+        b2SensorBeginTouchEvent* event = &sensorEvents.beginEvents[i];
+
+        b2ShapeId shapeA = event->sensorShapeId;
+        b2ShapeId shapeB = event->visitorShapeId;
+
+        GameObject* feetOwner = static_cast<GameObject*>(b2Shape_GetUserData(shapeA));
+        GameObject* visitor = static_cast<GameObject*>(b2Shape_GetUserData(shapeB));
+        (void)visitor;
+
+        if (Moveable* movingComponent = dynamic_cast<Moveable*>(feetOwner)) {
+            movingComponent->addSensorVisitor(shapeB);
+        }
+    }   
+}
+
+void GameWorld::finalizePendingSensors() {
+    for (std::shared_ptr<GameObject>& object : _objects) {
+        if (Moveable* movingComponent = dynamic_cast<Moveable*>(object.get())) {
+            movingComponent->finalizeSensorVisitors();
+        }
+    }
 }
 
 void GameWorld::updateVisuals(float deltaTime) {
-    for(std::shared_ptr<GameObject> object: _players)
+    for(std::shared_ptr<GameObject> object: _objects)
         object->updateVisuals(deltaTime);
 }
 
@@ -65,7 +141,7 @@ void GameWorld::render(sf::RenderTarget &target) {
         {viewBounds.size.x + margin * 2.f, viewBounds.size.y + margin * 2.f}
     );
 
-    for (std::shared_ptr<GameObject> object : _players) {
+    for (std::shared_ptr<GameObject> object : _objects) {
         if (!object) continue;
 
         // Visual rendering for static environment blocks is handled by _tileMap in batch
@@ -130,7 +206,7 @@ void GameWorld::loadMap(const std::vector<std::vector<int>>& mapData) {
     sf::Texture& koopaTexture = ResourceManager::getInstance().getTexture("koopa_spritesheet");
 
     _controllers.clear();
-    _players.clear();
+    _objects.clear();
 
     _loadedRows = std::min(static_cast<int>(mapData.size()), _gridHeight);
     _loadedCols = 0;
@@ -171,16 +247,16 @@ void GameWorld::loadMap(const std::vector<std::vector<int>>& mapData) {
                 // We pass CELL_SIZE because GameObject::createHitbox now correctly halves the dimensions.
                 brickBlock->spawn(_physicsWorld, spawnPos, {CELL_SIZE, CELL_SIZE});
                 _grid[logicY][x] = brickBlock;
-                _players.push_back(brickBlock);
+                _objects.push_back(brickBlock);
             } 
             else if (blockId == 2) {
                 // Player 1
                 auto player1 = _objectFactory.createPlayer("Player", &marioTexture, "mario");
-                player1->spawn(_physicsWorld, {spawnPos.x + 10, spawnPos.y}, {80, 80});
+                player1->spawn(_physicsWorld, {spawnPos.x + 10, spawnPos.y}, {80, 80}, true);
                 if (auto mario = std::dynamic_pointer_cast<Player>(player1)) {
                     _controllers.emplace_back(std::make_unique<PlayerController>(*mario, PlayerController::ControlScheme::Wasd));
                 }
-                _players.push_back(player1);
+                _objects.push_back(player1);
             }
             // else if (blockId == 3) {
             //     // Player 2
@@ -189,7 +265,7 @@ void GameWorld::loadMap(const std::vector<std::vector<int>>& mapData) {
             //     if (auto luigi = std::dynamic_pointer_cast<Player>(player2)) {
             //         _controllers.emplace_back(std::make_unique<PlayerController>(*luigi, PlayerController::ControlScheme::ArrowKeys));
             //     }
-            //     _players.push_back(player2);
+            //     _objects.push_back(player2);
             // }
             else if (blockId == 4) {
                 std::shared_ptr<GameObject> goomba = _objectFactory.createEnemy("Goomba", &goombaTexture, "goomba");
@@ -224,7 +300,7 @@ void GameWorld::test() {
 
 std::shared_ptr<GameObject> GameWorld::getPrimaryPlayer() const {
     // Finds and returns the first player instance in the world objects vector
-    for (const auto& object : _players) {
+    for (const auto& object : _objects) {
         if (std::dynamic_pointer_cast<Player>(object)) {
             return object;
         }

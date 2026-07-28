@@ -4,6 +4,10 @@
 #include <memory>
 #include <stdexcept>
 #include "box2d/box2d.h"
+#include "box2d/collision.h"
+#include "box2d/id.h"
+#include "box2d/math_functions.h"
+#include "box2d/types.h"
 
 namespace {
 constexpr bool drawFallbackCollisionRect = true;
@@ -46,7 +50,7 @@ void GameObject::render(sf::RenderTarget &target) { // DEFINITELY NEEDS TO BE RE
     onRenderVisual(target, position, angleDegrees);
 }
 
-void GameObject::spawn(const PhysicsWorld &physicsWorld, sf::Vector2f spawnPixels, sf::Vector2f hitboxPixels) {
+void GameObject::spawn(const PhysicsWorld &physicsWorld, sf::Vector2f spawnPixels, sf::Vector2f hitboxPixels, bool hasFeet) {
     if (!physicsWorld.isValid())
         throw std::runtime_error("Invalid World!");
     if(_body && _body->isValid())
@@ -54,6 +58,9 @@ void GameObject::spawn(const PhysicsWorld &physicsWorld, sf::Vector2f spawnPixel
 
     createBody(physicsWorld, spawnPixels);
     createHitbox(hitboxPixels);
+    if (hasFeet) {
+        createFeet(hitboxPixels);
+    }
     updateVisuals(0.f);
 }
 
@@ -109,7 +116,7 @@ void GameObject::createHitbox(sf::Vector2f hitboxPixels) {
 
     b2ShapeDef shapeDef = b2DefaultShapeDef();
     shapeDef.enableContactEvents = true;
-    shapeDef.userData = new std::weak_ptr<GameObject>(shared_from_this());
+    shapeDef.userData = this;
     onCreateShapeDef(shapeDef);
 
     b2Polygon box = b2MakeBox(
@@ -119,6 +126,25 @@ void GameObject::createHitbox(sf::Vector2f hitboxPixels) {
     
     b2ShapeId hitbox = b2CreatePolygonShape(_body->getId(), &shapeDef, &box);
     _body->setHibox(hitbox);
+}
+
+void GameObject::createFeet(sf::Vector2f hitboxPixels) {
+    b2ShapeDef shapeDef = b2DefaultShapeDef();
+    shapeDef.isSensor = true;
+    shapeDef.enableSensorEvents = true;
+    shapeDef.userData = this;
+
+    b2Polygon box = b2MakeOffsetBox(
+        PhysicsUnits::toMeters(hitboxPixels.x * 0.5f),
+        PhysicsUnits::toMeters(5.0f),
+        {
+            PhysicsUnits::toMeters(0.0f),
+            PhysicsUnits::toMeters(hitboxPixels.y * 0.5f + 2.0f)
+        },
+        b2MakeRot(0.0f)
+    );
+
+    b2ShapeId sensorShape = b2CreatePolygonShape(_body->getId(), &shapeDef, &box);
 }
 
 void GameObject::drawFallbackRect(sf::RenderTarget& target) const {

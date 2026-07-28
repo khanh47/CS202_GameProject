@@ -14,6 +14,10 @@ public:
     b2WorldId getId() const { return _worldId; }
     bool isValid() const { return b2World_IsValid(_worldId); }
 
+
+    b2ContactEvents getContactEvents();
+    b2SensorEvents getSensorEvents() ; 
+
     // update simulation
     void updateSimulation(const float &fixedDt);
 

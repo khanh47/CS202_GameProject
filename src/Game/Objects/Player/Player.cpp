@@ -31,24 +31,27 @@ void Player::updateSimulation(const float &fixedDt) {
 
     b2Vec2 velocity = b2Body_GetLinearVelocity(_body->getId());
 
-    b2Body_SetGravityScale(_body->getId(), 4.0f);
-
-    if (isJumping()) {
-        velocity.y = -_jumpSpeed;
-        playAnimation("jump");
-    }
-    else if (isMovingLeft() && !isMovingRight()) {
+    if (isMovingLeft() && !isMovingRight()) {
         velocity.x = -_moveSpeed;
-        playAnimation("walk");
-    }
-    else if (isMovingRight() && !isMovingLeft()) {
+
+    } else if (isMovingRight() && !isMovingLeft()) {
         velocity.x = _moveSpeed;
-        playAnimation("walk");
-    }
-    else if (!isMovingLeft() && !isMovingRight()) {
+    } else if (!isMovingLeft() && !isMovingRight()) {
         velocity.x = 0.f;
-        playAnimation("idle");
-    } 
+    }
+
+    if (isJumping() && !isAirbone()) {
+        velocity.y = -_jumpSpeed;
+    }
+
+    if (isAirbone() || isJumping()) {
+        b2Body_SetGravityScale(_body->getId(), velocity.y > 0.f ? 1.0f : 3.0f);
+        playAnimation("jump");
+    } else {
+        b2Body_SetGravityScale(_body->getId(), 4.0f);
+        if (!isMovingLeft() && !isMovingRight()) playAnimation("idle");
+        else playAnimation("walk");
+    }
 
     b2Body_SetLinearVelocity(_body->getId(), velocity);
 }

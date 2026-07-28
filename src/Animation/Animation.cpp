@@ -60,7 +60,7 @@ AnimationSet Animation::makeDefaultPlayerAnimationSet() {
             3,
             {32, 0},
             1.0f / 3.0f,
-            false
+            true
         )
     );
 
