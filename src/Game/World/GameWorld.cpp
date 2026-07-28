@@ -29,7 +29,7 @@ void GameWorld::handleInput(const sf::Event& event) {
 void GameWorld::updateSimulation(const float &fixedDt) {
     if (GameSettings::getInstance().freeCameraMove) {
         // Lock character controls and movement when free camera mode is active
-        for (std::shared_ptr<GameObject>& object : _players) {
+        for (std::shared_ptr<GameObject>& object : _objects) {
             if (std::shared_ptr<Player> player = std::dynamic_pointer_cast<Player>(object)) {
                 player->stopMoveLeft();
                 player->stopMoveRight();
@@ -38,7 +38,7 @@ void GameWorld::updateSimulation(const float &fixedDt) {
         }
     }
 
-    for (std::shared_ptr<GameObject>& object : _players) {
+    for (std::shared_ptr<GameObject>& object : _objects) {
         object->updateSimulation(fixedDt);
     }
 
@@ -46,7 +46,7 @@ void GameWorld::updateSimulation(const float &fixedDt) {
 }
 
 void GameWorld::updateVisuals(float deltaTime) {
-    for(std::shared_ptr<GameObject> object: _players)
+    for(std::shared_ptr<GameObject> object: _objects)
         object->updateVisuals(deltaTime);
 }
 
@@ -65,7 +65,7 @@ void GameWorld::render(sf::RenderTarget &target) {
         {viewBounds.size.x + margin * 2.f, viewBounds.size.y + margin * 2.f}
     );
 
-    for (std::shared_ptr<GameObject> object : _players) {
+    for (std::shared_ptr<GameObject> object : _objects) {
         if (!object) continue;
 
         // Visual rendering for static environment blocks is handled by _tileMap in batch
@@ -130,7 +130,7 @@ void GameWorld::loadMap(const std::vector<std::vector<int>>& mapData) {
     sf::Texture& koopaTexture = ResourceManager::getInstance().getTexture("koopa_spritesheet");
 
     _controllers.clear();
-    _players.clear();
+    _objects.clear();
 
     _loadedRows = std::min(static_cast<int>(mapData.size()), _gridHeight);
     _loadedCols = 0;
@@ -171,7 +171,6 @@ void GameWorld::loadMap(const std::vector<std::vector<int>>& mapData) {
                 // We pass CELL_SIZE because GameObject::createHitbox now correctly halves the dimensions.
                 brickBlock->spawn(_physicsWorld, spawnPos, {CELL_SIZE, CELL_SIZE});
                 _grid[logicY][x] = brickBlock;
-                _players.push_back(brickBlock);
             } 
             else if (blockId == 2) {
                 // Player 1
@@ -180,7 +179,7 @@ void GameWorld::loadMap(const std::vector<std::vector<int>>& mapData) {
                 if (auto mario = std::dynamic_pointer_cast<Player>(player1)) {
                     _controllers.emplace_back(std::make_unique<PlayerController>(*mario, PlayerController::ControlScheme::Wasd));
                 }
-                _players.push_back(player1);
+                _objects.push_back(player1);
             }
             // else if (blockId == 3) {
             //     // Player 2
@@ -189,7 +188,7 @@ void GameWorld::loadMap(const std::vector<std::vector<int>>& mapData) {
             //     if (auto luigi = std::dynamic_pointer_cast<Player>(player2)) {
             //         _controllers.emplace_back(std::make_unique<PlayerController>(*luigi, PlayerController::ControlScheme::ArrowKeys));
             //     }
-            //     _players.push_back(player2);
+            //     _objects.push_back(player2);
             // }
             else if (blockId == 4) {
                 std::shared_ptr<GameObject> goomba = _objectFactory.createEnemy("Goomba", &goombaTexture, "goomba");
@@ -224,7 +223,7 @@ void GameWorld::test() {
 
 std::shared_ptr<GameObject> GameWorld::getPrimaryPlayer() const {
     // Finds and returns the first player instance in the world objects vector
-    for (const auto& object : _players) {
+    for (const auto& object : _objects) {
         if (std::dynamic_pointer_cast<Player>(object)) {
             return object;
         }

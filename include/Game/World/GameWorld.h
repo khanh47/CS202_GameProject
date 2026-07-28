@@ -25,7 +25,7 @@ public:
 private:
     PhysicsWorld _physicsWorld;
     GameObjectFactory _objectFactory;
-    std::vector<std::shared_ptr<GameObject>> _players;
+    std::vector<std::shared_ptr<GameObject>> _objects;
     std::vector<std::unique_ptr<PlayerController>> _controllers;
 
     // TileMap system for batch vertex array rendering and tile culling
