@@ -9,9 +9,3 @@ void Koopa::onUpdateVisuals(float deltaTime) {
     bool facingLeft = hasValidBody() && b2Body_GetLinearVelocity(_body->getId()).x > 0.f;
     animatable->updateVisualState(deltaTime, _hitboxPixels, facingLeft);
 }
-
-void Koopa::updateSimulation(const float &fixedDt) {
-    b2Vec2 velocity = b2Body_GetLinearVelocity(_body->getId());
-    velocity.x = _moveSpeed;
-    b2Body_SetLinearVelocity(_body->getId(), velocity);
-}
