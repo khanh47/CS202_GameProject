@@ -4,10 +4,12 @@
 #include "Game/Objects/Player/Player.h"
 #include "Game/Objects/Block/Block.h"
 #include "Game/Objects/Item/FireFlower.h"
+#include "Game/Objects/Enemy/Enemy.h"
 #include "Game/UserInput/PlayerController.h"
 #include "ResourceManager.h"
 #include <SFML/Graphics/Texture.hpp>
 #include <memory>
+#include <cmath>
 
 GameWorld::GameWorld() {
     _grid.resize(_gridHeight, std::vector<std::shared_ptr<GameObject>>(_gridWidth, nullptr));
@@ -27,6 +29,10 @@ void GameWorld::handleInput(const sf::Event& event) {
     }
 }
 
+bool GameWorld::spawnFireball(sf::Vector2f spawnPos, bool facingRight) {
+    return _fireballPool.spawnFireball(spawnPos, facingRight);
+}
+
 void GameWorld::updateSimulation(const float &fixedDt) {
     if (GameSettings::getInstance().freeCameraMove) {
         // Lock character controls and movement when free camera mode is active
@@ -44,6 +50,114 @@ void GameWorld::updateSimulation(const float &fixedDt) {
     }
 
     _physicsWorld.updateSimulation(fixedDt);
+
+    // 1. Update simulation for pooled fireballs (1 screen width range limit & void threshold)
+    const float maxDistancePixels = 1280.0f; // 1 full 1280px screen width
+    const float voidYThreshold = _gridHeight * CELL_SIZE;
+    _fireballPool.updateSimulation(fixedDt, maxDistancePixels, voidYThreshold);
+
+    // 2. Fireball collisions with enemies (Goomba, Koopa) and environment obstacle blocks
+    const auto& fireballs = _fireballPool.getPool();
+    for (const auto& fb : fireballs) {
+        if (!fb || !fb->isActive()) continue;
+
+        sf::Vector2f fbPos = fb->getPosition();
+        const float fbRadius = 19.0f;
+
+        // 2a. Check enemy hit (Goomba, Koopa)
+        bool hitEnemy = false;
+        for (auto& obj : _objects) {
+            if (!obj || obj->isPendingDestroy()) continue;
+            if (auto enemy = std::dynamic_pointer_cast<Enemy>(obj)) {
+                sf::Vector2f enemyPos = enemy->getPosition();
+                float dx = fbPos.x - enemyPos.x;
+                float dy = fbPos.y - enemyPos.y;
+                float distSq = dx * dx + dy * dy;
+                const float enemyRadius = 32.0f;
+                if (distSq < (fbRadius + enemyRadius) * (fbRadius + enemyRadius)) {
+                    enemy->destroy(); // Defeat enemy!
+                    fb->deactivate(); // Despawn fireball on impact
+                    hitEnemy = true;
+                    break;
+                }
+            }
+        }
+
+        if (hitEnemy) continue;
+
+        // 2b. Surface & Wall collision handling matching SMB1 NES physics
+        // Search 3x3 surrounding grid neighbourhood for blocks
+        int centerTileX = static_cast<int>(fbPos.x / CELL_SIZE);
+        int centerTileY = static_cast<int>(fbPos.y / CELL_SIZE);
+        int centerLogicY = _gridHeight - 1 - centerTileY;
+
+        bool surfaceHit = false;
+
+        for (int ly = centerLogicY - 1; ly <= centerLogicY + 1 && !surfaceHit; ++ly) {
+            if (ly < 0 || ly >= _gridHeight) continue;
+            for (int tx = centerTileX - 1; tx <= centerTileX + 1; ++tx) {
+                if (tx < 0 || tx >= _gridWidth) continue;
+
+                const auto& block = _grid[ly][tx];
+                if (!block) continue;
+
+                sf::Vector2f blockPos = block->getPosition();
+                float dx = fbPos.x - blockPos.x;
+                float dy = fbPos.y - blockPos.y;
+                float absDx = std::abs(dx);
+                float absDy = std::abs(dy);
+
+                // Combined AABB half-size threshold (Fireball 19px radius + Block 32px half-width = 51px)
+                const float hitThreshold = 49.0f;
+                if (absDx < hitThreshold && absDy < hitThreshold) {
+                    // Differentiate top face landing (ground/platform) from side face impact (walls/stairs/pipes)
+                    // If fireball center is above the block center and vertical offset dominates, it hit the TOP surface
+                    if (dy < 0.0f && absDy > absDx - 6.0f) {
+                        // Contact on top surface while falling or level -> trigger bounce!
+                        if (fb->getVelocity().y >= -1.0f) {
+                            fb->triggerBounce();
+                            surfaceHit = true;
+                            break;
+                        }
+                    } else {
+                        // Contact on side face or bottom ceiling face -> explode/deactivate fireball!
+                        fb->deactivate();
+                        surfaceHit = true;
+                        break;
+                    }
+                }
+            }
+        }
+
+        // Also check any interactive blocks in _objects that are not in _grid
+        if (!surfaceHit) {
+            for (auto& obj : _objects) {
+                if (!obj || obj->isPendingDestroy()) continue;
+                if (std::dynamic_pointer_cast<Block>(obj)) {
+                    sf::Vector2f blockPos = obj->getPosition();
+                    float dx = fbPos.x - blockPos.x;
+                    float dy = fbPos.y - blockPos.y;
+                    float absDx = std::abs(dx);
+                    float absDy = std::abs(dy);
+
+                    const float hitThreshold = 49.0f;
+                    if (absDx < hitThreshold && absDy < hitThreshold) {
+                        if (dy < 0.0f && absDy > absDx - 6.0f) {
+                            if (fb->getVelocity().y >= -1.0f) {
+                                fb->triggerBounce();
+                                surfaceHit = true;
+                                break;
+                            }
+                        } else {
+                            fb->deactivate();
+                            surfaceHit = true;
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+    }
 
     // Check item pickup collisions (e.g. FireFlower & Player)
     std::shared_ptr<Player> primaryPlayer = std::dynamic_pointer_cast<Player>(getPrimaryPlayer());
@@ -77,6 +191,8 @@ void GameWorld::updateSimulation(const float &fixedDt) {
 void GameWorld::updateVisuals(float deltaTime) {
     for(std::shared_ptr<GameObject> object: _objects)
         object->updateVisuals(deltaTime);
+
+    _fireballPool.updateVisuals(deltaTime);
 }
 
 void GameWorld::render(sf::RenderTarget &target) {
@@ -107,6 +223,9 @@ void GameWorld::render(sf::RenderTarget &target) {
             object->render(target);
         }
     }
+
+    // 3. Render active fireballs from the object pool
+    _fireballPool.render(target);
 
     GameSettings& settings = GameSettings::getInstance();
     if (settings.debugDrawGrid || settings.debugDrawCoordinates) {
@@ -157,9 +276,11 @@ void GameWorld::loadMap(const std::vector<std::vector<int>>& mapData) {
     sf::Texture& luigiTexture = ResourceManager::getInstance().getTexture("luigi_spritesheet");
     sf::Texture& goombaTexture = ResourceManager::getInstance().getTexture("goomba_spritesheet");
     sf::Texture& koopaTexture = ResourceManager::getInstance().getTexture("koopa_spritesheet");
+    sf::Texture& itemsTexture = ResourceManager::getInstance().getTexture("mario_and_items");
 
     _controllers.clear();
     _objects.clear();
+    _fireballPool.initialize(_physicsWorld, itemsTexture);
 
     _loadedRows = std::min(static_cast<int>(mapData.size()), _gridHeight);
     _loadedCols = 0;
@@ -207,7 +328,7 @@ void GameWorld::loadMap(const std::vector<std::vector<int>>& mapData) {
                 player1->spawn(_physicsWorld, {spawnPos.x + 10, spawnPos.y}, {80, 80});
                 if (auto mario = std::dynamic_pointer_cast<Player>(player1)) {
                     mario->changeToNormalState();
-                    _controllers.emplace_back(std::make_unique<PlayerController>(*mario, PlayerController::ControlScheme::Wasd));
+                    _controllers.emplace_back(std::make_unique<PlayerController>(*mario, *this, PlayerController::ControlScheme::Wasd));
                 }
                 _objects.push_back(player1);
             }

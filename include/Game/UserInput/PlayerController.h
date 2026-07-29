@@ -5,6 +5,8 @@
 
 #include <SFML/Window/Event.hpp>
 
+class GameWorld;
+
 class PlayerController: public InputManager {
 public:
     enum class ControlScheme {
@@ -12,7 +14,7 @@ public:
         ArrowKeys
     };
 
-    explicit PlayerController(Player& player, ControlScheme controlScheme = ControlScheme::Wasd);
+    explicit PlayerController(Player& player, GameWorld& gameWorld, ControlScheme controlScheme = ControlScheme::Wasd);
 
     bool ActionStart(const sf::Event::KeyPressed& event) override;
     bool ActionEnd(const sf::Event::KeyReleased& event) override;
@@ -23,4 +25,5 @@ private:
     void applyReleaseAction(ActionType action);
 
     Player& _player;
+    GameWorld& _gameWorld;
 };

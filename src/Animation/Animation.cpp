@@ -219,3 +219,20 @@ AnimationSet Animation::makeFireFlowerAnimationSet() {
 
     return animationSet;
 }
+
+AnimationSet Animation::makeFireballAnimationSet() {
+    AnimationSet animationSet;
+    animationSet.defaultClip = "spin";
+
+    const float frameDuration = 1.0f / 8.0f;
+    std::vector<AnimationFrame> frames = {
+        AnimationFrame(sf::IntRect({4, 148}, {8, 10}), frameDuration),
+        AnimationFrame(sf::IntRect({23, 148}, {8, 10}), frameDuration),
+        AnimationFrame(sf::IntRect({42, 148}, {8, 10}), frameDuration),
+        AnimationFrame(sf::IntRect({59, 148}, {8, 10}), frameDuration)
+    };
+
+    animationSet.clips.emplace("spin", AnimationClip(frames, true));
+
+    return animationSet;
+}

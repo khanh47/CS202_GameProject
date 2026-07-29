@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Game/Objects/Player/State/PlayerState.h"
+#include "Game/Behaviours/FireballAttackStrategy.h"
 
 /**
  * @brief Concrete state representing Fire Mario, utilizing the white/red fire spritesheet
@@ -19,4 +20,7 @@ public:
     float getJumpSpeedMultiplier() const override { return 1.1f; }
     sf::Vector2f getScaleMultiplier() const override { return {1.25f, 1.25f}; }
     bool canShootFireballs() const override { return true; }
+    std::unique_ptr<IAttackStrategy> createAttackStrategy() const override {
+        return std::make_unique<FireballAttackStrategy>();
+    }
 };

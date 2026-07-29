@@ -1,7 +1,8 @@
 #include "Game/UserInput/PlayerController.h"
+#include "Game/World/GameWorld.h"
 
-PlayerController::PlayerController(Player& player, ControlScheme controlScheme)
-    : _player(player) {
+PlayerController::PlayerController(Player& player, GameWorld& gameWorld, ControlScheme controlScheme)
+    : _player(player), _gameWorld(gameWorld) {
     bindControls(controlScheme);
 }
 
@@ -32,12 +33,14 @@ void PlayerController::bindControls(ControlScheme controlScheme) {
             BindKey(sf::Keyboard::Key::D, ActionType::MoveRight);
             BindKey(sf::Keyboard::Key::W, ActionType::MoveUp);
             BindKey(sf::Keyboard::Key::S, ActionType::MoveDown);
+            BindKey(sf::Keyboard::Key::X, ActionType::Attack);
             break;
         case ControlScheme::ArrowKeys:
             BindKey(sf::Keyboard::Key::Left, ActionType::MoveLeft);
             BindKey(sf::Keyboard::Key::Right, ActionType::MoveRight);
             BindKey(sf::Keyboard::Key::Up, ActionType::MoveUp);
             BindKey(sf::Keyboard::Key::Down, ActionType::MoveDown);
+            BindKey(sf::Keyboard::Key::X, ActionType::Attack);
             break;
     }
 }
@@ -54,6 +57,9 @@ void PlayerController::applyPressAction(ActionType action) {
             break;
         case ActionType::MoveUp:
             _player.startJump();
+            break;
+        case ActionType::Attack:
+            _player.attack(_gameWorld);
             break;
         case ActionType::MoveDown:
         case ActionType::Accelerate:

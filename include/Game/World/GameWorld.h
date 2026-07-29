@@ -6,6 +6,7 @@
 #include "Physics/PhysicsWorld.h"
 #include "Game/Objects/GameObjectFactory.h"
 #include "Game/World/TileMap.h"
+#include "Game/Objects/Item/FireballPool.h"
 
 class PlayerController;
 
@@ -22,9 +23,12 @@ public:
     void test();
     void loadMap(const std::vector<std::vector<int>>& mapData);
 
+    bool spawnFireball(sf::Vector2f spawnPos, bool facingRight);
+
 private:
     PhysicsWorld _physicsWorld;
     GameObjectFactory _objectFactory;
+    FireballPool _fireballPool;
     std::vector<std::shared_ptr<GameObject>> _objects;
     std::vector<std::unique_ptr<PlayerController>> _controllers;
 

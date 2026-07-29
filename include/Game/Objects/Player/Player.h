@@ -11,6 +11,8 @@
 #include "Game/Objects/GameObject.h"
 #include "Game/Objects/Player/State/PlayerState.h"
 
+class GameWorld;
+
 class Player: public GameObject,
               public Animatable,
               public Damageable, 
@@ -28,6 +30,8 @@ public:
     void applyMegaState(float durationSeconds = 5.0f);
     void revertDecoratedState();
 
+    void attack(GameWorld& world);
+
     PlayerState* getState() const { return _state.get(); }
 
 protected:
@@ -41,4 +45,5 @@ private:
     float _baseMoveSpeed = 8.0f;
     float _baseJumpSpeed = 12.0f;
     std::unique_ptr<PlayerState> _state;
+    std::unique_ptr<IAttackStrategy> _attackStrategy;
 };

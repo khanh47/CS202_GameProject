@@ -35,6 +35,9 @@ void AnimationLibrary::preloadEnemyAnimationSets() {
 
     const AnimationSet fireFlowerSet = Animation::makeFireFlowerAnimationSet();
     registerAnimationSet("fire_flower", fireFlowerSet);
+
+    const AnimationSet fireballSet = Animation::makeFireballAnimationSet();
+    registerAnimationSet("fireball", fireballSet);
 }
 
 const AnimationSet& AnimationLibrary::getAnimationSet(const std::string& name) const {

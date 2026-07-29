@@ -36,12 +36,19 @@ void Player::setState(std::unique_ptr<PlayerState> newState) {
 
     _state = std::move(newState);
     _state->onEnter(*this);
+    _attackStrategy = _state->createAttackStrategy();
 
     // Apply texture and animation set dynamically from the current state
     const std::string& texAlias = _state->getTextureAlias();
     const std::string& animId = _state->getAnimationSetId();
     sf::Texture& tex = ResourceManager::getInstance().getTexture(texAlias);
     configureVisuals(tex, animId);
+}
+
+void Player::attack(GameWorld& world) {
+    if (_attackStrategy) {
+        _attackStrategy->executeAttack(*this, world);
+    }
 }
 
 void Player::changeToNormalState() {
@@ -120,6 +127,11 @@ void Player::onCreateBodyDef(b2BodyDef& def) {
 void Player::onCreateShapeDef(b2ShapeDef& def) {
     def.density = 1.0f;
     def.material.friction = 0.0f;
+    
+    // Category 0x0002 (Player), Mask 0x0001 | 0x0008 (Environment + Enemy)
+    // Excludes Category 0x0004 (Fireball) so fireballs pass completely through Player
+    def.filter.categoryBits = 0x0002;
+    def.filter.maskBits = 0x0001 | 0x0008;
 }
 
 void Player::onUpdateVisuals(float deltaTime) {
