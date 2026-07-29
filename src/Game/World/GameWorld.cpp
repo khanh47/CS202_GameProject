@@ -379,7 +379,7 @@ void GameWorld::loadMap(const std::vector<std::vector<int>>& mapData) {
                 player1->spawn(_physicsWorld, {spawnPos.x + 10, spawnPos.y}, {96, 96}, true);
                 if (auto mario = std::dynamic_pointer_cast<Player>(player1)) {
                     mario->changeToNormalState();
-                    _controllers.emplace_back(std::make_unique<PlayerController>(*mario, *this, PlayerController::ControlScheme::Wasd));
+                    _controllers.emplace_back(std::make_unique<PlayerController>(*mario, *this, PlayerController::ControlScheme::ArrowKeys));
                 }
                 _objects.push_back(player1);
             }
