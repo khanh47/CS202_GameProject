@@ -28,6 +28,7 @@ protected:
     virtual void onCreateShapeDef(b2ShapeDef& def);
     virtual void onUpdateVisuals(float deltaTime);
     virtual void onRenderVisual(sf::RenderTarget& target, const sf::Vector2f& position, float angleDegrees);
+    virtual void onHitboxRecreated();
 
     
     bool hasValidBody() const;

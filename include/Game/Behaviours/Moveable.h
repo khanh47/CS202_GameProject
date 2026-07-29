@@ -20,6 +20,11 @@ public:
         }
     }
 
+    void resetGroundContacts() {
+        _groundContactCount = 0;
+        _groundContactGraceFramesRemaining = 0;
+    }
+
     void finalizeGroundContacts() {
         if (_groundContactCount > 0) {
             _groundContactGraceFramesRemaining = kGroundContactGraceFrames;

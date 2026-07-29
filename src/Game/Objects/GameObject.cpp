@@ -109,6 +109,9 @@ void GameObject::onRenderVisual(sf::RenderTarget& target, const sf::Vector2f& po
     (void)angleDegrees;
 }
 
+void GameObject::onHitboxRecreated() {
+}
+
 bool GameObject::hasValidBody() const {
     return _body && _body->isValid();
 }
@@ -205,6 +208,8 @@ void GameObject::updateHitboxSize(sf::Vector2f newHitboxPixels) {
     if (_hasFeet) {
         createFeet(newHitboxPixels);
     }
+    
+    onHitboxRecreated();
 }
 
 void GameObject::createFeet(sf::Vector2f hitboxPixels) {
