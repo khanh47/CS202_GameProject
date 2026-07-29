@@ -93,7 +93,6 @@ void Player::updateSimulation(const float &fixedDt) {
     }
 
     b2Vec2 velocity = b2Body_GetLinearVelocity(_body->getId());
-    b2Body_SetGravityScale(_body->getId(), 4.0f);
 
     float moveSpeed = _baseMoveSpeed;
     float jumpSpeed = _baseJumpSpeed;
@@ -102,16 +101,11 @@ void Player::updateSimulation(const float &fixedDt) {
         jumpSpeed *= _state->getJumpSpeedMultiplier();
     }
 
-    if (isJumping()) {
-        velocity.y = -jumpSpeed;
-    }
-    else if (isMovingLeft() && !isMovingRight()) {
+    if (isMovingLeft() && !isMovingRight()) {
         velocity.x = -moveSpeed;
-    }
-    else if (isMovingRight() && !isMovingLeft()) {
+    } else if (isMovingRight() && !isMovingLeft()) {
         velocity.x = moveSpeed;
-    }
-    else if (!isMovingLeft() && !isMovingRight()) {
+    } else if (!isMovingLeft() && !isMovingRight()) {
         velocity.x = 0.f;
     }
 
@@ -217,4 +211,8 @@ void Player::onUpdateVisuals(float deltaTime) {
 
 void Player::onRenderVisual(sf::RenderTarget& target, const sf::Vector2f& position, float angleDegrees) {
     renderVisualState(target, position);
+}
+
+void Player::onHitboxRecreated() {
+    resetGroundContacts();
 }

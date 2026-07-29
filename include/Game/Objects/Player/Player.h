@@ -42,10 +42,11 @@ protected:
     void onCreateShapeDef(b2ShapeDef& def) override;
     void onUpdateVisuals(float deltaTime) override;
     void onRenderVisual(sf::RenderTarget& target, const sf::Vector2f& position, float angleDegrees) override;
+    void onHitboxRecreated() override;
 
 private:
     float _baseMoveSpeed = 8.0f;
-    float _baseJumpSpeed = 12.0f;
+    float _baseJumpSpeed = 16.0f;
     std::unique_ptr<PlayerState> _state;
     std::unique_ptr<IAttackStrategy> _attackStrategy;
 
