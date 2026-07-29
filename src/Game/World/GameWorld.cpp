@@ -30,6 +30,7 @@ void GameWorld::handleInput(const sf::Event& event) {
 
 void GameWorld::updateSimulation(const float &fixedDt) {
     if (GameSettings::getInstance().freeCameraMove) {
+        // Lock character controls and movement when free camera mode is active
         for (std::shared_ptr<GameObject>& object : _objects) {
             if (std::shared_ptr<Player> player = std::dynamic_pointer_cast<Player>(object)) {
                 player->stopMoveLeft();
