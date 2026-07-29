@@ -22,6 +22,6 @@ public:
     void updateSimulation(const float &fixedDt);
 
 private:
-    static const int subSteps = 4;
+    static const int subSteps = 12;
     b2WorldId _worldId = b2_nullWorldId;
 };

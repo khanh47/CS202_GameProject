@@ -26,7 +26,7 @@ public:
     void loadMap(const std::vector<std::vector<int>>& mapData);
 
 private:
-    void finalizePendingSensors();
+    void finalizeGroundContacts();
 
     PhysicsWorld _physicsWorld;
     GameObjectFactory _objectFactory;

@@ -39,7 +39,7 @@ void GameWorld::updateSimulation(const float &fixedDt) {
         }
     }
 
-    finalizePendingSensors();
+    finalizeGroundContacts();
 
     b2SensorEvents sensorEvents = _physicsWorld.getSensorEvents();
     for (std::shared_ptr<GameObject>& object : _objects) {
@@ -81,14 +81,11 @@ void GameWorld::handleSensors(b2SensorEvents sensorEvents) {
         b2SensorEndTouchEvent* event = &sensorEvents.endEvents[i];
         
         b2ShapeId shapeA = event->sensorShapeId;
-        b2ShapeId shapeB = event->visitorShapeId;
 
         GameObject* feetOwner = static_cast<GameObject*>(b2Shape_GetUserData(shapeA));
-        GameObject* visitor = static_cast<GameObject*>(b2Shape_GetUserData(shapeB));
-        (void)visitor;
 
         if (Moveable* movingComponent = dynamic_cast<Moveable*>(feetOwner)) {
-            movingComponent->queueSensorVisitorRemoval(shapeB);
+            movingComponent->endGroundContact();
         }
     }
 
@@ -97,22 +94,19 @@ void GameWorld::handleSensors(b2SensorEvents sensorEvents) {
         b2SensorBeginTouchEvent* event = &sensorEvents.beginEvents[i];
 
         b2ShapeId shapeA = event->sensorShapeId;
-        b2ShapeId shapeB = event->visitorShapeId;
 
         GameObject* feetOwner = static_cast<GameObject*>(b2Shape_GetUserData(shapeA));
-        GameObject* visitor = static_cast<GameObject*>(b2Shape_GetUserData(shapeB));
-        (void)visitor;
 
         if (Moveable* movingComponent = dynamic_cast<Moveable*>(feetOwner)) {
-            movingComponent->addSensorVisitor(shapeB);
+            movingComponent->beginGroundContact();
         }
     }   
 }
 
-void GameWorld::finalizePendingSensors() {
+void GameWorld::finalizeGroundContacts() {
     for (std::shared_ptr<GameObject>& object : _objects) {
         if (Moveable* movingComponent = dynamic_cast<Moveable*>(object.get())) {
-            movingComponent->finalizeSensorVisitors();
+            movingComponent->finalizeGroundContacts();
         }
     }
 }
@@ -248,7 +242,7 @@ void GameWorld::loadMap(const std::vector<std::vector<int>>& mapData) {
             else if (blockId == 2) {
                 // Player 1
                 auto player1 = _objectFactory.createPlayer("Player", &marioTexture, "mario");
-                player1->spawn(_physicsWorld, {spawnPos.x + 10, spawnPos.y}, {80, 80}, true);
+                player1->spawn(_physicsWorld, {spawnPos.x + 10, spawnPos.y}, {96, 96}, true);
                 if (auto mario = std::dynamic_pointer_cast<Player>(player1)) {
                     _controllers.emplace_back(std::make_unique<PlayerController>(*mario, PlayerController::ControlScheme::Wasd));
                 }

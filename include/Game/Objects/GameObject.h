@@ -43,4 +43,6 @@ private:
     void createHitbox(sf::Vector2f hitboxPixels);
     void createFeet(sf::Vector2f hitboxPixels);
     void drawFallbackRect(sf::RenderTarget& target) const; // debugging
+
+    bool _hasFeet = false;
 };

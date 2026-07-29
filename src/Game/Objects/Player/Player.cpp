@@ -48,10 +48,9 @@ void Player::updateSimulation(const float &fixedDt) {
 
     b2Body_SetGravityScale(_body->getId(), 4.0f);
     if (isAirbone() || isJumping()) {
-        b2Body_SetGravityScale(_body->getId(), velocity.y > 0.f ? 1.0f : 3.0f);
+        if (velocity.y > 0) b2Body_SetGravityScale(_body->getId(), isJumping() ? 3.0f : 4.0f);
         playAnimation("jump");
     } else {
-        b2Body_SetGravityScale(_body->getId(), 4.0f);
         if (!isMovingLeft() && !isMovingRight()) playAnimation("idle");
         else playAnimation("walk");
     }

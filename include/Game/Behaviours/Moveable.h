@@ -1,17 +1,5 @@
 #pragma once
 
-#include "box2d/id.h"
-#include <iostream>
-#include <set>
-
-struct b2ShapeIdLessThan {
-    bool operator()(const b2ShapeId& a, const b2ShapeId& b) const {
-        if (a.index1 != b.index1) return a.index1 < b.index1;
-        if (a.world0 != b.world0) return a.world0 < b.world0;
-        return a.generation < b.generation;
-    }
-};
-
 class Moveable {
 public:
     void startMoveLeft() { _movingLeft = true; _facingLeft = true; }
@@ -21,19 +9,19 @@ public:
     void startJump() { if(!isAirbone()) _jumping = true; }
     void stopJump() { _jumping = false; }
 
-    void addSensorVisitor(b2ShapeId visitor) {
-        _pendingSensorVisitorRemovals.erase(visitor);
-        _sensorVisitors.insert(visitor);
+    void beginGroundContact() {
+        ++_groundContactCount;
         _groundContactGraceFramesRemaining = kGroundContactGraceFrames;
     }
-    void queueSensorVisitorRemoval(b2ShapeId visitor) { _pendingSensorVisitorRemovals.insert(visitor); }
-    void finalizeSensorVisitors() {
-        for (const b2ShapeId& visitor : _pendingSensorVisitorRemovals) {
-            _sensorVisitors.erase(visitor);
-        }
-        _pendingSensorVisitorRemovals.clear();
 
-        if (!_sensorVisitors.empty()) {
+    void endGroundContact() {
+        if (_groundContactCount > 0) {
+            --_groundContactCount;
+        }
+    }
+
+    void finalizeGroundContacts() {
+        if (_groundContactCount > 0) {
             _groundContactGraceFramesRemaining = kGroundContactGraceFrames;
         } else if (_groundContactGraceFramesRemaining > 0) {
             --_groundContactGraceFramesRemaining;
@@ -46,19 +34,17 @@ public:
 
     bool isFacingLeft() const { return _facingLeft; }
     bool isAirbone() const {
-        return _sensorVisitors.empty() && _groundContactGraceFramesRemaining <= 0;
+        return _groundContactCount <= 0 && _groundContactGraceFramesRemaining <= 0;
     }
     
 
 private:
-    static constexpr int kGroundContactGraceFrames = 4;
+    static constexpr int kGroundContactGraceFrames = 1;
 
     bool _facingLeft = false;
     bool _movingLeft = false;
     bool _movingRight = false;
     bool _jumping = false;
+    int _groundContactCount = 0;
     int _groundContactGraceFramesRemaining = 0;
-
-    std::set<b2ShapeId, b2ShapeIdLessThan> _sensorVisitors;
-    std::set<b2ShapeId, b2ShapeIdLessThan> _pendingSensorVisitorRemovals;
 };

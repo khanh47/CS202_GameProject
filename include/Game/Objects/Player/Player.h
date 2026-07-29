@@ -28,5 +28,5 @@ protected:
 
 private:
     float _moveSpeed = 8.0f;
-    float _jumpSpeed = 12.0f;
+    float _jumpSpeed = 16.0f;
 };
