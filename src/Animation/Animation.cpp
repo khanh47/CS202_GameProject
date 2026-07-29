@@ -236,3 +236,27 @@ AnimationSet Animation::makeFireballAnimationSet() {
 
     return animationSet;
 }
+
+AnimationSet Animation::makeFireTransformAnimationSet() {
+    AnimationSet animationSet;
+    animationSet.defaultClip = "transform";
+
+    const float dt = 0.08f;
+    // Rapidly alternate between transformation frames (Normal -> Intermediate -> Fire)
+    std::vector<AnimationFrame> frames = {
+        AnimationFrame(sf::IntRect({0, 0}, {32, 32}), dt),
+        AnimationFrame(sf::IntRect({32, 0}, {32, 32}), dt),
+        AnimationFrame(sf::IntRect({64, 0}, {32, 32}), dt),
+        AnimationFrame(sf::IntRect({32, 0}, {32, 32}), dt),
+        AnimationFrame(sf::IntRect({0, 0}, {32, 32}), dt),
+        AnimationFrame(sf::IntRect({32, 0}, {32, 32}), dt),
+        AnimationFrame(sf::IntRect({64, 0}, {32, 32}), dt),
+        AnimationFrame(sf::IntRect({32, 0}, {32, 32}), dt),
+        AnimationFrame(sf::IntRect({0, 0}, {32, 32}), dt),
+        AnimationFrame(sf::IntRect({32, 0}, {32, 32}), dt),
+        AnimationFrame(sf::IntRect({64, 0}, {32, 32}), dt)
+    };
+
+    animationSet.clips.emplace("transform", AnimationClip(frames, false));
+    return animationSet;
+}

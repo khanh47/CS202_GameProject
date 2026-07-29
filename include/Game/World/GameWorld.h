@@ -24,8 +24,12 @@ public:
     void loadMap(const std::vector<std::vector<int>>& mapData);
 
     bool spawnFireball(sf::Vector2f spawnPos, bool facingRight);
+    void freeze(float durationSeconds) { _freezeTimer = std::max(_freezeTimer, durationSeconds); }
+    bool isFrozen() const { return _freezeTimer > 0.0f; }
+    void syncPlayerControllers();
 
 private:
+    float _freezeTimer = 0.0f;
     PhysicsWorld _physicsWorld;
     GameObjectFactory _objectFactory;
     FireballPool _fireballPool;

@@ -19,6 +19,8 @@ public:
     bool ActionStart(const sf::Event::KeyPressed& event) override;
     bool ActionEnd(const sf::Event::KeyReleased& event) override;
 
+    void syncStateWithKeyboard();
+
 private:
     void bindControls(ControlScheme controlScheme);
     void applyPressAction(ActionType action);

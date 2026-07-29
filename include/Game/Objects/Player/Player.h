@@ -31,8 +31,10 @@ public:
     void revertDecoratedState();
 
     void attack(GameWorld& world);
+    void startFireTransformation(GameWorld& world, float duration = 1.0f);
 
     PlayerState* getState() const { return _state.get(); }
+    bool isTransforming() const { return _isTransforming; }
 
 protected:
     void updateSimulation(const float &fixedDt) override;
@@ -46,4 +48,8 @@ private:
     float _baseJumpSpeed = 12.0f;
     std::unique_ptr<PlayerState> _state;
     std::unique_ptr<IAttackStrategy> _attackStrategy;
+
+    bool _isTransforming = false;
+    float _transformTimer = 0.0f;
+    float _transformDuration = 1.0f;
 };

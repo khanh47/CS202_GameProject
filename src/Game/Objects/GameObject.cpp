@@ -106,6 +106,9 @@ void GameObject::createBody(const PhysicsWorld &physicsWorld, sf::Vector2f spawn
 
 void GameObject::createHitbox(sf::Vector2f hitboxPixels) {
     _hitboxPixels = hitboxPixels;
+    if (_baseHitboxPixels.x <= 0.f || _baseHitboxPixels.y <= 0.f) {
+        _baseHitboxPixels = hitboxPixels;
+    }
 
     b2ShapeDef shapeDef = b2DefaultShapeDef();
     shapeDef.enableContactEvents = true;
@@ -119,6 +122,44 @@ void GameObject::createHitbox(sf::Vector2f hitboxPixels) {
     
     b2ShapeId hitbox = b2CreatePolygonShape(_body->getId(), &shapeDef, &box);
     _body->setHibox(hitbox);
+}
+
+void GameObject::updateHitboxSize(sf::Vector2f newHitboxPixels) {
+    if (!hasValidBody()) return;
+    if (std::abs(_hitboxPixels.x - newHitboxPixels.x) < 0.01f &&
+        std::abs(_hitboxPixels.y - newHitboxPixels.y) < 0.01f) {
+        return;
+    }
+
+    // Shift body position upward so the bottom boundary of the hitbox remains anchored on the ground
+    const float deltaYPixels = (newHitboxPixels.y - _hitboxPixels.y) * 0.5f;
+    const b2BodyId bodyId = _body->getId();
+    b2Vec2 currentPosMeters = b2Body_GetPosition(bodyId);
+    const b2Rot currentRot = b2Body_GetRotation(bodyId);
+
+    currentPosMeters.y -= PhysicsUnits::toMeters(deltaYPixels);
+    b2Body_SetTransform(bodyId, currentPosMeters, currentRot);
+
+    // Destroy existing shape in Box2D context
+    b2ShapeId oldShape = _body->getHitbox();
+    if (b2Shape_IsValid(oldShape)) {
+        b2DestroyShape(oldShape, true);
+    }
+
+    _hitboxPixels = newHitboxPixels;
+
+    b2ShapeDef shapeDef = b2DefaultShapeDef();
+    shapeDef.enableContactEvents = true;
+    shapeDef.userData = new std::weak_ptr<GameObject>(shared_from_this());
+    onCreateShapeDef(shapeDef);
+
+    b2Polygon box = b2MakeBox(
+        PhysicsUnits::toMeters(newHitboxPixels.x * 0.5f),
+        PhysicsUnits::toMeters(newHitboxPixels.y * 0.5f)
+    );
+
+    b2ShapeId newHitbox = b2CreatePolygonShape(bodyId, &shapeDef, &box);
+    _body->setHibox(newHitbox);
 }
 
 void GameObject::drawFallbackRect(sf::RenderTarget& target) const {

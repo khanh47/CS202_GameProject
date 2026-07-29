@@ -18,7 +18,7 @@ GameWorld::GameWorld() {
 GameWorld::~GameWorld() = default;
 
 void GameWorld::handleInput(const sf::Event& event) {
-    if (GameSettings::getInstance().freeCameraMove) {
+    if (GameSettings::getInstance().freeCameraMove || isFrozen()) {
         return;
     }
 
@@ -33,7 +33,26 @@ bool GameWorld::spawnFireball(sf::Vector2f spawnPos, bool facingRight) {
     return _fireballPool.spawnFireball(spawnPos, facingRight);
 }
 
+void GameWorld::syncPlayerControllers() {
+    for (auto& controller : _controllers) {
+        if (controller) {
+            controller->syncStateWithKeyboard();
+        }
+    }
+}
+
 void GameWorld::updateSimulation(const float &fixedDt) {
+    if (isFrozen()) {
+        _freezeTimer -= fixedDt;
+        if (_freezeTimer <= 0.0f) {
+            _freezeTimer = 0.0f;
+            // Synchronize player input states with physical keyboard state upon unfreezing
+            syncPlayerControllers();
+        }
+        // Physics & object movement are paused while frozen
+        return;
+    }
+
     if (GameSettings::getInstance().freeCameraMove) {
         // Lock character controls and movement when free camera mode is active
         for (std::shared_ptr<GameObject>& object : _objects) {
@@ -172,7 +191,8 @@ void GameWorld::updateSimulation(const float &fixedDt) {
                 float distSq = dx * dx + dy * dy;
                 // Pickup radius of 45 pixels
                 if (distSq < 45.0f * 45.0f) {
-                    fireFlower->onPickup(*primaryPlayer);
+                    primaryPlayer->startFireTransformation(*this, 1.0f);
+                    fireFlower->destroy();
                 }
             }
         }

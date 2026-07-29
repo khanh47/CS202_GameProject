@@ -1,4 +1,5 @@
 #include "Game/Objects/Player/Player.h"
+#include "Game/World/GameWorld.h"
 #include "Game/Objects/Player/State/NormalState.h"
 #include "Game/Objects/Player/State/SuperState.h"
 #include "Game/Objects/Player/State/FireState.h"
@@ -134,14 +135,71 @@ void Player::onCreateShapeDef(b2ShapeDef& def) {
     def.filter.maskBits = 0x0001 | 0x0008;
 }
 
+void Player::startFireTransformation(GameWorld& world, float duration) {
+    if (_isTransforming) return;
+
+    _isTransforming = true;
+    _transformTimer = duration;
+    _transformDuration = duration > 0.0f ? duration : 1.0f;
+
+    // Stop movement inputs and clear horizontal physics velocity when transformation starts
+    stopMoveLeft();
+    stopMoveRight();
+    stopJump();
+    if (hasValidBody()) {
+        const b2BodyId bodyId = _body->getId();
+        b2Vec2 vel = b2Body_GetLinearVelocity(bodyId);
+        vel.x = 0.0f;
+        b2Body_SetLinearVelocity(bodyId, vel);
+    }
+
+    // Freeze physics simulation & world updates for the duration of transformation
+    world.freeze(duration);
+
+    // Switch visuals to transformation spritesheet & play transformation animation
+    sf::Texture& transformTex = ResourceManager::getInstance().getTexture("mario_transform_spritesheet");
+    configureVisuals(transformTex, "transform_fire");
+    playAnimation("transform");
+}
+
 void Player::onUpdateVisuals(float deltaTime) {
+    if (_isTransforming) {
+        _transformTimer -= deltaTime;
+        if (_transformTimer <= 0.0f) {
+            _isTransforming = false;
+            stopMoveLeft();
+            stopMoveRight();
+            stopJump();
+            if (hasValidBody()) {
+                const b2BodyId bodyId = _body->getId();
+                b2Vec2 vel = b2Body_GetLinearVelocity(bodyId);
+                vel.x = 0.0f;
+                b2Body_SetLinearVelocity(bodyId, vel);
+            }
+            // Transformation finished -> transition into FireState
+            changeToFireState();
+            return;
+        }
+
+        // Gradually scale from 1.0x to 1.25x during transformation
+        float progress = 1.0f - (_transformTimer / _transformDuration);
+        progress = std::max(0.0f, std::min(1.0f, progress));
+        float currentScale = 1.0f + 0.25f * progress;
+
+        sf::Vector2f scaledHitbox = {_baseHitboxPixels.x * currentScale, _baseHitboxPixels.y * currentScale};
+        updateHitboxSize(scaledHitbox);
+        updateVisualState(deltaTime, scaledHitbox, isFacingLeft());
+        return;
+    }
+
     sf::Vector2f scaleMult{1.0f, 1.0f};
     if (_state) {
         _state->update(*this, deltaTime);
         scaleMult = _state->getScaleMultiplier();
     }
 
-    sf::Vector2f scaledHitbox = {_hitboxPixels.x * scaleMult.x, _hitboxPixels.y * scaleMult.y};
+    sf::Vector2f scaledHitbox = {_baseHitboxPixels.x * scaleMult.x, _baseHitboxPixels.y * scaleMult.y};
+    updateHitboxSize(scaledHitbox);
     updateVisualState(deltaTime, scaledHitbox, isFacingLeft());
 }
 

@@ -84,3 +84,29 @@ void PlayerController::applyReleaseAction(ActionType action) {
             break;
     }
 }
+
+void PlayerController::syncStateWithKeyboard() {
+    bool moveLeftPressed = false;
+    bool moveRightPressed = false;
+
+    for (const auto& [key, action] : getKeyActionMap()) {
+        if (sf::Keyboard::isKeyPressed(key)) {
+            if (action == ActionType::MoveLeft) {
+                moveLeftPressed = true;
+            } else if (action == ActionType::MoveRight) {
+                moveRightPressed = true;
+            }
+        }
+    }
+
+    if (moveLeftPressed && !moveRightPressed) {
+        _player.stopMoveRight();
+        _player.startMoveLeft();
+    } else if (moveRightPressed && !moveLeftPressed) {
+        _player.stopMoveLeft();
+        _player.startMoveRight();
+    } else {
+        _player.stopMoveLeft();
+        _player.stopMoveRight();
+    }
+}
