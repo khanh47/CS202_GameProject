@@ -103,82 +103,6 @@ void GameWorld::updateSimulation(const float &fixedDt) {
                 }
             }
         }
-
-        if (hitEnemy) continue;
-
-        // 2b. Surface & Wall collision handling matching SMB1 NES physics
-        // Search 3x3 surrounding grid neighbourhood for blocks
-        sf::Vector2f fbPos = fb->getPosition();
-        int centerTileX = static_cast<int>(fbPos.x / CELL_SIZE);
-        int centerTileY = static_cast<int>(fbPos.y / CELL_SIZE);
-        int centerLogicY = _gridHeight - 1 - centerTileY;
-
-        bool surfaceHit = false;
-
-        for (int ly = centerLogicY - 1; ly <= centerLogicY + 1 && !surfaceHit; ++ly) {
-            if (ly < 0 || ly >= _gridHeight) continue;
-            for (int tx = centerTileX - 1; tx <= centerTileX + 1; ++tx) {
-                if (tx < 0 || tx >= _gridWidth) continue;
-
-                const auto& block = _grid[ly][tx];
-                if (!block) continue;
-
-                sf::Vector2f blockPos = block->getPosition();
-                float dx = fbPos.x - blockPos.x;
-                float dy = fbPos.y - blockPos.y;
-                float absDx = std::abs(dx);
-                float absDy = std::abs(dy);
-
-                // Combined AABB half-size threshold (Fireball 19px radius + Block 32px half-width = 51px)
-                const float hitThreshold = 49.0f;
-                if (absDx < hitThreshold && absDy < hitThreshold) {
-                    // Differentiate top face landing (ground/platform) from side face impact (walls/stairs/pipes)
-                    // If fireball center is above the block center and vertical offset dominates, it hit the TOP surface
-                    if (dy < 0.0f && absDy > absDx - 6.0f) {
-                        // Contact on top surface while falling or level -> trigger bounce!
-                        if (fb->getVelocity().y >= -1.0f) {
-                            fb->triggerBounce();
-                            surfaceHit = true;
-                            break;
-                        }
-                    } else {
-                        // Contact on side face or bottom ceiling face -> explode/deactivate fireball!
-                        fb->deactivate();
-                        surfaceHit = true;
-                        break;
-                    }
-                }
-            }
-        }
-
-        // Also check any interactive blocks in _objects that are not in _grid
-        if (!surfaceHit) {
-            for (auto& obj : _objects) {
-                if (!obj || obj->isPendingDestroy()) continue;
-                if (std::dynamic_pointer_cast<Block>(obj)) {
-                    sf::Vector2f blockPos = obj->getPosition();
-                    float dx = fbPos.x - blockPos.x;
-                    float dy = fbPos.y - blockPos.y;
-                    float absDx = std::abs(dx);
-                    float absDy = std::abs(dy);
-
-                    const float hitThreshold = 49.0f;
-                    if (absDx < hitThreshold && absDy < hitThreshold) {
-                        if (dy < 0.0f && absDy > absDx - 6.0f) {
-                            if (fb->getVelocity().y >= -1.0f) {
-                                fb->triggerBounce();
-                                surfaceHit = true;
-                                break;
-                            }
-                        } else {
-                            fb->deactivate();
-                            surfaceHit = true;
-                            break;
-                        }
-                    }
-                }
-            }
-        }
     }
 
     // Check item pickup collisions (e.g. FireFlower & Player)
@@ -229,6 +153,36 @@ void GameWorld::handleContacts(b2ContactEvents contactEvents) {
 
         GameObject* objA = static_cast<GameObject*>(b2Shape_GetUserData(shapeA));
         GameObject* objB = static_cast<GameObject*>(b2Shape_GetUserData(shapeB));
+
+        if (!objA || !objB) continue;
+
+        // Process Fireball collisions against environment blocks via Box2D contact events
+        Fireball* fireball = dynamic_cast<Fireball*>(objA);
+        GameObject* other = objB;
+        if (!fireball) {
+            fireball = dynamic_cast<Fireball*>(objB);
+            other = objA;
+        }
+
+        if (fireball && fireball->isActive()) {
+            if (dynamic_cast<Block*>(other)) {
+                sf::Vector2f fbPos = fireball->getPosition();
+                sf::Vector2f blockPos = other->getPosition();
+
+                float dx = fbPos.x - blockPos.x;
+                float dy = fbPos.y - blockPos.y;
+
+                // In SFML coordinates, Y points downward.
+                // Block half-height is 32px. A fireball landing on the top surface has its center at dy ≈ -51px.
+                // If fireball center is above the block's top half (dy < -16.0f), it landed on top -> bounce!
+                if (dy < -16.0f) {
+                    fireball->triggerBounce();
+                } else {
+                    // Impact with vertical side wall or underside ceiling -> despawn fireball!
+                    fireball->deactivate();
+                }
+            }
+        }
     }
 
     for (int i = 0; i < contactEvents.endCount; ++i)

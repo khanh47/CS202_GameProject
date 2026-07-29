@@ -38,5 +38,5 @@ private:
     
     // Movement speeds in Box2D MKS matching original Super Mario Bros NES physics
     const float _moveSpeedMeters = 10.f;
-    const float _bounceImpulseMeters = 10.8f;
+    const float _bounceImpulseMeters = 7.5f;
 };
