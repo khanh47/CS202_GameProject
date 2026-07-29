@@ -30,6 +30,9 @@ void Enemy::onCreateBodyDef(b2BodyDef& def) {
 void Enemy::onCreateShapeDef(b2ShapeDef& def) {
     def.density = 1.0f;
     def.material.friction = 0.0f;
+    
+    // Category 0x0008 (Enemy)
+    def.filter.categoryBits = 0x0008;
 }
 
 void Enemy::onUpdateVisuals(float deltaTime) {

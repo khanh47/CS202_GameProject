@@ -33,7 +33,10 @@ protected:
     bool hasValidBody() const;
     sf::Vector2f getBodyPositionPixels() const;
     float getBodyAngleDegrees() const;
+    void updateHitboxSize(sf::Vector2f newHitboxPixels);
+
     sf::Vector2f _hitboxPixels{0.f, 0.f};
+    sf::Vector2f _baseHitboxPixels{0.f, 0.f};
 
     std::shared_ptr<PhysicsBody> _body = nullptr;
     bool _pendingDestroy = false;
@@ -45,4 +48,5 @@ private:
     void drawFallbackRect(sf::RenderTarget& target) const; // debugging
 
     bool _hasFeet = false;
+    b2ShapeId _feetShapeId = b2_nullShapeId;
 };

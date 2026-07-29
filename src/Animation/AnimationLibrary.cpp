@@ -22,7 +22,11 @@ void AnimationLibrary::registerAnimationSet(const std::string& name, AnimationSe
 void AnimationLibrary::preloadPlayerAnimationSets() {
     const AnimationSet playerSet = Animation::makeDefaultPlayerAnimationSet();
     registerAnimationSet("mario", playerSet);
+    registerAnimationSet("fire_mario", playerSet);
     registerAnimationSet("luigi", playerSet);
+
+    const AnimationSet fireTransformSet = Animation::makeFireTransformAnimationSet();
+    registerAnimationSet("transform_fire", fireTransformSet);
 }
 
 void AnimationLibrary::preloadEnemyAnimationSets() {
@@ -31,6 +35,12 @@ void AnimationLibrary::preloadEnemyAnimationSets() {
 
     const AnimationSet koopaSet = Animation::makeKoopaAnimationSet();
     registerAnimationSet("koopa", koopaSet);
+
+    const AnimationSet fireFlowerSet = Animation::makeFireFlowerAnimationSet();
+    registerAnimationSet("fire_flower", fireFlowerSet);
+
+    const AnimationSet fireballSet = Animation::makeFireballAnimationSet();
+    registerAnimationSet("fireball", fireballSet);
 }
 
 const AnimationSet& AnimationLibrary::getAnimationSet(const std::string& name) const {

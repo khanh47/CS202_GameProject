@@ -8,7 +8,8 @@ enum class ActionType {
     MoveUp,
     MoveDown,
     Accelerate,
-    Decelerate
+    Decelerate,
+    Attack
 };
 
 class Action {

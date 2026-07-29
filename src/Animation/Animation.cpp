@@ -200,3 +200,63 @@ animationSet.clips.emplace(
 
     return animationSet;
 }
+
+AnimationSet Animation::makeFireFlowerAnimationSet() {
+    AnimationSet animationSet;
+    animationSet.defaultClip = "idle";
+
+    animationSet.clips.emplace(
+        "idle",
+        Animation::createLinearClip(
+            {0, 109},
+            {18, 17},
+            4,
+            {18, 0},
+            1.0f / 6.0f,
+            true
+        )
+    );
+
+    return animationSet;
+}
+
+AnimationSet Animation::makeFireballAnimationSet() {
+    AnimationSet animationSet;
+    animationSet.defaultClip = "spin";
+
+    const float frameDuration = 1.0f / 8.0f;
+    std::vector<AnimationFrame> frames = {
+        AnimationFrame(sf::IntRect({4, 148}, {8, 10}), frameDuration),
+        AnimationFrame(sf::IntRect({23, 148}, {8, 10}), frameDuration),
+        AnimationFrame(sf::IntRect({42, 148}, {8, 10}), frameDuration),
+        AnimationFrame(sf::IntRect({59, 148}, {8, 10}), frameDuration)
+    };
+
+    animationSet.clips.emplace("spin", AnimationClip(frames, true));
+
+    return animationSet;
+}
+
+AnimationSet Animation::makeFireTransformAnimationSet() {
+    AnimationSet animationSet;
+    animationSet.defaultClip = "transform";
+
+    const float dt = 0.08f;
+    // Rapidly alternate between transformation frames (Normal -> Intermediate -> Fire)
+    std::vector<AnimationFrame> frames = {
+        AnimationFrame(sf::IntRect({0, 0}, {32, 32}), dt),
+        AnimationFrame(sf::IntRect({32, 0}, {32, 32}), dt),
+        AnimationFrame(sf::IntRect({64, 0}, {32, 32}), dt),
+        AnimationFrame(sf::IntRect({32, 0}, {32, 32}), dt),
+        AnimationFrame(sf::IntRect({0, 0}, {32, 32}), dt),
+        AnimationFrame(sf::IntRect({32, 0}, {32, 32}), dt),
+        AnimationFrame(sf::IntRect({64, 0}, {32, 32}), dt),
+        AnimationFrame(sf::IntRect({32, 0}, {32, 32}), dt),
+        AnimationFrame(sf::IntRect({0, 0}, {32, 32}), dt),
+        AnimationFrame(sf::IntRect({32, 0}, {32, 32}), dt),
+        AnimationFrame(sf::IntRect({64, 0}, {32, 32}), dt)
+    };
+
+    animationSet.clips.emplace("transform", AnimationClip(frames, false));
+    return animationSet;
+}
