@@ -8,6 +8,8 @@
 
 #include <SFML/Graphics/Texture.hpp>
 #include <SFML/System/Vector2.hpp>
+#include <iostream>
+#include <ostream>
 
 Player::Player() : GameObject(), Animatable(), Damageable(100) {
     setState(std::make_unique<NormalState>());
@@ -16,7 +18,7 @@ Player::Player() : GameObject(), Animatable(), Damageable(100) {
 Player::Player(sf::Texture &texture) : Player(texture, "mario") {
 }
 
-Player::Player(sf::Texture &texture, const std::string& animationSetId) 
+Player::Player(sf::Texture &texture, const std::string& animationSetId)
     : GameObject(), Animatable(), Damageable(100) {
     (void)texture;
     if (animationSetId == "fire_mario") {
@@ -102,20 +104,30 @@ void Player::updateSimulation(const float &fixedDt) {
 
     if (isJumping()) {
         velocity.y = -jumpSpeed;
-        playAnimation("jump");
     }
     else if (isMovingLeft() && !isMovingRight()) {
         velocity.x = -moveSpeed;
-        playAnimation("walk");
     }
     else if (isMovingRight() && !isMovingLeft()) {
         velocity.x = moveSpeed;
-        playAnimation("walk");
     }
     else if (!isMovingLeft() && !isMovingRight()) {
         velocity.x = 0.f;
-        playAnimation("idle");
-    } 
+    }
+
+    if (isJumping() && !isAirbone()) {
+        velocity.y = -jumpSpeed;
+    }
+
+
+    b2Body_SetGravityScale(_body->getId(), 4.0f);
+    if (isAirbone() || isJumping()) {
+        if (velocity.y > 0) b2Body_SetGravityScale(_body->getId(), isJumping() ? 3.0f : 4.0f);
+        playAnimation("jump");
+    } else {
+        if (!isMovingLeft() && !isMovingRight()) playAnimation("idle");
+        else playAnimation("walk");
+    }
 
     b2Body_SetLinearVelocity(_body->getId(), velocity);
 }
@@ -128,7 +140,7 @@ void Player::onCreateBodyDef(b2BodyDef& def) {
 void Player::onCreateShapeDef(b2ShapeDef& def) {
     def.density = 1.0f;
     def.material.friction = 0.0f;
-    
+
     // Category 0x0002 (Player), Mask 0x0001 | 0x0008 (Environment + Enemy)
     // Excludes Category 0x0004 (Fireball) so fireballs pass completely through Player
     def.filter.categoryBits = 0x0002;

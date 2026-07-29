@@ -7,6 +7,7 @@
 #include "Game/Objects/GameObjectFactory.h"
 #include "Game/World/TileMap.h"
 #include "Game/Objects/Item/FireballPool.h"
+#include "box2d/types.h"
 
 class PlayerController;
 
@@ -19,6 +20,8 @@ public:
     void updateSimulation(const float &fixedDt);
     void updateVisuals(float deltaTime);
     void render(sf::RenderTarget &target);
+    void handleContacts(b2ContactEvents contactEvents);
+    void handleSensors(b2SensorEvents sensorEvents);
 
     void test();
     void loadMap(const std::vector<std::vector<int>>& mapData);
@@ -30,6 +33,8 @@ public:
 
 private:
     float _freezeTimer = 0.0f;
+    void finalizeGroundContacts();
+
     PhysicsWorld _physicsWorld;
     GameObjectFactory _objectFactory;
     FireballPool _fireballPool;

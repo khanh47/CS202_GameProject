@@ -46,7 +46,7 @@ b2ShapeId PhysicsBody::getHitbox() const {
 }
 
 b2Vec2 PhysicsBody::getHitboxSize() {
-    if (B2_IS_NULL(_shapeId)) return {0, 0};
+    if (B2_IS_NULL(_shapeId) || !b2Shape_IsValid(_shapeId)) return {0, 0};
 
     b2Polygon polygon = b2Shape_GetPolygon(_shapeId);
     b2Vec2 minV = polygon.vertices[0];

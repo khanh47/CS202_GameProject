@@ -1,5 +1,10 @@
 #include "Physics/PhysicsWorld.h"
 #include "Game/Objects/GameObject.h"
+#include "Game/Objects/GameObjectFactory.h"
+#include "Game/World/GameWorld.h"
+#include "box2d/box2d.h"
+#include "box2d/id.h"
+#include "box2d/types.h"
 #include <memory>
 
 PhysicsWorld::PhysicsWorld() {
@@ -20,43 +25,14 @@ PhysicsWorld::~PhysicsWorld() {
 void PhysicsWorld::updateSimulation(const float &fixedDt){
     b2World_Step(_worldId, fixedDt, subSteps);
 
+}
+
+b2ContactEvents PhysicsWorld::getContactEvents() {
     b2ContactEvents contactEvents = b2World_GetContactEvents(_worldId);
+    return contactEvents;
+}
 
-    // AI SLOP
-    /*
-    for (int i = 0; i < contactEvents.beginCount; ++i)
-    {
-        b2ContactBeginTouchEvent* event = &contactEvents.beginEvents[i];
-        
-        b2ShapeId shapeA = event->shapeIdA;
-        b2ShapeId shapeB = event->shapeIdB;
-
-        // b2Manifold manifold = event->manifold; 
-
-        void* objA = b2Shape_GetUserData(shapeA);
-        void* objB = b2Shape_GetUserData(shapeB);
-
-        
-        if (userData != nullptr) {
-            auto* weak_ptr = static_cast<std::weak_ptr<GameObject>*>(userData);
-            delete weak_ptr; 
-        }
-        
-    }
-
-    // 2. Handle End Touch Events (Objects stopped touching)
-    for (int i = 0; i < contactEvents.endCount; ++i)
-    {
-        b2ContactEndTouchEvent* event = &contactEvents.endEvents[i];
-        // Handle separation logic here
-    }
-
-    // 3. Handle Hit Events (High-speed impacts, perfect for sound effects)
-    for (int i = 0; i < contactEvents.hitCount; ++i)
-    {
-        b2ContactHitEvent* event = &contactEvents.hitEvents[i];
-        float approachSpeed = event->approachSpeed;
-        // Play a sound scaled to the approachSpeed
-    }
-        */
+b2SensorEvents PhysicsWorld::getSensorEvents() {
+    b2SensorEvents sensorEvents = b2World_GetSensorEvents(_worldId);
+    return sensorEvents; 
 }

@@ -1,4 +1,5 @@
 #include "Game/World/GameWorld.h"
+#include "Game/Behaviours/Moveable.h"
 #include "Game/GameSettings.h"
 #include "Game/Objects/GameObject.h"
 #include "Game/Objects/Player/Player.h"
@@ -7,6 +8,7 @@
 #include "Game/Objects/Enemy/Enemy.h"
 #include "Game/UserInput/PlayerController.h"
 #include "ResourceManager.h"
+#include "box2d/types.h"
 #include <SFML/Graphics/Texture.hpp>
 #include <memory>
 #include <cmath>
@@ -64,10 +66,11 @@ void GameWorld::updateSimulation(const float &fixedDt) {
         }
     }
 
+    finalizeGroundContacts();
+
     for (std::shared_ptr<GameObject>& object : _objects) {
         object->updateSimulation(fixedDt);
     }
-
     _physicsWorld.updateSimulation(fixedDt);
 
     // 1. Update simulation for pooled fireballs (1 screen width range limit & void threshold)
@@ -80,15 +83,14 @@ void GameWorld::updateSimulation(const float &fixedDt) {
     for (const auto& fb : fireballs) {
         if (!fb || !fb->isActive()) continue;
 
-        sf::Vector2f fbPos = fb->getPosition();
-        const float fbRadius = 19.0f;
-
         // 2a. Check enemy hit (Goomba, Koopa)
         bool hitEnemy = false;
         for (auto& obj : _objects) {
             if (!obj || obj->isPendingDestroy()) continue;
             if (auto enemy = std::dynamic_pointer_cast<Enemy>(obj)) {
                 sf::Vector2f enemyPos = enemy->getPosition();
+                sf::Vector2f fbPos = fb->getPosition();
+                const float fbRadius = 19.0f;
                 float dx = fbPos.x - enemyPos.x;
                 float dy = fbPos.y - enemyPos.y;
                 float distSq = dx * dx + dy * dy;
@@ -106,6 +108,7 @@ void GameWorld::updateSimulation(const float &fixedDt) {
 
         // 2b. Surface & Wall collision handling matching SMB1 NES physics
         // Search 3x3 surrounding grid neighbourhood for blocks
+        sf::Vector2f fbPos = fb->getPosition();
         int centerTileX = static_cast<int>(fbPos.x / CELL_SIZE);
         int centerTileY = static_cast<int>(fbPos.y / CELL_SIZE);
         int centerLogicY = _gridHeight - 1 - centerTileY;
@@ -206,6 +209,79 @@ void GameWorld::updateSimulation(const float &fixedDt) {
             }),
         _objects.end()
     );
+
+    b2SensorEvents sensorEvents = _physicsWorld.getSensorEvents();
+    b2ContactEvents contactEvents = _physicsWorld.getContactEvents();
+
+    handleSensors(sensorEvents);
+    handleContacts(contactEvents);
+}
+
+void GameWorld::handleContacts(b2ContactEvents contactEvents) {
+    for (int i = 0; i < contactEvents.beginCount; ++i)
+    {
+        b2ContactBeginTouchEvent* event = &contactEvents.beginEvents[i];
+
+        b2ShapeId shapeA = event->shapeIdA;
+        b2ShapeId shapeB = event->shapeIdB;
+
+        if (!b2Shape_IsValid(shapeA) || !b2Shape_IsValid(shapeB)) continue;
+
+        GameObject* objA = static_cast<GameObject*>(b2Shape_GetUserData(shapeA));
+        GameObject* objB = static_cast<GameObject*>(b2Shape_GetUserData(shapeB));
+    }
+
+    for (int i = 0; i < contactEvents.endCount; ++i)
+    {
+        b2ContactEndTouchEvent* event = &contactEvents.endEvents[i];
+        b2ShapeId shapeA = event->shapeIdA;
+        b2ShapeId shapeB = event->shapeIdB;
+
+        if (!b2Shape_IsValid(shapeA) || !b2Shape_IsValid(shapeB)) continue;
+
+        GameObject* objA = static_cast<GameObject*>(b2Shape_GetUserData(shapeA));
+        GameObject* objB = static_cast<GameObject*>(b2Shape_GetUserData(shapeB));
+    }
+}
+
+void GameWorld::handleSensors(b2SensorEvents sensorEvents) {
+    for (int i = 0; i < sensorEvents.endCount; ++i)
+    {
+        b2SensorEndTouchEvent* event = &sensorEvents.endEvents[i];
+
+        b2ShapeId shapeA = event->sensorShapeId;
+
+        if (!b2Shape_IsValid(shapeA)) continue;
+
+        GameObject* feetOwner = static_cast<GameObject*>(b2Shape_GetUserData(shapeA));
+
+        if (Moveable* movingComponent = dynamic_cast<Moveable*>(feetOwner)) {
+            movingComponent->endGroundContact();
+        }
+    }
+
+    for (int i = 0; i < sensorEvents.beginCount; ++i)
+    {
+        b2SensorBeginTouchEvent* event = &sensorEvents.beginEvents[i];
+
+        b2ShapeId shapeA = event->sensorShapeId;
+
+        if (!b2Shape_IsValid(shapeA)) continue;
+
+        GameObject* feetOwner = static_cast<GameObject*>(b2Shape_GetUserData(shapeA));
+
+        if (Moveable* movingComponent = dynamic_cast<Moveable*>(feetOwner)) {
+            movingComponent->beginGroundContact();
+        }
+    }
+}
+
+void GameWorld::finalizeGroundContacts() {
+    for (std::shared_ptr<GameObject>& object : _objects) {
+        if (Moveable* movingComponent = dynamic_cast<Moveable*>(object.get())) {
+            movingComponent->finalizeGroundContacts();
+        }
+    }
 }
 
 void GameWorld::updateVisuals(float deltaTime) {
@@ -341,11 +417,12 @@ void GameWorld::loadMap(const std::vector<std::vector<int>>& mapData) {
                 // We pass CELL_SIZE because GameObject::createHitbox now correctly halves the dimensions.
                 brickBlock->spawn(_physicsWorld, spawnPos, {CELL_SIZE, CELL_SIZE});
                 _grid[logicY][x] = brickBlock;
-            } 
+                _objects.push_back(brickBlock);
+            }
             else if (blockId == 2) {
                 // Player 1
                 auto player1 = _objectFactory.createPlayer("Player", &marioTexture, "mario");
-                player1->spawn(_physicsWorld, {spawnPos.x + 10, spawnPos.y}, {80, 80});
+                player1->spawn(_physicsWorld, {spawnPos.x + 10, spawnPos.y}, {96, 96}, true);
                 if (auto mario = std::dynamic_pointer_cast<Player>(player1)) {
                     mario->changeToNormalState();
                     _controllers.emplace_back(std::make_unique<PlayerController>(*mario, *this, PlayerController::ControlScheme::Wasd));
