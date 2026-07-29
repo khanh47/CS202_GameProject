@@ -116,6 +116,7 @@ void GameObject::createHitbox(sf::Vector2f hitboxPixels) {
 
     b2ShapeDef shapeDef = b2DefaultShapeDef();
     shapeDef.enableContactEvents = true;
+    shapeDef.enableSensorEvents = true;
     shapeDef.userData = this;
     onCreateShapeDef(shapeDef);
 
@@ -131,15 +132,16 @@ void GameObject::createHitbox(sf::Vector2f hitboxPixels) {
 void GameObject::createFeet(sf::Vector2f hitboxPixels) {
     b2ShapeDef shapeDef = b2DefaultShapeDef();
     shapeDef.isSensor = true;
+    shapeDef.enableContactEvents = false;
     shapeDef.enableSensorEvents = true;
     shapeDef.userData = this;
 
     b2Polygon box = b2MakeOffsetBox(
         PhysicsUnits::toMeters(hitboxPixels.x * 0.5f),
-        PhysicsUnits::toMeters(5.0f),
+        PhysicsUnits::toMeters(19.0f),
         {
             PhysicsUnits::toMeters(0.0f),
-            PhysicsUnits::toMeters(hitboxPixels.y * 0.5f + 2.0f)
+            PhysicsUnits::toMeters(hitboxPixels.y * 0.5f + 5.0f)
         },
         b2MakeRot(0.0f)
     );

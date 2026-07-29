@@ -1,6 +1,7 @@
 #pragma once
 
 #include "box2d/id.h"
+#include <iostream>
 #include <set>
 
 struct b2ShapeIdLessThan {
@@ -20,13 +21,23 @@ public:
     void startJump() { if(!isAirbone()) _jumping = true; }
     void stopJump() { _jumping = false; }
 
-    void addSensorVisitor(b2ShapeId visitor) { _sensorVisitors.insert(visitor); }
+    void addSensorVisitor(b2ShapeId visitor) {
+        _pendingSensorVisitorRemovals.erase(visitor);
+        _sensorVisitors.insert(visitor);
+        _groundContactGraceFramesRemaining = kGroundContactGraceFrames;
+    }
     void queueSensorVisitorRemoval(b2ShapeId visitor) { _pendingSensorVisitorRemovals.insert(visitor); }
     void finalizeSensorVisitors() {
         for (const b2ShapeId& visitor : _pendingSensorVisitorRemovals) {
             _sensorVisitors.erase(visitor);
         }
         _pendingSensorVisitorRemovals.clear();
+
+        if (!_sensorVisitors.empty()) {
+            _groundContactGraceFramesRemaining = kGroundContactGraceFrames;
+        } else if (_groundContactGraceFramesRemaining > 0) {
+            --_groundContactGraceFramesRemaining;
+        }
     }
     
     bool isMovingRight() const { return _movingRight; }
@@ -34,14 +45,19 @@ public:
     bool isJumping() const { return _jumping; }
 
     bool isFacingLeft() const { return _facingLeft; }
-    bool isAirbone() const { return _sensorVisitors.empty(); }
+    bool isAirbone() const {
+        return _sensorVisitors.empty() && _groundContactGraceFramesRemaining <= 0;
+    }
     
 
 private:
+    static constexpr int kGroundContactGraceFrames = 4;
+
     bool _facingLeft = false;
     bool _movingLeft = false;
     bool _movingRight = false;
     bool _jumping = false;
+    int _groundContactGraceFramesRemaining = 0;
 
     std::set<b2ShapeId, b2ShapeIdLessThan> _sensorVisitors;
     std::set<b2ShapeId, b2ShapeIdLessThan> _pendingSensorVisitorRemovals;

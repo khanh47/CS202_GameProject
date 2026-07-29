@@ -17,8 +17,6 @@ GameWorld::GameWorld() {
 GameWorld::~GameWorld() = default;
 
 void GameWorld::handleInput(const sf::Event& event) {
-    finalizePendingSensors();
-
     if (GameSettings::getInstance().freeCameraMove) {
         return;
     }
@@ -31,8 +29,6 @@ void GameWorld::handleInput(const sf::Event& event) {
 }
 
 void GameWorld::updateSimulation(const float &fixedDt) {
-    finalizePendingSensors();
-
     if (GameSettings::getInstance().freeCameraMove) {
         for (std::shared_ptr<GameObject>& object : _objects) {
             if (std::shared_ptr<Player> player = std::dynamic_pointer_cast<Player>(object)) {
@@ -43,14 +39,14 @@ void GameWorld::updateSimulation(const float &fixedDt) {
         }
     }
 
+    finalizePendingSensors();
+
+    b2SensorEvents sensorEvents = _physicsWorld.getSensorEvents();
     for (std::shared_ptr<GameObject>& object : _objects) {
         object->updateSimulation(fixedDt);
     }
-
     _physicsWorld.updateSimulation(fixedDt);
-
     b2ContactEvents contactEvents = _physicsWorld.getContactEvents();
-    b2SensorEvents sensorEvents = _physicsWorld.getSensorEvents();
 
     handleSensors(sensorEvents);
     handleContacts(contactEvents);

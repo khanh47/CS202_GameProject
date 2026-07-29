@@ -1,6 +1,8 @@
 #include "Game/Objects/Player/Player.h"
 #include <SFML/Graphics/Texture.hpp>
 #include <SFML/System/Vector2.hpp>
+#include <iostream>
+#include <ostream>
 
 Player::Player() : GameObject(), Animatable(), Damageable(100) {
 }
@@ -33,7 +35,6 @@ void Player::updateSimulation(const float &fixedDt) {
 
     if (isMovingLeft() && !isMovingRight()) {
         velocity.x = -_moveSpeed;
-
     } else if (isMovingRight() && !isMovingLeft()) {
         velocity.x = _moveSpeed;
     } else if (!isMovingLeft() && !isMovingRight()) {
@@ -44,6 +45,8 @@ void Player::updateSimulation(const float &fixedDt) {
         velocity.y = -_jumpSpeed;
     }
 
+
+    b2Body_SetGravityScale(_body->getId(), 4.0f);
     if (isAirbone() || isJumping()) {
         b2Body_SetGravityScale(_body->getId(), velocity.y > 0.f ? 1.0f : 3.0f);
         playAnimation("jump");
