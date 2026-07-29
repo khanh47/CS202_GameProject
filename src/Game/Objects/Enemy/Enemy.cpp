@@ -1,9 +1,10 @@
 #include "Game/Objects/Enemy/Enemy.h"
 #include "Game/Behaviours/Animatable.h"
 #include "Game/Behaviours/Damageable.h"
-#include "Game/Behaviours/Moveable.h"
 #include "box2d/box2d.h"
+#include <iostream>
 #include <memory>
+#include <ostream>
 
 Enemy::Enemy() : GameObject() {
     animatable = std::make_unique<Animatable>();
@@ -40,4 +41,14 @@ void Enemy::onRenderVisual(sf::RenderTarget& target, const sf::Vector2f& positio
     animatable->renderVisualState(target, position, angleDegrees);
 }
 
-void Enemy::updateSimulation(const float &fixedDt) {}
+void Enemy::updateSimulation(const float &fixedDt) {
+    b2Vec2 velocity = b2Body_GetLinearVelocity(_body->getId());
+    velocity.x = _moveSpeed;
+    b2Body_SetLinearVelocity(_body->getId(), velocity);
+    onContact();
+}
+
+void Enemy::onContact() {
+    int countCapcacity = b2Body_GetContactCapacity(_body->getId());
+    std::cout << "Enemy contact: " << countCapcacity << std::endl;
+}
