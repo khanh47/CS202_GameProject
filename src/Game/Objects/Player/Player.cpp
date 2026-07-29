@@ -1,6 +1,8 @@
 #include "Game/Objects/Player/Player.h"
 #include <SFML/Graphics/Texture.hpp>
 #include <SFML/System/Vector2.hpp>
+#include <iostream>
+#include <ostream>
 
 Player::Player() : GameObject(), Animatable(), Damageable(100) {
 }
@@ -31,24 +33,27 @@ void Player::updateSimulation(const float &fixedDt) {
 
     b2Vec2 velocity = b2Body_GetLinearVelocity(_body->getId());
 
-    b2Body_SetGravityScale(_body->getId(), 4.0f);
-
-    if (isJumping()) {
-        velocity.y = -_jumpSpeed;
-        playAnimation("jump");
-    }
-    else if (isMovingLeft() && !isMovingRight()) {
+    if (isMovingLeft() && !isMovingRight()) {
         velocity.x = -_moveSpeed;
-        playAnimation("walk");
-    }
-    else if (isMovingRight() && !isMovingLeft()) {
+    } else if (isMovingRight() && !isMovingLeft()) {
         velocity.x = _moveSpeed;
-        playAnimation("walk");
-    }
-    else if (!isMovingLeft() && !isMovingRight()) {
+    } else if (!isMovingLeft() && !isMovingRight()) {
         velocity.x = 0.f;
-        playAnimation("idle");
-    } 
+    }
+
+    if (isJumping() && !isAirbone()) {
+        velocity.y = -_jumpSpeed;
+    }
+
+
+    b2Body_SetGravityScale(_body->getId(), 4.0f);
+    if (isAirbone() || isJumping()) {
+        if (velocity.y > 0) b2Body_SetGravityScale(_body->getId(), isJumping() ? 3.0f : 4.0f);
+        playAnimation("jump");
+    } else {
+        if (!isMovingLeft() && !isMovingRight()) playAnimation("idle");
+        else playAnimation("walk");
+    }
 
     b2Body_SetLinearVelocity(_body->getId(), velocity);
 }

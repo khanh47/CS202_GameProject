@@ -1,10 +1,12 @@
 #include "Game/World/GameWorld.h"
+#include "Game/Behaviours/Moveable.h"
 #include "Game/GameSettings.h"
 #include "Game/Objects/GameObject.h"
 #include "Game/Objects/Player/Player.h"
 #include "Game/Objects/Block/Block.h"
 #include "Game/UserInput/PlayerController.h"
 #include "ResourceManager.h"
+#include "box2d/types.h"
 #include <SFML/Graphics/Texture.hpp>
 #include <memory>
 
@@ -38,11 +40,76 @@ void GameWorld::updateSimulation(const float &fixedDt) {
         }
     }
 
+    finalizeGroundContacts();
+
+    b2SensorEvents sensorEvents = _physicsWorld.getSensorEvents();
     for (std::shared_ptr<GameObject>& object : _objects) {
         object->updateSimulation(fixedDt);
     }
-
     _physicsWorld.updateSimulation(fixedDt);
+    b2ContactEvents contactEvents = _physicsWorld.getContactEvents();
+
+    handleSensors(sensorEvents);
+    handleContacts(contactEvents);
+}
+
+void GameWorld::handleContacts(b2ContactEvents contactEvents) {
+    for (int i = 0; i < contactEvents.beginCount; ++i)
+    {
+        b2ContactBeginTouchEvent* event = &contactEvents.beginEvents[i];
+        
+        b2ShapeId shapeA = event->shapeIdA;
+        b2ShapeId shapeB = event->shapeIdB;
+
+        GameObject* objA = static_cast<GameObject*>(b2Shape_GetUserData(shapeA));
+        GameObject* objB = static_cast<GameObject*>(b2Shape_GetUserData(shapeB));
+    }
+
+    for (int i = 0; i < contactEvents.endCount; ++i)
+    {
+        b2ContactEndTouchEvent* event = &contactEvents.endEvents[i];
+        b2ShapeId shapeA = event->shapeIdA;
+        b2ShapeId shapeB = event->shapeIdB;
+
+        GameObject* objA = static_cast<GameObject*>(b2Shape_GetUserData(shapeA));
+        GameObject* objB = static_cast<GameObject*>(b2Shape_GetUserData(shapeB));
+    }   
+}
+
+void GameWorld::handleSensors(b2SensorEvents sensorEvents) {
+    for (int i = 0; i < sensorEvents.endCount; ++i)
+    {
+        b2SensorEndTouchEvent* event = &sensorEvents.endEvents[i];
+        
+        b2ShapeId shapeA = event->sensorShapeId;
+
+        GameObject* feetOwner = static_cast<GameObject*>(b2Shape_GetUserData(shapeA));
+
+        if (Moveable* movingComponent = dynamic_cast<Moveable*>(feetOwner)) {
+            movingComponent->endGroundContact();
+        }
+    }
+
+    for (int i = 0; i < sensorEvents.beginCount; ++i)
+    {
+        b2SensorBeginTouchEvent* event = &sensorEvents.beginEvents[i];
+
+        b2ShapeId shapeA = event->sensorShapeId;
+
+        GameObject* feetOwner = static_cast<GameObject*>(b2Shape_GetUserData(shapeA));
+
+        if (Moveable* movingComponent = dynamic_cast<Moveable*>(feetOwner)) {
+            movingComponent->beginGroundContact();
+        }
+    }   
+}
+
+void GameWorld::finalizeGroundContacts() {
+    for (std::shared_ptr<GameObject>& object : _objects) {
+        if (Moveable* movingComponent = dynamic_cast<Moveable*>(object.get())) {
+            movingComponent->finalizeGroundContacts();
+        }
+    }
 }
 
 void GameWorld::updateVisuals(float deltaTime) {
@@ -171,11 +238,12 @@ void GameWorld::loadMap(const std::vector<std::vector<int>>& mapData) {
                 // We pass CELL_SIZE because GameObject::createHitbox now correctly halves the dimensions.
                 brickBlock->spawn(_physicsWorld, spawnPos, {CELL_SIZE, CELL_SIZE});
                 _grid[logicY][x] = brickBlock;
+                _objects.push_back(brickBlock);
             } 
             else if (blockId == 2) {
                 // Player 1
                 auto player1 = _objectFactory.createPlayer("Player", &marioTexture, "mario");
-                player1->spawn(_physicsWorld, {spawnPos.x + 10, spawnPos.y}, {80, 80});
+                player1->spawn(_physicsWorld, {spawnPos.x + 10, spawnPos.y}, {96, 96}, true);
                 if (auto mario = std::dynamic_pointer_cast<Player>(player1)) {
                     _controllers.emplace_back(std::make_unique<PlayerController>(*mario, PlayerController::ControlScheme::Wasd));
                 }

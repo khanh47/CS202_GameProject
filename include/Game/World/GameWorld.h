@@ -6,6 +6,7 @@
 #include "Physics/PhysicsWorld.h"
 #include "Game/Objects/GameObjectFactory.h"
 #include "Game/World/TileMap.h"
+#include "box2d/types.h"
 
 class PlayerController;
 
@@ -18,11 +19,15 @@ public:
     void updateSimulation(const float &fixedDt);
     void updateVisuals(float deltaTime);
     void render(sf::RenderTarget &target);
+    void handleContacts(b2ContactEvents contactEvents);
+    void handleSensors(b2SensorEvents sensorEvents);
 
     void test();
     void loadMap(const std::vector<std::vector<int>>& mapData);
 
 private:
+    void finalizeGroundContacts();
+
     PhysicsWorld _physicsWorld;
     GameObjectFactory _objectFactory;
     std::vector<std::shared_ptr<GameObject>> _objects;

@@ -7,7 +7,7 @@
 #include "Physics/PhysicsBody.h"
 #include "Physics/PhysicsWorld.h"
 
-class GameObject: public std::enable_shared_from_this<GameObject> {
+class GameObject {
 public:
     GameObject();
     virtual ~GameObject() = default;
@@ -16,7 +16,7 @@ public:
     virtual void updateVisuals(float deltaTime);
     virtual void render(sf::RenderTarget &target);
 
-    virtual void spawn(const PhysicsWorld &physicsWorld, sf::Vector2f spawnPixels, sf::Vector2f hitboxPixels);
+    virtual void spawn(const PhysicsWorld &physicsWorld, sf::Vector2f spawnPixels, sf::Vector2f hitboxPixels, bool hasFeet = false);
     void destroy() { _pendingDestroy = true; }
     
     bool isPendingDestroy() { return _pendingDestroy; }
@@ -41,5 +41,8 @@ protected:
 private:
     void createBody(const PhysicsWorld &physicsWorld, sf::Vector2f spawnPixels);
     void createHitbox(sf::Vector2f hitboxPixels);
+    void createFeet(sf::Vector2f hitboxPixels);
     void drawFallbackRect(sf::RenderTarget& target) const; // debugging
+
+    bool _hasFeet = false;
 };
