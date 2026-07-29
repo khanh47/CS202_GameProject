@@ -24,4 +24,7 @@ protected:
     virtual void onUpdateVisuals(float deltaTime) override;
     virtual void onRenderVisual(sf::RenderTarget& target, const sf::Vector2f& position, float angleDegrees) override;
     virtual void updateSimulation(const float &fixedDt) override;
+    virtual void onContact();
+private:
+    float _moveSpeed = 2.0f;
 };
