@@ -5,6 +5,8 @@
 #include "Game/Objects/Player/State/FireState.h"
 #include "Game/Objects/Player/State/MegaStateDecorator.h"
 #include "Physics/PhysicsUnits.h"
+#include "Game/Objects/Enemy/Enemy.h"
+#include "Game/Objects/Item/FireFlower.h"
 #include "ResourceManager.h"
 
 #include <SFML/Graphics/Texture.hpp>
@@ -133,6 +135,30 @@ void Player::finalizeSimulation(const float &fixedDt) {
         playAnimation("idle");
     } else {
         playAnimation("walk");
+    }
+}
+
+void Player::onContact(GameObject& other) {
+    if (auto* fireFlower = dynamic_cast<FireFlower*>(&other)) {
+        if (_world) {
+            startFireTransformation(*_world, 1.0f);
+        }
+        fireFlower->destroy();
+        return;
+    }
+
+    if (auto* enemy = dynamic_cast<Enemy*>(&other)) {
+        const b2Vec2 velocity = b2Body_GetLinearVelocity(_body->getId());
+        const bool isFalling = velocity.y > 0.0f;
+        const bool isAbove = getPosition().y < enemy->getPosition().y;
+        if (isFalling && isAbove) {
+            enemy->destroy();
+            b2Vec2 vel = b2Body_GetLinearVelocity(_body->getId());
+            vel.y = -12.0f;
+            b2Body_SetLinearVelocity(_body->getId(), vel);
+        } else {
+            takeDamage(50);
+        }
     }
 }
 

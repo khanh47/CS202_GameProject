@@ -4,13 +4,11 @@
 #include <memory>
 
 #include "Game/Behaviours/Moveable.h"
-#include "Game/Objects/Block/Block.h"
 #include "Game/Objects/Enemy/Enemy.h"
 #include "Game/Objects/GameObject.h"
-#include "Game/Objects/Item/FireFlower.h"
-#include "Game/Objects/Item/Fireball.h"
 #include "Game/Objects/Item/FireballPool.h"
 #include "Game/Objects/Item/Item.h"
+#include "Game/Objects/Item/FireFlower.h"
 #include "Game/Objects/Player/Player.h"
 #include "Game/World/GameWorld.h"
 #include "Game/World/WorldObjectStore.h"
@@ -151,6 +149,7 @@ void WorldInteractionSystem::processObjectInteractions(
     FireballPool& fireballPool,
     GameWorld& gameWorld
 ) {
+    (void)gameWorld;
     const auto& objects = objectStore.objects();
     for (const std::shared_ptr<Fireball>& fireball : fireballPool.getPool()) {
         if (!fireball || !fireball->isActive()) {
@@ -170,8 +169,7 @@ void WorldInteractionSystem::processObjectInteractions(
             constexpr float combinedRadius = 19.0f + 32.0f;
             if (difference.x * difference.x + difference.y * difference.y
                 < combinedRadius * combinedRadius) {
-                enemy->destroy();
-                fireball->deactivate();
+                fireball->onContact(*enemy);
                 break;
             }
         }
@@ -196,8 +194,7 @@ void WorldInteractionSystem::processObjectInteractions(
             player->getPosition() - fireFlower->getPosition();
         if (difference.x * difference.x + difference.y * difference.y
             < 45.0f * 45.0f) {
-            player->startFireTransformation(gameWorld, 1.0f);
-            fireFlower->destroy();
+            player->onContact(*fireFlower);
         }
     }
 }

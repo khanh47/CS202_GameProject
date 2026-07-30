@@ -116,7 +116,7 @@ void WorldMap::rebuild(
                         std::make_unique<PlayerController>(
                             *mario,
                             gameWorld,
-                            PlayerController::ControlScheme::ArrowKeys
+                            PlayerController::ControlScheme::Wasd
                         )
                     );
                 }

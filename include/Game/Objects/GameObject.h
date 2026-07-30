@@ -24,6 +24,8 @@ public:
     sf::Vector2f getPosition() const;
     virtual sf::Vector2f getVelocity() const;
 
+    virtual void onContact(GameObject& other) {}
+
 protected:
     virtual void onCreateBodyDef(b2BodyDef& def);
     virtual void onCreateShapeDef(b2ShapeDef& def);

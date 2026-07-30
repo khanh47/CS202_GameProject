@@ -3,6 +3,7 @@
 #include <algorithm>
 
 #include "Game/GameSettings.h"
+#include "Game/Objects/Player/Player.h"
 #include "Game/World/LevelDataLoader.h"
 
 GameWorld::GameWorld() = default;
@@ -94,6 +95,9 @@ void GameWorld::test() {
         _worldMap.getGridWidth(),
         _worldMap.getGridHeight()
     ));
+    if (auto player = std::dynamic_pointer_cast<Player>(getPrimaryPlayer())) {
+        player->setGameWorld(*this);
+    }
 }
 
 bool GameWorld::spawnFireball(
