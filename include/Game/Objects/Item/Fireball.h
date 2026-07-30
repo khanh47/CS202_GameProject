@@ -24,7 +24,7 @@ public:
 
     void triggerBounce();
     void updateSimulation(const float& fixedDt) override;
-    void onContact(GameObject& other) override;
+    void onContact(GameObject& other, const b2ContactData& contactData, b2ShapeId ownShape) override;
 
 protected:
     void onCreateBodyDef(b2BodyDef& def) override;

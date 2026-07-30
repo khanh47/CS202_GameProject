@@ -69,7 +69,7 @@ void Fireball::updateSimulation(const float& fixedDt) {
     playAnimation("spin");
 }
 
-void Fireball::onContact(GameObject& other) {
+void Fireball::onContact(GameObject& other, const b2ContactData&, b2ShapeId) {
     if (auto* block = dynamic_cast<Block*>(&other)) {
         const sf::Vector2f difference = getPosition() - block->getPosition();
         if (difference.y < -16.0f) {
@@ -102,7 +102,7 @@ void Fireball::onCreateShapeDef(b2ShapeDef& def) {
     // Filter bits: Category 0x0004 (Fireball), Mask 0x0001 (Collides ONLY with environment/blocks)
     // Fireballs pass freely through player (0x0002) and other fireballs (0x0004)
     def.filter.categoryBits = 0x0004;
-    def.filter.maskBits = 0x0001;
+    def.filter.maskBits = 0x0001 | 0x0008;
 }
 
 void Fireball::onUpdateVisuals(float deltaTime) {

@@ -34,7 +34,7 @@ public:
     void startFireTransformation(GameWorld& world, float duration = 1.0f);
 
     void setGameWorld(GameWorld& world) { _world = &world; }
-    void onContact(GameObject& other) override;
+    void onContact(GameObject& other, const b2ContactData& contactData, b2ShapeId ownShape) override;
 
     PlayerState* getState() const { return _state.get(); }
     bool isTransforming() const { return _isTransforming; }
