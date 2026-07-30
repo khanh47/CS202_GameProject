@@ -11,14 +11,14 @@
 
 namespace {
 constexpr bool drawFallbackCollisionRect = true;
-constexpr float feetInsetPixels = 1.0f;
+constexpr float feetInsetPixels = 0.0f;
 constexpr float feetHalfHeightPixels = 1.0f;
-constexpr float feetOverlapPixels = 2.0f;
+constexpr float feetOverlapPixels = 0.0f;
 
 void drawDebugRect(
     sf::RenderTarget& target,
     const sf::Vector2f& centerPixels,
-    const sf::Vector2f& sizePixels,
+const sf::Vector2f& sizePixels,
     float angleDegrees,
     const sf::Color& fillColor,
     const sf::Color& outlineColor
