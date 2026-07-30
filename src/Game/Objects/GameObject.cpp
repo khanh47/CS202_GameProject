@@ -11,8 +11,8 @@
 
 namespace {
 constexpr bool drawFallbackCollisionRect = true;
-constexpr float feetInsetPixels = 4.0f;
-constexpr float feetHalfHeightPixels = 2.0f;
+constexpr float feetInsetPixels = 1.0f;
+constexpr float feetHalfHeightPixels = 1.0f;
 constexpr float feetOverlapPixels = 2.0f;
 
 void drawDebugRect(
@@ -63,7 +63,7 @@ void GameObject::updateVisuals(float deltaTime) {
     onUpdateVisuals(deltaTime);
 }
 
-void GameObject::render(sf::RenderTarget &target) { // DEFINITELY NEEDS TO BE REFRACTORED
+void GameObject::render(sf::RenderTarget &target) {
     if (!hasValidBody()) return;
 
     const sf::Vector2f position = getBodyPositionPixels();

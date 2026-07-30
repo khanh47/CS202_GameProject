@@ -9,9 +9,31 @@
 #include "Game/Objects/Item/FireFlower.h"
 #include "Game/Objects/Item/Fireball.h"
 #include "Game/Objects/Item/FireballPool.h"
+#include "Game/Objects/Item/Item.h"
 #include "Game/Objects/Player/Player.h"
 #include "Game/World/GameWorld.h"
 #include "Game/World/WorldObjectStore.h"
+#include "Physics/PhysicsUnits.h"
+#include "box2d/box2d.h"
+
+namespace {
+constexpr float groundSurfaceTolerancePixels = 16.0f;
+
+bool isSurfaceBelowFeet(b2ShapeId sensor, b2ShapeId visitor) {
+    if (!b2Shape_IsValid(visitor)) {
+        return false;
+    }
+
+    const b2AABB feetBounds = b2Shape_GetAABB(sensor);
+    const b2AABB surfaceBounds = b2Shape_GetAABB(visitor);
+    const float tolerance =
+        PhysicsUnits::toMeters(groundSurfaceTolerancePixels);
+    const float surfaceTop = surfaceBounds.lowerBound.y;
+
+    return surfaceTop >= feetBounds.lowerBound.y - tolerance
+        && surfaceTop <= feetBounds.upperBound.y + tolerance;
+}
+}
 
 void WorldInteractionSystem::processContacts(b2ContactEvents events) {
     for (int index = 0; index < events.beginCount; ++index) {
@@ -59,9 +81,13 @@ void WorldInteractionSystem::processSensors(b2SensorEvents events) {
         if (!b2Shape_IsValid(sensor)) {
             continue;
         }
-        auto* owner = static_cast<GameObject*>(b2Shape_GetUserData(sensor));
+        
+        const b2ShapeId visitorShape = events.beginEvents[index].visitorShapeId;
+        GameObject* owner = static_cast<GameObject*>(b2Shape_GetUserData(sensor));
+        GameObject* visitor = static_cast<GameObject*>(b2Shape_GetUserData(visitorShape));
+
         if (auto* moveable = dynamic_cast<Moveable*>(owner)) {
-            moveable->endGroundContact();
+            moveable->endGroundContact(events.endEvents[index].visitorShapeId);
         }
     }
 
@@ -70,9 +96,14 @@ void WorldInteractionSystem::processSensors(b2SensorEvents events) {
         if (!b2Shape_IsValid(sensor)) {
             continue;
         }
-        auto* owner = static_cast<GameObject*>(b2Shape_GetUserData(sensor));
-        if (auto* moveable = dynamic_cast<Moveable*>(owner)) {
-            moveable->beginGroundContact();
+
+        const b2ShapeId visitorShape = events.beginEvents[index].visitorShapeId;
+        GameObject* owner = static_cast<GameObject*>(b2Shape_GetUserData(sensor));
+        GameObject* visitor = static_cast<GameObject*>(b2Shape_GetUserData(visitorShape));
+
+        if (auto* moveable = dynamic_cast<Moveable*>(owner);
+            moveable && isSurfaceBelowFeet(sensor, visitorShape)) {
+            moveable->beginGroundContact(visitorShape);
         }
     }
 }

@@ -1,7 +1,9 @@
 #include "Game/World/WorldMap.h"
 
 #include <algorithm>
+#include <memory>
 
+#include "Game/Objects/GameObject.h"
 #include "Game/Objects/GameObjectFactory.h"
 #include "Game/Objects/Item/FireballPool.h"
 #include "Game/Objects/Player/Player.h"
@@ -59,32 +61,63 @@ void WorldMap::rebuild(
             static_cast<int>(mapData[mapRow].size()),
             _gridWidth
         );
+        const int logicY = logicYForMapRow(mapRow);
+        const int screenY = screenYForMapRow(mapRow);
+
         for (int column = 0; column < columns; ++column) {
-            const int tileId = mapData[mapRow][column];
-            if (tileId == 0) {
+            if (mapData[mapRow][column] == 1) {
+                _tileMap.setTile(column, screenY, 1);
+            }
+        }
+
+        int column = 0;
+        while (column < columns) {
+            if (mapData[mapRow][column] != 1) {
+                ++column;
                 continue;
             }
 
-            const int logicY = logicYForMapRow(mapRow);
-            const int screenY = screenYForMapRow(mapRow);
-            const sf::Vector2f spawnPosition = {
-                column * _cellSize + _cellSize * 0.5f,
+            const int runStart = column;
+            while (column < columns && mapData[mapRow][column] == 1) {
+                ++column;
+            }
+
+            const int runLength = column - runStart;
+            const float runWidth = runLength * _cellSize;
+            const sf::Vector2f runPosition = {
+                runStart * _cellSize + runWidth * 0.5f,
                 screenY * _cellSize + _cellSize * 0.5f
             };
 
-            if (tileId == 1) {
-                _tileMap.setTile(column, screenY, tileId);
-                auto block = objectFactory.createBlock("Block", &brickTexture);
-                block->spawn(
-                    physicsWorld,
-                    spawnPosition,
-                    {_cellSize, _cellSize}
-                );
-                if (logicY >= 0 && logicY < _gridHeight) {
-                    _grid[logicY][column] = block;
+            std::shared_ptr<GameObject> block = objectFactory.createBlock("Block", &brickTexture);
+            block->spawn(
+                physicsWorld,
+                runPosition,
+                {runWidth, _cellSize}
+            );
+            if (logicY >= 0 && logicY < _gridHeight) {
+                for (int runColumn = runStart;
+                     runColumn < column;
+                     ++runColumn) {
+                    _grid[logicY][runColumn] = block;
                 }
-                objectStore.addObject(std::move(block));
-            } else if (tileId == 2) {
+            }
+            objectStore.addObject(std::move(block));
+        }
+
+        for (int objectColumn = 0;
+             objectColumn < columns;
+             ++objectColumn) {
+            const int tileId = mapData[mapRow][objectColumn];
+            if (tileId == 0 || tileId == 1) {
+                continue;
+            }
+            const sf::Vector2f spawnPosition = {
+                objectColumn * _cellSize + _cellSize * 0.5f,
+                screenY * _cellSize + _cellSize * 0.5f
+            };
+
+            if (tileId == 2) {
                 auto player = objectFactory.createPlayer(
                     "Player",
                     &marioTexture,

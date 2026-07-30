@@ -20,6 +20,9 @@ void FireFlower::onCreateBodyDef(b2BodyDef& def) {
 void FireFlower::onCreateShapeDef(b2ShapeDef& def) {
     def.isSensor = true;
     def.density = 0.0f;
+
+    def.filter.categoryBits = 0x0004;
+    def.filter.maskBits = 0x0001;
 }
 
 void FireFlower::onUpdateVisuals(float deltaTime) {

@@ -1,5 +1,10 @@
 #pragma once
 
+#include <algorithm>
+#include <vector>
+
+#include <box2d/id.h>
+
 class Moveable {
 public:
     void startMoveLeft() { _movingLeft = true; _facingLeft = true; }
@@ -14,15 +19,44 @@ public:
         _groundContactGraceFramesRemaining = kGroundContactGraceFrames;
     }
 
+    void beginGroundContact(b2ShapeId visitor) {
+        const auto existing = std::find_if(
+            _groundVisitors.begin(),
+            _groundVisitors.end(),
+            [visitor](b2ShapeId current) {
+                return B2_ID_EQUALS(current, visitor);
+            }
+        );
+        if (existing == _groundVisitors.end()) {
+            _groundVisitors.push_back(visitor);
+            beginGroundContact();
+        }
+    }
+
     void endGroundContact() {
         if (_groundContactCount > 0) {
             --_groundContactCount;
         }
     }
 
+    void endGroundContact(b2ShapeId visitor) {
+        const auto existing = std::find_if(
+            _groundVisitors.begin(),
+            _groundVisitors.end(),
+            [visitor](b2ShapeId current) {
+                return B2_ID_EQUALS(current, visitor);
+            }
+        );
+        if (existing != _groundVisitors.end()) {
+            _groundVisitors.erase(existing);
+            endGroundContact();
+        }
+    }
+
     void resetGroundContacts() {
         _groundContactCount = 0;
         _groundContactGraceFramesRemaining = 0;
+        _groundVisitors.clear();
     }
 
     void finalizeGroundContacts() {
@@ -52,4 +86,5 @@ private:
     bool _jumping = false;
     int _groundContactCount = 0;
     int _groundContactGraceFramesRemaining = 0;
+    std::vector<b2ShapeId> _groundVisitors;
 };
