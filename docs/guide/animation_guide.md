@@ -1,6 +1,4 @@
-# Development Guide
-
-## Creating a New Game Object with Animation (e.g. Goomba)
+# Creating a New Game Object with Animation (e.g. Goomba)
 
 This guide walks through adding a new animated game object to the project.
 

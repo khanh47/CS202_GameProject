@@ -138,12 +138,31 @@ void Player::finalizeSimulation(const float &fixedDt) {
     }
 }
 
-void Player::onContact(GameObject& other) {
+void Player::onContact(GameObject& other, const b2ContactData& contactData, b2ShapeId ownShape) {
     if (auto* fireFlower = dynamic_cast<FireFlower*>(&other)) {
         if (_world) {
             startFireTransformation(*_world, 1.0f);
         }
         fireFlower->destroy();
+        return;
+    }
+
+    if (auto* enemy = dynamic_cast<Enemy*>(&other)) {
+        if (b2Shape_IsValid(ownShape)) {
+            b2Vec2 normal = contactData.manifold.normal;
+            if (!B2_ID_EQUALS(contactData.shapeIdA, ownShape)) {
+                normal = {-normal.x, -normal.y};
+            }
+            if (contactData.manifold.pointCount > 0 && normal.y >= 0.5f) {
+                enemy->destroy();
+                b2BodyId bodyId = b2Shape_GetBody(ownShape);
+                b2Vec2 vel = b2Body_GetLinearVelocity(bodyId);
+                vel.y = -12.0f;
+                b2Body_SetLinearVelocity(bodyId, vel);
+            } else {
+                takeDamage(50);
+            }
+        }
     }
 }
 
@@ -160,7 +179,7 @@ void Player::onCreateShapeDef(b2ShapeDef& def) {
     // Category 0x0002 (Player), Mask 0x0001 | 0x0008 (Environment + Enemy)
     // Excludes Category 0x0004 (Fireball) so fireballs pass completely through Player
     def.filter.categoryBits = 0x0002;
-    def.filter.maskBits = 0x0001 | 0x0008;
+    def.filter.maskBits = 0x0001 | 0x0008 | 0x0010;
 }
 
 b2Polygon Player::makeHitbox(sf::Vector2f hitboxPixels) const {

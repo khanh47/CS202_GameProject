@@ -48,11 +48,6 @@ void GameWorld::updateSimulation(const float& fixedDt) {
     handleSensors(_physicsWorld.getSensorEvents());
     handleContacts(_physicsWorld.getContactEvents());
     _objectStore.finalizeSimulation(fixedDt);
-    _interactionSystem.processObjectInteractions(
-        _objectStore,
-        _fireballPool,
-        *this
-    );
     _objectStore.cleanupDestroyed();
 }
 
