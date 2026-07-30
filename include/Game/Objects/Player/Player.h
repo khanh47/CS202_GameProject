@@ -33,6 +33,9 @@ public:
     void attack(GameWorld& world);
     void startFireTransformation(GameWorld& world, float duration = 1.0f);
 
+    void setGameWorld(GameWorld& world) { _world = &world; }
+    void onContact(GameObject& other) override;
+
     PlayerState* getState() const { return _state.get(); }
     bool isTransforming() const { return _isTransforming; }
 
@@ -53,4 +56,5 @@ private:
     bool _isTransforming = false;
     float _transformTimer = 0.0f;
     float _transformDuration = 1.0f;
+    GameWorld* _world = nullptr;
 };
