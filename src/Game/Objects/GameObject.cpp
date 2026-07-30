@@ -11,9 +11,9 @@
 
 namespace {
 constexpr bool drawFallbackCollisionRect = true;
-constexpr float feetInsetPixels = 0.05f;
+constexpr float feetInsetPixels = 4.0f;
 constexpr float feetHalfHeightPixels = 2.0f;
-constexpr float feetOverlapPixels = 1.0f;
+constexpr float feetOverlapPixels = 2.0f;
 
 void drawDebugRect(
     sf::RenderTarget& target,
