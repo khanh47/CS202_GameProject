@@ -2,6 +2,8 @@
 #include "Physics/PhysicsUnits.h"
 #include "ResourceManager.h"
 #include "Animation/AnimationLibrary.h"
+#include "Game/Objects/Block/Block.h"
+#include "Game/Objects/Enemy/Enemy.h"
 
 Fireball::Fireball() : GameObject(), Animatable() {
     sf::Texture& itemsTexture = ResourceManager::getInstance().getTexture("mario_and_items");
@@ -65,6 +67,23 @@ void Fireball::updateSimulation(const float& fixedDt) {
     _distanceTraveled += std::abs(vel.x) * fixedDt * PhysicsUnits::pixelsPerMeter;
 
     playAnimation("spin");
+}
+
+void Fireball::onContact(GameObject& other) {
+    if (auto* block = dynamic_cast<Block*>(&other)) {
+        const sf::Vector2f difference = getPosition() - block->getPosition();
+        if (difference.y < -16.0f) {
+            triggerBounce();
+        } else {
+            deactivate();
+        }
+        return;
+    }
+
+    if (dynamic_cast<Enemy*>(&other)) {
+        other.destroy();
+        deactivate();
+    }
 }
 
 void Fireball::onCreateBodyDef(b2BodyDef& def) {
