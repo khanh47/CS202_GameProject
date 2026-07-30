@@ -10,7 +10,7 @@
  * @brief Represents a bouncing fireball spawned by Fire Mario.
  * Uses Box2D dynamic physics for bouncing and manages its active/inactive pool lifecycle.
  */
-class Fireball : public GameObject, public Animatable {
+class Fireball : public GameObject {
 public:
     Fireball();
     Fireball(sf::Texture& texture);
@@ -33,6 +33,8 @@ protected:
     void onRenderVisual(sf::RenderTarget& target, const sf::Vector2f& position, float angleDegrees) override;
 
 private:
+    std::unique_ptr<Animatable> animatable;
+
     bool _active = false;
     bool _facingRight = true;
     float _distanceTraveled = 0.0f;

@@ -1,8 +1,4 @@
 #include "Game/World/WorldObjectStore.h"
-
-#include <algorithm>
-
-#include "Game/Behaviours/Moveable.h"
 #include "Game/Objects/GameObject.h"
 #include "Game/Objects/Player/Player.h"
 #include "Game/UserInput/PlayerController.h"
@@ -83,9 +79,7 @@ void WorldObjectStore::suspendPlayerMotion() {
 void WorldObjectStore::finalizeGroundContacts() {
     for (const std::shared_ptr<GameObject>& object : _objects) {
         if (object) {
-            if (auto* moveable = dynamic_cast<Moveable*>(object.get())) {
-                moveable->finalizeGroundContacts();
-            }
+            object->finalizeGroundContacts();
         }
     }
 }

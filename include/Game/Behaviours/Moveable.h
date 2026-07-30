@@ -44,7 +44,6 @@ public:
         return !_groundTracker.isGrounded();
     }
 
-protected:
     void consumeGroundForJump() {
         _groundTracker.consumeForJump();
     }

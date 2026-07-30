@@ -27,6 +27,7 @@ public:
     sf::Vector2f getHitboxPixels() const { return _hitboxPixels; }
 
     virtual void onContact(GameObject& other, const b2ContactData& contactData, b2ShapeId ownShape) {}
+    virtual void finalizeGroundContacts() {}
 
 protected:
     virtual void onCreateBodyDef(b2BodyDef& def);

@@ -1,7 +1,6 @@
 #include "Game/World/WorldInteractionSystem.h"
 
 #include <algorithm>
-#include <memory>
 
 #include "Game/Objects/GameObject.h"
 #include "Game/Objects/Player/Player.h"

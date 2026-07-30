@@ -13,10 +13,7 @@
 
 class GameWorld;
 
-class Player: public GameObject,
-              public Animatable,
-              public Damageable, 
-              public Moveable {
+class Player: public GameObject {
 public:
     Player();
     Player(sf::Texture &texture);
@@ -35,9 +32,21 @@ public:
 
     void setGameWorld(GameWorld& world) { _world = &world; }
     void onContact(GameObject& other, const b2ContactData& contactData, b2ShapeId ownShape) override;
+    void finalizeGroundContacts() override;
 
     PlayerState* getState() const { return _state.get(); }
     bool isTransforming() const { return _isTransforming; }
+
+    // Moveable forwarding (called externally)
+    bool isFacingLeft() const { return moveable->isFacingLeft(); }
+    void startMoveLeft() { moveable->startMoveLeft(); }
+    void startMoveRight() { moveable->startMoveRight(); }
+    void startJump() { moveable->startJump(); }
+    void stopMoveLeft() { moveable->stopMoveLeft(); }
+    void stopMoveRight() { moveable->stopMoveRight(); }
+    void stopJump() { moveable->stopJump(); }
+    void beginGroundContact(b2ShapeId visitor) { moveable->beginGroundContact(visitor); }
+    void endGroundContact(b2ShapeId visitor) { moveable->endGroundContact(visitor); }
 
 protected:
     void updateSimulation(const float &fixedDt) override;
@@ -50,6 +59,10 @@ protected:
     b2Polygon makeHitbox(sf::Vector2f hitboxPixels) const override;
 
 private:
+    std::unique_ptr<Animatable> animatable;
+    std::unique_ptr<Damageable> damageable;
+    std::unique_ptr<Moveable> moveable;
+
     float _baseMoveSpeed = 8.0f;
     float _baseJumpSpeed = 16.0f;
     std::unique_ptr<PlayerState> _state;

@@ -5,7 +5,7 @@ FireFlower::FireFlower() : Item() {
 }
 
 FireFlower::FireFlower(sf::Texture& texture) : Item() {
-    configureVisuals(texture, "fire_flower");
+    animatable->configureVisuals(texture, "fire_flower");
 }
 
 void FireFlower::onPickup(Player& player) {

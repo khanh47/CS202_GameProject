@@ -24,12 +24,9 @@ public:
 
     void setVisualScale(sf::Vector2f scale);
     sf::Vector2f getVisualScale() const;
-
-protected:
     void playAnimation(const std::string& name);
     void stopAnimation();
     std::string getActiveAnimationName() const;
-
     bool hasSprite() const;
 
 private:

@@ -11,10 +11,11 @@
 
 #include <SFML/Graphics/Texture.hpp>
 #include <SFML/System/Vector2.hpp>
-#include <iostream>
-#include <ostream>
 
-Player::Player() : GameObject(), Animatable(), Damageable(100) {
+Player::Player() : GameObject() {
+    animatable = std::make_unique<Animatable>();
+    damageable = std::make_unique<Damageable>(100);
+    moveable = std::make_unique<Moveable>();
     setState(std::make_unique<NormalState>());
 }
 
@@ -22,8 +23,11 @@ Player::Player(sf::Texture &texture) : Player(texture, "mario") {
 }
 
 Player::Player(sf::Texture &texture, const std::string& animationSetId)
-    : GameObject(), Animatable(), Damageable(100) {
+    : GameObject() {
     (void)texture;
+    animatable = std::make_unique<Animatable>();
+    damageable = std::make_unique<Damageable>(100);
+    moveable = std::make_unique<Moveable>();
     if (animationSetId == "fire_mario") {
         setState(std::make_unique<FireState>());
     } else {
@@ -32,6 +36,10 @@ Player::Player(sf::Texture &texture, const std::string& animationSetId)
 }
 
 Player::~Player() = default;
+
+void Player::finalizeGroundContacts() {
+    moveable->finalizeGroundContacts();
+}
 
 void Player::setState(std::unique_ptr<PlayerState> newState) {
     if (!newState) return;
@@ -48,7 +56,7 @@ void Player::setState(std::unique_ptr<PlayerState> newState) {
     const std::string& texAlias = _state->getTextureAlias();
     const std::string& animId = _state->getAnimationSetId();
     sf::Texture& tex = ResourceManager::getInstance().getTexture(texAlias);
-    configureVisuals(tex, animId);
+    animatable->configureVisuals(tex, animId);
 }
 
 void Player::attack(GameWorld& world) {
@@ -104,23 +112,23 @@ void Player::updateSimulation(const float &fixedDt) {
         jumpSpeed *= _state->getJumpSpeedMultiplier();
     }
 
-    if (isMovingLeft() && !isMovingRight()) {
+    if (moveable->isMovingLeft() && !moveable->isMovingRight()) {
         velocity.x = -moveSpeed;
-    } else if (isMovingRight() && !isMovingLeft()) {
+    } else if (moveable->isMovingRight() && !moveable->isMovingLeft()) {
         velocity.x = moveSpeed;
-    } else if (!isMovingLeft() && !isMovingRight()) {
+    } else if (!moveable->isMovingLeft() && !moveable->isMovingRight()) {
         velocity.x = 0.f;
     }
 
-    if (isJumping() && !isAirbone()) {
+    if (moveable->isJumping() && !moveable->isAirbone()) {
         velocity.y = -jumpSpeed;
-        consumeGroundForJump();
+        moveable->consumeGroundForJump();
     }
 
 
     b2Body_SetGravityScale(_body->getId(), 4.0f);
-    if (isAirbone() || isJumping()) {
-        if (velocity.y > 0) b2Body_SetGravityScale(_body->getId(), isJumping() ? 3.0f : 4.0f);
+    if (moveable->isAirbone() || moveable->isJumping()) {
+        if (velocity.y > 0) b2Body_SetGravityScale(_body->getId(), moveable->isJumping() ? 3.0f : 4.0f);
     }
 
     b2Body_SetLinearVelocity(_body->getId(), velocity);
@@ -129,12 +137,12 @@ void Player::updateSimulation(const float &fixedDt) {
 void Player::finalizeSimulation(const float &fixedDt) {
     (void)fixedDt;
 
-    if (isAirbone() || isJumping()) {
-        playAnimation("jump");
-    } else if (!isMovingLeft() && !isMovingRight()) {
-        playAnimation("idle");
+    if (moveable->isAirbone() || moveable->isJumping()) {
+        animatable->playAnimation("jump");
+    } else if (!moveable->isMovingLeft() && !moveable->isMovingRight()) {
+        animatable->playAnimation("idle");
     } else {
-        playAnimation("walk");
+        animatable->playAnimation("walk");
     }
 }
 
@@ -160,7 +168,7 @@ void Player::onContact(GameObject& other, const b2ContactData& contactData, b2Sh
                 vel.y = -12.0f;
                 b2Body_SetLinearVelocity(bodyId, vel);
             } else {
-                takeDamage(50);
+                damageable->takeDamage(50);
             }
         }
     }
@@ -203,9 +211,9 @@ void Player::startFireTransformation(GameWorld& world, float duration) {
     _transformDuration = duration > 0.0f ? duration : 1.0f;
 
     // Stop movement inputs and clear horizontal physics velocity when transformation starts
-    stopMoveLeft();
-    stopMoveRight();
-    stopJump();
+    moveable->stopMoveLeft();
+    moveable->stopMoveRight();
+    moveable->stopJump();
     if (hasValidBody()) {
         const b2BodyId bodyId = _body->getId();
         b2Vec2 vel = b2Body_GetLinearVelocity(bodyId);
@@ -218,8 +226,8 @@ void Player::startFireTransformation(GameWorld& world, float duration) {
 
     // Switch visuals to transformation spritesheet & play transformation animation
     sf::Texture& transformTex = ResourceManager::getInstance().getTexture("mario_transform_spritesheet");
-    configureVisuals(transformTex, "transform_fire");
-    playAnimation("transform");
+    animatable->configureVisuals(transformTex, "transform_fire");
+    animatable->playAnimation("transform");
 }
 
 void Player::onUpdateVisuals(float deltaTime) {
@@ -227,9 +235,9 @@ void Player::onUpdateVisuals(float deltaTime) {
         _transformTimer -= deltaTime;
         if (_transformTimer <= 0.0f) {
             _isTransforming = false;
-            stopMoveLeft();
-            stopMoveRight();
-            stopJump();
+            moveable->stopMoveLeft();
+            moveable->stopMoveRight();
+            moveable->stopJump();
             if (hasValidBody()) {
                 const b2BodyId bodyId = _body->getId();
                 b2Vec2 vel = b2Body_GetLinearVelocity(bodyId);
@@ -248,8 +256,8 @@ void Player::onUpdateVisuals(float deltaTime) {
 
         sf::Vector2f scaledHitbox = {_baseHitboxPixels.x * currentScale, _baseHitboxPixels.y * currentScale};
         updateHitboxSize(scaledHitbox);
-        setVisualScale({1.8f, 1.0f});
-        updateVisualState(deltaTime, scaledHitbox, isFacingLeft());
+        animatable->setVisualScale({1.8f, 1.0f});
+        animatable->updateVisualState(deltaTime, scaledHitbox, moveable->isFacingLeft());
         return;
     }
 
@@ -268,14 +276,15 @@ void Player::onUpdateVisuals(float deltaTime) {
 
     sf::Vector2f scaledHitbox = {_baseHitboxPixels.x * scaleMult.x, _baseHitboxPixels.y * scaleMult.y};
     updateHitboxSize(scaledHitbox);
-    setVisualScale({1.8f, 1.0f});
-    updateVisualState(deltaTime, scaledHitbox, isFacingLeft());
+    animatable->setVisualScale({1.8f, 1.0f});
+    animatable->updateVisualState(deltaTime, scaledHitbox, moveable->isFacingLeft());
 }
 
 void Player::onRenderVisual(sf::RenderTarget& target, const sf::Vector2f& position, float angleDegrees) {
-    renderVisualState(target, position);
+    (void)angleDegrees;
+    animatable->renderVisualState(target, position);
 }
 
 void Player::onHitboxRecreated() {
-    resetGroundContacts();
+    moveable->resetGroundContacts();
 }
