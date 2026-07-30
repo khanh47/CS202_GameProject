@@ -3,11 +3,10 @@
 #include <algorithm>
 #include <memory>
 
-#include "Game/Behaviours/Moveable.h"
+#include "Game/Objects/Block/Block.h"
 #include "Game/Objects/Enemy/Enemy.h"
 #include "Game/Objects/GameObject.h"
 #include "Game/Objects/Item/FireballPool.h"
-#include "Game/Objects/Item/Item.h"
 #include "Game/Objects/Item/FireFlower.h"
 #include "Game/Objects/Player/Player.h"
 #include "Game/World/GameWorld.h"
