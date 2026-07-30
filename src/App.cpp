@@ -4,10 +4,6 @@
 #include <windows.h>
 #endif
 
-namespace {
-    constexpr double fixedDt = 1.0 / 60.0;
-}
-
 App::App() : window(sf::VideoMode({1920, 1080}), "SUPER MARIO") {
 #ifdef _WIN32
     ShowWindow((HWND)window.getNativeHandle(), SW_MAXIMIZE); //to maximize window
@@ -22,13 +18,12 @@ App::App() : window(sf::VideoMode({1920, 1080}), "SUPER MARIO") {
 void App::run() {
     dtClock.restart();
     while (window.isOpen()) {
-        float deltaTime = dtClock.restart().asSeconds();
-        if(manager->getSceneName() == "IN_GAME")
-            accumulatedTime += std::min(deltaTime, 0.25f); // min to prevent too many physics updates at once => feel glitchy, not smooth LOL
-
+        const float deltaTime = stepAccumulator.addFrame(
+            dtClock.restart().asSeconds()
+        );
         processEvents();
-        updateSimulation(fixedDt);
-        // updateVisuals(std::min(deltaTime, 0.25f));
+        updateSimulation();
+        updateVisuals(deltaTime);
         render();
     }
 }
@@ -42,19 +37,14 @@ void App::processEvents() {
     }
 }
 
-void App::updateSimulation(const float &fixedDt){
-    while(accumulatedTime >= fixedDt){
-        if(manager->getSceneName() == "IN_GAME"){
-            manager->updateSimulation(fixedDt);
-            manager->updateVisuals(fixedDt);
-        }
-        accumulatedTime -= fixedDt;
-    }
+void App::updateSimulation() {
+    stepAccumulator.consume([this](float fixedDt) {
+        manager->updateSimulation(fixedDt);
+    });
 }
 
-// Visual update
 void App::updateVisuals(float deltaTime) {
-    manager->updateVisuals(deltaTime); //not controlled => 19283012 updates a second -> crash
+    manager->updateVisuals(deltaTime);
 }
 
 void App::render() {

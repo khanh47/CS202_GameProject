@@ -15,10 +15,13 @@ public:
     float getMoveSpeedMultiplier() const override;
     float getJumpSpeedMultiplier() const override;
     sf::Vector2f getScaleMultiplier() const override;
+    bool isExpired() const override { return _remainingTime <= 0.0f; }
+    void advanceLifetime(float deltaTime) noexcept {
+        _remainingTime -= deltaTime;
+    }
 
     void update(Player& player, float dt) override;
 
 private:
     float _remainingTime;
-    float _initialDuration;
 };
