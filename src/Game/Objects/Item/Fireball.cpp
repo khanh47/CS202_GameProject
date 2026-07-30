@@ -1,17 +1,18 @@
 #include "Game/Objects/Item/Fireball.h"
 #include "Physics/PhysicsUnits.h"
 #include "ResourceManager.h"
-#include "Animation/AnimationLibrary.h"
 #include "Game/Objects/Block/Block.h"
 #include "Game/Objects/Enemy/Enemy.h"
 
-Fireball::Fireball() : GameObject(), Animatable() {
+Fireball::Fireball() : GameObject() {
+    animatable = std::make_unique<Animatable>();
     sf::Texture& itemsTexture = ResourceManager::getInstance().getTexture("mario_and_items");
-    configureVisuals(itemsTexture, "fireball");
+    animatable->configureVisuals(itemsTexture, "fireball");
 }
 
-Fireball::Fireball(sf::Texture& texture) : GameObject(), Animatable() {
-    configureVisuals(texture, "fireball");
+Fireball::Fireball(sf::Texture& texture) : GameObject() {
+    animatable = std::make_unique<Animatable>();
+    animatable->configureVisuals(texture, "fireball");
 }
 
 void Fireball::activate(sf::Vector2f spawnPos, bool facingRight) {
@@ -66,7 +67,7 @@ void Fireball::updateSimulation(const float& fixedDt) {
     // Track total horizontal distance traveled in SFML pixel space
     _distanceTraveled += std::abs(vel.x) * fixedDt * PhysicsUnits::pixelsPerMeter;
 
-    playAnimation("spin");
+    animatable->playAnimation("spin");
 }
 
 void Fireball::onContact(GameObject& other, const b2ContactData&, b2ShapeId) {
@@ -109,7 +110,7 @@ void Fireball::onUpdateVisuals(float deltaTime) {
     if (!_active) {
         return;
     }
-    updateVisualState(deltaTime, _hitboxPixels, !_facingRight);
+    animatable->updateVisualState(deltaTime, _hitboxPixels, !_facingRight);
 }
 
 void Fireball::onRenderVisual(sf::RenderTarget& target, const sf::Vector2f& position, float angleDegrees) {
@@ -117,5 +118,5 @@ void Fireball::onRenderVisual(sf::RenderTarget& target, const sf::Vector2f& posi
     if (!_active) {
         return;
     }
-    renderVisualState(target, position);
+    animatable->renderVisualState(target, position);
 }
