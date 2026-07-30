@@ -38,11 +38,13 @@ public:
 
 protected:
     void updateSimulation(const float &fixedDt) override;
+    void finalizeSimulation(const float &fixedDt) override;
     void onCreateBodyDef(b2BodyDef& def) override;
     void onCreateShapeDef(b2ShapeDef& def) override;
     void onUpdateVisuals(float deltaTime) override;
     void onRenderVisual(sf::RenderTarget& target, const sf::Vector2f& position, float angleDegrees) override;
     void onHitboxRecreated() override;
+    b2Polygon makeHitbox(sf::Vector2f hitboxPixels) const override;
 
 private:
     float _baseMoveSpeed = 8.0f;

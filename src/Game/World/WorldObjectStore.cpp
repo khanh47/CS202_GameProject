@@ -47,6 +47,15 @@ void WorldObjectStore::updateSimulation(float fixedDt) {
     }
 }
 
+void WorldObjectStore::finalizeSimulation(float fixedDt) {
+    finalizeGroundContacts();
+    for (const std::shared_ptr<GameObject>& object : _objects) {
+        if (object) {
+            object->finalizeSimulation(fixedDt);
+        }
+    }
+}
+
 void WorldObjectStore::updateVisuals(float deltaTime) {
     for (const std::shared_ptr<GameObject>& object : _objects) {
         if (object) {

@@ -71,6 +71,7 @@ void Fireball::onCreateBodyDef(b2BodyDef& def) {
     def.type = b2_dynamicBody;
     def.motionLocks.angularZ = true;
     def.gravityScale = 2.8f;
+    def.isBullet = true;
 }
 
 void Fireball::onCreateShapeDef(b2ShapeDef& def) {

@@ -39,6 +39,8 @@ void WorldMap::rebuild(
 
     objectStore.clear();
     fireballPool.initialize(physicsWorld, itemsTexture);
+    _terrainSeamFilter.clear();
+    _terrainSeamFilter.install(physicsWorld);
 
     _loadedRows = std::min(static_cast<int>(mapData.size()), _gridHeight);
     _loadedColumns = 0;
@@ -65,59 +67,38 @@ void WorldMap::rebuild(
         const int screenY = screenYForMapRow(mapRow);
 
         for (int column = 0; column < columns; ++column) {
-            if (mapData[mapRow][column] == 1) {
-                _tileMap.setTile(column, screenY, 1);
-            }
-        }
-
-        int column = 0;
-        while (column < columns) {
-            if (mapData[mapRow][column] != 1) {
-                ++column;
-                continue;
-            }
-
-            const int runStart = column;
-            while (column < columns && mapData[mapRow][column] == 1) {
-                ++column;
-            }
-
-            const int runLength = column - runStart;
-            const float runWidth = runLength * _cellSize;
-            const sf::Vector2f runPosition = {
-                runStart * _cellSize + runWidth * 0.5f,
-                screenY * _cellSize + _cellSize * 0.5f
-            };
-
-            std::shared_ptr<GameObject> block = objectFactory.createBlock("Block", &brickTexture);
-            block->spawn(
-                physicsWorld,
-                runPosition,
-                {runWidth, _cellSize}
-            );
-            if (logicY >= 0 && logicY < _gridHeight) {
-                for (int runColumn = runStart;
-                     runColumn < column;
-                     ++runColumn) {
-                    _grid[logicY][runColumn] = block;
-                }
-            }
-            objectStore.addObject(std::move(block));
-        }
-
-        for (int objectColumn = 0;
-             objectColumn < columns;
-             ++objectColumn) {
-            const int tileId = mapData[mapRow][objectColumn];
-            if (tileId == 0 || tileId == 1) {
+            const int tileId = mapData[mapRow][column];
+            if (tileId == 0) {
                 continue;
             }
             const sf::Vector2f spawnPosition = {
-                objectColumn * _cellSize + _cellSize * 0.5f,
+                column * _cellSize + _cellSize * 0.5f,
                 screenY * _cellSize + _cellSize * 0.5f
             };
 
-            if (tileId == 2) {
+            if (tileId == 1) {
+                _tileMap.setTile(column, screenY, tileId);
+                auto block = objectFactory.createBlock(
+                    "Block",
+                    &brickTexture
+                );
+                block->spawn(
+                    physicsWorld,
+                    spawnPosition,
+                    {_cellSize, _cellSize}
+                );
+                if (logicY >= 0 && logicY < _gridHeight) {
+                    _grid[logicY][column] = block;
+                }
+                _terrainSeamFilter.addBlock(
+                    block,
+                    column,
+                    screenY,
+                    column * _cellSize,
+                    (column + 1) * _cellSize
+                );
+                objectStore.addObject(std::move(block));
+            } else if (tileId == 2) {
                 auto player = objectFactory.createPlayer(
                     "Player",
                     &marioTexture,

@@ -25,6 +25,7 @@ public:
 protected:
     void playAnimation(const std::string& name);
     void stopAnimation();
+    std::string getActiveAnimationName() const;
 
     bool hasSprite() const;
 

@@ -4,6 +4,7 @@
 #include <memory>
 #include <vector>
 
+#include "Game/World/TerrainSeamFilter.h"
 #include "Game/World/TileMap.h"
 
 class FireballPool;
@@ -62,4 +63,5 @@ private:
     int _loadedRows = 0;
     TileMap _tileMap;
     std::vector<std::vector<std::weak_ptr<GameObject>>> _grid;
+    TerrainSeamFilter _terrainSeamFilter;
 };

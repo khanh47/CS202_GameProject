@@ -1,9 +1,6 @@
 #pragma once
 
-#include <algorithm>
-#include <vector>
-
-#include <box2d/id.h>
+#include "Game/Behaviours/GroundTracker.h"
 
 class Moveable {
 public:
@@ -11,60 +8,31 @@ public:
     void stopMoveLeft() { _movingLeft = false; }
     void startMoveRight() { _movingRight = true; _facingLeft = false; }
     void stopMoveRight() { _movingRight = false; } 
-    void startJump() { if(!isAirbone()) _jumping = true; }
+    void startJump() { if (_groundTracker.canJump()) _jumping = true; }
     void stopJump() { _jumping = false; }
 
     void beginGroundContact() {
-        ++_groundContactCount;
-        _groundContactGraceFramesRemaining = kGroundContactGraceFrames;
+        _groundTracker.beginSupport();
     }
 
     void beginGroundContact(b2ShapeId visitor) {
-        const auto existing = std::find_if(
-            _groundVisitors.begin(),
-            _groundVisitors.end(),
-            [visitor](b2ShapeId current) {
-                return B2_ID_EQUALS(current, visitor);
-            }
-        );
-        if (existing == _groundVisitors.end()) {
-            _groundVisitors.push_back(visitor);
-            beginGroundContact();
-        }
+        _groundTracker.beginSupport(visitor);
     }
 
     void endGroundContact() {
-        if (_groundContactCount > 0) {
-            --_groundContactCount;
-        }
+        _groundTracker.endSupport();
     }
 
     void endGroundContact(b2ShapeId visitor) {
-        const auto existing = std::find_if(
-            _groundVisitors.begin(),
-            _groundVisitors.end(),
-            [visitor](b2ShapeId current) {
-                return B2_ID_EQUALS(current, visitor);
-            }
-        );
-        if (existing != _groundVisitors.end()) {
-            _groundVisitors.erase(existing);
-            endGroundContact();
-        }
+        _groundTracker.endSupport(visitor);
     }
 
     void resetGroundContacts() {
-        _groundContactCount = 0;
-        _groundContactGraceFramesRemaining = 0;
-        _groundVisitors.clear();
+        _groundTracker.reset();
     }
 
     void finalizeGroundContacts() {
-        if (_groundContactCount > 0) {
-            _groundContactGraceFramesRemaining = kGroundContactGraceFrames;
-        } else if (_groundContactGraceFramesRemaining > 0) {
-            --_groundContactGraceFramesRemaining;
-        }
+        _groundTracker.finalizeStep();
     }
     
     bool isMovingRight() const { return _movingRight; }
@@ -73,18 +41,18 @@ public:
 
     bool isFacingLeft() const { return _facingLeft; }
     bool isAirbone() const {
-        return _groundContactCount <= 0 && _groundContactGraceFramesRemaining <= 0;
+        return !_groundTracker.isGrounded();
     }
-    
+
+protected:
+    void consumeGroundForJump() {
+        _groundTracker.consumeForJump();
+    }
 
 private:
-    static constexpr int kGroundContactGraceFrames = 1;
-
     bool _facingLeft = false;
     bool _movingLeft = false;
     bool _movingRight = false;
     bool _jumping = false;
-    int _groundContactCount = 0;
-    int _groundContactGraceFramesRemaining = 0;
-    std::vector<b2ShapeId> _groundVisitors;
+    GroundTracker _groundTracker;
 };

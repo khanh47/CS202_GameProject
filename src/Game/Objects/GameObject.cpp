@@ -42,7 +42,11 @@ const sf::Vector2f& sizePixels,
 GameObject::GameObject() = default;
 
 void GameObject::updateSimulation(const float &fixedDt) {
+    (void)fixedDt;
+}
 
+void GameObject::finalizeSimulation(const float &fixedDt) {
+    (void)fixedDt;
 }
 
 sf::Vector2f GameObject::getPosition() const {
@@ -112,6 +116,13 @@ void GameObject::onRenderVisual(sf::RenderTarget& target, const sf::Vector2f& po
 void GameObject::onHitboxRecreated() {
 }
 
+b2Polygon GameObject::makeHitbox(sf::Vector2f hitboxPixels) const {
+    return b2MakeBox(
+        PhysicsUnits::toMeters(hitboxPixels.x * 0.5f),
+        PhysicsUnits::toMeters(hitboxPixels.y * 0.5f)
+    );
+}
+
 bool GameObject::hasValidBody() const {
     return _body && _body->isValid();
 }
@@ -135,7 +146,7 @@ float GameObject::getBodyAngleDegrees() const {
 void GameObject::createBody(const PhysicsWorld &physicsWorld, sf::Vector2f spawnPixels) {
     b2BodyDef bodyDef = b2DefaultBodyDef();
     bodyDef.position = PhysicsUnits::toMeters(spawnPixels);
-    bodyDef.isBullet = true;
+    bodyDef.isBullet = false;
     bodyDef.userData = this;
     onCreateBodyDef(bodyDef);
 
@@ -154,10 +165,7 @@ void GameObject::createHitbox(sf::Vector2f hitboxPixels) {
     shapeDef.userData = this;
     onCreateShapeDef(shapeDef);
 
-    b2Polygon box = b2MakeBox(
-        PhysicsUnits::toMeters(hitboxPixels.x * 0.5f),
-        PhysicsUnits::toMeters(hitboxPixels.y * 0.5f)
-    );
+    const b2Polygon box = makeHitbox(hitboxPixels);
     
     b2ShapeId hitbox = b2CreatePolygonShape(_body->getId(), &shapeDef, &box);
     _body->setHibox(hitbox);
@@ -197,10 +205,7 @@ void GameObject::updateHitboxSize(sf::Vector2f newHitboxPixels) {
     shapeDef.userData = this;
     onCreateShapeDef(shapeDef);
 
-    b2Polygon box = b2MakeBox(
-        PhysicsUnits::toMeters(newHitboxPixels.x * 0.5f),
-        PhysicsUnits::toMeters(newHitboxPixels.y * 0.5f)
-    );
+    const b2Polygon box = makeHitbox(newHitboxPixels);
 
     b2ShapeId newHitbox = b2CreatePolygonShape(bodyId, &shapeDef, &box);
     _body->setHibox(newHitbox);
