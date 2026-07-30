@@ -144,21 +144,6 @@ void Player::onContact(GameObject& other) {
             startFireTransformation(*_world, 1.0f);
         }
         fireFlower->destroy();
-        return;
-    }
-
-    if (auto* enemy = dynamic_cast<Enemy*>(&other)) {
-        const b2Vec2 velocity = b2Body_GetLinearVelocity(_body->getId());
-        const bool isFalling = velocity.y > 0.0f;
-        const bool isAbove = getPosition().y < enemy->getPosition().y;
-        if (isFalling && isAbove) {
-            enemy->destroy();
-            b2Vec2 vel = b2Body_GetLinearVelocity(_body->getId());
-            vel.y = -12.0f;
-            b2Body_SetLinearVelocity(_body->getId(), vel);
-        } else {
-            takeDamage(50);
-        }
     }
 }
 
@@ -244,6 +229,7 @@ void Player::onUpdateVisuals(float deltaTime) {
 
         sf::Vector2f scaledHitbox = {_baseHitboxPixels.x * currentScale, _baseHitboxPixels.y * currentScale};
         updateHitboxSize(scaledHitbox);
+        setVisualScale({1.8f, 1.0f});
         updateVisualState(deltaTime, scaledHitbox, isFacingLeft());
         return;
     }
@@ -263,6 +249,7 @@ void Player::onUpdateVisuals(float deltaTime) {
 
     sf::Vector2f scaledHitbox = {_baseHitboxPixels.x * scaleMult.x, _baseHitboxPixels.y * scaleMult.y};
     updateHitboxSize(scaledHitbox);
+    setVisualScale({1.8f, 1.0f});
     updateVisualState(deltaTime, scaledHitbox, isFacingLeft());
 }
 

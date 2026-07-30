@@ -25,5 +25,5 @@ protected:
     virtual void onRenderVisual(sf::RenderTarget& target, const sf::Vector2f& position, float angleDegrees) override;
     virtual void updateSimulation(const float &fixedDt) override;
 private:
-    float _moveSpeed = 2.0f;
+    float _moveSpeed = 3.0f;
 };
