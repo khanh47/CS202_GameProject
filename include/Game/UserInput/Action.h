@@ -11,7 +11,7 @@ enum class ActionType {
     MoveDown,
     Accelerate,
     Decelerate,
-    Shoot
+    Attack
 };
 
 class Action {

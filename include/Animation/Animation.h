@@ -14,4 +14,9 @@ namespace Animation {
     );
 
     AnimationSet makeDefaultPlayerAnimationSet();
+    AnimationSet makeGoombaAnimationSet();
+    AnimationSet makeKoopaAnimationSet();
+    AnimationSet makeFireFlowerAnimationSet();
+    AnimationSet makeFireballAnimationSet();
+    AnimationSet makeFireTransformAnimationSet();
 }

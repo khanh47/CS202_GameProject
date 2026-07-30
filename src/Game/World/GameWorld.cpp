@@ -1,211 +1,124 @@
 #include "Game/World/GameWorld.h"
+
+#include <algorithm>
+
 #include "Game/GameSettings.h"
 #include "Game/Objects/Player/Player.h"
-#include "Game/Objects/Block/Block.h"
-#include "Game/UserInput/PlayerController.h"
-#include "ResourceManager.h"
+#include "Game/World/LevelDataLoader.h"
 
-GameWorld::GameWorld() {
-    _grid.resize(_gridHeight, std::vector<std::shared_ptr<GameObject>>(_gridWidth, nullptr));
-}
+GameWorld::GameWorld() = default;
 
 GameWorld::~GameWorld() = default;
 
 void GameWorld::handleInput(const sf::Event& event) {
-    for (auto& controller : _controllers) {
-        if (controller && controller->handleEvent(event)) {
-            break;
-        }
+    if (GameSettings::getInstance().freeCameraMove || isFrozen()) {
+        return;
     }
+    _objectStore.handleInput(event);
 }
 
-void GameWorld::updateSimulation(const float &fixedDt) {
-    for (auto& object : _objects) {
-        object->updateSimulation(fixedDt);
+void GameWorld::updateSimulation(const float& fixedDt) {
+    if (isFrozen()) {
+        _freezeTimer -= fixedDt;
+        if (_freezeTimer <= 0.0f) {
+            _freezeTimer = 0.0f;
+            syncPlayerControllers();
+        }
+        return;
     }
 
+    if (GameSettings::getInstance().freeCameraMove) {
+        _objectStore.suspendPlayerMotion();
+    }
+
+    _objectStore.finalizeGroundContacts();
+    _objectStore.updateSimulation(fixedDt);
+
+    constexpr float maximumFireballDistance = 1280.0f;
+    const float voidThreshold =
+        _worldMap.getGridHeight() * _worldMap.getCellSize();
+    _fireballPool.updateSimulation(
+        fixedDt,
+        maximumFireballDistance,
+        voidThreshold
+    );
+
     _physicsWorld.updateSimulation(fixedDt);
+
+    // Events must be consumed while every fixture owner is still alive.
+    handleSensors(_physicsWorld.getSensorEvents());
+    handleContacts(_physicsWorld.getContactEvents());
+    _interactionSystem.processObjectInteractions(
+        _objectStore,
+        _fireballPool,
+        *this
+    );
+    _objectStore.cleanupDestroyed();
 }
 
 void GameWorld::updateVisuals(float deltaTime) {
-    for(auto object: _objects)
-        object->updateVisuals(deltaTime);
+    _objectStore.updateVisuals(deltaTime);
+    _fireballPool.updateVisuals(deltaTime);
 }
 
-void GameWorld::render(sf::RenderTarget &target) {
-    sf::View view = target.getView();
-
-    // 1. Render static environment map tiles using Tile Culling & sf::VertexArray batching (1 draw call)
-    _tileMap.updateVisibleVertices(view);
-    target.draw(_tileMap);
-
-    // 2. Perform Frustum Culling on dynamic game objects to prevent off-screen draw calls
-    sf::FloatRect viewBounds(view.getCenter() - view.getSize() / 2.f, view.getSize());
-    const float margin = CELL_SIZE * 2.f;
-    sf::FloatRect culledBounds(
-        {viewBounds.position.x - margin, viewBounds.position.y - margin},
-        {viewBounds.size.x + margin * 2.f, viewBounds.size.y + margin * 2.f}
+void GameWorld::render(sf::RenderTarget& target) {
+    _renderer.render(
+        target,
+        _worldMap,
+        _objectStore,
+        _fireballPool
     );
+}
 
-    for (auto object : _objects) {
-        if (!object) continue;
+void GameWorld::handleContacts(b2ContactEvents contactEvents) {
+    _interactionSystem.processContacts(contactEvents);
+}
 
-        // Visual rendering for static environment blocks is handled by _tileMap in batch
-        if (std::dynamic_pointer_cast<Block>(object)) {
-            continue;
-        }
-
-        sf::Vector2f pos = object->getPosition();
-        if (culledBounds.contains(pos)) {
-            object->render(target);
-        }
-    }
-
-    auto& settings = GameSettings::getInstance();
-    if (settings.debugDrawGrid || settings.debugDrawCoordinates) {
-        sf::FloatRect viewBounds(view.getCenter() - view.getSize() / 2.f, view.getSize());
-        
-        int startX = std::max(0, static_cast<int>(viewBounds.position.x / CELL_SIZE));
-        int endX = std::min(_gridWidth, static_cast<int>((viewBounds.position.x + viewBounds.size.x) / CELL_SIZE) + 1);
-        
-        int startY = std::max(0, static_cast<int>(viewBounds.position.y / CELL_SIZE));
-        int endY = std::min(_gridHeight, static_cast<int>((viewBounds.position.y + viewBounds.size.y) / CELL_SIZE) + 1);
-
-        if (settings.debugDrawGrid) {
-            sf::VertexArray lines(sf::PrimitiveType::Lines);
-            for (int x = startX; x <= endX; ++x) {
-                lines.append(sf::Vertex({x * CELL_SIZE, startY * CELL_SIZE}, sf::Color::Green));
-                lines.append(sf::Vertex({x * CELL_SIZE, endY * CELL_SIZE}, sf::Color::Green));
-            }
-            for (int y = startY; y <= endY; ++y) {
-                lines.append(sf::Vertex({startX * CELL_SIZE, y * CELL_SIZE}, sf::Color::Green));
-                lines.append(sf::Vertex({endX * CELL_SIZE, y * CELL_SIZE}, sf::Color::Green));
-            }
-            target.draw(lines);
-        }
-
-        if (settings.debugDrawCoordinates) {
-            const sf::Font& font = ResourceManager::getInstance().getFont("Roboto");
-            sf::Text text(font, "", 10);
-            text.setFillColor(sf::Color::White);
-            text.setOutlineColor(sf::Color::Black);
-            text.setOutlineThickness(1.0f);
-
-            for (int screenY = startY; screenY < endY; ++screenY) {
-                for (int x = startX; x < endX; ++x) {
-                    if (screenY >= _gridHeight || x >= _gridWidth) continue;
-                    int logicY = _gridHeight - 1 - screenY;
-                    text.setString(std::to_string(x) + "," + std::to_string(logicY));
-                    text.setPosition({x * CELL_SIZE + 2.f, screenY * CELL_SIZE + 2.f});
-                    target.draw(text);
-                }
-            }
-        }
-    }
+void GameWorld::handleSensors(b2SensorEvents sensorEvents) {
+    _interactionSystem.processSensors(sensorEvents);
 }
 
 void GameWorld::loadMap(const std::vector<std::vector<int>>& mapData) {
-    auto& brickTexture = ResourceManager::getInstance().getTexture("brick");
-    auto& marioTexture = ResourceManager::getInstance().getTexture("mario_spritesheet");
-    auto& luigiTexture = ResourceManager::getInstance().getTexture("luigi_spritesheet");
-
-    _controllers.clear();
-    _objects.clear();
-
-    _loadedRows = std::min(static_cast<int>(mapData.size()), _gridHeight);
-    _loadedCols = 0;
-    for (int mapY = 0; mapY < _loadedRows; ++mapY) {
-        _loadedCols = std::max(_loadedCols, std::min(static_cast<int>(mapData[mapY].size()), _gridWidth));
-    }
-
-    // Initialize TileMap grid and texture binding
-    _tileMap.initialize(_gridWidth, _gridHeight, CELL_SIZE);
-    _tileMap.setTexture(&brickTexture);
-
-    // Re-initialize grid based on GameWorld dimensions (500x60 default)
-    _grid.assign(_gridHeight, std::vector<std::shared_ptr<GameObject>>(_gridWidth, nullptr));
-
-    for (int mapY = 0; mapY < _loadedRows; ++mapY) {
-        int cols = std::min(static_cast<int>(mapData[mapY].size()), _gridWidth);
-        for (int x = 0; x < cols; ++x) {
-            int blockId = mapData[mapY][x];
-            if (blockId == 0) continue;
-
-            // Map data uses standard Y-down row indexing (0 is top row of the loaded matrix).
-            // Logic Y is distance from the bottom. Let's assume the provided matrix bottom row 
-            // maps to logic y=1 (so it's sitting on the bottom).
-            int logicY = _loadedRows - 1 - mapY + 1; // +1 to put floor 1 cell above the bottom abyss
-            int screenY = _gridHeight - 1 - logicY;
-
-            sf::Vector2f spawnPos = {
-                x * CELL_SIZE + CELL_SIZE / 2.f, 
-                screenY * CELL_SIZE + CELL_SIZE / 2.f
-            };
-
-            if (blockId == 1) {
-                // Set tile data in TileMap for batched rendering
-                _tileMap.setTile(x, screenY, blockId);
-
-                // Brick block (ID 1) - create physics body for collisions
-                auto brickBlock = _objectFactory.createBlock("Block", &brickTexture);
-                // We pass CELL_SIZE because GameObject::createHitbox now correctly halves the dimensions.
-                brickBlock->spawn(_physicsWorld, spawnPos, {CELL_SIZE, CELL_SIZE});
-                _grid[logicY][x] = brickBlock;
-                _objects.push_back(brickBlock);
-            } 
-            else if (blockId == 2) {
-                // Player 1
-                auto player1 = _objectFactory.createPlayer("Player", &marioTexture, "mario");
-                player1->spawn(_physicsWorld, {spawnPos.x + 10, spawnPos.y}, {80, 80});
-                if (auto mario = std::dynamic_pointer_cast<Player>(player1)) {
-                    _controllers.emplace_back(std::make_unique<PlayerController>(*mario, PlayerController::ControlScheme::Wasd));
-                }
-                _objects.push_back(player1);
-            }
-            // else if (blockId == 3) {
-            //     // Player 2
-            //     auto player2 = _objectFactory.createPlayer("Player", &luigiTexture, "luigi");
-            //     player2->spawn(_physicsWorld, {spawnPos.x + 10, spawnPos.y}, {80, 80});
-            //     if (auto luigi = std::dynamic_pointer_cast<Player>(player2)) {
-            //         _controllers.emplace_back(std::make_unique<PlayerController>(*luigi, PlayerController::ControlScheme::ArrowKeys));
-            //     }
-            //     _objects.push_back(player2);
-            // }
-        }
-    }
+    _worldMap.rebuild(
+        mapData,
+        _physicsWorld,
+        _objectFactory,
+        _fireballPool,
+        _objectStore,
+        *this
+    );
 }
 
 void GameWorld::test() {
-    // 0 = empty, 1 = brick, 2 = player1, 3 = player2
-    // Extended 60-column map slice with ground floor, platforms, and stairs
-    std::vector<std::vector<int>> mapData = {
-        {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,00,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,00,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-        {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,00,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,00,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-        {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,00,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,00,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-        {0,0,0,0,1,1,1,0,0,0,0,0,0,0,0,0,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,1,1,1,0,0,0,0,0,0,0,0,0,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,1,1,1,0,0,0,0,0,0,0,0,0,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,1,1,1,0,0,0,0,0,0,0,0,0,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,1,1,1,0,0,0,0,0,0,0,0,0,0,0,00,0,0,0,1,1,1,0,0,0,0,0,0,0,0,0,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,1,1,1,0,0,0,0,0,0,0,0,0,0,0,00,0,0,0,1,1,1,0,0,0,0,0,0,0,0,0,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0},
-        {0,0,0,0,0,0,0,0,0,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,1,1,1,1,0,0,00,0,0,0,0,0,0,0,0,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,1,1,1,1,0,0,00,0,0,0,0,0,0,0,0,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0},
-        {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,00,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,00,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-        {0,0,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,0,0,0,0,0,0,0,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,0,0,0,0,0,0,0,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,0,0,0,0,0,0,0,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,0,0,0,0,0,0,0,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,00,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,0,0,0,0,0,0,0,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,00,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,0,0,0,0,0,0,0,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-        {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,11,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,11,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1}
-    };
+    loadMap(LevelDataLoader::load(
+        "assets/levels/1-1.json",
+        _worldMap.getGridWidth(),
+        _worldMap.getGridHeight()
+    ));
+    if (auto player = std::dynamic_pointer_cast<Player>(getPrimaryPlayer())) {
+        player->setGameWorld(*this);
+    }
+}
 
-    loadMap(mapData);
+bool GameWorld::spawnFireball(
+    sf::Vector2f spawnPosition,
+    bool facingRight
+) {
+    return _fireballPool.spawnFireball(spawnPosition, facingRight);
+}
+
+void GameWorld::freeze(float durationSeconds) {
+    _freezeTimer = std::max(_freezeTimer, durationSeconds);
+}
+
+void GameWorld::syncPlayerControllers() {
+    _objectStore.syncControllersWithKeyboard();
 }
 
 std::shared_ptr<GameObject> GameWorld::getPrimaryPlayer() const {
-    // Finds and returns the first player instance in the world objects vector
-    for (const auto& object : _objects) {
-        if (std::dynamic_pointer_cast<Player>(object)) {
-            return object;
-        }
-    }
-    return nullptr;
+    return _objectStore.getPrimaryPlayer();
 }
 
 sf::FloatRect GameWorld::getBounds() const {
-    // Calculates total world bounding rectangle in pixels based on loaded columns and grid dimensions
-    const float width = (_loadedCols > 0) ? _loadedCols * CELL_SIZE : _gridWidth * CELL_SIZE;
-    const float height = _gridHeight * CELL_SIZE;
-    return sf::FloatRect({0.0f, 0.0f}, {width, height});
+    return _worldMap.getBounds();
 }
-

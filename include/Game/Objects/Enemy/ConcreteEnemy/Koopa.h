@@ -1,0 +1,12 @@
+#pragma once
+#include "../Enemy.h"
+
+class Koopa : public Enemy {
+public:
+    Koopa();
+    Koopa(sf::Texture& texture, const std::string& animationSetId = "koopa");
+    ~Koopa() override = default;
+
+private:
+    void onUpdateVisuals(float deltaTime) override;
+};

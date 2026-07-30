@@ -60,7 +60,7 @@ AnimationSet Animation::makeDefaultPlayerAnimationSet() {
             3,
             {32, 0},
             1.0f / 3.0f,
-            false
+            true
         )
     );
 
@@ -124,5 +124,139 @@ AnimationSet Animation::makeDefaultPlayerAnimationSet() {
         )
     );
 
+    return animationSet;
+}
+
+AnimationSet Animation::makeGoombaAnimationSet() {
+    AnimationSet animationSet;
+    animationSet.defaultClip = "walk";
+
+    animationSet.clips.emplace(
+        "walk",
+        Animation::createLinearClip(
+            {2, 42},
+            {16, 19},
+            4,       
+            {17, 0}, 
+            1.0f / 4.0f,
+            true        
+        )
+    );
+
+    animationSet.clips.emplace(
+        "dead",
+        Animation::createLinearClip(
+            {4, 450},   
+            {32, 16},   
+            1,          
+            {0, 0},     
+            1.0f,       
+            false       
+        )
+    );
+
+    return animationSet;
+}
+
+AnimationSet Animation::makeKoopaAnimationSet() {
+    AnimationSet animationSet;
+    animationSet.defaultClip = "walk";
+
+animationSet.clips.emplace(
+        "walk",
+        Animation::createLinearClip(
+            {6, 32},
+            {24, 32},
+            8,        
+            {28, 0},
+            1.0f / 8.0f,
+            true         
+        )
+    );
+
+    animationSet.clips.emplace(
+        "dead",
+        Animation::createLinearClip(
+            {180, 160},
+            {20, 16},
+            1,          
+            {0, 0},      
+            1.0f,
+            false 
+        )
+    );
+
+    animationSet.clips.emplace(
+        "slide",
+        Animation::createLinearClip(
+            {216, 269},
+            {16, 14},
+            4,          
+            {19, 0},
+            1.0f / 4.0f,        
+            true 
+        )
+    );
+
+    return animationSet;
+}
+
+AnimationSet Animation::makeFireFlowerAnimationSet() {
+    AnimationSet animationSet;
+    animationSet.defaultClip = "idle";
+
+    animationSet.clips.emplace(
+        "idle",
+        Animation::createLinearClip(
+            {0, 109},
+            {18, 17},
+            4,
+            {18, 0},
+            1.0f / 6.0f,
+            true
+        )
+    );
+
+    return animationSet;
+}
+
+AnimationSet Animation::makeFireballAnimationSet() {
+    AnimationSet animationSet;
+    animationSet.defaultClip = "spin";
+
+    const float frameDuration = 1.0f / 8.0f;
+    std::vector<AnimationFrame> frames = {
+        AnimationFrame(sf::IntRect({4, 148}, {8, 10}), frameDuration),
+        AnimationFrame(sf::IntRect({23, 148}, {8, 10}), frameDuration),
+        AnimationFrame(sf::IntRect({42, 148}, {8, 10}), frameDuration),
+        AnimationFrame(sf::IntRect({59, 148}, {8, 10}), frameDuration)
+    };
+
+    animationSet.clips.emplace("spin", AnimationClip(frames, true));
+
+    return animationSet;
+}
+
+AnimationSet Animation::makeFireTransformAnimationSet() {
+    AnimationSet animationSet;
+    animationSet.defaultClip = "transform";
+
+    const float dt = 0.08f;
+    // Rapidly alternate between transformation frames (Normal -> Intermediate -> Fire)
+    std::vector<AnimationFrame> frames = {
+        AnimationFrame(sf::IntRect({0, 0}, {32, 32}), dt),
+        AnimationFrame(sf::IntRect({32, 0}, {32, 32}), dt),
+        AnimationFrame(sf::IntRect({64, 0}, {32, 32}), dt),
+        AnimationFrame(sf::IntRect({32, 0}, {32, 32}), dt),
+        AnimationFrame(sf::IntRect({0, 0}, {32, 32}), dt),
+        AnimationFrame(sf::IntRect({32, 0}, {32, 32}), dt),
+        AnimationFrame(sf::IntRect({64, 0}, {32, 32}), dt),
+        AnimationFrame(sf::IntRect({32, 0}, {32, 32}), dt),
+        AnimationFrame(sf::IntRect({0, 0}, {32, 32}), dt),
+        AnimationFrame(sf::IntRect({32, 0}, {32, 32}), dt),
+        AnimationFrame(sf::IntRect({64, 0}, {32, 32}), dt)
+    };
+
+    animationSet.clips.emplace("transform", AnimationClip(frames, false));
     return animationSet;
 }

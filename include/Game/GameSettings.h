@@ -4,8 +4,8 @@ class GameSettings {
 public:
     static GameSettings& getInstance();
 
-    bool debugDrawGrid = true;
-    bool debugDrawCoordinates = true;
+    bool debugDrawGrid = false;
+    bool debugDrawCoordinates = false;
     bool freeCameraMove = false;
 
 private:

@@ -13,7 +13,7 @@ Block::~Block() {
 }
 
 void Block::onCreateShapeDef(b2ShapeDef& def) {
-    def.density = 1.0f;
+    def.density = 10000.0f;
     def.material.friction = 0.0f;
 }
 

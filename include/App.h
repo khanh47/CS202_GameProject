@@ -1,6 +1,7 @@
 #pragma once
 #include <SFML/Graphics.hpp>
 #include <memory>
+#include "Game/World/FixedStepAccumulator.h"
 #include "Scene/SceneManager.h"
 #include "Scene/SceneFactory.h"
 
@@ -10,11 +11,10 @@ private:
     std::unique_ptr<SceneFactory> factory;
     sf::RenderWindow window;
     sf::Clock dtClock;
-    double accumulatedTime = 0.0f;
+    FixedStepAccumulator stepAccumulator{1.0 / 60.0};
     void render();
-    void update(const float &fixedDt);
-    void updateSimulation(const float &fixedDt);
-    void updateVisuals(float deltaTime); // Visuals
+    void updateSimulation();
+    void updateVisuals(float deltaTime);
     void processEvents();
 
 public:
