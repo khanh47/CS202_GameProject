@@ -1,15 +1,18 @@
 #pragma once
 
 #include <SFML/Graphics.hpp>
+#include <memory>
 
 #include "Physics/PhysicsWorld.h"
 #include "Game/Objects/GameObjectFactory.h"
-#include "ResourceManager.h"
+#include "Game/World/TileMap.h"
+
+class PlayerController;
 
 class GameWorld {
 public:
     GameWorld();
-    ~GameWorld() = default;
+    ~GameWorld();
 
     void handleInput(const sf::Event& event);
     void updateSimulation(const float &fixedDt);
@@ -23,17 +26,26 @@ private:
     PhysicsWorld _physicsWorld;
     GameObjectFactory _objectFactory;
     std::vector<std::shared_ptr<GameObject>> _objects;
+    std::vector<std::unique_ptr<PlayerController>> _controllers;
+
+    // TileMap system for batch vertex array rendering and tile culling
+    TileMap _tileMap;
 
     // Grid system
     static constexpr float CELL_SIZE = 64.0f;
     int _gridWidth = 500;
     int _gridHeight = 60;
+    int _loadedCols = 0;
+    int _loadedRows = 0;
     std::vector<std::vector<std::shared_ptr<GameObject>>> _grid;
 
 public:
     int getGridWidth() const { return _gridWidth; }
     int getGridHeight() const { return _gridHeight; }
     float getCellSize() const { return CELL_SIZE; }
+
+    std::shared_ptr<GameObject> getPrimaryPlayer() const;
+    sf::FloatRect getBounds() const;
 
 private:
 };

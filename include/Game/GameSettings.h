@@ -6,7 +6,7 @@ public:
 
     bool debugDrawGrid = true;
     bool debugDrawCoordinates = true;
-    bool freeCameraMove = true;
+    bool freeCameraMove = false;
 
 private:
     GameSettings() = default;

@@ -1,5 +1,5 @@
 #include <iostream>
-#include "Game/Behaviours/UserInput/Action.h"
+#include "Game/UserInput/Action.h"
 
 using namespace std;
 

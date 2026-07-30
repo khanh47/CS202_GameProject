@@ -1,48 +1,76 @@
 #include "Game/Objects/Player/Player.h"
-#include "Animation/AnimationLibrary.h"
-#include "Game/Objects/GameObject.h"
 #include <SFML/Graphics/Texture.hpp>
 #include <SFML/System/Vector2.hpp>
-#include <memory>
 
-Player::Player() : GameObject(), Damageable(100) {
-    if (_sprite.has_value()) {
-        sf::FloatRect bounds = _sprite->getLocalBounds();
-        _sprite->setOrigin({bounds.size.x / 2.f, bounds.size.y / 2.f});
-    }
+Player::Player() : GameObject(), Animatable(), Damageable(100) {
 }
 
 Player::Player(sf::Texture &texture) : Player(texture, "mario") {
 }
 
-Player::Player(sf::Texture &texture, const std::string& animationSetId) : GameObject(), Damageable(100) {
-    _spritesheet.reset(&texture, [](sf::Texture*){});
-    _sprite = sf::Sprite(*_spritesheet);
+/*
+Gia Khanh: we shold remove the constructors with texture when implementing the concrete
+objects (such as Mario, Luigi), and let the Animatable construct the texture:v
+like
+Mario::Mario(): GameObject(), Animatable(marioTexture, "mario"), Damagable(100) {}
+*/ 
 
-    std::shared_ptr<AnimationSet> animationSet = std::make_shared<AnimationSet>(
-        AnimationLibrary::getInstance().getAnimationSet(animationSetId)
-    );
-    _animator = Animator(animationSet);
-
-    _animator.play(animationSet->defaultClip);
-    _sprite->setTextureRect(_animator.getCurrentTextureRect());
-
-    sf::FloatRect bounds = _sprite->getLocalBounds();
-    _sprite->setOrigin({bounds.size.x / 2.f, bounds.size.y / 2.f});
+Player::Player(sf::Texture &texture, const std::string& animationSetId) : GameObject(), Animatable(), Damageable(100) {
+    configureVisuals(texture, animationSetId);
 }
 
 Player::~Player() {
 }
 
-void Player::onInput(const sf::Event& event) {
-    (void)event;
+void Player::updateSimulation(const float &fixedDt) {
+    (void)fixedDt;
+
+    if (!_body || !_body->isValid()) {
+        return;
+    }
+
+    b2Vec2 velocity = b2Body_GetLinearVelocity(_body->getId());
+
+    if (isMovingLeft() && !isMovingRight()) {
+        velocity.x = -_moveSpeed;
+    }
+    else if (isMovingRight() && !isMovingLeft()) {
+        velocity.x = _moveSpeed;
+    }
+    else if (!isMovingLeft() && !isMovingRight()) {
+        velocity.x = 0.f;
+    }
+
+    if (isJumping()) {
+        velocity.y = -_jumpSpeed;
+        if (velocity.y > 0) {
+            b2Body_SetGravityScale(_body->getId(), 1.0f);
+        } 
+        else {
+            b2Body_SetGravityScale(_body->getId(), 3.0f);
+        }
+
+        playAnimation("jump");
+    }
+    else b2Body_SetGravityScale(_body->getId(), 4.0f);
+
+    b2Body_SetLinearVelocity(_body->getId(), velocity);
 }
 
 void Player::onCreateBodyDef(b2BodyDef& def) {
     def.type = b2_dynamicBody;
+    def.motionLocks.angularZ = true;
 }
 
 void Player::onCreateShapeDef(b2ShapeDef& def) {
     def.density = 1.0f;
     def.material.friction = 0.0f;
+}
+
+void Player::onUpdateVisuals(float deltaTime) {
+    updateVisualState(deltaTime, _hitboxPixels, isFacingLeft());
+}
+
+void Player::onRenderVisual(sf::RenderTarget& target, const sf::Vector2f& position, float angleDegrees) {
+    renderVisualState(target, position);
 }

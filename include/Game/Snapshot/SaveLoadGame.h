@@ -14,8 +14,8 @@ public:
     virtual ~SaveLoadGame() = default;
 
     string GetFile(int index);
-    void SaveGame(const string& saveFileName, const string& gameState);
-    void LoadGame(const string& saveFileName, string& gameState);
+    virtual void SaveGame(const string& saveFileName, const string& gameState);
+    virtual void LoadGame(const string& saveFileName, string& gameState);
     string operator [](int index) {
         return saveFiles[index];
     }

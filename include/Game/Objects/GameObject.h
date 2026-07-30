@@ -2,10 +2,8 @@
 
 #include <SFML/Graphics.hpp>
 #include <SFML/Graphics/Text.hpp>
-#include <optional>
 #include <memory>
 
-#include "Animation/Animator.h"
 #include "Physics/PhysicsBody.h"
 #include "Physics/PhysicsWorld.h"
 
@@ -23,15 +21,18 @@ public:
     
     bool isPendingDestroy() { return _pendingDestroy; }
     sf::Vector2f getPosition() const;
+    virtual sf::Vector2f getVelocity() const;
 
 protected:
     virtual void onCreateBodyDef(b2BodyDef& def);
     virtual void onCreateShapeDef(b2ShapeDef& def);
+    virtual void onUpdateVisuals(float deltaTime);
+    virtual void onRenderVisual(sf::RenderTarget& target, const sf::Vector2f& position, float angleDegrees);
 
-    std::shared_ptr<sf::Texture> _spritesheet;
-    Animator _animator;
-
-    std::optional<sf::Sprite> _sprite;
+    
+    bool hasValidBody() const;
+    sf::Vector2f getBodyPositionPixels() const;
+    float getBodyAngleDegrees() const;
     sf::Vector2f _hitboxPixels{0.f, 0.f};
 
     std::shared_ptr<PhysicsBody> _body = nullptr;
@@ -40,6 +41,5 @@ protected:
 private:
     void createBody(const PhysicsWorld &physicsWorld, sf::Vector2f spawnPixels);
     void createHitbox(sf::Vector2f hitboxPixels);
-    void updateSpriteLayout();
     void drawFallbackRect(sf::RenderTarget& target) const; // debugging
 };
