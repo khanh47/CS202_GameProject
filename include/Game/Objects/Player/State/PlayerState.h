@@ -28,6 +28,7 @@ public:
     virtual std::unique_ptr<IAttackStrategy> createAttackStrategy() const {
         return std::make_unique<NoAttackStrategy>();
     }
+    virtual bool isExpired() const { return false; }
 
     virtual void update(Player& player, float dt) { (void)player; (void)dt; }
     virtual void onEnter(Player& player) { (void)player; }

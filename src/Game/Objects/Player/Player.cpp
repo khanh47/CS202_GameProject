@@ -201,7 +201,14 @@ void Player::onUpdateVisuals(float deltaTime) {
     sf::Vector2f scaleMult{1.0f, 1.0f};
     if (_state) {
         _state->update(*this, deltaTime);
-        scaleMult = _state->getScaleMultiplier();
+        // State replacement is deferred until update() returns, so a decorator
+        // never destroys itself while one of its member functions is active.
+        if (_state->isExpired()) {
+            revertDecoratedState();
+        }
+        if (_state) {
+            scaleMult = _state->getScaleMultiplier();
+        }
     }
 
     sf::Vector2f scaledHitbox = {_baseHitboxPixels.x * scaleMult.x, _baseHitboxPixels.y * scaleMult.y};
