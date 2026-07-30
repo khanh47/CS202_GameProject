@@ -219,6 +219,8 @@ void GameObject::createFeet(sf::Vector2f hitboxPixels) {
     shapeDef.enableContactEvents = false;
     shapeDef.enableSensorEvents = true;
     shapeDef.userData = this;
+    shapeDef.filter.categoryBits = 0x0001;
+    shapeDef.filter.maskBits = 0x0001;
 
     const float feetOffsetPixels = hitboxPixels.y * 0.5f + feetHalfHeightPixels - feetOverlapPixels;
 
