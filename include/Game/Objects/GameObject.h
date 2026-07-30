@@ -13,6 +13,7 @@ public:
     virtual ~GameObject() = default;
 
     virtual void updateSimulation(const float &fixedDt);
+    virtual void finalizeSimulation(const float &fixedDt);
     virtual void updateVisuals(float deltaTime);
     virtual void render(sf::RenderTarget &target);
 
@@ -31,6 +32,7 @@ protected:
     virtual void onUpdateVisuals(float deltaTime);
     virtual void onRenderVisual(sf::RenderTarget& target, const sf::Vector2f& position, float angleDegrees);
     virtual void onHitboxRecreated();
+    virtual b2Polygon makeHitbox(sf::Vector2f hitboxPixels) const;
 
     
     bool hasValidBody() const;

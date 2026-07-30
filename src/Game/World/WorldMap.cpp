@@ -1,7 +1,9 @@
 #include "Game/World/WorldMap.h"
 
 #include <algorithm>
+#include <memory>
 
+#include "Game/Objects/GameObject.h"
 #include "Game/Objects/GameObjectFactory.h"
 #include "Game/Objects/Item/FireballPool.h"
 #include "Game/Objects/Player/Player.h"
@@ -37,6 +39,8 @@ void WorldMap::rebuild(
 
     objectStore.clear();
     fireballPool.initialize(physicsWorld, itemsTexture);
+    _terrainSeamFilter.clear();
+    _terrainSeamFilter.install(physicsWorld);
 
     _loadedRows = std::min(static_cast<int>(mapData.size()), _gridHeight);
     _loadedColumns = 0;
@@ -59,14 +63,14 @@ void WorldMap::rebuild(
             static_cast<int>(mapData[mapRow].size()),
             _gridWidth
         );
+        const int logicY = logicYForMapRow(mapRow);
+        const int screenY = screenYForMapRow(mapRow);
+
         for (int column = 0; column < columns; ++column) {
             const int tileId = mapData[mapRow][column];
             if (tileId == 0) {
                 continue;
             }
-
-            const int logicY = logicYForMapRow(mapRow);
-            const int screenY = screenYForMapRow(mapRow);
             const sf::Vector2f spawnPosition = {
                 column * _cellSize + _cellSize * 0.5f,
                 screenY * _cellSize + _cellSize * 0.5f
@@ -74,7 +78,10 @@ void WorldMap::rebuild(
 
             if (tileId == 1) {
                 _tileMap.setTile(column, screenY, tileId);
-                auto block = objectFactory.createBlock("Block", &brickTexture);
+                auto block = objectFactory.createBlock(
+                    "Block",
+                    &brickTexture
+                );
                 block->spawn(
                     physicsWorld,
                     spawnPosition,
@@ -83,6 +90,13 @@ void WorldMap::rebuild(
                 if (logicY >= 0 && logicY < _gridHeight) {
                     _grid[logicY][column] = block;
                 }
+                _terrainSeamFilter.addBlock(
+                    block,
+                    column,
+                    screenY,
+                    column * _cellSize,
+                    (column + 1) * _cellSize
+                );
                 objectStore.addObject(std::move(block));
             } else if (tileId == 2) {
                 auto player = objectFactory.createPlayer(

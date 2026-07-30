@@ -18,6 +18,7 @@ public:
 
     bool handleInput(const sf::Event& event);
     void updateSimulation(float fixedDt);
+    void finalizeSimulation(float fixedDt);
     void updateVisuals(float deltaTime);
     void cleanupDestroyed();
     void suspendPlayerMotion();

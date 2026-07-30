@@ -4,6 +4,7 @@
 #include "Game/Objects/Player/State/SuperState.h"
 #include "Game/Objects/Player/State/FireState.h"
 #include "Game/Objects/Player/State/MegaStateDecorator.h"
+#include "Physics/PhysicsUnits.h"
 #include "Game/Objects/Enemy/Enemy.h"
 #include "Game/Objects/Item/FireFlower.h"
 #include "ResourceManager.h"
@@ -113,19 +114,28 @@ void Player::updateSimulation(const float &fixedDt) {
 
     if (isJumping() && !isAirbone()) {
         velocity.y = -jumpSpeed;
+        consumeGroundForJump();
     }
 
 
     b2Body_SetGravityScale(_body->getId(), 4.0f);
     if (isAirbone() || isJumping()) {
         if (velocity.y > 0) b2Body_SetGravityScale(_body->getId(), isJumping() ? 3.0f : 4.0f);
-        playAnimation("jump");
-    } else {
-        if (!isMovingLeft() && !isMovingRight()) playAnimation("idle");
-        else playAnimation("walk");
     }
 
     b2Body_SetLinearVelocity(_body->getId(), velocity);
+}
+
+void Player::finalizeSimulation(const float &fixedDt) {
+    (void)fixedDt;
+
+    if (isAirbone() || isJumping()) {
+        playAnimation("jump");
+    } else if (!isMovingLeft() && !isMovingRight()) {
+        playAnimation("idle");
+    } else {
+        playAnimation("walk");
+    }
 }
 
 void Player::onContact(GameObject& other) {
@@ -160,11 +170,25 @@ void Player::onCreateBodyDef(b2BodyDef& def) {
 void Player::onCreateShapeDef(b2ShapeDef& def) {
     def.density = 1.0f;
     def.material.friction = 0.0f;
+    def.enablePreSolveEvents = true;
 
     // Category 0x0002 (Player), Mask 0x0001 | 0x0008 (Environment + Enemy)
     // Excludes Category 0x0004 (Fireball) so fireballs pass completely through Player
     def.filter.categoryBits = 0x0002;
     def.filter.maskBits = 0x0001 | 0x0008;
+}
+
+b2Polygon Player::makeHitbox(sf::Vector2f hitboxPixels) const {
+    constexpr float cornerRadiusPixels = 4.0f;
+    const float halfWidthPixels =
+        std::max(0.0f, hitboxPixels.x * 0.5f - cornerRadiusPixels);
+    const float halfHeightPixels =
+        std::max(0.0f, hitboxPixels.y * 0.5f - cornerRadiusPixels);
+    return b2MakeRoundedBox(
+        PhysicsUnits::toMeters(halfWidthPixels),
+        PhysicsUnits::toMeters(halfHeightPixels),
+        PhysicsUnits::toMeters(cornerRadiusPixels)
+    );
 }
 
 void Player::startFireTransformation(GameWorld& world, float duration) {

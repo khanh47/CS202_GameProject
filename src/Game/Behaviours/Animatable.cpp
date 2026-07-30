@@ -83,6 +83,10 @@ void Animatable::stopAnimation() {
     _animator.stop();
 }
 
+std::string Animatable::getActiveAnimationName() const {
+    return _animator.getActiveAnimationName();
+}
+
 bool Animatable::hasSprite() const {
     return _sprite.has_value();
 }
