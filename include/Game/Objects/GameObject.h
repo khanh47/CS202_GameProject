@@ -24,6 +24,8 @@ public:
     sf::Vector2f getPosition() const;
     virtual sf::Vector2f getVelocity() const;
 
+    sf::Vector2f getHitboxPixels() const { return _hitboxPixels; }
+
     virtual void onContact(GameObject& other) {}
 
 protected:

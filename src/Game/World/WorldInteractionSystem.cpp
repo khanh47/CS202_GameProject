@@ -99,6 +99,33 @@ void WorldInteractionSystem::processContacts(b2ContactEvents events) {
 
         processGroundContactBegin(event, objectA, objectB);
 
+        if (Player* player = getPlayer(objectA, objectB)) {
+            GameObject* enemy = (player == objectA) ? objectB : objectA;
+            if (dynamic_cast<Enemy*>(enemy)) {
+                const b2ShapeId playerShape = (player == objectA) ? event.shapeIdA : event.shapeIdB;
+
+                if (!b2Contact_IsValid(event.contactId)) {
+                    continue;
+                }
+
+                const b2ContactData contact = b2Contact_GetData(event.contactId);
+                b2Vec2 normal = contact.manifold.normal;
+                if (!B2_ID_EQUALS(contact.shapeIdA, playerShape)) {
+                    normal = {-normal.x, -normal.y};
+                }
+
+                if (contact.manifold.pointCount > 0 && normal.y >= 0.5f) {
+                    enemy->destroy();
+                    b2BodyId playerBodyId = b2Shape_GetBody(playerShape);
+                    b2Vec2 vel = b2Body_GetLinearVelocity(playerBodyId);
+                    vel.y = -12.0f;
+                    b2Body_SetLinearVelocity(playerBodyId, vel);
+                } else {
+                    player->takeDamage(50);
+                }
+            }
+        }
+
         auto* fireball = dynamic_cast<Fireball*>(objectA);
         GameObject* other = objectB;
         if (!fireball) {

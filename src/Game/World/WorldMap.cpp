@@ -107,7 +107,7 @@ void WorldMap::rebuild(
                 player->spawn(
                     physicsWorld,
                     {spawnPosition.x + 10.0f, spawnPosition.y},
-                    {96.0f, 96.0f},
+                    {72.0f, 120.0f},
                     true
                 );
                 if (auto mario = std::dynamic_pointer_cast<Player>(player)) {
@@ -130,7 +130,7 @@ void WorldMap::rebuild(
                 goomba->spawn(
                     physicsWorld,
                     spawnPosition,
-                    {40.0f, 48.0f}
+                    {60.0f, 72.0f}
                 );
                 objectStore.addObject(std::move(goomba));
             } else if (tileId == 5) {
@@ -142,7 +142,7 @@ void WorldMap::rebuild(
                 koopa->spawn(
                     physicsWorld,
                     spawnPosition,
-                    {64.0f, 80.0f}
+                    {64.0f, 100.0f}
                 );
                 objectStore.addObject(std::move(koopa));
             } else if (tileId == 6) {

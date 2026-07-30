@@ -2,7 +2,6 @@
 #include  "iostream"
 
 #include "Animation/AnimationLibrary.h"
-#include "Physics/PhysicsUnits.h"
 
 #include <SFML/System/Angle.hpp>
 #include <memory>
@@ -65,7 +64,7 @@ void Animatable::renderVisualState(sf::RenderTarget& target, const sf::Vector2f&
     }
 
     sf::Sprite sprite = *_sprite;
-    sprite.setPosition(position);
+    sprite.setPosition({position.x, position.y + _spriteOffsetY});
     sprite.setRotation(sf::degrees(angleDegrees));
     target.draw(sprite);
 }
@@ -96,6 +95,14 @@ void Animatable::bindTexture(sf::Texture& texture) {
     _sprite = sf::Sprite(*_spritesheet);
 }
 
+void Animatable::setVisualScale(sf::Vector2f scale) {
+    _visualScale = scale;
+}
+
+sf::Vector2f Animatable::getVisualScale() const {
+    return _visualScale;
+}
+
 void Animatable::syncSpriteLayout(const sf::Vector2f& hitboxPixels, bool facingLeft) {
     if (!_sprite || hitboxPixels.x <= 0.f || hitboxPixels.y <= 0.f) {
         return;
@@ -106,13 +113,12 @@ void Animatable::syncSpriteLayout(const sf::Vector2f& hitboxPixels, bool facingL
         return;
     }
 
+    _sprite->setOrigin({frameSize.x / 2.f, static_cast<float>(frameSize.y)});
 
-    _sprite->setOrigin({frameSize.x / 2.f, frameSize.y / 2.f});
+    _spriteOffsetY = hitboxPixels.y / 2.0f;
 
-    float xOrientation = 1.0f;
-    if(facingLeft) xOrientation = -1.0f;
-    _sprite->setScale({
-        xOrientation * hitboxPixels.x / static_cast<float>(frameSize.x),
-        hitboxPixels.y / static_cast<float>(frameSize.y)
-    });
+    float xOrientation = facingLeft ? -1.0f : 1.0f;
+    float intendedScaleX = hitboxPixels.x / static_cast<float>(frameSize.x);
+    float intendedScaleY = hitboxPixels.y / static_cast<float>(frameSize.y);
+    _sprite->setScale({xOrientation * intendedScaleX * _visualScale.x, intendedScaleY * _visualScale.y});
 }
