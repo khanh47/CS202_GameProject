@@ -17,6 +17,7 @@ private:
     void registerAnimationSet(const std::string& name, AnimationSet animationSet);
     void preloadPlayerAnimationSets();
     void preloadEnemyAnimationSets();
+    void preloadCoinAnimationSets();
 
     std::unordered_map<std::string, AnimationSet> _animationSets;
 };

@@ -105,4 +105,5 @@ ResourceManager::ResourceManager() {
 	_preLoadTexture("assets/spritesheets/goomba_spritesheet.png", "goomba_spritesheet");
 	_preLoadTexture("assets/spritesheets/koopa_spritesheet.png", "koopa_spritesheet");
 	_preLoadTexture("assets/sprites/Tiles/mario_and_items.png", "mario_and_items");
+	_preLoadTexture("assets/spritesheets/coins_and_items.png", "coin_spritesheet");
 }

@@ -7,6 +7,7 @@
 #include "Game/Objects/Item/Item.h"
 #include "Game/Objects/Item/FireFlower.h"
 #include "Game/Objects/Player/Player.h"
+#include "Game/Objects/Item/Coin.h"
 
 GameObjectFactory::GameObjectFactory() {
     registerPlayer("Player", createAnimated<Player>);
@@ -15,6 +16,7 @@ GameObjectFactory::GameObjectFactory() {
     registerEnemy("Koopa", createAnimated<Koopa>);
     registerItem("Item", createStatic<Item>);
     registerItem("FireFlower", createStatic<FireFlower>);
+    registerItem("Coin", createStatic<Coin>);
 }
 
 void GameObjectFactory::registerPlayer(const std::string& key, AnimatedCreator creator) {

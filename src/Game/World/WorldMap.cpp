@@ -36,6 +36,7 @@ void WorldMap::rebuild(
     sf::Texture& goombaTexture = resources.getTexture("goomba_spritesheet");
     sf::Texture& koopaTexture = resources.getTexture("koopa_spritesheet");
     sf::Texture& itemsTexture = resources.getTexture("mario_and_items");
+    sf::Texture& coinsTexture = resources.getTexture("coin_spritesheet");
 
     objectStore.clear();
     fireballPool.initialize(physicsWorld, itemsTexture);
@@ -161,6 +162,23 @@ void WorldMap::rebuild(
                     flowerSize
                 );
                 objectStore.addObject(std::move(fireFlower));
+            }
+            else if (tileId == 7) {
+                auto coin = objectFactory.createItem(
+                    "Coin", 
+                    &coinsTexture
+                );
+                constexpr sf::Vector2f coinSize{54.0f, 54.0f};
+                const sf::Vector2f coinPosition = {
+                    spawnPosition.x,
+                    spawnPosition.y + (_cellSize - coinSize.y) * 0.5f
+                };
+                coin->spawn(
+                    physicsWorld,
+                    coinPosition,
+                    coinSize
+                );
+                objectStore.addObject(std::move(coin));
             }
         }
     }
