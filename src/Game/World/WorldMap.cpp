@@ -6,6 +6,7 @@
 #include "Game/Objects/GameObject.h"
 #include "Game/Objects/GameObjectFactory.h"
 #include "Game/Objects/Item/FireballPool.h"
+#include "Game/Objects/Item/Coin.h"
 #include "Game/Objects/Player/Player.h"
 #include "Game/UserInput/PlayerController.h"
 #include "Game/World/GameWorld.h"
