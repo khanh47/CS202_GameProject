@@ -1,36 +1,38 @@
 #pragma once
 
+#include "Game/Behaviours/GroundTracker.h"
+
 class Moveable {
 public:
     void startMoveLeft() { _movingLeft = true; _facingLeft = true; }
     void stopMoveLeft() { _movingLeft = false; }
     void startMoveRight() { _movingRight = true; _facingLeft = false; }
     void stopMoveRight() { _movingRight = false; } 
-    void startJump() { if(!isAirbone()) _jumping = true; }
+    void startJump() { if (_groundTracker.canJump()) _jumping = true; }
     void stopJump() { _jumping = false; }
 
     void beginGroundContact() {
-        ++_groundContactCount;
-        _groundContactGraceFramesRemaining = kGroundContactGraceFrames;
+        _groundTracker.beginSupport();
+    }
+
+    void beginGroundContact(b2ShapeId visitor) {
+        _groundTracker.beginSupport(visitor);
     }
 
     void endGroundContact() {
-        if (_groundContactCount > 0) {
-            --_groundContactCount;
-        }
+        _groundTracker.endSupport();
+    }
+
+    void endGroundContact(b2ShapeId visitor) {
+        _groundTracker.endSupport(visitor);
     }
 
     void resetGroundContacts() {
-        _groundContactCount = 0;
-        _groundContactGraceFramesRemaining = 0;
+        _groundTracker.reset();
     }
 
     void finalizeGroundContacts() {
-        if (_groundContactCount > 0) {
-            _groundContactGraceFramesRemaining = kGroundContactGraceFrames;
-        } else if (_groundContactGraceFramesRemaining > 0) {
-            --_groundContactGraceFramesRemaining;
-        }
+        _groundTracker.finalizeStep();
     }
     
     bool isMovingRight() const { return _movingRight; }
@@ -39,17 +41,17 @@ public:
 
     bool isFacingLeft() const { return _facingLeft; }
     bool isAirbone() const {
-        return _groundContactCount <= 0 && _groundContactGraceFramesRemaining <= 0;
+        return !_groundTracker.isGrounded();
     }
-    
+
+    void consumeGroundForJump() {
+        _groundTracker.consumeForJump();
+    }
 
 private:
-    static constexpr int kGroundContactGraceFrames = 1;
-
     bool _facingLeft = false;
     bool _movingLeft = false;
     bool _movingRight = false;
     bool _jumping = false;
-    int _groundContactCount = 0;
-    int _groundContactGraceFramesRemaining = 0;
+    GroundTracker _groundTracker;
 };

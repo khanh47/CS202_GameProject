@@ -1,17 +1,18 @@
 #include "Game/Objects/Item/Fireball.h"
 #include "Physics/PhysicsUnits.h"
 #include "ResourceManager.h"
-#include "Animation/AnimationLibrary.h"
 #include "Game/Objects/Block/Block.h"
 #include "Game/Objects/Enemy/Enemy.h"
 
-Fireball::Fireball() : GameObject(), Animatable() {
+Fireball::Fireball() : GameObject() {
+    animatable = std::make_unique<Animatable>();
     sf::Texture& itemsTexture = ResourceManager::getInstance().getTexture("mario_and_items");
-    configureVisuals(itemsTexture, "fireball");
+    animatable->configureVisuals(itemsTexture, "fireball");
 }
 
-Fireball::Fireball(sf::Texture& texture) : GameObject(), Animatable() {
-    configureVisuals(texture, "fireball");
+Fireball::Fireball(sf::Texture& texture) : GameObject() {
+    animatable = std::make_unique<Animatable>();
+    animatable->configureVisuals(texture, "fireball");
 }
 
 void Fireball::activate(sf::Vector2f spawnPos, bool facingRight) {
@@ -66,10 +67,10 @@ void Fireball::updateSimulation(const float& fixedDt) {
     // Track total horizontal distance traveled in SFML pixel space
     _distanceTraveled += std::abs(vel.x) * fixedDt * PhysicsUnits::pixelsPerMeter;
 
-    playAnimation("spin");
+    animatable->playAnimation("spin");
 }
 
-void Fireball::onContact(GameObject& other) {
+void Fireball::onContact(GameObject& other, const b2ContactData&, b2ShapeId) {
     if (auto* block = dynamic_cast<Block*>(&other)) {
         const sf::Vector2f difference = getPosition() - block->getPosition();
         if (difference.y < -16.0f) {
@@ -90,6 +91,7 @@ void Fireball::onCreateBodyDef(b2BodyDef& def) {
     def.type = b2_dynamicBody;
     def.motionLocks.angularZ = true;
     def.gravityScale = 2.8f;
+    def.isBullet = true;
 }
 
 void Fireball::onCreateShapeDef(b2ShapeDef& def) {
@@ -101,14 +103,14 @@ void Fireball::onCreateShapeDef(b2ShapeDef& def) {
     // Filter bits: Category 0x0004 (Fireball), Mask 0x0001 (Collides ONLY with environment/blocks)
     // Fireballs pass freely through player (0x0002) and other fireballs (0x0004)
     def.filter.categoryBits = 0x0004;
-    def.filter.maskBits = 0x0001;
+    def.filter.maskBits = 0x0001 | 0x0008;
 }
 
 void Fireball::onUpdateVisuals(float deltaTime) {
     if (!_active) {
         return;
     }
-    updateVisualState(deltaTime, _hitboxPixels, !_facingRight);
+    animatable->updateVisualState(deltaTime, _hitboxPixels, !_facingRight);
 }
 
 void Fireball::onRenderVisual(sf::RenderTarget& target, const sf::Vector2f& position, float angleDegrees) {
@@ -116,5 +118,5 @@ void Fireball::onRenderVisual(sf::RenderTarget& target, const sf::Vector2f& posi
     if (!_active) {
         return;
     }
-    renderVisualState(target, position);
+    animatable->renderVisualState(target, position);
 }

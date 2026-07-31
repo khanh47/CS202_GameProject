@@ -31,7 +31,6 @@ void GameWorld::updateSimulation(const float& fixedDt) {
         _objectStore.suspendPlayerMotion();
     }
 
-    _objectStore.finalizeGroundContacts();
     _objectStore.updateSimulation(fixedDt);
 
     constexpr float maximumFireballDistance = 1280.0f;
@@ -48,11 +47,7 @@ void GameWorld::updateSimulation(const float& fixedDt) {
     // Events must be consumed while every fixture owner is still alive.
     handleSensors(_physicsWorld.getSensorEvents());
     handleContacts(_physicsWorld.getContactEvents());
-    _interactionSystem.processObjectInteractions(
-        _objectStore,
-        _fireballPool,
-        *this
-    );
+    _objectStore.finalizeSimulation(fixedDt);
     _objectStore.cleanupDestroyed();
 }
 

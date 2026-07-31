@@ -5,7 +5,7 @@ FireFlower::FireFlower() : Item() {
 }
 
 FireFlower::FireFlower(sf::Texture& texture) : Item() {
-    configureVisuals(texture, "fire_flower");
+    animatable->configureVisuals(texture, "fire_flower");
 }
 
 void FireFlower::onPickup(Player& player) {
@@ -20,6 +20,9 @@ void FireFlower::onCreateBodyDef(b2BodyDef& def) {
 void FireFlower::onCreateShapeDef(b2ShapeDef& def) {
     def.isSensor = true;
     def.density = 0.0f;
+
+    def.filter.categoryBits = 0x0010;
+    def.filter.maskBits = 0x0002;
 }
 
 void FireFlower::onUpdateVisuals(float deltaTime) {

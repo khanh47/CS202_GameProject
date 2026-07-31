@@ -13,6 +13,7 @@ public:
     virtual ~GameObject() = default;
 
     virtual void updateSimulation(const float &fixedDt);
+    virtual void finalizeSimulation(const float &fixedDt);
     virtual void updateVisuals(float deltaTime);
     virtual void render(sf::RenderTarget &target);
 
@@ -23,7 +24,10 @@ public:
     sf::Vector2f getPosition() const;
     virtual sf::Vector2f getVelocity() const;
 
-    virtual void onContact(GameObject& other) {}
+    sf::Vector2f getHitboxPixels() const { return _hitboxPixels; }
+
+    virtual void onContact(GameObject& other, const b2ContactData& contactData, b2ShapeId ownShape) {}
+    virtual void finalizeGroundContacts() {}
 
 protected:
     virtual void onCreateBodyDef(b2BodyDef& def);
@@ -31,6 +35,7 @@ protected:
     virtual void onUpdateVisuals(float deltaTime);
     virtual void onRenderVisual(sf::RenderTarget& target, const sf::Vector2f& position, float angleDegrees);
     virtual void onHitboxRecreated();
+    virtual b2Polygon makeHitbox(sf::Vector2f hitboxPixels) const;
 
     
     bool hasValidBody() const;

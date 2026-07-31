@@ -22,10 +22,11 @@ public:
     void updateVisualState(float deltaTime, const sf::Vector2f& hitboxPixels, bool facingLeft = false);
     void renderVisualState(sf::RenderTarget& target, const sf::Vector2f& position, float angleDegrees = 0) const;
 
-protected:
+    void setVisualScale(sf::Vector2f scale);
+    sf::Vector2f getVisualScale() const;
     void playAnimation(const std::string& name);
     void stopAnimation();
-
+    std::string getActiveAnimationName() const;
     bool hasSprite() const;
 
 private:
@@ -35,4 +36,6 @@ private:
     std::shared_ptr<sf::Texture> _spritesheet;
     Animator _animator;
     std::optional<sf::Sprite> _sprite;
+    sf::Vector2f _visualScale{1.0f, 1.0f};
+    float _spriteOffsetY{0.0f};
 };
