@@ -23,7 +23,7 @@ void Action::PerformAction(const ActionType& action) {
         case ActionType::Decelerate:
             Decelerate();
             break;
-        case ActionType::Shoot:
+        case ActionType::Attack:
             Shoot();
             break;
         default:
