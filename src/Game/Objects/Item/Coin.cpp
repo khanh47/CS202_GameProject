@@ -1,42 +1,30 @@
 #include "Game/Objects/Item/Coin.h"
-#include "Physics/PhysicsUnits.h"
+#include "Game/Objects/Player/Player.h"
 
-Coin::Coin()
-    : GameObject(), Animatable(), Damageable(20) {
+Coin::Coin() : Item() {
 }
 
-Coin::Coin(sf::Texture& texture)
-    : GameObject(), Animatable(), Damageable(20) {
-    configureVisuals(texture, "Coin");
+Coin::Coin(sf::Texture& texture) : Item() {
+    animatable->configureVisuals(texture, "coin");
 }
 
-Coin::~Coin() = default;
+void Coin::onPickup(Player& player) {
+    player.changeToFireState();
+    destroy();
+}
 
 void Coin::onCreateBodyDef(b2BodyDef& def) {
-    def.type = b2_dynamicBody;
-    startMoveLeft();
+    def.type = b2_staticBody;
 }
 
 void Coin::onCreateShapeDef(b2ShapeDef& def) {
-    def.density = 1.0f;
-}
+    def.isSensor = true;
+    def.density = 0.0f;
 
-void Coin::updateSimulation(const float& fixedDt) {
-    if (!hasValidBody()) return;
-
-    b2BodyId body = _body->getId();
-    float speed = 0.0f;
-    float dir = 0.0f;
-    b2Vec2 vel = b2Body_GetLinearVelocity(body);
-    b2Body_SetLinearVelocity(body, { speed * dir, vel.y });
+    def.filter.categoryBits = 0x0010;
+    def.filter.maskBits = 0x0002;
 }
 
 void Coin::onUpdateVisuals(float deltaTime) {
-    updateVisualState(deltaTime, _hitboxPixels, isFacingLeft());
-}
-
-void Coin::onRenderVisual(sf::RenderTarget& target,
-                            const sf::Vector2f& position,
-                            float angleDegrees) {
-    renderVisualState(target, position, angleDegrees);
+    Item::onUpdateVisuals(deltaTime);
 }

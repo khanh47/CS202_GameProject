@@ -45,7 +45,8 @@ void AnimationLibrary::preloadEnemyAnimationSets() {
 }
 
 void AnimationLibrary::preloadCoinAnimationSets() {
-    registerAnimationSet("coin", Animation::makeCoinAnimationSet());
+    const AnimationSet coinSet = Animation::makeCoinAnimationSet();
+    registerAnimationSet("coin", coinSet);
 }
 
 const AnimationSet& AnimationLibrary::getAnimationSet(const std::string& name) const {

@@ -169,7 +169,7 @@ void WorldMap::rebuild(
                     "Coin", 
                     &coinsTexture
                 );
-                constexpr sf::Vector2f coinSize{54.0f, 54.0f};
+                constexpr sf::Vector2f coinSize{32.0f, 64.0f};
                 const sf::Vector2f coinPosition = {
                     spawnPosition.x,
                     spawnPosition.y + (_cellSize - coinSize.y) * 0.5f

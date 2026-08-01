@@ -263,15 +263,15 @@ AnimationSet Animation::makeFireTransformAnimationSet() {
 
 AnimationSet Animation::makeCoinAnimationSet() {
     AnimationSet set;
-    set.defaultClip = "flip";
+    set.defaultClip = "idle";
     
     set.clips.emplace(
-        "flip", 
+        "idle", 
         Animation::createLinearClip (
-            {48, 64},
-            {16, 16},
-            4, 
-            {16, 0},
+            {0, 0},
+            {152, 64},
+            1, 
+            {40, 0},
             1.0f / 6.0f,
             true
         )

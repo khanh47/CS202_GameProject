@@ -1,27 +1,23 @@
 #pragma once
 
-#include <box2d/box2d.h>
-#include "Game/Behaviours/Animatable.h"
-#include "Game/Behaviours/Damageable.h"
-#include "Game/Behaviours/Moveable.h"
-#include "Game/Objects/GameObject.h"
-#include "Physics/PhysicsWorld.h"
+#include "Game/Objects/Item/Item.h"
 
-class Coin : public GameObject,
-               public Animatable,
-               public Damageable,
-               public Moveable {
+class Player;
+
+/**
+ * @brief Represents a Fire Flower pickup item.
+ * When touched by Mario, changes Mario's state to FireState.
+ */
+class Coin : public Item {
 public:
     Coin();
     Coin(sf::Texture& texture);
-    ~Coin();
+    ~Coin() override = default;
+
+    void onPickup(Player& player);
 
 protected:
     void onCreateBodyDef(b2BodyDef& def) override;
     void onCreateShapeDef(b2ShapeDef& def) override;
     void onUpdateVisuals(float deltaTime) override;
-    void onRenderVisual(sf::RenderTarget& target,
-                        const sf::Vector2f& position,
-                        float angleDegrees) override;
-    void updateSimulation(const float& fixedDt) override;
 };
