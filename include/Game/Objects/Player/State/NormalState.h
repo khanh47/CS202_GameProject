@@ -12,7 +12,7 @@ public:
 
     std::string getStateName() const override { return "Normal"; }
     std::string getAnimationSetId() const override { return "mario"; }
-    std::string getTextureAlias() const override { return "mario_spritesheet"; }
+    std::string getTextureAlias() const override { return "luigi_spritesheet"; }
 
     float getMoveSpeedMultiplier() const override { return 1.0f; }
     float getJumpSpeedMultiplier() const override { return 1.0f; }
