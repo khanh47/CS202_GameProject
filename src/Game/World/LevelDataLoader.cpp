@@ -51,7 +51,7 @@ std::vector<std::vector<int>> LevelDataLoader::load(
         std::vector<int> row;
         row.reserve(rowText.size());
         for (const char tile : rowText) {
-            if (tile < '0' || tile > '6') {
+            if (tile < '0' || tile > '7') {
                 throw std::runtime_error("Level contains an unsupported tile id");
             }
             row.push_back(tile - '0');
