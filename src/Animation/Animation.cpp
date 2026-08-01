@@ -269,8 +269,8 @@ AnimationSet Animation::makeCoinAnimationSet() {
         "idle", 
         Animation::createLinearClip (
             {0, 0},
-            {152, 64},
-            1, 
+            {32, 64},
+            4, 
             {40, 0},
             1.0f / 6.0f,
             true

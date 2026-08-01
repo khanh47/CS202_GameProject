@@ -7,6 +7,7 @@
 #include "Physics/PhysicsUnits.h"
 #include "Game/Objects/Enemy/Enemy.h"
 #include "Game/Objects/Item/FireFlower.h"
+#include "Game/Objects/Item/Coin.h"
 #include "ResourceManager.h"
 
 #include <SFML/Graphics/Texture.hpp>
@@ -152,6 +153,14 @@ void Player::onContact(GameObject& other, const b2ContactData& contactData, b2Sh
             startFireTransformation(*_world, 1.0f);
         }
         fireFlower->destroy();
+        return;
+    }
+
+    if (auto* coin = dynamic_cast<Coin*>(&other)) {
+        if (_world) {
+            //_world->incrementScore(100);
+        }
+        coin->destroy();
         return;
     }
 
