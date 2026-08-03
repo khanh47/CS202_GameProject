@@ -73,9 +73,9 @@ void GameWorld::handleSensors(b2SensorEvents sensorEvents) {
     _interactionSystem.processSensors(sensorEvents);
 }
 
-void GameWorld::loadMap(const std::vector<std::vector<int>>& mapData) {
+void GameWorld::loadMap(const LevelData& levelData) {
     _worldMap.rebuild(
-        mapData,
+        levelData,
         _physicsWorld,
         _objectFactory,
         _fireballPool,
@@ -84,9 +84,9 @@ void GameWorld::loadMap(const std::vector<std::vector<int>>& mapData) {
     );
 }
 
-void GameWorld::test() {
+void GameWorld::loadLevel(const std::string& levelPath) {
     loadMap(LevelDataLoader::load(
-        "assets/levels/1-1.json",
+        levelPath,
         _worldMap.getGridWidth(),
         _worldMap.getGridHeight()
     ));

@@ -1,4 +1,5 @@
 #include "Game/Objects/GameObject.h"
+#include "Game/GameSettings.h"
 #include "Physics/PhysicsUnits.h"
 #include <SFML/System/Vector2.hpp>
 #include <memory>
@@ -10,7 +11,7 @@
 #include "box2d/types.h"
 
 namespace {
-constexpr bool drawFallbackCollisionRect = true;
+constexpr bool drawFallbackCollisionRect = false;
 constexpr float feetInsetPixels = 0.0f;
 constexpr float feetHalfHeightPixels = 1.0f;
 constexpr float feetOverlapPixels = 0.0f;
@@ -73,11 +74,12 @@ void GameObject::render(sf::RenderTarget &target) {
     const sf::Vector2f position = getBodyPositionPixels();
     const float angleDegrees = getBodyAngleDegrees();
 
-    if (drawFallbackCollisionRect) {
+    onRenderVisual(target, position, angleDegrees);
+
+    if (drawFallbackCollisionRect
+        || GameSettings::getInstance().debugDrawHitbox) {
         drawFallbackRect(target);
     }
-
-    onRenderVisual(target, position, angleDegrees);
 }
 
 void GameObject::spawn(const PhysicsWorld &physicsWorld, sf::Vector2f spawnPixels, sf::Vector2f hitboxPixels, bool hasFeet) {
@@ -202,6 +204,7 @@ void GameObject::updateHitboxSize(sf::Vector2f newHitboxPixels) {
 
     b2ShapeDef shapeDef = b2DefaultShapeDef();
     shapeDef.enableContactEvents = true;
+    shapeDef.enableSensorEvents = true;
     shapeDef.userData = this;
     onCreateShapeDef(shapeDef);
 
@@ -258,8 +261,8 @@ void GameObject::drawFallbackRect(sf::RenderTarget& target) const {
         bodyCenterPixels,
         sizePixels,
         angleDegrees,
-        sf::Color::Magenta,
-        sf::Color::Black
+        sf::Color(255, 0, 255, 80),
+        sf::Color::Magenta
     );
 
     if (_hasFeet) {

@@ -29,10 +29,11 @@ Player::Player(sf::Texture &texture, const std::string& animationSetId)
     animatable = std::make_unique<Animatable>();
     damageable = std::make_unique<Damageable>(100);
     moveable = std::make_unique<Moveable>();
-    if (animationSetId == "fire_mario") {
-        setState(std::make_unique<FireState>());
+    _character = animationSetId.find("luigi") != std::string::npos ? "luigi" : "mario";
+    if (animationSetId.rfind("fire_", 0) == 0) {
+        setState(std::make_unique<FireState>(_character));
     } else {
-        setState(std::make_unique<NormalState>());
+        setState(std::make_unique<NormalState>(_character));
     }
 }
 
@@ -67,20 +68,20 @@ void Player::attack(GameWorld& world) {
 }
 
 void Player::changeToNormalState() {
-    setState(std::make_unique<NormalState>());
+    setState(std::make_unique<NormalState>(_character));
 }
 
 void Player::changeToSuperState() {
-    setState(std::make_unique<SuperState>());
+    setState(std::make_unique<SuperState>(_character));
 }
 
 void Player::changeToFireState() {
-    setState(std::make_unique<FireState>());
+    setState(std::make_unique<FireState>(_character));
 }
 
 void Player::applyMegaState(float durationSeconds) {
     if (!_state) {
-        _state = std::make_unique<NormalState>();
+        _state = std::make_unique<NormalState>(_character);
     }
     setState(std::make_unique<MegaStateDecorator>(std::move(_state), durationSeconds));
 }
@@ -234,7 +235,8 @@ void Player::startFireTransformation(GameWorld& world, float duration) {
     world.freeze(duration);
 
     // Switch visuals to transformation spritesheet & play transformation animation
-    sf::Texture& transformTex = ResourceManager::getInstance().getTexture("mario_transform_spritesheet");
+    const char* transformAlias = _character == "luigi" ? "luigi_transform_spritesheet" : "mario_transform_spritesheet";
+    sf::Texture& transformTex = ResourceManager::getInstance().getTexture(transformAlias);
     animatable->configureVisuals(transformTex, "transform_fire");
     animatable->playAnimation("transform");
 }

@@ -15,6 +15,7 @@ void SettingsScene::init() {
 
     _menu.addToggleButtonAuto("Grid", settings.debugDrawGrid, std::make_unique<ToggleGridCommand>());
     _menu.addToggleButtonAuto("Coordinates", settings.debugDrawCoordinates, std::make_unique<ToggleCoordinatesCommand>());
+    _menu.addToggleButtonAuto("Hitbox", settings.debugDrawHitbox, std::make_unique<ToggleHitboxCommand>());
     _menu.addToggleButtonAuto("Camera Move", settings.freeCameraMove, std::make_unique<ToggleFreeCameraCommand>());
 }
 

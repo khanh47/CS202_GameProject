@@ -72,7 +72,7 @@ void MainMenuScene::_setupButtons() {
     _buttonMenu.addButtonAuto("New Game", std::make_unique<FunctionalCommand>(
         "New Game", [this]() {
             if (auto mgr = getSceneManager()) {
-                mgr->pushSceneByName("IN_GAME");
+                mgr->pushSceneByName("LEVEL_SELECT");
             }
         }
     ));

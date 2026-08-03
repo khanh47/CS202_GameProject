@@ -1,6 +1,7 @@
 #pragma once
 
 #include <SFML/Graphics.hpp>
+#include <string>
 
 class FireballPool;
 class WorldMap;
@@ -16,6 +17,10 @@ public:
     ) const;
 
 private:
+    void renderBackground(
+        sf::RenderTarget& target,
+        const std::string& backgroundKey
+    ) const;
     void renderDebugGrid(
         sf::RenderTarget& target,
         const WorldMap& worldMap
