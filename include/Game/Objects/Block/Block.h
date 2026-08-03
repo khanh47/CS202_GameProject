@@ -7,8 +7,7 @@
 #include "Game/Objects/GameObject.h"
 #include "Physics/PhysicsWorld.h"
 
-class Block: public GameObject,
-             public Animatable {
+class Block: public GameObject {
 public:
     Block();
     Block(sf::Texture &texture);
@@ -18,4 +17,6 @@ protected:
     void onCreateShapeDef(b2ShapeDef& def) override;
     void onUpdateVisuals(float deltaTime) override;
     void onRenderVisual(sf::RenderTarget& target, const sf::Vector2f& position, float angleDegrees) override;
+private:
+    std::unique_ptr<Animatable> animatable;
 };

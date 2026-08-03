@@ -67,6 +67,7 @@ private:
     float _baseJumpSpeed = 16.0f;
     std::unique_ptr<PlayerState> _state;
     std::unique_ptr<IAttackStrategy> _attackStrategy;
+    std::string _character = "mario";
 
     bool _isTransforming = false;
     float _transformTimer = 0.0f;

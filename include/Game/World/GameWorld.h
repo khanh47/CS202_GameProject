@@ -2,6 +2,7 @@
 
 #include <SFML/Graphics.hpp>
 #include <memory>
+#include <string>
 
 #include "Game/Objects/GameObjectFactory.h"
 #include "Game/Objects/Item/FireballPool.h"
@@ -23,8 +24,8 @@ public:
     void handleContacts(b2ContactEvents contactEvents);
     void handleSensors(b2SensorEvents sensorEvents);
 
-    void test();
-    void loadMap(const std::vector<std::vector<int>>& mapData);
+    void loadLevel(const std::string& levelPath);
+    void loadMap(const LevelData& levelData);
 
     bool spawnFireball(sf::Vector2f spawnPos, bool facingRight);
     void freeze(float durationSeconds);

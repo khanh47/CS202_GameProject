@@ -24,6 +24,7 @@ void AnimationLibrary::preloadPlayerAnimationSets() {
     const AnimationSet playerSet = Animation::makeDefaultPlayerAnimationSet();
     registerAnimationSet("mario", playerSet);
     registerAnimationSet("fire_mario", playerSet);
+    registerAnimationSet("fire_luigi", playerSet);
     registerAnimationSet("luigi", playerSet);
 
     const AnimationSet fireTransformSet = Animation::makeFireTransformAnimationSet();

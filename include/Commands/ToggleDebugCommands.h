@@ -16,6 +16,13 @@ public:
     CommandType getType() const override { return CommandType::IMMEDIATE; }
 };
 
+class ToggleHitboxCommand : public ICommand {
+public:
+    void execute() override;
+    std::string getName() const override { return "ToggleHitboxCommand"; }
+    CommandType getType() const override { return CommandType::IMMEDIATE; }
+};
+
 class ToggleFreeCameraCommand : public ICommand {
 public:
     void execute() override;

@@ -6,7 +6,7 @@
 
 #include <nlohmann/json.hpp>
 
-std::vector<std::vector<int>> LevelDataLoader::load(
+LevelData LevelDataLoader::load(
     const std::filesystem::path& filePath,
     int maximumWidth,
     int maximumHeight
@@ -51,12 +51,40 @@ std::vector<std::vector<int>> LevelDataLoader::load(
         std::vector<int> row;
         row.reserve(rowText.size());
         for (const char tile : rowText) {
-            if (tile < '0' || tile > '7') {
+            if (tile < '0' || tile > '9') {
                 throw std::runtime_error("Level contains an unsupported tile id");
             }
             row.push_back(tile - '0');
         }
         rows.push_back(std::move(row));
     }
-    return rows;
+
+    if (!document.contains("spawns")) {
+        throw std::runtime_error("Level JSON must contain a spawns array");
+    }
+    std::unordered_map<int, std::vector<SpawnSpec>> spawns;
+    try {
+        spawns = parseSpawnSpecs(document["spawns"]);
+    } catch (const std::exception& error) {
+        throw std::runtime_error("Invalid spawns definition: " + std::string(error.what()));
+    }
+
+    for (std::size_t rowIndex = 0; rowIndex < rows.size(); ++rowIndex) {
+        for (std::size_t column = 0; column < rows[rowIndex].size(); ++column) {
+            const int tileId = rows[rowIndex][column];
+            if (tileId != 0 && spawns.find(tileId) == spawns.end()) {
+                throw std::runtime_error(
+                    "Level references tile id " + std::to_string(tileId)
+                    + " that has no spawn definition"
+                );
+            }
+        }
+    }
+
+    LevelData levelData;
+    levelData.rows = std::move(rows);
+    levelData.spawns = std::move(spawns);
+    levelData.background = document.value("background", "");
+
+    return levelData;
 }
