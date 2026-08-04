@@ -123,6 +123,10 @@ bool TerrainSeamFilter::shouldEnableContact(
     return std::abs(playerToTerrain.x) < minimumLateralNormal;
 }
 
+bool TerrainSeamFilter::isCellOccupied(int column, int row) const {
+    return hasLiveBlock(column, row);
+}
+
 bool TerrainSeamFilter::hasLiveBlock(int column, int row) const {
     const auto occupant = _occupancy.find(cellKey(column, row));
     if (occupant == _occupancy.end()) {

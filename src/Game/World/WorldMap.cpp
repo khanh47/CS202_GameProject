@@ -5,6 +5,7 @@
 
 #include "Game/Objects/GameObject.h"
 #include "Game/Objects/GameObjectFactory.h"
+#include "Game/Objects/Enemy/Enemy.h"
 #include "Game/Objects/Item/FireballPool.h"
 #include "Game/Objects/Player/Player.h"
 #include "Game/UserInput/PlayerController.h"
@@ -74,19 +75,28 @@ void spawnFromSpec(
             player->spawn(
                 context.physicsWorld,
                 spawnPosition,
-                spec.size,
-                true
+                spec.size
             );
             if (auto mario = std::dynamic_pointer_cast<Player>(player)) {
                 mario->changeToNormalState();
                 if (spec.addController) {
-                    context.objectStore.addController(
-                        std::make_unique<PlayerController>(
-                            *mario,
-                            context.gameWorld,
-                            PlayerController::ControlScheme::Wasd
-                        )
-                    );
+                    if (spec.animationId == "mario") {
+                        context.objectStore.addController(
+                            std::make_unique<PlayerController>(
+                                *mario,
+                                context.gameWorld,
+                                PlayerController::ControlScheme::Wasd
+                            )
+                        );
+                    } else {
+                        context.objectStore.addController(
+                            std::make_unique<PlayerController>(
+                                *mario,
+                                context.gameWorld,
+                                PlayerController::ControlScheme::ArrowKeys
+                            )
+                        );
+                    }
                 }
             }
             object = std::move(player);
@@ -99,6 +109,9 @@ void spawnFromSpec(
                 spec.animationId
             );
             enemy->spawn(context.physicsWorld, spawnPosition, spec.size);
+            if (auto e = std::dynamic_pointer_cast<Enemy>(enemy)) {
+                e->setSupportGrid(&context.terrainSeamFilter, context.cellSize);
+            }
             object = std::move(enemy);
             break;
         }

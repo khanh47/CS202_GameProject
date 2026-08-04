@@ -12,9 +12,6 @@
 
 namespace {
 constexpr bool drawFallbackCollisionRect = false;
-constexpr float feetInsetPixels = 0.0f;
-constexpr float feetHalfHeightPixels = 1.0f;
-constexpr float feetOverlapPixels = 0.0f;
 
 void drawDebugRect(
     sf::RenderTarget& target,
@@ -82,18 +79,14 @@ void GameObject::render(sf::RenderTarget &target) {
     }
 }
 
-void GameObject::spawn(const PhysicsWorld &physicsWorld, sf::Vector2f spawnPixels, sf::Vector2f hitboxPixels, bool hasFeet) {
+void GameObject::spawn(const PhysicsWorld &physicsWorld, sf::Vector2f spawnPixels, sf::Vector2f hitboxPixels) {
     if (!physicsWorld.isValid())
         throw std::runtime_error("Invalid World!");
     if(_body && _body->isValid())
         throw std::runtime_error("The player has already been spawned!");
 
-    _hasFeet = hasFeet;
     createBody(physicsWorld, spawnPixels);
     createHitbox(hitboxPixels);
-    if (hasFeet) {
-        createFeet(hitboxPixels);
-    }
     updateVisuals(0.f);
 }
 
@@ -195,11 +188,6 @@ void GameObject::updateHitboxSize(sf::Vector2f newHitboxPixels) {
         b2DestroyShape(oldShape, true);
     }
 
-    if (b2Shape_IsValid(_feetShapeId)) {
-        b2DestroyShape(_feetShapeId, false);
-        _feetShapeId = b2_nullShapeId;
-    }
-
     _hitboxPixels = newHitboxPixels;
 
     b2ShapeDef shapeDef = b2DefaultShapeDef();
@@ -213,36 +201,7 @@ void GameObject::updateHitboxSize(sf::Vector2f newHitboxPixels) {
     b2ShapeId newHitbox = b2CreatePolygonShape(bodyId, &shapeDef, &box);
     _body->setHibox(newHitbox);
 
-    if (_hasFeet) {
-        createFeet(newHitboxPixels);
-    }
-    
     onHitboxRecreated();
-}
-
-void GameObject::createFeet(sf::Vector2f hitboxPixels) {
-    b2ShapeDef shapeDef = b2DefaultShapeDef();
-    shapeDef.density = 0.0f;
-    shapeDef.isSensor = true;
-    shapeDef.enableContactEvents = false;
-    shapeDef.enableSensorEvents = true;
-    shapeDef.userData = this;
-    shapeDef.filter.categoryBits = 0x0001;
-    shapeDef.filter.maskBits = 0x0001;
-
-    const float feetOffsetPixels = hitboxPixels.y * 0.5f + feetHalfHeightPixels - feetOverlapPixels;
-
-    b2Polygon box = b2MakeOffsetBox(
-        PhysicsUnits::toMeters(hitboxPixels.x * 0.5f - feetInsetPixels),
-        PhysicsUnits::toMeters(feetHalfHeightPixels),
-        {
-            PhysicsUnits::toMeters(0.0f),
-            PhysicsUnits::toMeters(feetOffsetPixels)
-        },
-        b2MakeRot(0.0f)
-    );
-
-    _feetShapeId = b2CreatePolygonShape(_body->getId(), &shapeDef, &box);
 }
 
 void GameObject::drawFallbackRect(sf::RenderTarget& target) const {
@@ -252,10 +211,10 @@ void GameObject::drawFallbackRect(sf::RenderTarget& target) const {
 
     const b2Vec2 position = b2Body_GetPosition(_body->getId());
     const b2Rot rotation = b2Body_GetRotation(_body->getId());
-    const float angleDegrees = b2Rot_GetAngle(rotation) * (180.f / 3.14159265f);
+    const float bodyAngleRad = b2Rot_GetAngle(rotation);
+    const float angleDegrees = bodyAngleRad * (180.f / B2_PI);
     const sf::Vector2f sizePixels = _hitboxPixels;
     const sf::Vector2f bodyCenterPixels = PhysicsUnits::toPixels(position);
-
     drawDebugRect(
         target,
         bodyCenterPixels,
@@ -264,27 +223,4 @@ void GameObject::drawFallbackRect(sf::RenderTarget& target) const {
         sf::Color(255, 0, 255, 80),
         sf::Color::Magenta
     );
-
-    if (_hasFeet) {
-        const sf::Vector2f feetSizePixels = {
-            sizePixels.x - (feetInsetPixels * 2.f),
-            feetHalfHeightPixels * 2.f
-        };
-        const float feetOffsetPixels = sizePixels.y * 0.5f + feetHalfHeightPixels - feetOverlapPixels;
-        const b2Vec2 localFeetOffsetMeters = {
-            0.0f,
-            PhysicsUnits::toMeters(feetOffsetPixels)
-        };
-        const b2Vec2 rotatedFeetOffsetMeters = b2RotateVector(rotation, localFeetOffsetMeters);
-        const sf::Vector2f feetCenterPixels = bodyCenterPixels + PhysicsUnits::toPixels(rotatedFeetOffsetMeters);
-
-        drawDebugRect(
-            target,
-            feetCenterPixels,
-            feetSizePixels,
-            angleDegrees,
-            sf::Color(0, 255, 0, 80),
-            sf::Color::Green
-        );
-    }
 }
