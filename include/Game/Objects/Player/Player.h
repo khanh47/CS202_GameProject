@@ -27,8 +27,10 @@ public:
     void applyMegaState(float durationSeconds = 5.0f);
     void revertDecoratedState();
 
+    enum class TransformTarget { Super, Fire };
+
     void attack(GameWorld& world);
-    void startFireTransformation(GameWorld& world, float duration = 1.0f);
+    void startTransformation(TransformTarget target, GameWorld& world, float duration = 1.0f);
 
     void setGameWorld(GameWorld& world) { _world = &world; }
     void onContact(GameObject& other, const b2ContactData& contactData, b2ShapeId ownShape) override;
@@ -72,5 +74,7 @@ private:
     bool _isTransforming = false;
     float _transformTimer = 0.0f;
     float _transformDuration = 1.0f;
+    float _transformStartScale = 1.0f;
+    TransformTarget _transformTarget = TransformTarget::Fire;
     GameWorld* _world = nullptr;
 };

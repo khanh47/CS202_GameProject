@@ -6,6 +6,7 @@
 #include "Game/Objects/Enemy/ConcreteEnemy/Koopa.h"
 #include "Game/Objects/Item/Item.h"
 #include "Game/Objects/Item/FireFlower.h"
+#include "Game/Objects/Item/SuperMushroom.h"
 #include "Game/Objects/Player/Player.h"
 #include "Game/Objects/Item/Coin.h"
 
@@ -16,6 +17,7 @@ GameObjectFactory::GameObjectFactory() {
     registerEnemy("Koopa", createAnimated<Koopa>);
     registerItem("Item", createStatic<Item>);
     registerItem("FireFlower", createStatic<FireFlower>);
+    registerItem("SuperMushroom", createStatic<SuperMushroom>);
     registerItem("Coin", createStatic<Coin>);
 }
 

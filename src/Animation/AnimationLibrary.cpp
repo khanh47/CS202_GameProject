@@ -13,6 +13,7 @@ AnimationLibrary& AnimationLibrary::getInstance() {
 AnimationLibrary::AnimationLibrary() {
     preloadPlayerAnimationSets();
     preloadEnemyAnimationSets();
+    preloadItemAnimationSets();
     preloadCoinAnimationSets();
 }
 
@@ -27,8 +28,8 @@ void AnimationLibrary::preloadPlayerAnimationSets() {
     registerAnimationSet("fire_luigi", playerSet);
     registerAnimationSet("luigi", playerSet);
 
-    const AnimationSet fireTransformSet = Animation::makeFireTransformAnimationSet();
-    registerAnimationSet("transform_fire", fireTransformSet);
+    const AnimationSet transformSet = Animation::makeTransformAnimationSet();
+    registerAnimationSet("transform", transformSet);
 }
 
 void AnimationLibrary::preloadEnemyAnimationSets() {
@@ -37,12 +38,17 @@ void AnimationLibrary::preloadEnemyAnimationSets() {
 
     const AnimationSet koopaSet = Animation::makeKoopaAnimationSet();
     registerAnimationSet("koopa", koopaSet);
+}
 
+void AnimationLibrary::preloadItemAnimationSets() {
     const AnimationSet fireFlowerSet = Animation::makeFireFlowerAnimationSet();
     registerAnimationSet("fire_flower", fireFlowerSet);
 
     const AnimationSet fireballSet = Animation::makeFireballAnimationSet();
     registerAnimationSet("fireball", fireballSet);
+
+    const AnimationSet superMushroomSet = Animation::makeSuperMushroomAnimationSet();
+    registerAnimationSet("super_mushroom", superMushroomSet);
 }
 
 void AnimationLibrary::preloadCoinAnimationSets() {

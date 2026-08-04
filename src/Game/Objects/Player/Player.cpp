@@ -7,6 +7,7 @@
 #include "Physics/PhysicsUnits.h"
 #include "Game/Objects/Enemy/Enemy.h"
 #include "Game/Objects/Item/FireFlower.h"
+#include "Game/Objects/Item/SuperMushroom.h"
 #include "Game/Objects/Item/Coin.h"
 #include "ResourceManager.h"
 
@@ -149,9 +150,26 @@ void Player::finalizeSimulation(const float &fixedDt) {
 }
 
 void Player::onContact(GameObject& other, const b2ContactData& contactData, b2ShapeId ownShape) {
+    if (auto* mushroom = dynamic_cast<SuperMushroom*>(&other)) {
+        // Only Normal state benefits from the Super Mushroom
+        if (_state && _state->getStateName() == "Normal") {
+            if (_world) {
+                startTransformation(TransformTarget::Super, *_world, 1.0f);
+            }
+        }
+        //If player is Super or Fire, +1000 points or whatever
+        //If multiplayer, do not destroy
+        mushroom->destroy();
+        return;
+    }
+
     if (auto* fireFlower = dynamic_cast<FireFlower*>(&other)) {
+        //If player is Fire, +1000 points or whatever
+        //If multiplayer, do not destroy
         if (_world) {
-            startFireTransformation(*_world, 1.0f);
+            if (_state && _state->getStateName() != "Fire") {
+                startTransformation(TransformTarget::Fire, *_world, 1.0f);
+            }
         }
         fireFlower->destroy();
         return;
@@ -213,12 +231,16 @@ b2Polygon Player::makeHitbox(sf::Vector2f hitboxPixels) const {
     );
 }
 
-void Player::startFireTransformation(GameWorld& world, float duration) {
+void Player::startTransformation(TransformTarget target, GameWorld& world, float duration) {
     if (_isTransforming) return;
 
     _isTransforming = true;
     _transformTimer = duration;
     _transformDuration = duration > 0.0f ? duration : 1.0f;
+    _transformTarget = target;
+
+    // Snapshot current scale so the animation lerps from it to the target (1.25x)
+    _transformStartScale = _state ? _state->getScaleMultiplier().x : 1.0f;
 
     // Stop movement inputs and clear horizontal physics velocity when transformation starts
     moveable->stopMoveLeft();
@@ -234,10 +256,10 @@ void Player::startFireTransformation(GameWorld& world, float duration) {
     // Freeze physics simulation & world updates for the duration of transformation
     world.freeze(duration);
 
-    // Switch visuals to transformation spritesheet & play transformation animation
+    // Switch visuals to transformation spritesheet & play the shared transform animation
     const char* transformAlias = _character == "luigi" ? "luigi_transform_spritesheet" : "mario_transform_spritesheet";
     sf::Texture& transformTex = ResourceManager::getInstance().getTexture(transformAlias);
-    animatable->configureVisuals(transformTex, "transform_fire");
+    animatable->configureVisuals(transformTex, "transform");
     animatable->playAnimation("transform");
 }
 
@@ -255,15 +277,20 @@ void Player::onUpdateVisuals(float deltaTime) {
                 vel.x = 0.0f;
                 b2Body_SetLinearVelocity(bodyId, vel);
             }
-            // Transformation finished -> transition into FireState
-            changeToFireState();
+            // Transformation finished -> enter the correct target state
+            if (_transformTarget == TransformTarget::Fire) {
+                changeToFireState();
+            } else {
+                changeToSuperState();
+            }
             return;
         }
 
-        // Gradually scale from 1.0x to 1.25x during transformation
+        // Lerp from the pre-transformation scale to Fire's 1.25x target
+        constexpr float targetScale = 1.25f;
         float progress = 1.0f - (_transformTimer / _transformDuration);
         progress = std::max(0.0f, std::min(1.0f, progress));
-        float currentScale = 1.0f + 0.25f * progress;
+        float currentScale = _transformStartScale + (targetScale - _transformStartScale) * progress;
 
         sf::Vector2f scaledHitbox = {_baseHitboxPixels.x * currentScale, _baseHitboxPixels.y * currentScale};
         updateHitboxSize(scaledHitbox);
