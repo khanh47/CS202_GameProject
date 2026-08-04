@@ -2,7 +2,6 @@
 #include "Game/GameSettings.h"
 #include "Physics/PhysicsUnits.h"
 #include <SFML/System/Vector2.hpp>
-#include <iostream>
 #include <memory>
 #include <stdexcept>
 #include "box2d/box2d.h"
@@ -13,10 +12,6 @@
 
 namespace {
 constexpr bool drawFallbackCollisionRect = false;
-constexpr float sensorHalfWidthPixels = 4.0f;
-constexpr float sensorHalfHeightPixels = 3.0f;
-constexpr float sensorForwardPixels = 2.0f;
-constexpr float sensorBelowFeetPixels = 2.0f;
 
 void drawDebugRect(
     sf::RenderTarget& target,
@@ -84,18 +79,14 @@ void GameObject::render(sf::RenderTarget &target) {
     }
 }
 
-void GameObject::spawn(const PhysicsWorld &physicsWorld, sf::Vector2f spawnPixels, sf::Vector2f hitboxPixels, bool hasSensor) {
+void GameObject::spawn(const PhysicsWorld &physicsWorld, sf::Vector2f spawnPixels, sf::Vector2f hitboxPixels) {
     if (!physicsWorld.isValid())
         throw std::runtime_error("Invalid World!");
     if(_body && _body->isValid())
         throw std::runtime_error("The player has already been spawned!");
 
-    _hasSensor = hasSensor;
     createBody(physicsWorld, spawnPixels);
     createHitbox(hitboxPixels);
-    if (hasSensor) {
-        createSensor(hitboxPixels);
-    }
     updateVisuals(0.f);
 }
 
@@ -197,11 +188,6 @@ void GameObject::updateHitboxSize(sf::Vector2f newHitboxPixels) {
         b2DestroyShape(oldShape, true);
     }
 
-    if (b2Shape_IsValid(_sensorShapeId)) {
-        b2DestroyShape(_sensorShapeId, false);
-        _sensorShapeId = b2_nullShapeId;
-    }
-
     _hitboxPixels = newHitboxPixels;
 
     b2ShapeDef shapeDef = b2DefaultShapeDef();
@@ -215,58 +201,7 @@ void GameObject::updateHitboxSize(sf::Vector2f newHitboxPixels) {
     b2ShapeId newHitbox = b2CreatePolygonShape(bodyId, &shapeDef, &box);
     _body->setHibox(newHitbox);
 
-    if (_hasSensor) {
-        createSensor(newHitboxPixels);
-    }
-    
     onHitboxRecreated();
-}
-
-void GameObject::createSensor(sf::Vector2f hitboxPixels) {
-    b2ShapeDef shapeDef = b2DefaultShapeDef();
-    shapeDef.density = 0.0f;
-    shapeDef.isSensor = true;
-    shapeDef.enableContactEvents = false;
-    shapeDef.enableSensorEvents = true;
-    shapeDef.userData = this;
-    shapeDef.filter.categoryBits = 0x0001;
-    shapeDef.filter.maskBits = 0x0001;
-
-    const float forwardOffsetPixels = _sensorDirection * (hitboxPixels.x * 0.5f + sensorForwardPixels);
-    const float sensorOffsetPixels = hitboxPixels.y * 0.5f + sensorBelowFeetPixels;
-
-    std::cout << "[Sensor] create dir=" << _sensorDirection
-              << " probePx=(cx=" << forwardOffsetPixels
-              << ",cy=" << sensorOffsetPixels
-              << ",halfW=" << sensorHalfWidthPixels
-              << ",halfH=" << sensorHalfHeightPixels << ")" << std::endl;
-
-    b2Polygon box = b2MakeOffsetBox(
-        PhysicsUnits::toMeters(sensorHalfWidthPixels),
-        PhysicsUnits::toMeters(sensorHalfHeightPixels),
-        {
-            PhysicsUnits::toMeters(forwardOffsetPixels),
-            PhysicsUnits::toMeters(sensorOffsetPixels)
-        },
-        b2Rot_identity
-    );
-
-    _sensorShapeId = b2CreatePolygonShape(_body->getId(), &shapeDef, &box);
-}
-
-void GameObject::flipSensorDirection() {
-    if (!_hasSensor) {
-        return;
-    }
-
-    _sensorDirection = -_sensorDirection;
-
-    if (b2Shape_IsValid(_sensorShapeId)) {
-        b2DestroyShape(_sensorShapeId, false);
-        _sensorShapeId = b2_nullShapeId;
-    }
-
-    createSensor(_hitboxPixels);
 }
 
 void GameObject::drawFallbackRect(sf::RenderTarget& target) const {
@@ -280,7 +215,6 @@ void GameObject::drawFallbackRect(sf::RenderTarget& target) const {
     const float angleDegrees = bodyAngleRad * (180.f / B2_PI);
     const sf::Vector2f sizePixels = _hitboxPixels;
     const sf::Vector2f bodyCenterPixels = PhysicsUnits::toPixels(position);
-
     drawDebugRect(
         target,
         bodyCenterPixels,
@@ -289,29 +223,4 @@ void GameObject::drawFallbackRect(sf::RenderTarget& target) const {
         sf::Color(255, 0, 255, 80),
         sf::Color::Magenta
     );
-
-    if (_hasSensor) {
-        const sf::Vector2f sensorSizePixels = {
-            sensorHalfWidthPixels * 2.f,
-            sensorHalfHeightPixels * 2.f
-        };
-
-        const float forwardOffsetPixels = _sensorDirection * (sizePixels.x * 0.5f + sensorForwardPixels);
-        const float sensorOffsetPixels = sizePixels.y * 0.5f + sensorBelowFeetPixels;
-        const b2Vec2 localSensorOffsetMeters = {
-            PhysicsUnits::toMeters(forwardOffsetPixels),
-            PhysicsUnits::toMeters(sensorOffsetPixels)
-        };
-        const b2Vec2 rotatedSensorOffsetMeters = b2RotateVector(rotation, localSensorOffsetMeters);
-        const sf::Vector2f sensorCenterPixels = bodyCenterPixels + PhysicsUnits::toPixels(rotatedSensorOffsetMeters);
-
-        drawDebugRect(
-            target,
-            sensorCenterPixels,
-            sensorSizePixels,
-            angleDegrees,
-            sf::Color(0, 255, 0, 80),
-            sf::Color::Green
-        );
-    }
 }

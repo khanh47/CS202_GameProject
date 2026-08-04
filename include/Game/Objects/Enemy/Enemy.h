@@ -16,7 +16,6 @@ public:
     Enemy(sf::Texture& texture);
     Enemy(sf::Texture &texture, const std::string& animationSetId);
     ~Enemy();
-    void onContact(GameObject& other, const b2ContactData& contactData, b2ShapeId ownShape) override;
     void setSupportGrid(const TerrainSeamFilter* filter, float cellSize = 64.0f);
 
 protected:
@@ -29,20 +28,16 @@ protected:
     virtual void onRenderVisual(sf::RenderTarget& target, const sf::Vector2f& position, float angleDegrees) override;
     virtual void updateSimulation(const float &fixedDt) override;
 
-    struct SensorProbeResult {
-        bool touching = false;
-        int overlapCount = 0;
-        b2AABB worldAABB = {};
-    };
-    SensorProbeResult probeSensor() const;
 private:
-    bool isSupportedByGrid(int& outCol, int& outRow) const;
+    bool isSupportedByGrid() const;
+    bool isBlockedAhead() const;
+    int probeColumn() const;
+    int rowAt(float pixelY) const;
+    void turnAround();
+    void flipMoveDirection();
 
     float _moveSpeed = 3.0f;
-    int _unsupportedSteps = 0;
-    int _simTick = 0;
-    bool _wasTouching = false;
+    int _moveDirection = 1;
     const TerrainSeamFilter* _supportGrid = nullptr;
     float _supportCellSize = 64.0f;
-    static constexpr int unsupportedStepsBeforeTurn = 6;
 };

@@ -17,7 +17,7 @@ public:
     virtual void updateVisuals(float deltaTime);
     virtual void render(sf::RenderTarget &target);
 
-    virtual void spawn(const PhysicsWorld &physicsWorld, sf::Vector2f spawnPixels, sf::Vector2f hitboxPixels, bool hasSensor = false);
+    virtual void spawn(const PhysicsWorld &physicsWorld, sf::Vector2f spawnPixels, sf::Vector2f hitboxPixels);
     void destroy() { _pendingDestroy = true; }
     
     bool isPendingDestroy() { return _pendingDestroy; }
@@ -28,7 +28,6 @@ public:
 
     virtual void onContact(GameObject& other, const b2ContactData& contactData, b2ShapeId ownShape) {}
     virtual void finalizeGroundContacts() {}
-    bool hasSensor() { return _hasSensor; }
 
 protected:
     virtual void onCreateBodyDef(b2BodyDef& def);
@@ -43,21 +42,15 @@ protected:
     sf::Vector2f getBodyPositionPixels() const;
     float getBodyAngleDegrees() const;
     void updateHitboxSize(sf::Vector2f newHitboxPixels);
-    void flipSensorDirection();
 
     sf::Vector2f _hitboxPixels{0.f, 0.f};
     sf::Vector2f _baseHitboxPixels{0.f, 0.f};
 
     std::shared_ptr<PhysicsBody> _body = nullptr;
     bool _pendingDestroy = false;
-    b2ShapeId _sensorShapeId = b2_nullShapeId;
-    int _sensorDirection = 1;
 
 private:
     void createBody(const PhysicsWorld &physicsWorld, sf::Vector2f spawnPixels);
     void createHitbox(sf::Vector2f hitboxPixels);
-    void createSensor(sf::Vector2f hitboxPixels);
     void drawFallbackRect(sf::RenderTarget& target) const; // debugging
-
-    bool _hasSensor = false;
 };

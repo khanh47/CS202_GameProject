@@ -108,7 +108,7 @@ void spawnFromSpec(
                 &texture,
                 spec.animationId
             );
-            enemy->spawn(context.physicsWorld, spawnPosition, spec.size, true);
+            enemy->spawn(context.physicsWorld, spawnPosition, spec.size);
             if (auto e = std::dynamic_pointer_cast<Enemy>(enemy)) {
                 e->setSupportGrid(&context.terrainSeamFilter, context.cellSize);
             }
