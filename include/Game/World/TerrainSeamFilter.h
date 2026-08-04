@@ -20,6 +20,7 @@ public:
         float leftPixels,
         float rightPixels
     );
+    bool isCellOccupied(int column, int row) const;
 
 private:
     struct Cell {

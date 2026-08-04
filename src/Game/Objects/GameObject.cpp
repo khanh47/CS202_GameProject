@@ -2,6 +2,7 @@
 #include "Game/GameSettings.h"
 #include "Physics/PhysicsUnits.h"
 #include <SFML/System/Vector2.hpp>
+#include <iostream>
 #include <memory>
 #include <stdexcept>
 #include "box2d/box2d.h"
@@ -12,9 +13,10 @@
 
 namespace {
 constexpr bool drawFallbackCollisionRect = false;
-constexpr float feetInsetPixels = 0.0f;
-constexpr float feetHalfHeightPixels = 1.0f;
-constexpr float feetOverlapPixels = 0.0f;
+constexpr float sensorHalfWidthPixels = 4.0f;
+constexpr float sensorHalfHeightPixels = 3.0f;
+constexpr float sensorForwardPixels = 2.0f;
+constexpr float sensorBelowFeetPixels = 2.0f;
 
 void drawDebugRect(
     sf::RenderTarget& target,
@@ -82,17 +84,17 @@ void GameObject::render(sf::RenderTarget &target) {
     }
 }
 
-void GameObject::spawn(const PhysicsWorld &physicsWorld, sf::Vector2f spawnPixels, sf::Vector2f hitboxPixels, bool hasFeet) {
+void GameObject::spawn(const PhysicsWorld &physicsWorld, sf::Vector2f spawnPixels, sf::Vector2f hitboxPixels, bool hasSensor) {
     if (!physicsWorld.isValid())
         throw std::runtime_error("Invalid World!");
     if(_body && _body->isValid())
         throw std::runtime_error("The player has already been spawned!");
 
-    _hasFeet = hasFeet;
+    _hasSensor = hasSensor;
     createBody(physicsWorld, spawnPixels);
     createHitbox(hitboxPixels);
-    if (hasFeet) {
-        createFeet(hitboxPixels);
+    if (hasSensor) {
+        createSensor(hitboxPixels);
     }
     updateVisuals(0.f);
 }
@@ -195,9 +197,9 @@ void GameObject::updateHitboxSize(sf::Vector2f newHitboxPixels) {
         b2DestroyShape(oldShape, true);
     }
 
-    if (b2Shape_IsValid(_feetShapeId)) {
-        b2DestroyShape(_feetShapeId, false);
-        _feetShapeId = b2_nullShapeId;
+    if (b2Shape_IsValid(_sensorShapeId)) {
+        b2DestroyShape(_sensorShapeId, false);
+        _sensorShapeId = b2_nullShapeId;
     }
 
     _hitboxPixels = newHitboxPixels;
@@ -213,14 +215,14 @@ void GameObject::updateHitboxSize(sf::Vector2f newHitboxPixels) {
     b2ShapeId newHitbox = b2CreatePolygonShape(bodyId, &shapeDef, &box);
     _body->setHibox(newHitbox);
 
-    if (_hasFeet) {
-        createFeet(newHitboxPixels);
+    if (_hasSensor) {
+        createSensor(newHitboxPixels);
     }
     
     onHitboxRecreated();
 }
 
-void GameObject::createFeet(sf::Vector2f hitboxPixels) {
+void GameObject::createSensor(sf::Vector2f hitboxPixels) {
     b2ShapeDef shapeDef = b2DefaultShapeDef();
     shapeDef.density = 0.0f;
     shapeDef.isSensor = true;
@@ -230,19 +232,41 @@ void GameObject::createFeet(sf::Vector2f hitboxPixels) {
     shapeDef.filter.categoryBits = 0x0001;
     shapeDef.filter.maskBits = 0x0001;
 
-    const float feetOffsetPixels = hitboxPixels.y * 0.5f + feetHalfHeightPixels - feetOverlapPixels;
+    const float forwardOffsetPixels = _sensorDirection * (hitboxPixels.x * 0.5f + sensorForwardPixels);
+    const float sensorOffsetPixels = hitboxPixels.y * 0.5f + sensorBelowFeetPixels;
+
+    std::cout << "[Sensor] create dir=" << _sensorDirection
+              << " probePx=(cx=" << forwardOffsetPixels
+              << ",cy=" << sensorOffsetPixels
+              << ",halfW=" << sensorHalfWidthPixels
+              << ",halfH=" << sensorHalfHeightPixels << ")" << std::endl;
 
     b2Polygon box = b2MakeOffsetBox(
-        PhysicsUnits::toMeters(hitboxPixels.x * 0.5f - feetInsetPixels),
-        PhysicsUnits::toMeters(feetHalfHeightPixels),
+        PhysicsUnits::toMeters(sensorHalfWidthPixels),
+        PhysicsUnits::toMeters(sensorHalfHeightPixels),
         {
-            PhysicsUnits::toMeters(0.0f),
-            PhysicsUnits::toMeters(feetOffsetPixels)
+            PhysicsUnits::toMeters(forwardOffsetPixels),
+            PhysicsUnits::toMeters(sensorOffsetPixels)
         },
-        b2MakeRot(0.0f)
+        b2Rot_identity
     );
 
-    _feetShapeId = b2CreatePolygonShape(_body->getId(), &shapeDef, &box);
+    _sensorShapeId = b2CreatePolygonShape(_body->getId(), &shapeDef, &box);
+}
+
+void GameObject::flipSensorDirection() {
+    if (!_hasSensor) {
+        return;
+    }
+
+    _sensorDirection = -_sensorDirection;
+
+    if (b2Shape_IsValid(_sensorShapeId)) {
+        b2DestroyShape(_sensorShapeId, false);
+        _sensorShapeId = b2_nullShapeId;
+    }
+
+    createSensor(_hitboxPixels);
 }
 
 void GameObject::drawFallbackRect(sf::RenderTarget& target) const {
@@ -252,7 +276,8 @@ void GameObject::drawFallbackRect(sf::RenderTarget& target) const {
 
     const b2Vec2 position = b2Body_GetPosition(_body->getId());
     const b2Rot rotation = b2Body_GetRotation(_body->getId());
-    const float angleDegrees = b2Rot_GetAngle(rotation) * (180.f / 3.14159265f);
+    const float bodyAngleRad = b2Rot_GetAngle(rotation);
+    const float angleDegrees = bodyAngleRad * (180.f / B2_PI);
     const sf::Vector2f sizePixels = _hitboxPixels;
     const sf::Vector2f bodyCenterPixels = PhysicsUnits::toPixels(position);
 
@@ -265,23 +290,25 @@ void GameObject::drawFallbackRect(sf::RenderTarget& target) const {
         sf::Color::Magenta
     );
 
-    if (_hasFeet) {
-        const sf::Vector2f feetSizePixels = {
-            sizePixels.x - (feetInsetPixels * 2.f),
-            feetHalfHeightPixels * 2.f
+    if (_hasSensor) {
+        const sf::Vector2f sensorSizePixels = {
+            sensorHalfWidthPixels * 2.f,
+            sensorHalfHeightPixels * 2.f
         };
-        const float feetOffsetPixels = sizePixels.y * 0.5f + feetHalfHeightPixels - feetOverlapPixels;
-        const b2Vec2 localFeetOffsetMeters = {
-            0.0f,
-            PhysicsUnits::toMeters(feetOffsetPixels)
+
+        const float forwardOffsetPixels = _sensorDirection * (sizePixels.x * 0.5f + sensorForwardPixels);
+        const float sensorOffsetPixels = sizePixels.y * 0.5f + sensorBelowFeetPixels;
+        const b2Vec2 localSensorOffsetMeters = {
+            PhysicsUnits::toMeters(forwardOffsetPixels),
+            PhysicsUnits::toMeters(sensorOffsetPixels)
         };
-        const b2Vec2 rotatedFeetOffsetMeters = b2RotateVector(rotation, localFeetOffsetMeters);
-        const sf::Vector2f feetCenterPixels = bodyCenterPixels + PhysicsUnits::toPixels(rotatedFeetOffsetMeters);
+        const b2Vec2 rotatedSensorOffsetMeters = b2RotateVector(rotation, localSensorOffsetMeters);
+        const sf::Vector2f sensorCenterPixels = bodyCenterPixels + PhysicsUnits::toPixels(rotatedSensorOffsetMeters);
 
         drawDebugRect(
             target,
-            feetCenterPixels,
-            feetSizePixels,
+            sensorCenterPixels,
+            sensorSizePixels,
             angleDegrees,
             sf::Color(0, 255, 0, 80),
             sf::Color::Green

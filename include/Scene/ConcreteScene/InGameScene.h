@@ -25,7 +25,7 @@ public:
     void updateVisuals(float deltaTime) override;
     void render(sf::RenderTarget& target) override;
 
-    std::string getName() const override { return _name; }
+    std::string getName() const override { return "InGameScene"; }
     bool isActive() const override { return _isActive; }
 
 private:
