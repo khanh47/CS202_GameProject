@@ -11,6 +11,11 @@ void ToggleCoordinatesCommand::execute() {
     settings.debugDrawCoordinates = !settings.debugDrawCoordinates;
 }
 
+void ToggleHitboxCommand::execute() {
+    auto& settings = GameSettings::getInstance();
+    settings.debugDrawHitbox = !settings.debugDrawHitbox;
+}
+
 void ToggleFreeCameraCommand::execute() {
     auto& settings = GameSettings::getInstance();
     settings.freeCameraMove = !settings.freeCameraMove;

@@ -10,7 +10,7 @@ InGameScene::InGameScene(const std::string& name)
 }
 
 void InGameScene::init() {
-    _gameWorld.test();
+    _gameWorld.loadLevel(_name);
 
     // Configure 2D Platformer Camera System parameters
     CameraConfig config;

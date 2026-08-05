@@ -6,6 +6,7 @@ public:
 
     bool debugDrawGrid = false;
     bool debugDrawCoordinates = false;
+    bool debugDrawHitbox = false;
     bool freeCameraMove = false;
 
 private:

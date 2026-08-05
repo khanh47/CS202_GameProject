@@ -1,5 +1,6 @@
 #include "Scene/SceneFactory.h"
 #include "Scene/ConcreteScene/InGameScene.h"
+#include "Scene/ConcreteScene/LevelSelectionScene.h"
 #include "Scene/ConcreteScene/MainMenuScene.h"
 #include "Scene/ConcreteScene/SettingsScene.h"
 #include <iostream>
@@ -8,7 +9,8 @@ SceneFactory::SceneFactory() {
     registerScene("MAIN_MENU", []() { return std::make_unique<MainMenuScene>(); });
     //registerScene("GAME_DATA", []() { return std::make_unique<MenuScene>("Load Game"); });
     registerScene("SETTINGS", []() { return std::make_unique<SettingsScene>(); });
-    registerScene("IN_GAME", []() { return std::make_unique<InGameScene>("IN_GAME"); });
+    registerScene("LEVEL_SELECT", []() { return std::make_unique<LevelSelectionScene>(); });
+    registerScene("IN_GAME", []() { return std::make_unique<InGameScene>("assets/levels/1.json"); });
 }
 
 void SceneFactory::registerScene(const std::string& stateName, std::function<std::unique_ptr<Scene>()> factory) {

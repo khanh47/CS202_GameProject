@@ -1,20 +1,22 @@
 #pragma once
 
+#include <string>
+
 #include "Game/Objects/Player/State/PlayerState.h"
 #include "Game/Behaviours/FireballAttackStrategy.h"
 
 /**
- * @brief Concrete state representing Fire Mario, utilizing the white/red fire spritesheet
- * and enabling fireball attack capabilities.
+ * @brief Concrete state representing Fire player (Mario or Luigi), utilizing the fire
+ * spritesheet and enabling fireball attack capabilities.
  */
 class FireState : public PlayerState {
 public:
-    FireState() = default;
+    explicit FireState(std::string character = "mario");
     ~FireState() override = default;
 
     std::string getStateName() const override { return "Fire"; }
-    std::string getAnimationSetId() const override { return "fire_mario"; }
-    std::string getTextureAlias() const override { return "fire_mario_spritesheet"; }
+    std::string getAnimationSetId() const override { return "fire_" + _character; }
+    std::string getTextureAlias() const override { return "fire_" + _character + "_spritesheet"; }
 
     float getMoveSpeedMultiplier() const override { return 1.1f; }
     float getJumpSpeedMultiplier() const override { return 1.1f; }
@@ -23,4 +25,7 @@ public:
     std::unique_ptr<IAttackStrategy> createAttackStrategy() const override {
         return std::make_unique<FireballAttackStrategy>();
     }
+
+private:
+    std::string _character;
 };

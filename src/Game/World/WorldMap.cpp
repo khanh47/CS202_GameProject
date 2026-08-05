@@ -5,40 +5,150 @@
 
 #include "Game/Objects/GameObject.h"
 #include "Game/Objects/GameObjectFactory.h"
+#include "Game/Objects/Enemy/Enemy.h"
 #include "Game/Objects/Item/FireballPool.h"
-#include "Game/Objects/Item/Coin.h"
 #include "Game/Objects/Player/Player.h"
 #include "Game/UserInput/PlayerController.h"
 #include "Game/World/GameWorld.h"
+#include "Game/World/SpawnSpec.h"
 #include "Game/World/WorldObjectStore.h"
 #include "Physics/PhysicsWorld.h"
 #include "ResourceManager.h"
 
+namespace {
+struct SpawnContext {
+    PhysicsWorld& physicsWorld;
+    GameObjectFactory& objectFactory;
+    WorldObjectStore& objectStore;
+    GameWorld& gameWorld;
+    TileMap& tileMap;
+    TerrainSeamFilter& terrainSeamFilter;
+    float cellSize;
+};
+
+void spawnFromSpec(
+    const SpawnSpec& spec,
+    const SpawnContext& context,
+    int column,
+    int logicY,
+    int screenY,
+    const sf::Vector2f& cellPosition
+) {
+    sf::Texture& texture = ResourceManager::getInstance().getTexture(
+        spec.textureKey
+    );
+    const float verticalOffset = spec.centerVertically
+        ? (context.cellSize - spec.size.y) * 0.5f
+        : 0.0f;
+    const sf::Vector2f spawnPosition = {
+        cellPosition.x + spec.offset.x,
+        cellPosition.y + spec.offset.y + verticalOffset
+    };
+
+    std::shared_ptr<GameObject> object;
+    switch (spec.kind) {
+        case ObjectKind::Block: {
+            auto block = context.objectFactory.createBlock(
+                spec.typeKey,
+                &texture
+            );
+            block->spawn(context.physicsWorld, spawnPosition, spec.size);
+            context.tileMap.setTile(column, screenY, 1, &texture);
+            if (spec.addSeamFilter) {
+                context.terrainSeamFilter.addBlock(
+                    block,
+                    column,
+                    screenY,
+                    column * context.cellSize,
+                    (column + 1) * context.cellSize
+                );
+            }
+            object = std::move(block);
+            break;
+        }
+        case ObjectKind::Player: {
+            auto player = context.objectFactory.createPlayer(
+                spec.typeKey,
+                &texture,
+                spec.animationId
+            );
+            player->spawn(
+                context.physicsWorld,
+                spawnPosition,
+                spec.size
+            );
+            if (auto mario = std::dynamic_pointer_cast<Player>(player)) {
+                mario->changeToNormalState();
+                if (spec.addController) {
+                    if (spec.animationId == "mario") {
+                        context.objectStore.addController(
+                            std::make_unique<PlayerController>(
+                                *mario,
+                                context.gameWorld,
+                                PlayerController::ControlScheme::Wasd
+                            )
+                        );
+                    } else {
+                        context.objectStore.addController(
+                            std::make_unique<PlayerController>(
+                                *mario,
+                                context.gameWorld,
+                                PlayerController::ControlScheme::ArrowKeys
+                            )
+                        );
+                    }
+                }
+            }
+            object = std::move(player);
+            break;
+        }
+        case ObjectKind::Enemy: {
+            auto enemy = context.objectFactory.createEnemy(
+                spec.typeKey,
+                &texture,
+                spec.animationId
+            );
+            enemy->spawn(context.physicsWorld, spawnPosition, spec.size);
+            if (auto e = std::dynamic_pointer_cast<Enemy>(enemy)) {
+                e->setSupportGrid(&context.terrainSeamFilter, context.cellSize);
+            }
+            object = std::move(enemy);
+            break;
+        }
+        case ObjectKind::Item: {
+            auto item = context.objectFactory.createItem(
+                spec.typeKey,
+                &texture
+            );
+            item->spawn(context.physicsWorld, spawnPosition, spec.size);
+            object = std::move(item);
+            break;
+        }
+    }
+
+    context.objectStore.addObject(std::move(object));
+}
+}
+
 WorldMap::WorldMap(int gridWidth, int gridHeight, float cellSize)
     : _cellSize(cellSize),
       _gridWidth(gridWidth),
-      _gridHeight(gridHeight),
-      _grid(
-          gridHeight,
-          std::vector<std::weak_ptr<GameObject>>(gridWidth)
-      ) {}
+      _gridHeight(gridHeight) {}
 
 void WorldMap::rebuild(
-    const std::vector<std::vector<int>>& mapData,
+    const LevelData& levelData,
     PhysicsWorld& physicsWorld,
     GameObjectFactory& objectFactory,
     FireballPool& fireballPool,
     WorldObjectStore& objectStore,
     GameWorld& gameWorld
 ) {
-    auto& resources = ResourceManager::getInstance();
-    sf::Texture& brickTexture = resources.getTexture("brick");
-    sf::Texture& marioTexture = resources.getTexture("mario_spritesheet");
-    sf::Texture& goombaTexture = resources.getTexture("goomba_spritesheet");
-    sf::Texture& koopaTexture = resources.getTexture("koopa_spritesheet");
-    sf::Texture& itemsTexture = resources.getTexture("mario_and_items");
-    sf::Texture& coinsTexture = resources.getTexture("coin_spritesheet");
+    const std::vector<std::vector<int>>& mapData = levelData.rows;
 
+    auto& resources = ResourceManager::getInstance();
+    sf::Texture& itemsTexture = resources.getTexture("mario_and_items");
+
+    _background = levelData.background;
     objectStore.clear();
     fireballPool.initialize(physicsWorld, itemsTexture);
     _terrainSeamFilter.clear();
@@ -54,11 +164,16 @@ void WorldMap::rebuild(
     }
 
     _tileMap.initialize(_gridWidth, _gridHeight, _cellSize);
-    _tileMap.setTexture(&brickTexture);
-    _grid.assign(
-        _gridHeight,
-        std::vector<std::weak_ptr<GameObject>>(_gridWidth)
-    );
+
+    SpawnContext context{
+        physicsWorld,
+        objectFactory,
+        objectStore,
+        gameWorld,
+        _tileMap,
+        _terrainSeamFilter,
+        _cellSize
+    };
 
     for (int mapRow = 0; mapRow < _loadedRows; ++mapRow) {
         const int columns = std::min(
@@ -73,113 +188,24 @@ void WorldMap::rebuild(
             if (tileId == 0) {
                 continue;
             }
-            const sf::Vector2f spawnPosition = {
+            const sf::Vector2f cellPosition = {
                 column * _cellSize + _cellSize * 0.5f,
                 screenY * _cellSize + _cellSize * 0.5f
             };
 
-            if (tileId == 1) {
-                _tileMap.setTile(column, screenY, tileId);
-                auto block = objectFactory.createBlock(
-                    "Block",
-                    &brickTexture
-                );
-                block->spawn(
-                    physicsWorld,
-                    spawnPosition,
-                    {_cellSize, _cellSize}
-                );
-                if (logicY >= 0 && logicY < _gridHeight) {
-                    _grid[logicY][column] = block;
-                }
-                _terrainSeamFilter.addBlock(
-                    block,
-                    column,
-                    screenY,
-                    column * _cellSize,
-                    (column + 1) * _cellSize
-                );
-                objectStore.addObject(std::move(block));
-            } else if (tileId == 2) {
-                auto player = objectFactory.createPlayer(
-                    "Player",
-                    &marioTexture,
-                    "mario"
-                );
-                player->spawn(
-                    physicsWorld,
-                    {spawnPosition.x + 10.0f, spawnPosition.y},
-                    {72.0f, 120.0f},
-                    true
-                );
-                if (auto mario = std::dynamic_pointer_cast<Player>(player)) {
-                    mario->changeToNormalState();
-                    objectStore.addController(
-                        std::make_unique<PlayerController>(
-                            *mario,
-                            gameWorld,
-                            PlayerController::ControlScheme::Wasd
-                        )
-                    );
-                }
-                objectStore.addObject(std::move(player));
-            } else if (tileId == 4) {
-                auto goomba = objectFactory.createEnemy(
-                    "Goomba",
-                    &goombaTexture,
-                    "goomba"
-                );
-                goomba->spawn(
-                    physicsWorld,
-                    spawnPosition,
-                    {60.0f, 72.0f}
-                );
-                objectStore.addObject(std::move(goomba));
-            } else if (tileId == 5) {
-                auto koopa = objectFactory.createEnemy(
-                    "Koopa",
-                    &koopaTexture,
-                    "koopa"
-                );
-                koopa->spawn(
-                    physicsWorld,
-                    spawnPosition,
-                    {64.0f, 100.0f}
-                );
-                objectStore.addObject(std::move(koopa));
-            } else if (tileId == 6) {
-                auto fireFlower = objectFactory.createItem(
-                    "FireFlower",
-                    &itemsTexture
-                );
-                constexpr sf::Vector2f flowerSize{54.0f, 54.0f};
-                const sf::Vector2f flowerPosition = {
-                    spawnPosition.x,
-                    spawnPosition.y + (_cellSize - flowerSize.y) * 0.5f
-                };
-                fireFlower->spawn(
-                    physicsWorld,
-                    flowerPosition,
-                    flowerSize
-                );
-                objectStore.addObject(std::move(fireFlower));
+            const auto spawnIt = levelData.spawns.find(tileId);
+            if (spawnIt == levelData.spawns.end()) {
+                continue;
             }
-            else if (tileId == 7) {
-                auto coin = objectFactory.createItem(
-                    "Coin", 
-                    &coinsTexture
+            for (const SpawnSpec& spec : spawnIt->second) {
+                spawnFromSpec(
+                    spec,
+                    context,
+                    column,
+                    logicY,
+                    screenY,
+                    cellPosition
                 );
-                constexpr sf::Vector2f coinSize{32.0f, 64.0f};
-                const sf::Vector2f coinPosition = {
-                    spawnPosition.x,
-                    spawnPosition.y + (_cellSize - coinSize.y) * 0.5f
-                };
-                coin->spawn(
-                    physicsWorld,
-                    coinPosition,
-                    coinSize
-                );
-                objectStore.addObject(std::move(coin));
             }
         }
     }

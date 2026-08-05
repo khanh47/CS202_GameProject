@@ -98,6 +98,10 @@ ResourceManager::~ResourceManager() {
 ResourceManager::ResourceManager() {
 	_preLoadFont("assets/fonts/Roboto-VariableFont_wdth,wght.ttf", "Roboto");
 	_preLoadTexture("assets/sprites/Brick.png", "brick");
+	_preLoadTexture("assets/sprites/Tiles/mario_and_items.png", "mario_and_items");
+	_preLoadTexture("assets/sprites/Tilesets/mutiple_tilesets.png", "mutiple_tilesets");
+	_preLoadTexture("assets/sprites/Tilesets/general_tiles.png", "general_tiles");
+
 	_preLoadTexture("assets/spritesheets/mario_spritesheet.png", "mario_spritesheet");
 	_preLoadTexture("assets/spritesheets/rainbow_mario_spritesheet.png", "rainbow_mario_spritesheet");
 	_preLoadTexture("assets/spritesheets/fire_mario_spritesheet.png", "fire_mario_spritesheet");
@@ -105,8 +109,19 @@ ResourceManager::ResourceManager() {
 	_preLoadTexture("assets/spritesheets/luigi_spritesheet.png", "luigi_spritesheet");
 	_preLoadTexture("assets/spritesheets/rainbow_luigi_spritesheet.png", "rainbow_luigi_spritesheet");
 	_preLoadTexture("assets/spritesheets/fire_luigi_spritesheet.png", "fire_luigi_spritesheet");
+	_preLoadTexture("assets/spritesheets/luigi_transform_spritesheet.png", "luigi_transform_spritesheet");
+
+	_preLoadTexture("assets/backgrounds/far_sky.png", "far_sky");
+	_preLoadTexture("assets/backgrounds/far_sky.png", "far_sky");
+	_preLoadTexture("assets/backgrounds/close_bush.png", "close_bush");
+	_preLoadTexture("assets/backgrounds/far_underground.png", "far_underground");
+	_preLoadTexture("assets/backgrounds/close_underground.png", "close_underground");
 	_preLoadTexture("assets/spritesheets/goomba_spritesheet.png", "goomba_spritesheet");
 	_preLoadTexture("assets/spritesheets/koopa_spritesheet.png", "koopa_spritesheet");
+<<<<<<< HEAD
 	_preLoadTexture("assets/sprites/Tiles/mario_and_items.png", "mario_and_items");
 	_preLoadTexture("assets/spritesheets/transparent_coin_strip.png", "coin_spritesheet");
+=======
+	_preLoadTexture("assets/spritesheets/transparent_coin_spritesheet.png", "coin_spritesheet");
+>>>>>>> origin/main
 }

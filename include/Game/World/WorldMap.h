@@ -2,8 +2,10 @@
 
 #include <SFML/Graphics.hpp>
 #include <memory>
+#include <string>
 #include <vector>
 
+#include "Game/World/LevelDataLoader.h"
 #include "Game/World/TerrainSeamFilter.h"
 #include "Game/World/TileMap.h"
 
@@ -27,7 +29,7 @@ public:
     );
 
     void rebuild(
-        const std::vector<std::vector<int>>& mapData,
+        const LevelData& levelData,
         PhysicsWorld& physicsWorld,
         GameObjectFactory& objectFactory,
         FireballPool& fireballPool,
@@ -43,7 +45,7 @@ public:
         int loadedRows,
         int gridHeight
     ) noexcept {
-        return gridHeight - 1 - (loadedRows - mapRow);
+        return gridHeight - (loadedRows - mapRow);
     }
 
     int getGridWidth() const noexcept { return _gridWidth; }
@@ -51,6 +53,7 @@ public:
     float getCellSize() const noexcept { return _cellSize; }
     int getLoadedRows() const noexcept { return _loadedRows; }
     int getLoadedColumns() const noexcept { return _loadedColumns; }
+    const std::string& getBackground() const noexcept { return _background; }
 
 private:
     int logicYForMapRow(int mapRow) const noexcept;
@@ -61,7 +64,7 @@ private:
     int _gridHeight;
     int _loadedColumns = 0;
     int _loadedRows = 0;
+    std::string _background;
     TileMap _tileMap;
-    std::vector<std::vector<std::weak_ptr<GameObject>>> _grid;
     TerrainSeamFilter _terrainSeamFilter;
 };

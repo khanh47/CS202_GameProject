@@ -1,3 +1,6 @@
 #include "Game/Objects/Player/State/FireState.h"
 
-// FireState implementation unit reserved for state-specific attack spawning logic.
+#include <utility>
+
+FireState::FireState(std::string character)
+    : _character(std::move(character)) {}
