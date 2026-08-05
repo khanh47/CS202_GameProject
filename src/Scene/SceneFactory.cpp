@@ -3,12 +3,14 @@
 #include "Scene/ConcreteScene/LevelSelectionScene.h"
 #include "Scene/ConcreteScene/MainMenuScene.h"
 #include "Scene/ConcreteScene/SettingsScene.h"
+#include "Scene/ConcreteScene/KeyBindSettingsScene.h"
 #include <iostream>
 
 SceneFactory::SceneFactory() {
     registerScene("MAIN_MENU", []() { return std::make_unique<MainMenuScene>(); });
     //registerScene("GAME_DATA", []() { return std::make_unique<MenuScene>("Load Game"); });
     registerScene("SETTINGS", []() { return std::make_unique<SettingsScene>(); });
+    registerScene("KEYBIND_SETTINGS", []() { return std::make_unique<KeyBindSettingsScene>(); });
     registerScene("LEVEL_SELECT", []() { return std::make_unique<LevelSelectionScene>(); });
     registerScene("IN_GAME", []() { return std::make_unique<InGameScene>("assets/levels/1.json"); });
 }

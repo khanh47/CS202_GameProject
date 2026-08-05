@@ -20,6 +20,7 @@ public:
     bool ActionEnd(const sf::Event::KeyReleased& event) override;
 
     void syncStateWithKeyboard();
+    void refreshBindings();
 
 private:
     void bindControls(ControlScheme controlScheme);
@@ -28,4 +29,5 @@ private:
 
     Player& _player;
     GameWorld& _gameWorld;
+    ControlScheme _controlScheme;
 };

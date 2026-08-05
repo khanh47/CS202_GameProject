@@ -1,7 +1,8 @@
 #pragma once
+
 #include "Scene/Scene.h"
-#include <string>
 #include "Button/ButtonMenu.h"
+#include <string>
 
 class SettingsScene : public Scene {
 public:

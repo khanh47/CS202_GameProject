@@ -15,6 +15,7 @@ public:
 
     void BindKey(const sf::Keyboard::Key& key, const ActionType& action);
     void UnbindKey(const sf::Keyboard::Key& key);
+    void ClearBindings() { keyActionMap.clear(); }
     std::optional<ActionType> GetActionForKey(const sf::Keyboard::Key& key) const;
     const std::unordered_map<sf::Keyboard::Key, ActionType>& getKeyActionMap() const { return keyActionMap; }
 }; 
