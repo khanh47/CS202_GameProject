@@ -43,7 +43,16 @@ Player::Player(sf::Texture &texture, const std::string& animationSetId)
 Player::~Player() = default;
 
 void Player::finalizeGroundContacts() {
+    // moveable->finalizeGroundContacts();
+
+    bool wasAirborne = moveable->isAirbone();
     moveable->finalizeGroundContacts();
+    // If Mario was in the air and just landed on solid ground -> Reset stomp combo
+    if (wasAirborne && !moveable->isAirbone()) {
+        if (_world && _world->getScoreManager()) {
+            _world->getScoreManager()->handleEvent(ScoreEventType::MarioLanded);
+        }
+    }
 }
 
 void Player::setState(std::unique_ptr<PlayerState> newState) {
@@ -168,6 +177,11 @@ void Player::onContact(GameObject& other, const b2ContactData& contactData, b2Sh
         if (_state) {
             _state->handleSuperMushroom(*this);
         }
+
+        if (_world && _world->getScoreManager()) {
+            _world->getScoreManager()->handleEvent(ScoreEventType::PowerupCollected, getPosition());
+        }
+
         mushroom->destroy();
         return;
     }
@@ -176,6 +190,11 @@ void Player::onContact(GameObject& other, const b2ContactData& contactData, b2Sh
         if (_state) {
             _state->handleFireFlower(*this);
         }
+
+        if (_world && _world->getScoreManager()) {
+            _world->getScoreManager()->handleEvent(ScoreEventType::PowerupCollected, getPosition());
+        }
+
         fireFlower->destroy();
         return;
     }
@@ -184,6 +203,11 @@ void Player::onContact(GameObject& other, const b2ContactData& contactData, b2Sh
         if (_state) {
             _state->handleSuperStar(*this);
         }
+
+        if (_world && _world->getScoreManager()) {
+            _world->getScoreManager()->handleEvent(ScoreEventType::PowerupCollected, getPosition());
+        }
+
         star->destroy();
         return;
     }
@@ -192,6 +216,11 @@ void Player::onContact(GameObject& other, const b2ContactData& contactData, b2Sh
         if (_world) {
             //_world->incrementScore(100);
         }
+
+        if (_world && _world->getScoreManager()) {
+            _world->getScoreManager()->handleEvent(ScoreEventType::CoinCollected, getPosition());
+        }
+
         coin->destroy();
         return;
     }
@@ -199,6 +228,11 @@ void Player::onContact(GameObject& other, const b2ContactData& contactData, b2Sh
     if (auto* enemy = dynamic_cast<Enemy*>(&other)) {
         // StarMan invincibility: instantly destroy any enemy on contact
         if (_state && _state->isInvincible()) {
+
+            if (_world && _world->getScoreManager()) {
+                _world->getScoreManager()->handleEvent(ScoreEventType::EnemyStomped, enemy->getPosition());
+            }
+
             enemy->destroy();
             return;
         }
@@ -209,6 +243,12 @@ void Player::onContact(GameObject& other, const b2ContactData& contactData, b2Sh
                 normal = {-normal.x, -normal.y};
             }
             if (contactData.manifold.pointCount > 0 && normal.y >= 0.5f) {
+                
+                if (_world && _world->getScoreManager()) {
+                    // Triggers 100 -> 200 -> 400 -> 800 -> 1000 -> 2000 -> 4000 -> 8000 -> 1UP
+                    _world->getScoreManager()->handleEvent(ScoreEventType::EnemyStomped, enemy->getPosition());
+                }
+                
                 enemy->destroy();
                 b2BodyId bodyId = b2Shape_GetBody(ownShape);
                 b2Vec2 vel = b2Body_GetLinearVelocity(bodyId);

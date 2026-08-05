@@ -7,6 +7,7 @@
 #include "Scene/Scene.h"
 #include "Game/World/GameWorld.h"
 #include "Game/Camera.h"
+#include "Game/ScoreManager.h"
 
 
 
@@ -33,4 +34,5 @@ private:
 
     GameWorld _gameWorld;
     Camera _camera;
+    ScoreManager _scoreManager;
 };

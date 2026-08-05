@@ -11,6 +11,7 @@ InGameScene::InGameScene(const std::string& name)
 
 void InGameScene::init() {
     _gameWorld.loadLevel(_name);
+    _gameWorld.setScoreManager(&_scoreManager); // Set score manager for the game world
 
     // Configure 2D Platformer Camera System parameters
     CameraConfig config;
@@ -65,6 +66,7 @@ void InGameScene::updateSimulation(const float &fixedDt) {
 void InGameScene::updateVisuals(float deltaTime) {
     _gameWorld.updateVisuals(deltaTime);
     _camera.update(deltaTime);
+    _scoreManager.update(deltaTime);
 }
 
 void InGameScene::render(sf::RenderTarget& target) {
@@ -73,10 +75,17 @@ void InGameScene::render(sf::RenderTarget& target) {
 
     _gameWorld.render(target);
 
+    // Render floating score popups in world coordinates
+    const sf::Font& font = ResourceManager::getInstance().getFont("Roboto");
+    _scoreManager.renderFloatingTexts(target, font);
+
     // Render camera debug overlays (deadzone, lookahead line, level bounds) when debug grid is enabled
     if (GameSettings::getInstance().debugDrawGrid) {
         _camera.renderDebug(target);
     }
 
     target.setView(defaultView);
+
+    // Render screen HUD overlay
+    _scoreManager.renderHUD(target, font, sf::Vector2f(40.f, 30.f));
 }
