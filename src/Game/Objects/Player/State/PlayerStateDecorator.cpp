@@ -37,6 +37,10 @@ bool PlayerStateDecorator::isInvincible() const {
     return _wrappedState ? _wrappedState->isInvincible() : false;
 }
 
+std::unique_ptr<IAttackStrategy> PlayerStateDecorator::createAttackStrategy() const {
+    return _wrappedState ? _wrappedState->createAttackStrategy() : std::make_unique<NoAttackStrategy>();
+}
+
 void PlayerStateDecorator::handleSuperMushroom(Player& player) {
     if (_wrappedState) _wrappedState->handleSuperMushroom(player);
 }

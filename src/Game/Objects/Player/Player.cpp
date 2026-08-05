@@ -74,6 +74,9 @@ void Player::setState(std::unique_ptr<PlayerState> newState) {
 }
 
 void Player::attack(GameWorld& world) {
+    if (_state) {
+        _attackStrategy = _state->createAttackStrategy();
+    }
     if (_attackStrategy) {
         _attackStrategy->executeAttack(*this, world);
     }
