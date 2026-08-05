@@ -4,9 +4,12 @@
 #include "Game/Objects/Player/State/SuperState.h"
 #include "Game/Objects/Player/State/FireState.h"
 #include "Game/Objects/Player/State/MegaStateDecorator.h"
+#include "Game/Objects/Player/State/StarManStateDecorator.h"
 #include "Physics/PhysicsUnits.h"
 #include "Game/Objects/Enemy/Enemy.h"
 #include "Game/Objects/Item/FireFlower.h"
+#include "Game/Objects/Item/SuperMushroom.h"
+#include "Game/Objects/Item/SuperStar.h"
 #include "Game/Objects/Item/Coin.h"
 #include "ResourceManager.h"
 
@@ -86,6 +89,18 @@ void Player::applyMegaState(float durationSeconds) {
     setState(std::make_unique<MegaStateDecorator>(std::move(_state), durationSeconds));
 }
 
+void Player::applyStarManState(float durationSeconds) {
+    if (!_state) {
+        _state = std::make_unique<NormalState>(_character);
+    }
+    auto* starDecorator = dynamic_cast<StarManStateDecorator*>(_state.get());
+    if (starDecorator) {
+        starDecorator->resetTimer(durationSeconds);
+        return;
+    }
+    setState(std::make_unique<StarManStateDecorator>(std::move(_state), durationSeconds));
+}
+
 void Player::revertDecoratedState() {
     if (!_state) return;
 
@@ -149,11 +164,27 @@ void Player::finalizeSimulation(const float &fixedDt) {
 }
 
 void Player::onContact(GameObject& other, const b2ContactData& contactData, b2ShapeId ownShape) {
+    if (auto* mushroom = dynamic_cast<SuperMushroom*>(&other)) {
+        if (_state) {
+            _state->handleSuperMushroom(*this);
+        }
+        mushroom->destroy();
+        return;
+    }
+
     if (auto* fireFlower = dynamic_cast<FireFlower*>(&other)) {
-        if (_world) {
-            startFireTransformation(*_world, 1.0f);
+        if (_state) {
+            _state->handleFireFlower(*this);
         }
         fireFlower->destroy();
+        return;
+    }
+
+    if (auto* star = dynamic_cast<SuperStar*>(&other)) {
+        if (_state) {
+            _state->handleSuperStar(*this);
+        }
+        star->destroy();
         return;
     }
 
@@ -166,6 +197,12 @@ void Player::onContact(GameObject& other, const b2ContactData& contactData, b2Sh
     }
 
     if (auto* enemy = dynamic_cast<Enemy*>(&other)) {
+        // StarMan invincibility: instantly destroy any enemy on contact
+        if (_state && _state->isInvincible()) {
+            enemy->destroy();
+            return;
+        }
+
         if (b2Shape_IsValid(ownShape)) {
             b2Vec2 normal = contactData.manifold.normal;
             if (!B2_ID_EQUALS(contactData.shapeIdA, ownShape)) {
@@ -213,12 +250,22 @@ b2Polygon Player::makeHitbox(sf::Vector2f hitboxPixels) const {
     );
 }
 
-void Player::startFireTransformation(GameWorld& world, float duration) {
+void Player::startTransformation(TransformTarget target, float duration) {
+    if (_world) {
+        startTransformation(target, *_world, duration);
+    }
+}
+
+void Player::startTransformation(TransformTarget target, GameWorld& world, float duration) {
     if (_isTransforming) return;
 
     _isTransforming = true;
     _transformTimer = duration;
     _transformDuration = duration > 0.0f ? duration : 1.0f;
+    _transformTarget = target;
+
+    // Snapshot current scale so the animation lerps from it to the target (1.25x)
+    _transformStartScale = _state ? _state->getScaleMultiplier().x : 1.0f;
 
     // Stop movement inputs and clear horizontal physics velocity when transformation starts
     moveable->stopMoveLeft();
@@ -234,10 +281,10 @@ void Player::startFireTransformation(GameWorld& world, float duration) {
     // Freeze physics simulation & world updates for the duration of transformation
     world.freeze(duration);
 
-    // Switch visuals to transformation spritesheet & play transformation animation
+    // Switch visuals to transformation spritesheet & play the shared transform animation
     const char* transformAlias = _character == "luigi" ? "luigi_transform_spritesheet" : "mario_transform_spritesheet";
     sf::Texture& transformTex = ResourceManager::getInstance().getTexture(transformAlias);
-    animatable->configureVisuals(transformTex, "transform_fire");
+    animatable->configureVisuals(transformTex, "transform");
     animatable->playAnimation("transform");
 }
 
@@ -255,15 +302,27 @@ void Player::onUpdateVisuals(float deltaTime) {
                 vel.x = 0.0f;
                 b2Body_SetLinearVelocity(bodyId, vel);
             }
-            // Transformation finished -> transition into FireState
-            changeToFireState();
+            // Transformation finished -> enter the correct target state
+            if (_transformTarget == TransformTarget::Fire) {
+                changeToFireState();
+            } else if (_transformTarget == TransformTarget::StarMan) {
+                applyStarManState(10.0f);
+            } else if (_transformTarget == TransformTarget::Super) {
+                changeToSuperState();
+            } else if (_transformTarget == TransformTarget::None) {
+                if (_state) {
+                    sf::Texture& tex = ResourceManager::getInstance().getTexture(_state->getTextureAlias());
+                    animatable->configureVisuals(tex, _state->getAnimationSetId());
+                }
+            }
             return;
         }
 
-        // Gradually scale from 1.0x to 1.25x during transformation
+        // Lerp from the pre-transformation scale to target scale
+        float targetScale = (_transformTarget == TransformTarget::StarMan) ? _transformStartScale : 1.25f;
         float progress = 1.0f - (_transformTimer / _transformDuration);
         progress = std::max(0.0f, std::min(1.0f, progress));
-        float currentScale = 1.0f + 0.25f * progress;
+        float currentScale = _transformStartScale + (targetScale - _transformStartScale) * progress;
 
         sf::Vector2f scaledHitbox = {_baseHitboxPixels.x * currentScale, _baseHitboxPixels.y * currentScale};
         updateHitboxSize(scaledHitbox);
@@ -289,11 +348,22 @@ void Player::onUpdateVisuals(float deltaTime) {
     updateHitboxSize(scaledHitbox);
     animatable->setVisualScale({1.8f, 1.0f});
     animatable->updateVisualState(deltaTime, scaledHitbox, moveable->isFacingLeft());
+
+    // Drive sparkle particles when in invincible (StarMan) state
+    if (_state && _state->isInvincible() && hasValidBody()) {
+        sf::Vector2f pos = getPosition();
+        _starSparkle.update(deltaTime, pos, {scaledHitbox.x * 0.5f, scaledHitbox.y * 0.5f});
+    }
 }
 
 void Player::onRenderVisual(sf::RenderTarget& target, const sf::Vector2f& position, float angleDegrees) {
     (void)angleDegrees;
     animatable->renderVisualState(target, position);
+
+    // Overlay sparkle particles during StarMan invincibility
+    if (_state && _state->isInvincible()) {
+        _starSparkle.render(target);
+    }
 }
 
 void Player::onHitboxRecreated() {
