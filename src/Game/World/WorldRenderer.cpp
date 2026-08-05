@@ -30,8 +30,7 @@ const std::vector<BackgroundLayer>& layersForBackground(
         std::vector<BackgroundLayer>
     > registry = {
         {"parallax_sky", {
-            {"far_sky", 0.20f},
-            {"far_sky", 0.5f},
+            {"far_sky", 0.2f},
             {"close_bush", 0.5f},
         }},
         {"parallax_underground", {
@@ -49,7 +48,7 @@ void WorldRenderer::render(
     sf::RenderTarget& target,
     WorldMap& worldMap,
     const WorldObjectStore& objectStore,
-    FireballPool& fireballPool
+    std::array<FireballPool, 2>& fireballPools
 ) const {
     renderBackground(target, worldMap.getBackground());
     worldMap.renderTiles(target);
@@ -74,7 +73,9 @@ void WorldRenderer::render(
         }
     }
 
-    fireballPool.render(target);
+    for (FireballPool& pool : fireballPools) {
+        pool.render(target);
+    }
     renderDebugGrid(target, worldMap);
 }
 

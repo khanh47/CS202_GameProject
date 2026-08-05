@@ -31,6 +31,7 @@ public:
     void startFireTransformation(GameWorld& world, float duration = 1.0f);
 
     void setGameWorld(GameWorld& world) { _world = &world; }
+    const std::string& getCharacter() const { return _character; }
     void onContact(GameObject& other, const b2ContactData& contactData, b2ShapeId ownShape) override;
     void finalizeGroundContacts() override;
 

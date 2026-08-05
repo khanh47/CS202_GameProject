@@ -1,9 +1,11 @@
 #pragma once
 
 #include <SFML/Graphics.hpp>
+#include <array>
 #include <string>
 
-class FireballPool;
+#include "Game/Objects/Item/FireballPool.h"
+
 class WorldMap;
 class WorldObjectStore;
 
@@ -13,7 +15,7 @@ public:
         sf::RenderTarget& target,
         WorldMap& worldMap,
         const WorldObjectStore& objectStore,
-        FireballPool& fireballPool
+        std::array<FireballPool, 2>& fireballPools
     ) const;
 
 private:

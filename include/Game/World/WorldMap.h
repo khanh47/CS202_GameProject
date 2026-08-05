@@ -1,15 +1,17 @@
 #pragma once
 
 #include <SFML/Graphics.hpp>
+#include <array>
+#include <box2d/box2d.h>
 #include <memory>
 #include <string>
 #include <vector>
 
+#include "Game/Objects/Item/FireballPool.h"
 #include "Game/World/LevelDataLoader.h"
 #include "Game/World/TerrainSeamFilter.h"
 #include "Game/World/TileMap.h"
 
-class FireballPool;
 class GameObject;
 class GameObjectFactory;
 class GameWorld;
@@ -32,7 +34,7 @@ public:
         const LevelData& levelData,
         PhysicsWorld& physicsWorld,
         GameObjectFactory& objectFactory,
-        FireballPool& fireballPool,
+        std::array<FireballPool, 2>& fireballPools,
         WorldObjectStore& objectStore,
         GameWorld& gameWorld
     );
@@ -59,6 +61,9 @@ private:
     int logicYForMapRow(int mapRow) const noexcept;
     int screenYForMapRow(int mapRow) const noexcept;
 
+    void createBoundaryWalls(PhysicsWorld& physicsWorld);
+    void destroyBoundaryWalls();
+
     float _cellSize;
     int _gridWidth;
     int _gridHeight;
@@ -67,4 +72,5 @@ private:
     std::string _background;
     TileMap _tileMap;
     TerrainSeamFilter _terrainSeamFilter;
+    std::vector<b2BodyId> _boundaryWalls;
 };

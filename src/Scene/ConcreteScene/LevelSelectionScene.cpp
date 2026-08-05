@@ -1,5 +1,6 @@
 #include "Scene/ConcreteScene/LevelSelectionScene.h"
 #include "Commands/FunctionalCommand.h"
+#include "Game/GameSettings.h"
 #include "ResourceManager.h"
 #include "Scene/ConcreteScene/InGameScene.h"
 #include "Scene/SceneManager.h"
@@ -62,26 +63,33 @@ void LevelSelectionScene::_setupButtons() {
         28
     );
 
+    const GameSettings& settings = GameSettings::getInstance();
+    const std::string modeDir =
+        settings.gameMode == GameMode::Solo
+            ? "solo-" + settings.player1Character
+            : "coop";
+    const std::string base = "assets/datas/levels/" + modeDir + "/level-";
+
     _buttonMenu.addButtonAuto("Level 1", std::make_unique<FunctionalCommand>(
-        "Level 1", [this]() {
+        "Level 1", [this, base]() {
             if (auto mgr = getSceneManager()) {
-                mgr->pushScene(std::make_unique<InGameScene>("assets/levels/1.json"));
+                mgr->pushScene(std::make_unique<InGameScene>(base + "1.json"));
             }
         }
     ));
 
     _buttonMenu.addButtonAuto("Level 2", std::make_unique<FunctionalCommand>(
-        "Level 2", [this]() {
+        "Level 2", [this, base]() {
             if (auto mgr = getSceneManager()) {
-                mgr->pushScene(std::make_unique<InGameScene>("assets/levels/2.json"));
+                mgr->pushScene(std::make_unique<InGameScene>(base + "2.json"));
             }
         }
     ));
 
     _buttonMenu.addButtonAuto("Level 3", std::make_unique<FunctionalCommand>(
-        "Level 3", [this]() {
+        "Level 3", [this, base]() {
             if (auto mgr = getSceneManager()) {
-                mgr->pushScene(std::make_unique<InGameScene>("assets/levels/3.json"));
+                mgr->pushScene(std::make_unique<InGameScene>(base + "3.json"));
             }
         }
     ));

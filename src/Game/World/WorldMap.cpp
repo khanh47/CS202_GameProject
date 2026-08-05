@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <memory>
 
+#include "Game/GameSettings.h"
 #include "Game/Objects/GameObject.h"
 #include "Game/Objects/GameObjectFactory.h"
 #include "Game/Objects/Enemy/Enemy.h"
@@ -12,6 +13,7 @@
 #include "Game/World/GameWorld.h"
 #include "Game/World/SpawnSpec.h"
 #include "Game/World/WorldObjectStore.h"
+#include "Physics/PhysicsUnits.h"
 #include "Physics/PhysicsWorld.h"
 #include "ResourceManager.h"
 
@@ -67,6 +69,14 @@ void spawnFromSpec(
             break;
         }
         case ObjectKind::Player: {
+            const GameSettings& settings = GameSettings::getInstance();
+            const bool isLuigi = spec.animationId.find("luigi") != std::string::npos;
+            const std::string specCharacter = isLuigi ? "luigi" : "mario";
+            if (settings.gameMode == GameMode::Solo
+                && specCharacter != settings.player1Character) {
+                return;
+            }
+
             auto player = context.objectFactory.createPlayer(
                 spec.typeKey,
                 &texture,
@@ -80,23 +90,17 @@ void spawnFromSpec(
             if (auto mario = std::dynamic_pointer_cast<Player>(player)) {
                 mario->changeToNormalState();
                 if (spec.addController) {
-                    if (spec.animationId == "mario") {
-                        context.objectStore.addController(
-                            std::make_unique<PlayerController>(
-                                *mario,
-                                context.gameWorld,
-                                PlayerController::ControlScheme::Wasd
-                            )
-                        );
-                    } else {
-                        context.objectStore.addController(
-                            std::make_unique<PlayerController>(
-                                *mario,
-                                context.gameWorld,
-                                PlayerController::ControlScheme::ArrowKeys
-                            )
-                        );
-                    }
+                    const bool useWasd =
+                        settings.gameMode == GameMode::Solo
+                        || spec.animationId == "mario";
+                    context.objectStore.addController(
+                        std::make_unique<PlayerController>(
+                            *mario,
+                            context.gameWorld,
+                            useWasd ? PlayerController::ControlScheme::Wasd
+                                    : PlayerController::ControlScheme::ArrowKeys
+                        )
+                    );
                 }
             }
             object = std::move(player);
@@ -139,7 +143,7 @@ void WorldMap::rebuild(
     const LevelData& levelData,
     PhysicsWorld& physicsWorld,
     GameObjectFactory& objectFactory,
-    FireballPool& fireballPool,
+    std::array<FireballPool, 2>& fireballPools,
     WorldObjectStore& objectStore,
     GameWorld& gameWorld
 ) {
@@ -150,7 +154,9 @@ void WorldMap::rebuild(
 
     _background = levelData.background;
     objectStore.clear();
-    fireballPool.initialize(physicsWorld, itemsTexture);
+    for (FireballPool& pool : fireballPools) {
+        pool.initialize(physicsWorld, itemsTexture);
+    }
     _terrainSeamFilter.clear();
     _terrainSeamFilter.install(physicsWorld);
 
@@ -164,6 +170,10 @@ void WorldMap::rebuild(
     }
 
     _tileMap.initialize(_gridWidth, _gridHeight, _cellSize);
+
+    destroyBoundaryWalls();
+    createBoundaryWalls(physicsWorld);
+    _terrainSeamFilter.setBoundaryColumns(-1, _loadedColumns);
 
     SpawnContext context{
         physicsWorld,
@@ -235,4 +245,38 @@ int WorldMap::logicYForMapRow(int mapRow) const noexcept {
 
 int WorldMap::screenYForMapRow(int mapRow) const noexcept {
     return screenRowFor(mapRow, _loadedRows, _gridHeight);
+}
+
+void WorldMap::createBoundaryWalls(PhysicsWorld& physicsWorld) {
+    b2BodyDef wallDef = b2DefaultBodyDef();
+    wallDef.type = b2_staticBody;
+
+    b2ShapeDef shapeDef = b2DefaultShapeDef();
+    shapeDef.filter.categoryBits = 0x0001;
+    shapeDef.enableContactEvents = false;
+    shapeDef.enableSensorEvents = false;
+
+    const b2Polygon box = b2MakeBox(
+        PhysicsUnits::toMeters(_cellSize * 0.25f),
+        PhysicsUnits::toMeters(_gridHeight * _cellSize * 0.5f)
+    );
+
+    const float rightEdge = _loadedColumns * _cellSize;
+    const float midY = _gridHeight * _cellSize * 0.5f;
+
+    for (float edgeX : {0.0f, rightEdge}) {
+        wallDef.position = PhysicsUnits::toMeters({edgeX, midY});
+        b2BodyId body = b2CreateBody(physicsWorld.getId(), &wallDef);
+        b2CreatePolygonShape(body, &shapeDef, &box);
+        _boundaryWalls.push_back(body);
+    }
+}
+
+void WorldMap::destroyBoundaryWalls() {
+    for (b2BodyId body : _boundaryWalls) {
+        if (b2Body_IsValid(body)) {
+            b2DestroyBody(body);
+        }
+    }
+    _boundaryWalls.clear();
 }

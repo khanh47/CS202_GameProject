@@ -35,6 +35,7 @@ public:
 
     // Target & Configuration
     void setTarget(std::shared_ptr<GameObject> target);
+    std::shared_ptr<GameObject> getTarget() const { return _target; }
     void setConfig(const CameraConfig& config);
     CameraConfig& getConfig();
     const CameraConfig& getConfig() const;

@@ -20,6 +20,7 @@ public:
     bool ActionEnd(const sf::Event::KeyReleased& event) override;
 
     void syncStateWithKeyboard();
+    bool isPlayerPendingDestroy() const { return _player.isPendingDestroy(); }
 
 private:
     void bindControls(ControlScheme controlScheme);

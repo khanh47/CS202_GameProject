@@ -36,11 +36,13 @@ void GameWorld::updateSimulation(const float& fixedDt) {
     constexpr float maximumFireballDistance = 1280.0f;
     const float voidThreshold =
         _worldMap.getGridHeight() * _worldMap.getCellSize();
-    _fireballPool.updateSimulation(
-        fixedDt,
-        maximumFireballDistance,
-        voidThreshold
-    );
+    for (FireballPool& pool : _fireballPools) {
+        pool.updateSimulation(
+            fixedDt,
+            maximumFireballDistance,
+            voidThreshold
+        );
+    }
 
     _physicsWorld.updateSimulation(fixedDt);
 
@@ -53,7 +55,9 @@ void GameWorld::updateSimulation(const float& fixedDt) {
 
 void GameWorld::updateVisuals(float deltaTime) {
     _objectStore.updateVisuals(deltaTime);
-    _fireballPool.updateVisuals(deltaTime);
+    for (FireballPool& pool : _fireballPools) {
+        pool.updateVisuals(deltaTime);
+    }
 }
 
 void GameWorld::render(sf::RenderTarget& target) {
@@ -61,7 +65,7 @@ void GameWorld::render(sf::RenderTarget& target) {
         target,
         _worldMap,
         _objectStore,
-        _fireballPool
+        _fireballPools
     );
 }
 
@@ -78,7 +82,7 @@ void GameWorld::loadMap(const LevelData& levelData) {
         levelData,
         _physicsWorld,
         _objectFactory,
-        _fireballPool,
+        _fireballPools,
         _objectStore,
         *this
     );
@@ -90,16 +94,26 @@ void GameWorld::loadLevel(const std::string& levelPath) {
         _worldMap.getGridWidth(),
         _worldMap.getGridHeight()
     ));
-    if (auto player = std::dynamic_pointer_cast<Player>(getPrimaryPlayer())) {
-        player->setGameWorld(*this);
+    for (const std::shared_ptr<GameObject>& object : _objectStore.objects()) {
+        if (auto player = std::dynamic_pointer_cast<Player>(object)) {
+            player->setGameWorld(*this);
+        }
     }
 }
 
 bool GameWorld::spawnFireball(
     sf::Vector2f spawnPosition,
-    bool facingRight
+    bool facingRight,
+    int playerIndex
 ) {
-    return _fireballPool.spawnFireball(spawnPosition, facingRight);
+    if (playerIndex < 0
+        || playerIndex >= static_cast<int>(_fireballPools.size())) {
+        return false;
+    }
+    return _fireballPools[playerIndex].spawnFireball(
+        spawnPosition,
+        facingRight
+    );
 }
 
 void GameWorld::freeze(float durationSeconds) {

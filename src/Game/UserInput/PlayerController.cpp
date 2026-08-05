@@ -40,7 +40,7 @@ void PlayerController::bindControls(ControlScheme controlScheme) {
             BindKey(sf::Keyboard::Key::Right, ActionType::MoveRight);
             BindKey(sf::Keyboard::Key::Up, ActionType::MoveUp);
             BindKey(sf::Keyboard::Key::Down, ActionType::MoveDown);
-            BindKey(sf::Keyboard::Key::X, ActionType::Attack);
+            BindKey(sf::Keyboard::Key::Enter, ActionType::Attack);
             break;
     }
 }

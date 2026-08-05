@@ -1,6 +1,7 @@
 #pragma once
 
 #include <SFML/Graphics.hpp>
+#include <array>
 #include <memory>
 #include <string>
 
@@ -27,7 +28,7 @@ public:
     void loadLevel(const std::string& levelPath);
     void loadMap(const LevelData& levelData);
 
-    bool spawnFireball(sf::Vector2f spawnPos, bool facingRight);
+    bool spawnFireball(sf::Vector2f spawnPos, bool facingRight, int playerIndex);
     void freeze(float durationSeconds);
     bool isFrozen() const { return _freezeTimer > 0.0f; }
     void syncPlayerControllers();
@@ -42,7 +43,7 @@ private:
     float _freezeTimer = 0.0f;
     PhysicsWorld _physicsWorld;
     GameObjectFactory _objectFactory;
-    FireballPool _fireballPool;
+    std::array<FireballPool, 2> _fireballPools;
     WorldObjectStore _objectStore;
     WorldMap _worldMap;
     WorldInteractionSystem _interactionSystem;
