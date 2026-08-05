@@ -103,13 +103,9 @@ ResourceManager::ResourceManager() {
 	_preLoadTexture("assets/sprites/Tilesets/general_tiles.png", "general_tiles");
 
 	_preLoadTexture("assets/spritesheets/mario_spritesheet.png", "mario_spritesheet");
-	_preLoadTexture("assets/spritesheets/rainbow_mario_spritesheet.png", "rainbow_mario_spritesheet");
 	_preLoadTexture("assets/spritesheets/fire_mario_spritesheet.png", "fire_mario_spritesheet");
-	_preLoadTexture("assets/spritesheets/mario_transform_spritesheet.png", "mario_transform_spritesheet");
 	_preLoadTexture("assets/spritesheets/luigi_spritesheet.png", "luigi_spritesheet");
-	_preLoadTexture("assets/spritesheets/rainbow_luigi_spritesheet.png", "rainbow_luigi_spritesheet");
 	_preLoadTexture("assets/spritesheets/fire_luigi_spritesheet.png", "fire_luigi_spritesheet");
-	_preLoadTexture("assets/spritesheets/luigi_transform_spritesheet.png", "luigi_transform_spritesheet");
 
 	_preLoadTexture("assets/backgrounds/far_sky.png", "far_sky");
 	_preLoadTexture("assets/backgrounds/far_sky.png", "far_sky");
