@@ -307,8 +307,13 @@ void Player::onUpdateVisuals(float deltaTime) {
                 changeToFireState();
             } else if (_transformTarget == TransformTarget::StarMan) {
                 applyStarManState(10.0f);
-            } else {
+            } else if (_transformTarget == TransformTarget::Super) {
                 changeToSuperState();
+            } else if (_transformTarget == TransformTarget::None) {
+                if (_state) {
+                    sf::Texture& tex = ResourceManager::getInstance().getTexture(_state->getTextureAlias());
+                    animatable->configureVisuals(tex, _state->getAnimationSetId());
+                }
             }
             return;
         }

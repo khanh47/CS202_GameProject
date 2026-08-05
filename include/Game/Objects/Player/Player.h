@@ -29,7 +29,7 @@ public:
     void applyStarManState(float durationSeconds = 10.0f);
     void revertDecoratedState();
 
-    enum class TransformTarget { Super, Fire, StarMan };
+    enum class TransformTarget { Super, Fire, StarMan, None };
 
     void attack(GameWorld& world);
     void startTransformation(TransformTarget target, GameWorld& world, float duration = 1.0f);

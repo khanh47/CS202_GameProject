@@ -32,16 +32,20 @@ float StarManStateDecorator::getJumpSpeedMultiplier() const {
 
 void StarManStateDecorator::handleSuperMushroom(Player& player) {
     if (_wrappedState) {
+        //OOP principal violate but it works so just leave it there lol
         if (_wrappedState->getStateName() == "Normal") {
             _wrappedState = std::make_unique<SuperState>(player.getCharacter());
+            player.startTransformation(Player::TransformTarget::None);
         }
     }
 }
 
 void StarManStateDecorator::handleFireFlower(Player& player) {
     if (_wrappedState) {
+        //OOP principal violate but it works so just leave it there lol
         if (_wrappedState->getStateName() != "Fire") {
             _wrappedState = std::make_unique<FireState>(player.getCharacter());
+            player.startTransformation(Player::TransformTarget::None);
         }
     }
 }
