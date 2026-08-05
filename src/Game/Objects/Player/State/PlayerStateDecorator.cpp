@@ -33,6 +33,22 @@ bool PlayerStateDecorator::canShootFireballs() const {
     return _wrappedState ? _wrappedState->canShootFireballs() : false;
 }
 
+bool PlayerStateDecorator::isInvincible() const {
+    return _wrappedState ? _wrappedState->isInvincible() : false;
+}
+
+void PlayerStateDecorator::handleSuperMushroom(Player& player) {
+    if (_wrappedState) _wrappedState->handleSuperMushroom(player);
+}
+
+void PlayerStateDecorator::handleFireFlower(Player& player) {
+    if (_wrappedState) _wrappedState->handleFireFlower(player);
+}
+
+void PlayerStateDecorator::handleSuperStar(Player& player) {
+    if (_wrappedState) _wrappedState->handleSuperStar(player);
+}
+
 void PlayerStateDecorator::update(Player& player, float dt) {
     if (_wrappedState) {
         _wrappedState->update(player, dt);

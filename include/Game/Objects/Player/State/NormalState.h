@@ -21,6 +21,10 @@ public:
     sf::Vector2f getScaleMultiplier() const override { return {1.0f, 1.0f}; }
     bool canShootFireballs() const override { return false; }
 
+    void handleSuperMushroom(Player& player) override;
+    void handleFireFlower(Player& player) override;
+    void handleSuperStar(Player& player) override;
+
 private:
     std::string _character;
 };

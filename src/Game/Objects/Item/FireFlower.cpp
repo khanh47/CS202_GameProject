@@ -9,7 +9,9 @@ FireFlower::FireFlower(sf::Texture& texture) : Item() {
 }
 
 void FireFlower::onPickup(Player& player) {
-    player.changeToFireState();
+    if (player.getState()) {
+        player.getState()->handleFireFlower(player);
+    }
     destroy();
 }
 

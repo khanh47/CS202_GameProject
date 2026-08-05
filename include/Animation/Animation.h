@@ -18,6 +18,8 @@ namespace Animation {
     AnimationSet makeKoopaAnimationSet();
     AnimationSet makeFireFlowerAnimationSet();
     AnimationSet makeFireballAnimationSet();
-    AnimationSet makeFireTransformAnimationSet();
+    AnimationSet makeTransformAnimationSet();
+    AnimationSet makeSuperMushroomAnimationSet();
+    AnimationSet makeSuperStarAnimationSet();
     AnimationSet makeCoinAnimationSet();
 }
