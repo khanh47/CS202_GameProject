@@ -1,12 +1,14 @@
 #include "Game/UserInput/PlayerController.h"
 #include "Game/World/GameWorld.h"
+#include "Game/GameSettings.h"
 
 PlayerController::PlayerController(Player& player, GameWorld& gameWorld, ControlScheme controlScheme)
-    : _player(player), _gameWorld(gameWorld) {
+    : _player(player), _gameWorld(gameWorld), _controlScheme(controlScheme) {
     bindControls(controlScheme);
 }
 
 bool PlayerController::ActionStart(const sf::Event::KeyPressed& event) {
+    refreshBindings();
     const auto action = GetActionForKey(event.code);
     if (!action.has_value()) {
         return false;
@@ -17,6 +19,7 @@ bool PlayerController::ActionStart(const sf::Event::KeyPressed& event) {
 }
 
 bool PlayerController::ActionEnd(const sf::Event::KeyReleased& event) {
+    refreshBindings();
     const auto action = GetActionForKey(event.code);
     if (!action.has_value()) {
         return false;
@@ -27,21 +30,25 @@ bool PlayerController::ActionEnd(const sf::Event::KeyReleased& event) {
 }
 
 void PlayerController::bindControls(ControlScheme controlScheme) {
-    switch (controlScheme) {
-        case ControlScheme::Wasd:
-            BindKey(sf::Keyboard::Key::A, ActionType::MoveLeft);
-            BindKey(sf::Keyboard::Key::D, ActionType::MoveRight);
-            BindKey(sf::Keyboard::Key::W, ActionType::MoveUp);
-            BindKey(sf::Keyboard::Key::S, ActionType::MoveDown);
-            BindKey(sf::Keyboard::Key::X, ActionType::Attack);
-            break;
-        case ControlScheme::ArrowKeys:
-            BindKey(sf::Keyboard::Key::Left, ActionType::MoveLeft);
-            BindKey(sf::Keyboard::Key::Right, ActionType::MoveRight);
-            BindKey(sf::Keyboard::Key::Up, ActionType::MoveUp);
-            BindKey(sf::Keyboard::Key::Down, ActionType::MoveDown);
-            BindKey(sf::Keyboard::Key::X, ActionType::Attack);
-            break;
+    _controlScheme = controlScheme;
+    refreshBindings();
+}
+
+void PlayerController::refreshBindings() {
+    ClearBindings();
+    if (_controlScheme == ControlScheme::Wasd) {
+        const auto& settings = GameSettings::getInstance();
+        BindKey(settings.keyMoveLeft, ActionType::MoveLeft);
+        BindKey(settings.keyMoveRight, ActionType::MoveRight);
+        BindKey(settings.keyJump, ActionType::MoveUp);
+        BindKey(sf::Keyboard::Key::S, ActionType::MoveDown);
+        BindKey(settings.keyAttack, ActionType::Attack);
+    } else {
+        BindKey(sf::Keyboard::Key::Left, ActionType::MoveLeft);
+        BindKey(sf::Keyboard::Key::Right, ActionType::MoveRight);
+        BindKey(sf::Keyboard::Key::Up, ActionType::MoveUp);
+        BindKey(sf::Keyboard::Key::Down, ActionType::MoveDown);
+        BindKey(sf::Keyboard::Key::X, ActionType::Attack);
     }
 }
 
@@ -86,6 +93,7 @@ void PlayerController::applyReleaseAction(ActionType action) {
 }
 
 void PlayerController::syncStateWithKeyboard() {
+    refreshBindings();
     bool moveLeftPressed = false;
     bool moveRightPressed = false;
 

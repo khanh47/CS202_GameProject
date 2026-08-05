@@ -46,6 +46,10 @@ public:
 
     void setFocusedIndex(int index);
     int getFocusedIndex() const { return _focusedIndex; }
+    std::shared_ptr<Button> getButton(std::size_t index) const {
+        if (index < _buttonMenu.size()) return _buttonMenu[index];
+        return nullptr;
+    }
     void clear();
     std::size_t size() const;
 };
