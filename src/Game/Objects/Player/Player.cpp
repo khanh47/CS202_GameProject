@@ -15,13 +15,14 @@
 #include "ResourceManager.h"
 #include "Game/Objects/Player/PlayerShaders.h"
 
+#include <algorithm>
 #include <SFML/Graphics/Texture.hpp>
 #include <SFML/System/Vector2.hpp>
 
 Player::Player() : GameObject() {
-    animatable = std::make_unique<Animatable>();
-    damageable = std::make_unique<Damageable>(100);
-    moveable = std::make_unique<Moveable>();
+    addBehaviour<Animatable>();
+    addBehaviour<Damageable>(100);
+    addBehaviour<Moveable>();
     setState(std::make_unique<NormalState>());
 }
 
@@ -31,9 +32,9 @@ Player::Player(sf::Texture &texture) : Player(texture, "mario") {
 Player::Player(sf::Texture &texture, const std::string& animationSetId)
     : GameObject() {
     (void)texture;
-    animatable = std::make_unique<Animatable>();
-    damageable = std::make_unique<Damageable>(100);
-    moveable = std::make_unique<Moveable>();
+    addBehaviour<Animatable>();
+    addBehaviour<Damageable>(100);
+    addBehaviour<Moveable>();
     _character = animationSetId.find("luigi") != std::string::npos ? "luigi" : "mario";
     if (animationSetId.rfind("fire_", 0) == 0) {
         setState(std::make_unique<FireState>(_character));
@@ -45,7 +46,10 @@ Player::Player(sf::Texture &texture, const std::string& animationSetId)
 Player::~Player() = default;
 
 void Player::finalizeGroundContacts() {
-    // moveable->finalizeGroundContacts();
+    auto* moveable = getBehaviour<Moveable>();
+    if (!moveable) {
+        return;
+    }
 
     bool wasAirborne = moveable->isAirbone();
     moveable->finalizeGroundContacts();
@@ -72,7 +76,9 @@ void Player::setState(std::unique_ptr<PlayerState> newState) {
     const std::string& texAlias = _state->getTextureAlias();
     const std::string& animId = _state->getAnimationSetId();
     sf::Texture& tex = ResourceManager::getInstance().getTexture(texAlias);
-    animatable->configureVisuals(tex, animId);
+    if (auto* animatable = getBehaviour<Animatable>()) {
+        animatable->configureVisuals(tex, animId);
+    }
 }
 
 void Player::attack(GameWorld& world) {
@@ -134,6 +140,11 @@ void Player::updateSimulation(const float &fixedDt) {
         return;
     }
 
+    auto* moveable = getBehaviour<Moveable>();
+    if (!moveable) {
+        return;
+    }
+
     b2Vec2 velocity = b2Body_GetLinearVelocity(_body->getId());
 
     float moveSpeed = _baseMoveSpeed;
@@ -167,6 +178,12 @@ void Player::updateSimulation(const float &fixedDt) {
 
 void Player::finalizeSimulation(const float &fixedDt) {
     (void)fixedDt;
+
+    auto* moveable = getBehaviour<Moveable>();
+    auto* animatable = getBehaviour<Animatable>();
+    if (!moveable || !animatable) {
+        return;
+    }
 
     if (moveable->isAirbone() || moveable->isJumping()) {
         animatable->playAnimation("jump");
@@ -261,7 +278,9 @@ void Player::onContact(GameObject& other, const b2ContactData& contactData, b2Sh
                 b2Body_SetLinearVelocity(bodyId, vel);
             } else {
                 destroy();
-                damageable->takeDamage(50);
+                if (auto* damageable = getBehaviour<Damageable>()) {
+                    damageable->takeDamage(50);
+                }
             }
         }
     }
@@ -282,7 +301,9 @@ void Player::onContact(GameObject& other, const b2ContactData& contactData, b2Sh
                 vel.y = -12.0f;
                 b2Body_SetLinearVelocity(bodyId, vel);
             } else {
-                damageable->takeDamage(50);
+                if (auto* damageable = getBehaviour<Damageable>()) {
+                    damageable->takeDamage(50);
+                }
             }
         }
         return;
@@ -336,9 +357,11 @@ void Player::startTransformation(TransformTarget target, GameWorld& world, float
     _transformStartScale = _state ? _state->getScaleMultiplier().x : 1.0f;
 
     // Stop movement inputs and clear horizontal physics velocity when transformation starts
-    moveable->stopMoveLeft();
-    moveable->stopMoveRight();
-    moveable->stopJump();
+    if (auto* moveable = getBehaviour<Moveable>()) {
+        moveable->stopMoveLeft();
+        moveable->stopMoveRight();
+        moveable->stopJump();
+    }
     if (hasValidBody()) {
         const b2BodyId bodyId = _body->getId();
         b2Vec2 vel = b2Body_GetLinearVelocity(bodyId);
@@ -357,14 +380,18 @@ void Player::startTransformation(TransformTarget target, GameWorld& world, float
 void Player::onUpdateVisuals(float deltaTime) {
     _effectTime += deltaTime;
     PlayerShaders::getInstance().update(deltaTime);
+    auto* moveable = getBehaviour<Moveable>();
+    const bool facingLeft = moveable ? moveable->isFacingLeft() : false;
 
     if (_isTransforming) {
         _transformTimer -= deltaTime;
         if (_transformTimer <= 0.0f) {
             _isTransforming = false;
-            moveable->stopMoveLeft();
-            moveable->stopMoveRight();
-            moveable->stopJump();
+            if (auto* moveable = getBehaviour<Moveable>()) {
+                moveable->stopMoveLeft();
+                moveable->stopMoveRight();
+                moveable->stopJump();
+            }
             if (hasValidBody()) {
                 const b2BodyId bodyId = _body->getId();
                 b2Vec2 vel = b2Body_GetLinearVelocity(bodyId);
@@ -381,7 +408,9 @@ void Player::onUpdateVisuals(float deltaTime) {
             } else if (_transformTarget == TransformTarget::None) {
                 if (_state) {
                     sf::Texture& tex = ResourceManager::getInstance().getTexture(_state->getTextureAlias());
-                    animatable->configureVisuals(tex, _state->getAnimationSetId());
+                    if (auto* animatable = getBehaviour<Animatable>()) {
+                        animatable->configureVisuals(tex, _state->getAnimationSetId());
+                    }
                 }
             }
             return;
@@ -395,8 +424,10 @@ void Player::onUpdateVisuals(float deltaTime) {
 
         sf::Vector2f scaledHitbox = {_baseHitboxPixels.x * currentScale, _baseHitboxPixels.y * currentScale};
         updateHitboxSize(scaledHitbox);
-        animatable->setVisualScale({1.8f, 1.0f});
-        animatable->updateVisualState(deltaTime, scaledHitbox, moveable->isFacingLeft());
+        if (auto* animatable = getBehaviour<Animatable>()) {
+            animatable->setVisualScale({1.8f, 1.0f});
+            animatable->updateVisualState(deltaTime, scaledHitbox, facingLeft);
+        }
         return;
     }
 
@@ -415,8 +446,10 @@ void Player::onUpdateVisuals(float deltaTime) {
 
     sf::Vector2f scaledHitbox = {_baseHitboxPixels.x * scaleMult.x, _baseHitboxPixels.y * scaleMult.y};
     updateHitboxSize(scaledHitbox);
-    animatable->setVisualScale({1.8f, 1.0f});
-    animatable->updateVisualState(deltaTime, scaledHitbox, moveable->isFacingLeft());
+    if (auto* animatable = getBehaviour<Animatable>()) {
+        animatable->setVisualScale({1.8f, 1.0f});
+        animatable->updateVisualState(deltaTime, scaledHitbox, facingLeft);
+    }
 
     // Drive sparkle particles when in invincible (StarMan) state
     if (_state && _state->isInvincible() && hasValidBody()) {
@@ -436,7 +469,9 @@ void Player::onRenderVisual(sf::RenderTarget& target, const sf::Vector2f& positi
         activeShader = PlayerShaders::getInstance().getRainbowShader();
     }
 
-    animatable->renderVisualState(target, position, 0.0f, activeShader);
+    if (auto* animatable = getBehaviour<Animatable>()) {
+        animatable->renderVisualState(target, position, 0.0f, activeShader);
+    }
 
     // Overlay sparkle particles during StarMan invincibility
     if (_state && _state->isInvincible()) {
@@ -445,5 +480,7 @@ void Player::onRenderVisual(sf::RenderTarget& target, const sf::Vector2f& positi
 }
 
 void Player::onHitboxRecreated() {
-    moveable->resetGroundContacts();
+    if (auto* moveable = getBehaviour<Moveable>()) {
+        moveable->resetGroundContacts();
+    }
 }

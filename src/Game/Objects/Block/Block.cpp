@@ -1,14 +1,19 @@
 #include "Game/Objects/Block/Block.h"
+#include "Game/Behaviours/Animatable.h"
 #include "ResourceManager.h"
 
 Block::Block() : GameObject() {
-    animatable = std::make_unique<Animatable>();
-    animatable->configureVisuals(ResourceManager::getInstance().getTexture("tiles"));
+    addBehaviour<Animatable>();
+    if (auto* animatable = getBehaviour<Animatable>()) {
+        animatable->configureVisuals(ResourceManager::getInstance().getTexture("tiles"));
+    }
 }
 
 Block::Block(sf::Texture &texture) : GameObject() {
-    animatable = std::make_unique<Animatable>();
-    animatable->configureVisuals(texture);
+    addBehaviour<Animatable>();
+    if (auto* animatable = getBehaviour<Animatable>()) {
+        animatable->configureVisuals(texture);
+    }
 }
 
 Block::~Block() {
@@ -20,9 +25,13 @@ void Block::onCreateShapeDef(b2ShapeDef& def) {
 }
 
 void Block::onUpdateVisuals(float deltaTime) {
-    animatable->updateVisualState(deltaTime, _hitboxPixels);
+    if (auto* animatable = getBehaviour<Animatable>()) {
+        animatable->updateVisualState(deltaTime, _hitboxPixels);
+    }
 }
 
 void Block::onRenderVisual(sf::RenderTarget& target, const sf::Vector2f& position, float angleDegrees) {
-    animatable->renderVisualState(target, position, angleDegrees);
+    if (auto* animatable = getBehaviour<Animatable>()) {
+        animatable->renderVisualState(target, position, angleDegrees);
+    }
 }

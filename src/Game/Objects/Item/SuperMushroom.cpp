@@ -1,11 +1,14 @@
 #include "Game/Objects/Item/SuperMushroom.h"
+#include "Game/Behaviours/Animatable.h"
 #include "Game/Objects/Player/Player.h"
 
 SuperMushroom::SuperMushroom() : Item() {
 }
 
 SuperMushroom::SuperMushroom(sf::Texture& texture) : Item() {
-    animatable->configureVisuals(texture, "super_mushroom");
+    if (auto* animatable = getBehaviour<Animatable>()) {
+        animatable->configureVisuals(texture, "super_mushroom");
+    }
 }
 
 void SuperMushroom::onPickup(Player& player) {

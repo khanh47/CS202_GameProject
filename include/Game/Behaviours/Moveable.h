@@ -1,8 +1,9 @@
 #pragma once
 
+#include "Game/Behaviours/Behaviour.h"
 #include "Game/Behaviours/GroundTracker.h"
 
-class Moveable {
+class Moveable : public Behaviour {
 public:
     void startMoveLeft() { _movingLeft = true; _facingLeft = true; }
     void stopMoveLeft() { _movingLeft = false; }

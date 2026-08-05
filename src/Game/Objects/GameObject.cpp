@@ -1,6 +1,7 @@
 #include "Game/Objects/GameObject.h"
 #include "Game/GameSettings.h"
 #include "Physics/PhysicsUnits.h"
+#include <cmath>
 #include <SFML/System/Vector2.hpp>
 #include <memory>
 #include <stdexcept>
@@ -38,6 +39,14 @@ const sf::Vector2f& sizePixels,
 }
 
 GameObject::GameObject() = default;
+
+GameObject::~GameObject() {
+    for (auto& behaviour : _behaviours) {
+        if (behaviour) {
+            behaviour->detach();
+        }
+    }
+}
 
 void GameObject::updateSimulation(const float &fixedDt) {
     (void)fixedDt;
