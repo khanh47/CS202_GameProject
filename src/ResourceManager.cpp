@@ -118,10 +118,5 @@ ResourceManager::ResourceManager() {
 	_preLoadTexture("assets/backgrounds/close_underground.png", "close_underground");
 	_preLoadTexture("assets/spritesheets/goomba_spritesheet.png", "goomba_spritesheet");
 	_preLoadTexture("assets/spritesheets/koopa_spritesheet.png", "koopa_spritesheet");
-<<<<<<< HEAD
-	_preLoadTexture("assets/sprites/Tiles/mario_and_items.png", "mario_and_items");
-	_preLoadTexture("assets/spritesheets/transparent_coin_strip.png", "coin_spritesheet");
-=======
 	_preLoadTexture("assets/spritesheets/transparent_coin_spritesheet.png", "coin_spritesheet");
->>>>>>> origin/main
 }
