@@ -1,6 +1,7 @@
 #include "Game/World/WorldObjectStore.h"
 #include "Game/Objects/GameObject.h"
 #include "Game/Objects/Player/Player.h"
+#include "Game/Behaviours/Moveable.h"
 #include "Game/UserInput/PlayerController.h"
 
 WorldObjectStore::WorldObjectStore() = default;
@@ -102,4 +103,14 @@ std::shared_ptr<GameObject> WorldObjectStore::getPrimaryPlayer() const {
         }
     }
     return nullptr;
+}
+
+bool WorldObjectStore::hasLivingPlayers() const {
+    for (const std::shared_ptr<GameObject>& object : _objects) {
+        const auto player = std::dynamic_pointer_cast<Player>(object);
+        if (player) {
+            return true;
+        }
+    }
+    return false;
 }

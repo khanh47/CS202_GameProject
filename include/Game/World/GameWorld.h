@@ -38,6 +38,7 @@ public:
     int getGridHeight() const { return _worldMap.getGridHeight(); }
     float getCellSize() const { return _worldMap.getCellSize(); }
     std::shared_ptr<GameObject> getPrimaryPlayer() const;
+    bool hasLivingPlayers() const;
     sf::FloatRect getBounds() const;
 
     // Add getter & setter for ScoreManager

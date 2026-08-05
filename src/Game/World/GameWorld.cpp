@@ -131,6 +131,10 @@ std::shared_ptr<GameObject> GameWorld::getPrimaryPlayer() const {
     return _objectStore.getPrimaryPlayer();
 }
 
+bool GameWorld::hasLivingPlayers() const {
+    return _objectStore.hasLivingPlayers();
+}
+
 sf::FloatRect GameWorld::getBounds() const {
     return _worldMap.getBounds();
 }
