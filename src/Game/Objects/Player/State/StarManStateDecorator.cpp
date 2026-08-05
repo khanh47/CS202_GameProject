@@ -14,14 +14,6 @@ std::string StarManStateDecorator::getStateName() const {
     return "StarMan (" + PlayerStateDecorator::getStateName() + ")";
 }
 
-std::string StarManStateDecorator::getTextureAlias() const {
-    // Derive character from the wrapped state's animation set id to pick
-    // the correct rainbow spritesheet (already loaded by ResourceManager)
-    std::string baseAnimId = PlayerStateDecorator::getAnimationSetId();
-    bool isLuigi = baseAnimId.find("luigi") != std::string::npos;
-    return isLuigi ? "rainbow_luigi_spritesheet" : "rainbow_mario_spritesheet";
-}
-
 float StarManStateDecorator::getMoveSpeedMultiplier() const {
     return PlayerStateDecorator::getMoveSpeedMultiplier() * 1.5f;
 }

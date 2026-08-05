@@ -14,7 +14,6 @@ public:
     ~StarManStateDecorator() override = default;
 
     std::string getStateName() const override;
-    std::string getTextureAlias() const override;
     float getMoveSpeedMultiplier() const override;
     float getJumpSpeedMultiplier() const override;
     bool isInvincible() const override { return true; }

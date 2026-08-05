@@ -20,7 +20,7 @@ public:
     void setTextureRect(const sf::IntRect& rect);
 
     void updateVisualState(float deltaTime, const sf::Vector2f& hitboxPixels, bool facingLeft = false);
-    void renderVisualState(sf::RenderTarget& target, const sf::Vector2f& position, float angleDegrees = 0) const;
+    void renderVisualState(sf::RenderTarget& target, const sf::Vector2f& position, float angleDegrees = 0, sf::Shader* shader = nullptr) const;
 
     void setVisualScale(sf::Vector2f scale);
     sf::Vector2f getVisualScale() const;

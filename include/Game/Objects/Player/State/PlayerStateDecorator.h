@@ -21,6 +21,7 @@ public:
     sf::Vector2f getScaleMultiplier() const override;
     bool canShootFireballs() const override;
     bool isInvincible() const override;
+    std::unique_ptr<IAttackStrategy> createAttackStrategy() const override;
 
     void handleSuperMushroom(Player& player) override;
     void handleFireFlower(Player& player) override;
