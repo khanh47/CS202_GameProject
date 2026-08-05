@@ -58,7 +58,7 @@ void Animatable::updateVisualState(float deltaTime, const sf::Vector2f& hitboxPi
     syncSpriteLayout(hitboxPixels, facingLeft);
 }
 
-void Animatable::renderVisualState(sf::RenderTarget& target, const sf::Vector2f& position, float angleDegrees) const {
+void Animatable::renderVisualState(sf::RenderTarget& target, const sf::Vector2f& position, float angleDegrees, sf::Shader* shader) const {
     if (!_sprite.has_value()) {
         return;
     }
@@ -66,7 +66,14 @@ void Animatable::renderVisualState(sf::RenderTarget& target, const sf::Vector2f&
     sf::Sprite sprite = *_sprite;
     sprite.setPosition({position.x, position.y + _spriteOffsetY});
     sprite.setRotation(sf::degrees(angleDegrees));
-    target.draw(sprite);
+
+    if (shader) {
+        sf::RenderStates states;
+        states.shader = shader;
+        target.draw(sprite, states);
+    } else {
+        target.draw(sprite);
+    }
 }
 
 void Animatable::playAnimation(const std::string& name) {

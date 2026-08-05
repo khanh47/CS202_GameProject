@@ -81,5 +81,6 @@ private:
     float _transformStartScale = 1.0f;
     TransformTarget _transformTarget = TransformTarget::Fire;
     SparkleEffect _starSparkle{30.0f, 0.5f};
+    float _effectTime = 0.0f;
     GameWorld* _world = nullptr;
 };

@@ -12,6 +12,7 @@
 #include "Game/Objects/Item/SuperStar.h"
 #include "Game/Objects/Item/Coin.h"
 #include "ResourceManager.h"
+#include "Game/Objects/Player/PlayerShaders.h"
 
 #include <SFML/Graphics/Texture.hpp>
 #include <SFML/System/Vector2.hpp>
@@ -324,14 +325,15 @@ void Player::startTransformation(TransformTarget target, GameWorld& world, float
     // Freeze physics simulation & world updates for the duration of transformation
     world.freeze(duration);
 
-    // Switch visuals to transformation spritesheet & play the shared transform animation
-    const char* transformAlias = _character == "luigi" ? "luigi_transform_spritesheet" : "mario_transform_spritesheet";
-    sf::Texture& transformTex = ResourceManager::getInstance().getTexture(transformAlias);
-    animatable->configureVisuals(transformTex, "transform");
-    animatable->playAnimation("transform");
+    // The blink shader handles the visual flash effect, so no spritesheet swap needed.
+    // Reset effect clock so the blink starts cleanly from t=0.
+    _effectTime = 0.0f;
 }
 
 void Player::onUpdateVisuals(float deltaTime) {
+    _effectTime += deltaTime;
+    PlayerShaders::getInstance().update(deltaTime);
+
     if (_isTransforming) {
         _transformTimer -= deltaTime;
         if (_transformTimer <= 0.0f) {
@@ -401,7 +403,16 @@ void Player::onUpdateVisuals(float deltaTime) {
 
 void Player::onRenderVisual(sf::RenderTarget& target, const sf::Vector2f& position, float angleDegrees) {
     (void)angleDegrees;
-    animatable->renderVisualState(target, position);
+
+    // Select the appropriate shader effect for the current visual state
+    sf::Shader* activeShader = nullptr;
+    if (_isTransforming) {
+        activeShader = PlayerShaders::getInstance().getBlinkShader();
+    } else if (_state && _state->isInvincible()) {
+        activeShader = PlayerShaders::getInstance().getRainbowShader();
+    }
+
+    animatable->renderVisualState(target, position, 0.0f, activeShader);
 
     // Overlay sparkle particles during StarMan invincibility
     if (_state && _state->isInvincible()) {
