@@ -36,12 +36,12 @@ public:
     void startTransformation(TransformTarget target, float duration = 1.0f);
 
     void setGameWorld(GameWorld& world) { _world = &world; }
+    const std::string& getCharacter() const { return _character; }
     void onContact(GameObject& other, const b2ContactData& contactData, b2ShapeId ownShape) override;
     void finalizeGroundContacts() override;
 
     PlayerState* getState() const { return _state.get(); }
     bool isTransforming() const { return _isTransforming; }
-    const std::string& getCharacter() const { return _character; }
 
     // Moveable forwarding (called externally)
     bool isFacingLeft() const { return moveable->isFacingLeft(); }

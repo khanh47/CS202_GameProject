@@ -2,9 +2,26 @@
 #include <string>
 #include "Game/UserInput/Action.h"
 
+#include <string>
+
+enum class GameMode {
+    Coop,
+    Solo,
+    Minigame
+};
+
+enum class MinigameMode {
+    TwoPlayer,
+    VsAi
+};
+
 class GameSettings {
 public:
     static GameSettings& getInstance();
+
+    GameMode gameMode = GameMode::Coop;
+    MinigameMode minigameMode = MinigameMode::TwoPlayer;
+    std::string player1Character = "mario";
 
     bool debugDrawGrid = false;
     bool debugDrawCoordinates = false;

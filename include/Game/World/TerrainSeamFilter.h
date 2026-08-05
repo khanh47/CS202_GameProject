@@ -20,6 +20,7 @@ public:
         float leftPixels,
         float rightPixels
     );
+    void setBoundaryColumns(int leftColumn, int rightColumn);
     bool isCellOccupied(int column, int row) const;
 
 private:
@@ -53,4 +54,6 @@ private:
         std::int64_t,
         std::weak_ptr<GameObject>
     > _occupancy;
+    int _boundaryLeftColumn = 0;
+    int _boundaryRightColumn = -1;
 };

@@ -66,6 +66,9 @@ void InGameScene::updateSimulation(const float &fixedDt) {
 void InGameScene::updateVisuals(float deltaTime) {
     _gameWorld.updateVisuals(deltaTime);
     _camera.update(deltaTime);
+    if (!_camera.getTarget() && _gameWorld.getPrimaryPlayer()) {
+        _camera.setTarget(_gameWorld.getPrimaryPlayer());
+    }
     _scoreManager.update(deltaTime);
 }
 

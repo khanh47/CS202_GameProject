@@ -1,4 +1,5 @@
 #include "Game/Objects/Player/Player.h"
+#include "Game/GameSettings.h"
 #include "Game/World/GameWorld.h"
 #include "Game/Objects/Player/State/NormalState.h"
 #include "Game/Objects/Player/State/SuperState.h"
@@ -259,9 +260,32 @@ void Player::onContact(GameObject& other, const b2ContactData& contactData, b2Sh
                 vel.y = -12.0f;
                 b2Body_SetLinearVelocity(bodyId, vel);
             } else {
+                destroy();
                 damageable->takeDamage(50);
             }
         }
+    }
+
+    if (auto* player = dynamic_cast<Player*>(&other)) {
+        if (GameSettings::getInstance().gameMode != GameMode::Minigame) {
+            return;
+        }
+        if (b2Shape_IsValid(ownShape)) {
+            b2Vec2 normal = contactData.manifold.normal;
+            if (!B2_ID_EQUALS(contactData.shapeIdA, ownShape)) {
+                normal = {-normal.x, -normal.y};
+            }
+            if (contactData.manifold.pointCount > 0 && normal.y >= 0.5f) {
+                player->destroy();
+                b2BodyId bodyId = b2Shape_GetBody(ownShape);
+                b2Vec2 vel = b2Body_GetLinearVelocity(bodyId);
+                vel.y = -12.0f;
+                b2Body_SetLinearVelocity(bodyId, vel);
+            } else {
+                damageable->takeDamage(50);
+            }
+        }
+        return;
     }
 }
 
@@ -278,7 +302,7 @@ void Player::onCreateShapeDef(b2ShapeDef& def) {
     // Category 0x0002 (Player), Mask 0x0001 | 0x0008 (Environment + Enemy)
     // Excludes Category 0x0004 (Fireball) so fireballs pass completely through Player
     def.filter.categoryBits = 0x0002;
-    def.filter.maskBits = 0x0001 | 0x0008 | 0x0010;
+    def.filter.maskBits = 0x0001 | 0x0008 | 0x0010 | 0x0002;
 }
 
 b2Polygon Player::makeHitbox(sf::Vector2f hitboxPixels) const {

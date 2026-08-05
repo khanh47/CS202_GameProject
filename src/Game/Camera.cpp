@@ -15,6 +15,10 @@ Camera::Camera(const sf::Vector2f& size) {
 }
 
 void Camera::update(float deltaTime) {
+    if (_target && _target->isPendingDestroy()) {
+        _target.reset();
+    }
+
     if (deltaTime <= 0.0f) {
         return;
     }

@@ -61,6 +61,9 @@ void WorldObjectStore::updateVisuals(float deltaTime) {
 }
 
 void WorldObjectStore::cleanupDestroyed() {
+    std::erase_if(_controllers, [](const std::unique_ptr<PlayerController>& controller) {
+        return !controller || controller->isPlayerPendingDestroy();
+    });
     std::erase_if(_objects, [](const std::shared_ptr<GameObject>& object) {
         return !object || object->isPendingDestroy();
     });

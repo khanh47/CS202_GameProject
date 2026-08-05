@@ -28,6 +28,8 @@ void TerrainSeamFilter::install(PhysicsWorld& physicsWorld) {
 void TerrainSeamFilter::clear() {
     _blockCells.clear();
     _occupancy.clear();
+    _boundaryLeftColumn = 0;
+    _boundaryRightColumn = -1;
 }
 
 void TerrainSeamFilter::addBlock(
@@ -123,7 +125,16 @@ bool TerrainSeamFilter::shouldEnableContact(
     return std::abs(playerToTerrain.x) < minimumLateralNormal;
 }
 
+void TerrainSeamFilter::setBoundaryColumns(int leftColumn, int rightColumn) {
+    _boundaryLeftColumn = leftColumn;
+    _boundaryRightColumn = rightColumn;
+}
+
 bool TerrainSeamFilter::isCellOccupied(int column, int row) const {
+    if (_boundaryRightColumn > _boundaryLeftColumn
+        && (column <= _boundaryLeftColumn || column >= _boundaryRightColumn)) {
+        return true;
+    }
     return hasLiveBlock(column, row);
 }
 
