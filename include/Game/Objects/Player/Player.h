@@ -18,6 +18,7 @@ public:
     Player(sf::Texture &texture);
     Player(sf::Texture &texture, const std::string& animationSetId);
     ~Player() override;
+    void destroy() override;
 
     void setState(std::unique_ptr<PlayerState> newState);
     void changeToNormalState();

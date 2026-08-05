@@ -15,9 +15,13 @@
 #include "ResourceManager.h"
 #include "Game/Objects/Player/PlayerShaders.h"
 
+#include <SFML/System/Clock.hpp>
 #include <algorithm>
 #include <SFML/Graphics/Texture.hpp>
 #include <SFML/System/Vector2.hpp>
+#include <ctime>
+#include <iostream>
+#include <iterator>
 
 Player::Player() : GameObject() {
     addBehaviour<Animatable>();
@@ -44,6 +48,13 @@ Player::Player(sf::Texture &texture, const std::string& animationSetId)
 }
 
 Player::~Player() = default;
+
+void Player::destroy() {
+    removeBehaviour<Moveable>();
+    auto* animatable = getBehaviour<Animatable>();
+    animatable->playAnimation("knockout");
+    // _pendingDestroy = true; updated later in updateSimulation when knockout is done playing
+}
 
 void Player::finalizeGroundContacts() {
     auto* moveable = getBehaviour<Moveable>();
@@ -140,8 +151,21 @@ void Player::updateSimulation(const float &fixedDt) {
         return;
     }
 
+    auto* animatable = getBehaviour<Animatable>();
     auto* moveable = getBehaviour<Moveable>();
+
+    static bool dead = false;
+
     if (!moveable) {
+        if (dead || animatable->getActiveAnimationName() == "knockout") {
+            static float timeSinceDeath = 0.0f;
+            static sf::Clock dtClock;
+
+            dead = true;
+            timeSinceDeath += dtClock.restart().asSeconds();
+
+            if (timeSinceDeath > 3.0f) _pendingDestroy = true;
+        }
         return;
     }
 
@@ -324,6 +348,8 @@ void Player::onCreateShapeDef(b2ShapeDef& def) {
     // Excludes Category 0x0004 (Fireball) so fireballs pass completely through Player
     def.filter.categoryBits = 0x0002;
     def.filter.maskBits = 0x0001 | 0x0008 | 0x0010 | 0x0002;
+    if (GameSettings::getInstance().gameMode == GameMode::Coop)
+        def.filter.maskBits ^= 0x0002; // exclues player if in coop so that they can phase thru each other.
 }
 
 b2Polygon Player::makeHitbox(sf::Vector2f hitboxPixels) const {

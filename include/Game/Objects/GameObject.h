@@ -22,7 +22,7 @@ public:
     virtual void render(sf::RenderTarget &target);
 
     virtual void spawn(const PhysicsWorld &physicsWorld, sf::Vector2f spawnPixels, sf::Vector2f hitboxPixels);
-    void destroy() { _pendingDestroy = true; }
+    virtual void destroy() { _pendingDestroy = true; }
     
     bool isPendingDestroy() { return _pendingDestroy; }
     sf::Vector2f getPosition() const;
