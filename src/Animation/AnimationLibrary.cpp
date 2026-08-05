@@ -49,6 +49,9 @@ void AnimationLibrary::preloadItemAnimationSets() {
 
     const AnimationSet superMushroomSet = Animation::makeSuperMushroomAnimationSet();
     registerAnimationSet("super_mushroom", superMushroomSet);
+
+    const AnimationSet superStarSet = Animation::makeSuperStarAnimationSet();
+    registerAnimationSet("super_star", superStarSet);
 }
 
 void AnimationLibrary::preloadCoinAnimationSets() {

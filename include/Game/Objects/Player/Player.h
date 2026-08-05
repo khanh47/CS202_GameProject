@@ -8,6 +8,7 @@
 #include "Game/Behaviours/Animatable.h"
 #include "Game/Behaviours/Damageable.h"
 #include "Game/Behaviours/Moveable.h"
+#include "Game/Behaviours/SparkleEffect.h"
 #include "Game/Objects/GameObject.h"
 #include "Game/Objects/Player/State/PlayerState.h"
 
@@ -25,12 +26,14 @@ public:
     void changeToSuperState();
     void changeToFireState();
     void applyMegaState(float durationSeconds = 5.0f);
+    void applyStarManState(float durationSeconds = 10.0f);
     void revertDecoratedState();
 
-    enum class TransformTarget { Super, Fire };
+    enum class TransformTarget { Super, Fire, StarMan };
 
     void attack(GameWorld& world);
     void startTransformation(TransformTarget target, GameWorld& world, float duration = 1.0f);
+    void startTransformation(TransformTarget target, float duration = 1.0f);
 
     void setGameWorld(GameWorld& world) { _world = &world; }
     void onContact(GameObject& other, const b2ContactData& contactData, b2ShapeId ownShape) override;
@@ -38,6 +41,7 @@ public:
 
     PlayerState* getState() const { return _state.get(); }
     bool isTransforming() const { return _isTransforming; }
+    const std::string& getCharacter() const { return _character; }
 
     // Moveable forwarding (called externally)
     bool isFacingLeft() const { return moveable->isFacingLeft(); }
@@ -76,5 +80,6 @@ private:
     float _transformDuration = 1.0f;
     float _transformStartScale = 1.0f;
     TransformTarget _transformTarget = TransformTarget::Fire;
+    SparkleEffect _starSparkle{30.0f, 0.5f};
     GameWorld* _world = nullptr;
 };

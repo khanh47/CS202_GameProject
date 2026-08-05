@@ -25,6 +25,7 @@ public:
     virtual float getJumpSpeedMultiplier() const { return 1.0f; }
     virtual sf::Vector2f getScaleMultiplier() const { return {1.0f, 1.0f}; }
     virtual bool canShootFireballs() const { return false; }
+    virtual bool isInvincible() const { return false; }
     virtual std::unique_ptr<IAttackStrategy> createAttackStrategy() const {
         return std::make_unique<NoAttackStrategy>();
     }
@@ -33,4 +34,8 @@ public:
     virtual void update(Player& player, float dt) { (void)player; (void)dt; }
     virtual void onEnter(Player& player) { (void)player; }
     virtual void onExit(Player& player) { (void)player; }
+
+    virtual void handleSuperMushroom(Player& player) { (void)player; }
+    virtual void handleFireFlower(Player& player) { (void)player; }
+    virtual void handleSuperStar(Player& player) { (void)player; }
 };

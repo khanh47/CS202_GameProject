@@ -20,6 +20,11 @@ public:
     float getJumpSpeedMultiplier() const override;
     sf::Vector2f getScaleMultiplier() const override;
     bool canShootFireballs() const override;
+    bool isInvincible() const override;
+
+    void handleSuperMushroom(Player& player) override;
+    void handleFireFlower(Player& player) override;
+    void handleSuperStar(Player& player) override;
 
     void update(Player& player, float dt) override;
     void onEnter(Player& player) override;

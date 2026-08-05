@@ -26,6 +26,10 @@ public:
         return std::make_unique<FireballAttackStrategy>();
     }
 
+    void handleSuperMushroom(Player& player) override;
+    void handleFireFlower(Player& player) override;
+    void handleSuperStar(Player& player) override;
+
 private:
     std::string _character;
 };

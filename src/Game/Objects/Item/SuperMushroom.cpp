@@ -9,12 +9,9 @@ SuperMushroom::SuperMushroom(sf::Texture& texture) : Item() {
 }
 
 void SuperMushroom::onPickup(Player& player) {
-    // Only upgrade Normal -> Super
-    if (player.getState() && player.getState()->getStateName() == "Normal") {
-        player.changeToSuperState();
+    if (player.getState()) {
+        player.getState()->handleSuperMushroom(player);
     }
-
-    //Pick up +1000 points if player is Super or Fire
     destroy();
 }
 

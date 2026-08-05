@@ -280,6 +280,25 @@ AnimationSet Animation::makeSuperMushroomAnimationSet() {
     return animationSet;
 }
 
+AnimationSet Animation::makeSuperStarAnimationSet() {
+    AnimationSet animationSet;
+    animationSet.defaultClip = "idle";
+
+    animationSet.clips.emplace(
+        "idle",
+        Animation::createLinearClip(
+            {0, 126},
+            {18, 18},
+            4,
+            {18, 0},
+            1.0f / 6.0f,
+            true
+        )
+    );
+
+    return animationSet;
+}
+
 AnimationSet Animation::makeCoinAnimationSet() {
     AnimationSet set;
     set.defaultClip = "idle";
