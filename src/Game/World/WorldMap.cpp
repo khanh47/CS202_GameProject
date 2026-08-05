@@ -264,7 +264,7 @@ void WorldMap::createBoundaryWalls(PhysicsWorld& physicsWorld) {
     const float rightEdge = _loadedColumns * _cellSize;
     const float midY = _gridHeight * _cellSize * 0.5f;
 
-    for (float edgeX : {0.0f, rightEdge}) {
+    for (float edgeX : {-_cellSize * 0.25f, rightEdge + _cellSize * 0.25f}) {
         wallDef.position = PhysicsUnits::toMeters({edgeX, midY});
         b2BodyId body = b2CreateBody(physicsWorld.getId(), &wallDef);
         b2CreatePolygonShape(body, &shapeDef, &box);
