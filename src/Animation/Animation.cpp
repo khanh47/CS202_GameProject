@@ -237,7 +237,7 @@ AnimationSet Animation::makeFireballAnimationSet() {
     return animationSet;
 }
 
-AnimationSet Animation::makeFireTransformAnimationSet() {
+AnimationSet Animation::makeTransformAnimationSet() {
     AnimationSet animationSet;
     animationSet.defaultClip = "transform";
 
@@ -261,6 +261,44 @@ AnimationSet Animation::makeFireTransformAnimationSet() {
     return animationSet;
 }
 
+AnimationSet Animation::makeSuperMushroomAnimationSet() {
+    AnimationSet animationSet;
+    animationSet.defaultClip = "idle";
+
+    animationSet.clips.emplace(
+        "idle",
+        Animation::createLinearClip(
+            {0, 90},
+            {18, 18},
+            6,
+            {18, 0},
+            1.0f / 6.0f,
+            true
+        )
+    );
+
+    return animationSet;
+}
+
+AnimationSet Animation::makeSuperStarAnimationSet() {
+    AnimationSet animationSet;
+    animationSet.defaultClip = "idle";
+
+    animationSet.clips.emplace(
+        "idle",
+        Animation::createLinearClip(
+            {0, 126},
+            {18, 18},
+            4,
+            {18, 0},
+            1.0f / 6.0f,
+            true
+        )
+    );
+
+    return animationSet;
+}
+
 AnimationSet Animation::makeCoinAnimationSet() {
     AnimationSet set;
     set.defaultClip = "idle";
@@ -269,9 +307,9 @@ AnimationSet Animation::makeCoinAnimationSet() {
         "idle", 
         Animation::createLinearClip (
             {0, 0},
-            {32, 64},
+            {64, 64},
             4, 
-            {40, 0},
+            {72, 0},
             1.0f / 6.0f,
             true
         )

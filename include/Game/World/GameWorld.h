@@ -11,6 +11,7 @@
 #include "Game/World/WorldMap.h"
 #include "Game/World/WorldObjectStore.h"
 #include "Game/World/WorldRenderer.h"
+#include "Game/ScoreManager.h"
 #include "Physics/PhysicsWorld.h"
 
 class GameWorld {
@@ -39,7 +40,12 @@ public:
     std::shared_ptr<GameObject> getPrimaryPlayer() const;
     sf::FloatRect getBounds() const;
 
+    // Add getter & setter for ScoreManager
+    void setScoreManager(ScoreManager* scoreManager) { _scoreManager = scoreManager; }
+    ScoreManager* getScoreManager() const { return _scoreManager; }
+
 private:
+    ScoreManager* _scoreManager = nullptr;
     float _freezeTimer = 0.0f;
     PhysicsWorld _physicsWorld;
     GameObjectFactory _objectFactory;

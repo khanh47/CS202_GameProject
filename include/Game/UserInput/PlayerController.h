@@ -21,6 +21,7 @@ public:
 
     void syncStateWithKeyboard();
     bool isPlayerPendingDestroy() const { return _player.isPendingDestroy(); }
+    void refreshBindings();
 
 private:
     void bindControls(ControlScheme controlScheme);
@@ -29,4 +30,5 @@ private:
 
     Player& _player;
     GameWorld& _gameWorld;
+    ControlScheme _controlScheme;
 };

@@ -99,6 +99,9 @@ void GameWorld::loadLevel(const std::string& levelPath) {
             player->setGameWorld(*this);
         }
     }
+    for (FireballPool& pool : _fireballPools) {
+        pool.setGameWorld(this);
+    }
 }
 
 bool GameWorld::spawnFireball(
