@@ -92,7 +92,7 @@
       "typeKey": "Coin",
       "texture": "coin_spritesheet",
       "size": [
-        32,
+        64,
         64
       ],
       "centerVertically": true
