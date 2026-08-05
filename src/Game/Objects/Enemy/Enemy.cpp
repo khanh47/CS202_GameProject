@@ -1,6 +1,5 @@
 #include "Game/Objects/Enemy/Enemy.h"
 #include "Game/Behaviours/Animatable.h"
-#include "Game/Behaviours/Damageable.h"
 #include "Game/Objects/GameObject.h"
 #include "Game/World/TerrainSeamFilter.h"
 #include "Physics/PhysicsUnits.h"
@@ -9,16 +8,20 @@
 #include <memory>
 
 Enemy::Enemy() : GameObject() {
-    animatable = std::make_unique<Animatable>();
-    damageable = std::make_unique<Damageable>(50);
+    addBehaviour<Animatable>();
+    addBehaviour<Damageable>(50);
 }
 
 Enemy::Enemy(sf::Texture& texture) : Enemy() {
-    animatable->configureVisuals(texture);
+    if (auto* animatable = getBehaviour<Animatable>()) {
+        animatable->configureVisuals(texture);
+    }
 }
 
 Enemy::Enemy(sf::Texture &texture, const std::string& animationSetId) : Enemy() {
-    animatable->configureVisuals(texture, animationSetId);
+    if (auto* animatable = getBehaviour<Animatable>()) {
+        animatable->configureVisuals(texture, animationSetId);
+    }
 }
 
 Enemy::~Enemy() {
@@ -90,11 +93,15 @@ void Enemy::onCreateShapeDef(b2ShapeDef& def) {
 
 void Enemy::onUpdateVisuals(float deltaTime) {
     bool facingLeft = hasValidBody() && b2Body_GetLinearVelocity(_body->getId()).x < 0.f;
-    animatable->updateVisualState(deltaTime, _hitboxPixels, facingLeft);
+    if (auto* animatable = getBehaviour<Animatable>()) {
+        animatable->updateVisualState(deltaTime, _hitboxPixels, facingLeft);
+    }
 }
 
 void Enemy::onRenderVisual(sf::RenderTarget& target, const sf::Vector2f& position, float angleDegrees) {
-    animatable->renderVisualState(target, position, angleDegrees);
+    if (auto* animatable = getBehaviour<Animatable>()) {
+        animatable->renderVisualState(target, position, angleDegrees);
+    }
 }
 
 void Enemy::updateSimulation(const float &fixedDt) {

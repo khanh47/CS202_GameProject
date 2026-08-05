@@ -80,11 +80,7 @@ bool Animator::update(float deltaTime) {
             continue;
         }
 
-        if (_animations->clips.find(_animations->defaultClip) != _animations->clips.end()) {
-            play(_animations->defaultClip);
-        } else {
-            stop();
-        }
+        stop();
 
         frameChanged = true;
         break;

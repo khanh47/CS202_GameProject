@@ -2,8 +2,6 @@
 
 #include <box2d/box2d.h>
 #include <SFML/System.hpp>
-#include <memory>
-
 #include "Game/Behaviours/Animatable.h"
 #include "Game/Behaviours/Damageable.h"
 #include "Game/Objects/GameObject.h"
@@ -19,9 +17,6 @@ public:
     void setSupportGrid(const TerrainSeamFilter* filter, float cellSize = 64.0f);
 
 protected:
-    std::unique_ptr<Animatable> animatable;
-    std::unique_ptr<Damageable> damageable;
-
     virtual void onCreateBodyDef(b2BodyDef& def) override;
     virtual void onCreateShapeDef(b2ShapeDef& def) override;
     virtual void onUpdateVisuals(float deltaTime) override;

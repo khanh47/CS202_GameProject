@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstddef>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -30,7 +31,14 @@ public:
     bool isActive() const override { return _isActive; }
 
 private:
+    void _checkGameOver();
+    void _drawGameOverOverlay(sf::RenderTarget& target);
+
     std::string _name;
+    bool _gameOverActive = false;
+    std::optional<sf::Sprite> _gameOverOverlay;
+    std::optional<sf::Text> _gameOverPrompt;
+    const sf::Texture* _gameOverTexture = nullptr;
 
     GameWorld _gameWorld;
     Camera _camera;

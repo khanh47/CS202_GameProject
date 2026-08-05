@@ -1,6 +1,8 @@
 #pragma once
 
-class Damageable {
+#include "Game/Behaviours/Behaviour.h"
+
+class Damageable : public Behaviour {
 public:
     Damageable(int initHealth = 100);
     virtual ~Damageable() = default;

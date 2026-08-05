@@ -23,6 +23,7 @@ public:
     bool hasActiveAnimation() const;
     bool isPlaying() const;
     bool isPaused() const;
+    bool isAnimationDone() const;
     std::string getActiveAnimationName() const;
 
 private:

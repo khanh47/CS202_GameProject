@@ -3,14 +3,18 @@
 #include <SFML/Graphics.hpp>
 #include <SFML/Graphics/Text.hpp>
 #include <memory>
+#include <type_traits>
+#include <utility>
+#include <vector>
 
+#include "Game/Behaviours/Behaviour.h"
 #include "Physics/PhysicsBody.h"
 #include "Physics/PhysicsWorld.h"
 
 class GameObject {
 public:
     GameObject();
-    virtual ~GameObject() = default;
+    virtual ~GameObject();
 
     virtual void updateSimulation(const float &fixedDt);
     virtual void finalizeSimulation(const float &fixedDt);
@@ -18,7 +22,7 @@ public:
     virtual void render(sf::RenderTarget &target);
 
     virtual void spawn(const PhysicsWorld &physicsWorld, sf::Vector2f spawnPixels, sf::Vector2f hitboxPixels);
-    void destroy() { _pendingDestroy = true; }
+    virtual void destroy() { _pendingDestroy = true; }
     
     bool isPendingDestroy() { return _pendingDestroy; }
     sf::Vector2f getPosition() const;
@@ -28,6 +32,43 @@ public:
 
     virtual void onContact(GameObject& other, const b2ContactData& contactData, b2ShapeId ownShape) {}
     virtual void finalizeGroundContacts() {}
+
+    template<typename T, typename... Args>
+    T* addBehaviour(Args&&... args) {
+        static_assert(std::is_base_of_v<Behaviour, T>, "Behaviour must derive from Behaviour");
+
+        auto behaviour = std::make_unique<T>(std::forward<Args>(args)...);
+        T* behaviourPtr = behaviour.get();
+        behaviourPtr->attach(*this);
+        _behaviours.emplace_back(std::move(behaviour));
+        return behaviourPtr;
+    }
+
+    template<typename T>
+    T* getBehaviour() const {
+        static_assert(std::is_base_of_v<Behaviour, T>, "Behaviour must derive from Behaviour");
+
+        for (const auto& behaviour : _behaviours) {
+            if (auto* typed = dynamic_cast<T*>(behaviour.get())) {
+                return typed;
+            }
+        }
+        return nullptr;
+    }
+
+    template<typename T>
+    bool removeBehaviour() {
+        static_assert(std::is_base_of_v<Behaviour, T>, "Behaviour must derive from Behaviour");
+
+        for (auto it = _behaviours.begin(); it != _behaviours.end(); ++it) {
+            if (dynamic_cast<T*>(it->get()) != nullptr) {
+                (*it)->detach();
+                _behaviours.erase(it);
+                return true;
+            }
+        }
+        return false;
+    }
 
 protected:
     virtual void onCreateBodyDef(b2BodyDef& def);
@@ -48,6 +89,8 @@ protected:
 
     std::shared_ptr<PhysicsBody> _body = nullptr;
     bool _pendingDestroy = false;
+
+    std::vector<std::unique_ptr<Behaviour>> _behaviours;
 
 private:
     void createBody(const PhysicsWorld &physicsWorld, sf::Vector2f spawnPixels);

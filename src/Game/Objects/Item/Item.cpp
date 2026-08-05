@@ -1,21 +1,28 @@
 #include "Game/Objects/Item/Item.h"
+#include "Game/Behaviours/Animatable.h"
 
 Item::Item() : GameObject() {
-    animatable = std::make_unique<Animatable>();
+    addBehaviour<Animatable>();
 }
 
 Item::Item(sf::Texture& texture) : GameObject() {
-    animatable = std::make_unique<Animatable>();
-    animatable->configureVisuals(texture);
+    addBehaviour<Animatable>();
+    if (auto* animatable = getBehaviour<Animatable>()) {
+        animatable->configureVisuals(texture);
+    }
 }
 
 Item::~Item() {
 }
 
 void Item::onUpdateVisuals(float deltaTime) {
-    animatable->updateVisualState(deltaTime, _hitboxPixels);
+    if (auto* animatable = getBehaviour<Animatable>()) {
+        animatable->updateVisualState(deltaTime, _hitboxPixels);
+    }
 }
 
 void Item::onRenderVisual(sf::RenderTarget& target, const sf::Vector2f& position, float angleDegrees) {
-    animatable->renderVisualState(target, position, angleDegrees);
+    if (auto* animatable = getBehaviour<Animatable>()) {
+        animatable->renderVisualState(target, position, angleDegrees);
+    }
 }

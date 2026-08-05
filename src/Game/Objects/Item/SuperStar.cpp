@@ -1,11 +1,14 @@
 #include "Game/Objects/Item/SuperStar.h"
+#include "Game/Behaviours/Animatable.h"
 #include "Game/Objects/Player/Player.h"
 
 SuperStar::SuperStar() : Item() {
 }
 
 SuperStar::SuperStar(sf::Texture& texture) : Item() {
-    animatable->configureVisuals(texture, "super_star");
+    if (auto* animatable = getBehaviour<Animatable>()) {
+        animatable->configureVisuals(texture, "super_star");
+    }
 }
 
 void SuperStar::onCreateBodyDef(b2BodyDef& def) {

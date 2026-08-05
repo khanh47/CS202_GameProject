@@ -6,9 +6,10 @@
 #include <optional>
 #include <string>
 
+#include "Game/Behaviours/Behaviour.h"
 #include "Animation/Animator.h"
 
-class Animatable {
+class Animatable : public Behaviour {
 public:
     Animatable() = default;
     Animatable(sf::Texture &texture);

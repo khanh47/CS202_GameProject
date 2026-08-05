@@ -3,7 +3,6 @@
 #include <SFML/Graphics.hpp>
 #include <box2d/box2d.h>
 
-#include "Game/Behaviours/Animatable.h"
 #include "Game/Objects/GameObject.h"
 
 class GameWorld; // Forward declaration — full include is in Fireball.cpp
@@ -37,8 +36,6 @@ protected:
     void onRenderVisual(sf::RenderTarget& target, const sf::Vector2f& position, float angleDegrees) override;
 
 private:
-    std::unique_ptr<Animatable> animatable;
-
     bool _active = false;
     bool _facingRight = true;
     float _distanceTraveled = 0.0f;

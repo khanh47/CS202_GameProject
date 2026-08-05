@@ -1,4 +1,5 @@
 #include "Game/Objects/Item/Fireball.h"
+#include "Game/Behaviours/Animatable.h"
 #include "Physics/PhysicsUnits.h"
 #include "ResourceManager.h"
 #include "Game/Objects/Block/Block.h"
@@ -7,14 +8,18 @@
 #include "Game/ScoreManager.h"
 
 Fireball::Fireball() : GameObject() {
-    animatable = std::make_unique<Animatable>();
+    addBehaviour<Animatable>();
     sf::Texture& itemsTexture = ResourceManager::getInstance().getTexture("mario_and_items");
-    animatable->configureVisuals(itemsTexture, "fireball");
+    if (auto* animatable = getBehaviour<Animatable>()) {
+        animatable->configureVisuals(itemsTexture, "fireball");
+    }
 }
 
 Fireball::Fireball(sf::Texture& texture) : GameObject() {
-    animatable = std::make_unique<Animatable>();
-    animatable->configureVisuals(texture, "fireball");
+    addBehaviour<Animatable>();
+    if (auto* animatable = getBehaviour<Animatable>()) {
+        animatable->configureVisuals(texture, "fireball");
+    }
 }
 
 void Fireball::activate(sf::Vector2f spawnPos, bool facingRight) {
@@ -69,7 +74,9 @@ void Fireball::updateSimulation(const float& fixedDt) {
     // Track total horizontal distance traveled in SFML pixel space
     _distanceTraveled += std::abs(vel.x) * fixedDt * PhysicsUnits::pixelsPerMeter;
 
-    animatable->playAnimation("spin");
+    if (auto* animatable = getBehaviour<Animatable>()) {
+        animatable->playAnimation("spin");
+    }
 }
 
 void Fireball::onContact(GameObject& other, const b2ContactData&, b2ShapeId) {
@@ -117,7 +124,9 @@ void Fireball::onUpdateVisuals(float deltaTime) {
     if (!_active) {
         return;
     }
-    animatable->updateVisualState(deltaTime, _hitboxPixels, !_facingRight);
+    if (auto* animatable = getBehaviour<Animatable>()) {
+        animatable->updateVisualState(deltaTime, _hitboxPixels, !_facingRight);
+    }
 }
 
 void Fireball::onRenderVisual(sf::RenderTarget& target, const sf::Vector2f& position, float angleDegrees) {
@@ -125,5 +134,7 @@ void Fireball::onRenderVisual(sf::RenderTarget& target, const sf::Vector2f& posi
     if (!_active) {
         return;
     }
-    animatable->renderVisualState(target, position);
+    if (auto* animatable = getBehaviour<Animatable>()) {
+        animatable->renderVisualState(target, position);
+    }
 }

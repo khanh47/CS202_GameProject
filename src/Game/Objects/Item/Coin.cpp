@@ -1,11 +1,14 @@
 #include "Game/Objects/Item/Coin.h"
+#include "Game/Behaviours/Animatable.h"
 #include "Game/Objects/Player/Player.h"
 
 Coin::Coin() : Item() {
 }
 
 Coin::Coin(sf::Texture& texture) : Item() {
-    animatable->configureVisuals(texture, "coin");
+    if (auto* animatable = getBehaviour<Animatable>()) {
+        animatable->configureVisuals(texture, "coin");
+    }
 }
 
 void Coin::onPickup(Player& player) {

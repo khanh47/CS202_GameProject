@@ -1,11 +1,14 @@
 #include "Game/Objects/Item/FireFlower.h"
+#include "Game/Behaviours/Animatable.h"
 #include "Game/Objects/Player/Player.h"
 
 FireFlower::FireFlower() : Item() {
 }
 
 FireFlower::FireFlower(sf::Texture& texture) : Item() {
-    animatable->configureVisuals(texture, "fire_flower");
+    if (auto* animatable = getBehaviour<Animatable>()) {
+        animatable->configureVisuals(texture, "fire_flower");
+    }
 }
 
 void FireFlower::onPickup(Player& player) {

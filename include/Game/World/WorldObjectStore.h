@@ -26,6 +26,7 @@ public:
     void syncControllersWithKeyboard();
 
     std::shared_ptr<GameObject> getPrimaryPlayer() const;
+    bool hasLivingPlayers() const;
     const std::vector<std::shared_ptr<GameObject>>& objects() const noexcept {
         return _objects;
     }
