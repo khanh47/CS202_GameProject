@@ -93,6 +93,7 @@ void GameWorld::loadLevel(const std::string& levelPath) {
     if (auto player = std::dynamic_pointer_cast<Player>(getPrimaryPlayer())) {
         player->setGameWorld(*this);
     }
+    _fireballPool.setGameWorld(this);
 }
 
 bool GameWorld::spawnFireball(

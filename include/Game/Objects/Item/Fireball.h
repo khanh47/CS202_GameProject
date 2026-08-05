@@ -6,6 +6,8 @@
 #include "Game/Behaviours/Animatable.h"
 #include "Game/Objects/GameObject.h"
 
+class GameWorld; // Forward declaration — full include is in Fireball.cpp
+
 /**
  * @brief Represents a bouncing fireball spawned by Fire Mario.
  * Uses Box2D dynamic physics for bouncing and manages its active/inactive pool lifecycle.
@@ -26,6 +28,8 @@ public:
     void updateSimulation(const float& fixedDt) override;
     void onContact(GameObject& other, const b2ContactData& contactData, b2ShapeId ownShape) override;
 
+    void setGameWorld(GameWorld* world) { _world = world; }
+
 protected:
     void onCreateBodyDef(b2BodyDef& def) override;
     void onCreateShapeDef(b2ShapeDef& def) override;
@@ -42,4 +46,6 @@ private:
     // Movement speeds in Box2D MKS matching original Super Mario Bros NES physics
     const float _moveSpeedMeters = 10.f;
     const float _bounceImpulseMeters = 7.5f;
+
+    GameWorld* _world = nullptr; // Pointer to the game world for score management
 };

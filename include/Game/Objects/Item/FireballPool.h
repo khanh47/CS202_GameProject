@@ -7,6 +7,7 @@
 #include "Game/Objects/Item/Fireball.h"
 
 class PhysicsWorld;
+class GameWorld; // Forward declaration
 
 /**
  * @brief Implements the Object Pool pattern for Fireball objects.
@@ -28,6 +29,8 @@ public:
 
     int getActiveCount() const;
     const std::vector<std::shared_ptr<Fireball>>& getPool() const { return _pool; }
+
+    void setGameWorld(GameWorld* world);
 
 private:
     static constexpr size_t POOL_CAPACITY = 8;

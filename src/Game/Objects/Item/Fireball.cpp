@@ -3,6 +3,8 @@
 #include "ResourceManager.h"
 #include "Game/Objects/Block/Block.h"
 #include "Game/Objects/Enemy/Enemy.h"
+#include "Game/World/GameWorld.h"
+#include "Game/ScoreManager.h"
 
 Fireball::Fireball() : GameObject() {
     animatable = std::make_unique<Animatable>();
@@ -81,7 +83,12 @@ void Fireball::onContact(GameObject& other, const b2ContactData&, b2ShapeId) {
         return;
     }
 
-    if (dynamic_cast<Enemy*>(&other)) {
+    if (auto* enemy = dynamic_cast<Enemy*>(&other)) {
+        if (_world && _world->getScoreManager()) {
+            // Triggers 100 -> 200 -> 400 -> 800 -> 1000 -> 2000 -> 4000 -> 8000 -> 1UP
+            _world->getScoreManager()->handleEvent(ScoreEventType::EnemyStomped, enemy->getPosition());
+        }
+
         other.destroy();
         deactivate();
     }

@@ -80,3 +80,12 @@ int FireballPool::getActiveCount() const {
     }
     return count;
 }
+
+
+void FireballPool::setGameWorld(GameWorld* world) {
+    for (auto& fireball : _pool) {
+        if (fireball) {
+            fireball->setGameWorld(world);
+        }
+    }
+}
