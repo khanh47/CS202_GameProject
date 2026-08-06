@@ -50,10 +50,19 @@ Player::Player(sf::Texture &texture, const std::string& animationSetId)
 Player::~Player() = default;
 
 void Player::destroy() {
+    if (_isDying) {
+        return;
+    }
+
+    _isDying = true;
+    _deathTimer = 0.0f;
+
     removeBehaviour<Moveable>();
     auto* animatable = getBehaviour<Animatable>();
-    animatable->playAnimation("knockout");
-    // _pendingDestroy = true; updated later in updateSimulation when knockout is done playing
+    if (animatable) {
+        animatable->playAnimation("knockout");
+    }
+    // _pendingDestroy is set later in updateSimulation once knockout finishes.
 }
 
 void Player::finalizeGroundContacts() {
@@ -145,8 +154,6 @@ void Player::revertDecoratedState() {
 }
 
 void Player::updateSimulation(const float &fixedDt) {
-    (void)fixedDt;
-
     if (!_body || !_body->isValid()) {
         return;
     }
@@ -154,18 +161,19 @@ void Player::updateSimulation(const float &fixedDt) {
     auto* animatable = getBehaviour<Animatable>();
     auto* moveable = getBehaviour<Moveable>();
 
-    static bool dead = false;
+    if (_isDying) {
+        if (animatable && animatable->getActiveAnimationName() != "knockout") {
+            animatable->playAnimation("knockout");
+        }
+
+        _deathTimer += fixedDt;
+        if (_deathTimer >= 9 / 7.0f) {
+            _pendingDestroy = true;
+        }
+        return;
+    }
 
     if (!moveable) {
-        if (dead || animatable->getActiveAnimationName() == "knockout") {
-            static float timeSinceDeath = 0.0f;
-            static sf::Clock dtClock;
-
-            dead = true;
-            timeSinceDeath += dtClock.restart().asSeconds();
-
-            if (timeSinceDeath > 3.0f) _pendingDestroy = true;
-        }
         return;
     }
 

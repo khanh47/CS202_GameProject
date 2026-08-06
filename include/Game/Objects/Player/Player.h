@@ -91,6 +91,8 @@ private:
     std::unique_ptr<IAttackStrategy> _attackStrategy;
     std::string _character = "mario";
 
+    bool _isDying = false;
+    float _deathTimer = 0.0f;
     bool _isTransforming = false;
     float _transformTimer = 0.0f;
     float _transformDuration = 1.0f;
