@@ -18,6 +18,8 @@ public:
     static LevelData load(
         const std::filesystem::path& filePath,
         int maximumWidth = 500,
-        int maximumHeight = 60
+        int maximumHeight = 60,
+        const std::filesystem::path& sharedSpawnsPath =
+            "assets/datas/spawns.json"
     );
 };

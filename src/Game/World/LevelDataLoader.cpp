@@ -9,7 +9,8 @@
 LevelData LevelDataLoader::load(
     const std::filesystem::path& filePath,
     int maximumWidth,
-    int maximumHeight
+    int maximumHeight,
+    const std::filesystem::path& sharedSpawnsPath
 ) {
     if (maximumWidth <= 0 || maximumHeight <= 0) {
         throw std::invalid_argument("Level limits must be positive");
@@ -27,7 +28,11 @@ LevelData LevelDataLoader::load(
         throw std::runtime_error("Malformed level JSON: " + std::string(error.what()));
     }
 
-    if (!document.is_object() || !document.contains("rows")
+    if (!document.is_object()) {
+        throw std::runtime_error("Level JSON must be a JSON object");
+    }
+
+    if (!document.contains("rows")
         || !document["rows"].is_array()) {
         throw std::runtime_error("Level JSON must contain a rows array");
     }
@@ -59,12 +64,24 @@ LevelData LevelDataLoader::load(
         rows.push_back(std::move(row));
     }
 
-    if (!document.contains("spawns")) {
-        throw std::runtime_error("Level JSON must contain a spawns array");
-    }
     std::unordered_map<int, std::vector<SpawnSpec>> spawns;
     try {
-        spawns = parseSpawnSpecs(document["spawns"]);
+        std::ifstream sharedInput(sharedSpawnsPath);
+        if (!sharedInput) {
+            throw std::runtime_error(
+                "Unable to open shared spawns file: " + sharedSpawnsPath.string()
+            );
+        }
+        nlohmann::json sharedDocument;
+        sharedInput >> sharedDocument;
+        spawns = parseSpawnSpecs(sharedDocument["spawns"]);
+        if (document.contains("spawns")) {
+            std::unordered_map<int, std::vector<SpawnSpec>> levelSpawns =
+                parseSpawnSpecs(document["spawns"]);
+            for (auto& [id, specs] : levelSpawns) {
+                spawns[id] = std::move(specs);
+            }
+        }
     } catch (const std::exception& error) {
         throw std::runtime_error("Invalid spawns definition: " + std::string(error.what()));
     }
