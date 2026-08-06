@@ -33,4 +33,5 @@ private:
     std::size_t _currentFrameId = 0;
     float _elapsedTime = 0.f;
     bool _paused = false;
+    bool _animationDone = false;
 };

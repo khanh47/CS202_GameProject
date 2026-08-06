@@ -2,6 +2,7 @@
 
 #include <string>
 
+#include "Game/Objects/Player/Player.h"
 #include "Game/Objects/Player/State/PlayerState.h"
 
 /**
@@ -24,6 +25,7 @@ public:
     void handleSuperMushroom(Player& player) override;
     void handleFireFlower(Player& player) override;
     void handleSuperStar(Player& player) override;
+    void handleEnemy(Player& player) override;
 
 private:
     std::string _character;

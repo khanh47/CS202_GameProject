@@ -1,5 +1,6 @@
 #include "Game/Objects/Player/State/SuperState.h"
 #include "Game/Objects/Player/Player.h"
+#include "Game/Behaviours/Invincible.h"
 
 #include <utility>
 
@@ -16,4 +17,9 @@ void SuperState::handleFireFlower(Player& player) {
 
 void SuperState::handleSuperStar(Player& player) {
     player.startTransformation(Player::TransformTarget::StarMan);
+}
+
+void SuperState::handleEnemy(Player& player) {
+    player.startTransformation(Player::TransformTarget::Normal);
+    player.addBehaviour<Invincible>(2.0f);
 }

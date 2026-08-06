@@ -22,6 +22,9 @@ public:
     /** Advance the internal clock used by shader uniforms. */
     void update(float deltaTime);
 
+    /** Shader that flashes between empty and raw sprite colors (~8 Hz). */
+    sf::Shader* getGhostShader();
+
     /** Shader that flashes between white and raw sprite colors (~8 Hz). */
     sf::Shader* getBlinkShader();
 
@@ -32,6 +35,7 @@ private:
     PlayerShaders();
 
     bool _shadersAvailable = false;
+    sf::Shader _ghostShader;
     sf::Shader _blinkShader;
     sf::Shader _rainbowShader;
     float _time = 0.0f;
