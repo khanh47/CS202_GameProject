@@ -1,6 +1,5 @@
 #include "Scene/ConcreteScene/LevelSelectionScene.h"
 #include "Commands/FunctionalCommand.h"
-#include "Game/GameSettings.h"
 #include "ResourceManager.h"
 #include "Scene/ConcreteScene/InGameScene.h"
 #include "Scene/SceneManager.h"
@@ -63,12 +62,7 @@ void LevelSelectionScene::_setupButtons() {
         28
     );
 
-    const GameSettings& settings = GameSettings::getInstance();
-    const std::string modeDir =
-        settings.gameMode == GameMode::Solo
-            ? "solo-" + settings.player1Character
-            : "coop";
-    const std::string base = "assets/datas/levels/" + modeDir + "/level-";
+    const std::string base = "assets/datas/levels/map-";
 
     _buttonMenu.addButtonAuto("Level 1", std::make_unique<FunctionalCommand>(
         "Level 1", [this, base]() {

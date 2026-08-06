@@ -16,7 +16,7 @@ SceneFactory::SceneFactory() {
     registerScene("CHARACTER_SELECT", []() { return std::make_unique<CharacterSelectScene>(); });
     registerScene("KEYBIND_SETTINGS", []() { return std::make_unique<KeyBindSettingsScene>(); });
     registerScene("LEVEL_SELECT", []() { return std::make_unique<LevelSelectionScene>(); });
-    registerScene("IN_GAME", []() { return std::make_unique<InGameScene>("assets/datas/levels/coop/level-1.json"); });
+    registerScene("IN_GAME", []() { return std::make_unique<InGameScene>("assets/datas/levels/map-1.json"); });
 }
 
 void SceneFactory::registerScene(const std::string& stateName, std::function<std::unique_ptr<Scene>()> factory) {
