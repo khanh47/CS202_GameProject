@@ -17,3 +17,7 @@ void NormalState::handleFireFlower(Player& player) {
 void NormalState::handleSuperStar(Player& player) {
     player.startTransformation(Player::TransformTarget::StarMan);
 }
+
+void NormalState::handleEnemy(Player& player) {
+    player.destroy();
+}

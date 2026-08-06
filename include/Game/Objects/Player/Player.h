@@ -28,7 +28,7 @@ public:
     void applyStarManState(float durationSeconds = 10.0f);
     void revertDecoratedState();
 
-    enum class TransformTarget { Super, Fire, StarMan, None };
+    enum class TransformTarget { Normal, Super, Fire, StarMan, None };
 
     void attack(GameWorld& world);
     void startTransformation(TransformTarget target, GameWorld& world, float duration = 1.0f);
@@ -92,7 +92,6 @@ private:
     std::string _character = "mario";
 
     bool _isDying = false;
-    float _deathTimer = 0.0f;
     bool _isTransforming = false;
     float _transformTimer = 0.0f;
     float _transformDuration = 1.0f;

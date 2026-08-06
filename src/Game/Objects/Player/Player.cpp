@@ -1,5 +1,6 @@
 #include "Game/Objects/Player/Player.h"
 #include "Game/GameSettings.h"
+#include "Game/Objects/GameObject.h"
 #include "Game/World/GameWorld.h"
 #include "Game/Objects/Player/State/NormalState.h"
 #include "Game/Objects/Player/State/SuperState.h"
@@ -14,6 +15,8 @@
 #include "Game/Objects/Item/Coin.h"
 #include "ResourceManager.h"
 #include "Game/Objects/Player/PlayerShaders.h"
+#include "Game/Behaviours/Invincible.h"
+#include "box2d/id.h"
 
 #include <SFML/System/Clock.hpp>
 #include <algorithm>
@@ -50,12 +53,13 @@ Player::Player(sf::Texture &texture, const std::string& animationSetId)
 Player::~Player() = default;
 
 void Player::destroy() {
+    if (auto* invincible = getBehaviour<Invincible>()) return;
+
     if (_isDying) {
         return;
     }
 
     _isDying = true;
-    _deathTimer = 0.0f;
 
     removeBehaviour<Moveable>();
     auto* animatable = getBehaviour<Animatable>();
@@ -158,16 +162,28 @@ void Player::updateSimulation(const float &fixedDt) {
         return;
     }
 
+    if (auto* invincible = getBehaviour<Invincible>()) {
+        invincible->updateSimulation(fixedDt);
+
+        if(invincible->getTime() < 0.001f){
+            removeBehaviour<Invincible>();
+
+        };
+    }
     auto* animatable = getBehaviour<Animatable>();
     auto* moveable = getBehaviour<Moveable>();
 
     if (_isDying) {
-        if (animatable && animatable->getActiveAnimationName() != "knockout") {
+        if (!animatable) {
+            _pendingDestroy = true;
+            return;
+        }
+
+        if (animatable->getActiveAnimationName() != "knockout") {
             animatable->playAnimation("knockout");
         }
 
-        _deathTimer += fixedDt;
-        if (_deathTimer >= 9 / 7.0f) {
+        if (animatable->isAnimationDone()) {
             _pendingDestroy = true;
         }
         return;
@@ -309,10 +325,7 @@ void Player::onContact(GameObject& other, const b2ContactData& contactData, b2Sh
                 vel.y = -12.0f;
                 b2Body_SetLinearVelocity(bodyId, vel);
             } else {
-                destroy();
-                if (auto* damageable = getBehaviour<Damageable>()) {
-                    damageable->takeDamage(50);
-                }
+                _state->handleEnemy(*this);
             }
         }
     }
@@ -433,7 +446,10 @@ void Player::onUpdateVisuals(float deltaTime) {
                 b2Body_SetLinearVelocity(bodyId, vel);
             }
             // Transformation finished -> enter the correct target state
-            if (_transformTarget == TransformTarget::Fire) {
+            if (_transformTarget == TransformTarget::Normal) {
+                changeToNormalState();
+            }
+            else if (_transformTarget == TransformTarget::Fire) {
                 changeToFireState();
             } else if (_transformTarget == TransformTarget::StarMan) {
                 applyStarManState(10.0f);
@@ -497,10 +513,16 @@ void Player::onRenderVisual(sf::RenderTarget& target, const sf::Vector2f& positi
 
     // Select the appropriate shader effect for the current visual state
     sf::Shader* activeShader = nullptr;
+
+    
+    
     if (_isTransforming) {
         activeShader = PlayerShaders::getInstance().getBlinkShader();
     } else if (_state && _state->isInvincible()) {
         activeShader = PlayerShaders::getInstance().getRainbowShader();
+    }
+    else if (auto* tempInvincible = getBehaviour<Invincible>()) {
+        activeShader = PlayerShaders::getInstance().getGhostShader();
     }
 
     if (auto* animatable = getBehaviour<Animatable>()) {
@@ -516,5 +538,9 @@ void Player::onRenderVisual(sf::RenderTarget& target, const sf::Vector2f& positi
 void Player::onHitboxRecreated() {
     if (auto* moveable = getBehaviour<Moveable>()) {
         moveable->resetGroundContacts();
+    }
+
+    if (auto* invincible = getBehaviour<Invincible>()) {
+        invincible->refreshCollisionMask();
     }
 }

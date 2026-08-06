@@ -107,7 +107,7 @@ AnimationSet Animation::makeDefaultPlayerAnimationSet() {
             {32, 32},
             3,
             {32, 0},
-            1.0f / 4.0f,
+            1.0f / 3.0f,
             false
         )
     );
