@@ -1,4 +1,4 @@
-#include "Game/Objects/Item/FireFlower.h"
+#include "Game/Objects/Item/ConcreteItems/FireFlower.h"
 #include "Game/Behaviours/Animatable.h"
 #include "Game/Objects/Player/Player.h"
 

@@ -1,6 +1,7 @@
-#include "Game/Objects/Item/SuperStar.h"
+#include "Game/Objects/Item/ConcreteItems/SuperStar.h"
 #include "Game/Behaviours/Animatable.h"
 #include "Game/Objects/Player/Player.h"
+#include "Game/GameSettings.h"
 
 SuperStar::SuperStar() : Item() {
 }
@@ -43,6 +44,7 @@ void SuperStar::updateSimulation(const float& fixedDt) {
 
     // Maintain constant horizontal speed; leave vertical velocity to physics
     float dir = _movingRight ? 1.0f : -1.0f;
+    if (GameSettings::getInstance().gameMode == GameMode::Minigame) dir = 0.0f;
     b2Body_SetLinearVelocity(body, {_speed * dir, vel.y});
 }
 

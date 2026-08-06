@@ -8,10 +8,10 @@
 #include "Game/Objects/Player/State/StarManStateDecorator.h"
 #include "Physics/PhysicsUnits.h"
 #include "Game/Objects/Enemy/Enemy.h"
-#include "Game/Objects/Item/FireFlower.h"
-#include "Game/Objects/Item/SuperMushroom.h"
-#include "Game/Objects/Item/SuperStar.h"
-#include "Game/Objects/Item/Coin.h"
+#include "Game/Objects/Item/ConcreteItems/FireFlower.h"
+#include "Game/Objects/Item/ConcreteItems/SuperMushroom.h"
+#include "Game/Objects/Item/ConcreteItems/SuperStar.h"
+#include "Game/Objects/Item/ConcreteItems/Coin.h"
 #include "ResourceManager.h"
 #include "Game/Objects/Player/PlayerShaders.h"
 
@@ -287,6 +287,7 @@ void Player::onContact(GameObject& other, const b2ContactData& contactData, b2Sh
                 _world->getScoreManager()->handleEvent(ScoreEventType::EnemyStomped, enemy->getPosition());
             }
 
+            enemy->onDead();
             enemy->destroy();
             return;
         }

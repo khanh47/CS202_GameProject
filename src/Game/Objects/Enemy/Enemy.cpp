@@ -115,3 +115,9 @@ void Enemy::updateSimulation(const float &fixedDt) {
     velocity.x = _moveSpeed;
     b2Body_SetLinearVelocity(_body->getId(), velocity);
 }
+
+void Enemy::onDead() {
+    if (auto* animatable = getBehaviour<Animatable>()) {
+        animatable->playAnimation("dead");
+    }
+}

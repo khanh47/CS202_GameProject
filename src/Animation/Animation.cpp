@@ -124,6 +124,30 @@ AnimationSet Animation::makeDefaultPlayerAnimationSet() {
         )
     );
 
+    animationSet.clips.emplace(
+        "hold_stand",
+        Animation::createLinearClip(
+            {140, 176},
+            {28, 32},
+            1,
+            {0, 0},
+            1.0f,
+            false
+        )
+    );
+
+    animationSet.clips.emplace(
+        "hold_walk",
+        Animation::createLinearClip(
+            {48, 224},
+            {32, 32},
+            6,
+            {32, 0},
+            1.0f / 6.0f,
+            true
+        )
+    );
+
     return animationSet;
 }
 

@@ -3,9 +3,11 @@
 #include "Physics/PhysicsUnits.h"
 #include "ResourceManager.h"
 #include "Game/Objects/Block/Block.h"
+#include "Game/Objects/Player/Player.h"
 #include "Game/Objects/Enemy/Enemy.h"
 #include "Game/World/GameWorld.h"
 #include "Game/ScoreManager.h"
+#include "Game/GameSettings.h"
 
 Fireball::Fireball() : GameObject() {
     addBehaviour<Animatable>();
@@ -99,6 +101,10 @@ void Fireball::onContact(GameObject& other, const b2ContactData&, b2ShapeId) {
         other.destroy();
         deactivate();
     }
+    if (auto* player = dynamic_cast<Player*>(&other)) {
+        other.destroy();
+        deactivate();
+    }
 }
 
 void Fireball::onCreateBodyDef(b2BodyDef& def) {
@@ -118,6 +124,9 @@ void Fireball::onCreateShapeDef(b2ShapeDef& def) {
     // Fireballs pass freely through player (0x0002) and other fireballs (0x0004)
     def.filter.categoryBits = 0x0004;
     def.filter.maskBits = 0x0001 | 0x0008;
+    if (GameSettings::getInstance().gameMode == GameMode::Minigame) {
+        def.filter.maskBits |= 0x0002;
+    }
 }
 
 void Fireball::onUpdateVisuals(float deltaTime) {

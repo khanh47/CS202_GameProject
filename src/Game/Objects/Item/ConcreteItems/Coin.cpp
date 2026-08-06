@@ -1,4 +1,4 @@
-#include "Game/Objects/Item/Coin.h"
+#include "Game/Objects/Item/ConcreteItems/Coin.h"
 #include "Game/Behaviours/Animatable.h"
 #include "Game/Objects/Player/Player.h"
 

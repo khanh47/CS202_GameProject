@@ -1,4 +1,4 @@
-#include "Game/Objects/Item/SuperMushroom.h"
+#include "Game/Objects/Item/ConcreteItems/SuperMushroom.h"
 #include "Game/Behaviours/Animatable.h"
 #include "Game/Objects/Player/Player.h"
 

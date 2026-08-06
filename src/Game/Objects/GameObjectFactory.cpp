@@ -5,11 +5,11 @@
 #include "Game/Objects/Enemy/ConcreteEnemy/Goomba.h"
 #include "Game/Objects/Enemy/ConcreteEnemy/Koopa.h"
 #include "Game/Objects/Item/Item.h"
-#include "Game/Objects/Item/FireFlower.h"
-#include "Game/Objects/Item/SuperMushroom.h"
-#include "Game/Objects/Item/SuperStar.h"
+#include "Game/Objects/Item/ConcreteItems/FireFlower.h"
+#include "Game/Objects/Item/ConcreteItems/SuperMushroom.h"
+#include "Game/Objects/Item/ConcreteItems/SuperStar.h"
 #include "Game/Objects/Player/Player.h"
-#include "Game/Objects/Item/Coin.h"
+#include "Game/Objects/Item/ConcreteItems/Coin.h"
 
 GameObjectFactory::GameObjectFactory() {
     registerPlayer("Player", createAnimated<Player>);
