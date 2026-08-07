@@ -18,7 +18,6 @@ private:
     void preloadPlayerAnimationSets();
     void preloadEnemyAnimationSets();
     void preloadItemAnimationSets();
-    void preloadCoinAnimationSets();
 
     std::unordered_map<std::string, AnimationSet> _animationSets;
 };

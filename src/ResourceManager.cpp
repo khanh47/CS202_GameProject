@@ -116,4 +116,5 @@ ResourceManager::ResourceManager() {
 	_preLoadTexture("assets/spritesheets/goomba_spritesheet.png", "goomba_spritesheet");
 	_preLoadTexture("assets/spritesheets/koopa_spritesheet.png", "koopa_spritesheet");
 	_preLoadTexture("assets/spritesheets/transparent_coin_strip.png", "coin_spritesheet");
+	_preLoadTexture("assets/spritesheets/transparent_coin_block_spritesheet.png", "coin_block_spritesheet");
 }

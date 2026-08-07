@@ -10,10 +10,12 @@
 #include "Game/Objects/Item/SuperStar.h"
 #include "Game/Objects/Player/Player.h"
 #include "Game/Objects/Item/Coin.h"
+#include "Game/Objects/Block/CoinBlock.h"
 
 GameObjectFactory::GameObjectFactory() {
     registerPlayer("Player", createAnimated<Player>);
     registerBlock("Block", createStatic<Block>);
+    registerBlock("CoinBlock", createStatic<CoinBlock>);
     registerEnemy("Goomba", createAnimated<Goomba>);
     registerEnemy("Koopa", createAnimated<Koopa>);
     registerItem("Item", createStatic<Item>);
