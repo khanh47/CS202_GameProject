@@ -135,9 +135,27 @@ void InGameScene::_checkGameOver() {
         return;
     }
 
-    _gameOverActive = true;
-    if (_gameOverOverlay.has_value() && _gameOverTexture) {
-        _gameOverOverlay->setTexture(*_gameOverTexture);
+    // Mario died! Deduct 1 life from ScoreManager
+    int remainingLives = _scoreManager.getLives() - 1;
+    _scoreManager.setLives(remainingLives);
+    if (remainingLives > 0) {
+        // Player still has lives left -> Respawn Mario / reload level
+        _respawnPlayer();
+    } else {
+        // 0 lives left -> Trigger Game Over screen
+        _gameOverActive = true;
+        if (_gameOverOverlay.has_value() && _gameOverTexture) {
+            _gameOverOverlay->setTexture(*_gameOverTexture);
+        }
+    }
+}
+
+void InGameScene::_respawnPlayer() {
+    _gameWorld.respawnPlayer();
+    _gameWorld.setScoreManager(&_scoreManager);
+    // Rebind camera tracking to the newly spawned player
+    if (auto player = _gameWorld.getPrimaryPlayer()) {
+        _camera.setTarget(player);
     }
 }
 

@@ -32,6 +32,7 @@ public:
 
 private:
     void _checkGameOver();
+    void _respawnPlayer();
     void _drawGameOverOverlay(sf::RenderTarget& target);
 
     std::string _name;

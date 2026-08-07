@@ -77,7 +77,11 @@ void GameWorld::handleSensors(b2SensorEvents sensorEvents) {
     _interactionSystem.processSensors(sensorEvents);
 }
 
+#include "ResourceManager.h"
+#include "Game/UserInput/PlayerController.h"
+
 void GameWorld::loadMap(const LevelData& levelData) {
+    _currentLevelData = levelData;
     _worldMap.rebuild(
         levelData,
         _physicsWorld,
@@ -101,6 +105,68 @@ void GameWorld::loadLevel(const std::string& levelPath) {
     }
     for (FireballPool& pool : _fireballPools) {
         pool.setGameWorld(this);
+    }
+}
+
+void GameWorld::respawnPlayer() {
+    auto& resources = ResourceManager::getInstance();
+    const GameSettings& settings = GameSettings::getInstance();
+
+    const std::vector<std::vector<int>>& mapData = _currentLevelData.rows;
+    const int loadedRows = std::min(static_cast<int>(mapData.size()), _worldMap.getGridHeight());
+
+    for (int mapRow = 0; mapRow < loadedRows; ++mapRow) {
+        const int columns = std::min(static_cast<int>(mapData[mapRow].size()), _worldMap.getGridWidth());
+        const int screenY = WorldMap::screenRowFor(mapRow, loadedRows, _worldMap.getGridHeight());
+
+        for (int column = 0; column < columns; ++column) {
+            const int tileId = mapData[mapRow][column];
+            if (tileId == 0) continue;
+
+            auto spawnIt = _currentLevelData.spawns.find(tileId);
+            if (spawnIt == _currentLevelData.spawns.end()) continue;
+
+            for (const SpawnSpec& spec : spawnIt->second) {
+                if (spec.kind == ObjectKind::Player) {
+                    const bool isLuigi = spec.animationId.find("luigi") != std::string::npos;
+                    const std::string specCharacter = isLuigi ? "luigi" : "mario";
+                    if (settings.gameMode == GameMode::Solo && specCharacter != settings.player1Character) {
+                        continue;
+                    }
+
+                    sf::Texture& texture = resources.getTexture(spec.textureKey);
+                    const float verticalOffset = spec.centerVertically ? (_worldMap.getCellSize() - spec.size.y) * 0.5f : 0.0f;
+                    const sf::Vector2f cellPosition = {
+                        column * _worldMap.getCellSize() + _worldMap.getCellSize() * 0.5f,
+                        screenY * _worldMap.getCellSize() + _worldMap.getCellSize() * 0.5f
+                    };
+                    const sf::Vector2f spawnPosition = {
+                        cellPosition.x + spec.offset.x,
+                        cellPosition.y + spec.offset.y + verticalOffset
+                    };
+
+                    auto player = _objectFactory.createPlayer(spec.typeKey, &texture, spec.animationId);
+                    player->spawn(_physicsWorld, spawnPosition, spec.size);
+
+                    if (auto mario = std::dynamic_pointer_cast<Player>(player)) {
+                        mario->changeToNormalState();
+                        mario->setGameWorld(*this);
+
+                        if (spec.addController) {
+                            const bool useWasd = settings.gameMode == GameMode::Solo || spec.animationId == "mario";
+                            _objectStore.addController(
+                                std::make_unique<PlayerController>(
+                                    *mario,
+                                    *this,
+                                    useWasd ? PlayerController::ControlScheme::Wasd : PlayerController::ControlScheme::ArrowKeys
+                                )
+                            );
+                        }
+                    }
+                    _objectStore.addObject(std::move(player));
+                }
+            }
+        }
     }
 }
 
