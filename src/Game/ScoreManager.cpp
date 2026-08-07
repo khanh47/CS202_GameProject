@@ -56,6 +56,12 @@ void ScoreManager::handleEvent(ScoreEventType event, sf::Vector2f position, int 
             pointsAwarded = (detail > 0) ? detail : 1000;
             displayText = std::to_string(pointsAwarded);
             break;
+
+        case ScoreEventType::LostLive:
+            // Reset stomp combo ladder when a life is lost
+            _stompComboIndex = 0;
+            _lives--;
+            return;
     }
 
     if (pointsAwarded > 0) {
