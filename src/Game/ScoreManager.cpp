@@ -1,4 +1,5 @@
 #include "Game/ScoreManager.h"
+#include "Game/Objects/Block/CoinBlock.h"
 #include <cmath>
 
 ScoreManager::ScoreManager() {

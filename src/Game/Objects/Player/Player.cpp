@@ -296,13 +296,6 @@ void Player::onContact(GameObject& other, const b2ContactData& contactData, b2Sh
         return;
     }
 
-    if (auto* coinBlock = dynamic_cast<CoinBlock*>(&other)) {
-        if (_world && _world->getScoreManager()) {
-            _world->getScoreManager()->handleEvent(ScoreEventType::CoinBlockTouched, coinBlock->getPosition());
-        }
-        return;
-    }
-
     if (auto* enemy = dynamic_cast<Enemy*>(&other)) {
         // StarMan invincibility: instantly destroy any enemy on contact
         if (_state && _state->isInvincible()) {

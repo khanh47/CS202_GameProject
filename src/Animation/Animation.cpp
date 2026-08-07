@@ -335,7 +335,7 @@ AnimationSet Animation::makeCoinBlockAnimationSet() {
     );
 
     set.clips.emplace(
-        "final",
+        "empty",
         Animation::createLinearClip(
             {288, 0},
             {64, 64},
