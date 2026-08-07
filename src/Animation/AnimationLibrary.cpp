@@ -14,7 +14,6 @@ AnimationLibrary::AnimationLibrary() {
     preloadPlayerAnimationSets();
     preloadEnemyAnimationSets();
     preloadItemAnimationSets();
-    preloadCoinAnimationSets();
 }
 
 void AnimationLibrary::registerAnimationSet(const std::string& name, AnimationSet animationSet) {
@@ -52,11 +51,12 @@ void AnimationLibrary::preloadItemAnimationSets() {
 
     const AnimationSet superStarSet = Animation::makeSuperStarAnimationSet();
     registerAnimationSet("super_star", superStarSet);
-}
 
-void AnimationLibrary::preloadCoinAnimationSets() {
     const AnimationSet coinSet = Animation::makeCoinAnimationSet();
     registerAnimationSet("coin", coinSet);
+
+    const AnimationSet coinBlockSet = Animation::makeCoinBlockAnimationSet();
+    registerAnimationSet("coin_block", coinBlockSet);
 }
 
 const AnimationSet& AnimationLibrary::getAnimationSet(const std::string& name) const {

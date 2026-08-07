@@ -8,6 +8,7 @@
 #include "Game/Objects/Player/State/MegaStateDecorator.h"
 #include "Game/Objects/Player/State/StarManStateDecorator.h"
 #include "Physics/PhysicsUnits.h"
+#include "Game/Objects/Block/CoinBlock.h"
 #include "Game/Objects/Enemy/Enemy.h"
 #include "Game/Objects/Item/FireFlower.h"
 #include "Game/Objects/Item/SuperMushroom.h"
@@ -292,6 +293,13 @@ void Player::onContact(GameObject& other, const b2ContactData& contactData, b2Sh
         }
 
         coin->destroy();
+        return;
+    }
+
+    if (auto* coinBlock = dynamic_cast<CoinBlock*>(&other)) {
+        if (_world && _world->getScoreManager()) {
+            _world->getScoreManager()->handleEvent(ScoreEventType::CoinBlockTouched, coinBlock->getPosition());
+        }
         return;
     }
 

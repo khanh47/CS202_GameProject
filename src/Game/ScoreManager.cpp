@@ -61,7 +61,14 @@ void ScoreManager::handleEvent(ScoreEventType event, sf::Vector2f position, int 
             // Reset stomp combo ladder when a life is lost
             _stompComboIndex = 0;
             _lives--;
-            return;
+            break;
+
+        case ScoreEventType::CoinBlockTouched:
+            // Reset stomp combo ladder when a coin block is touched
+            addCoins(1);
+            pointsAwarded = 200;
+            displayText = "200";
+            break;
     }
 
     if (pointsAwarded > 0) {

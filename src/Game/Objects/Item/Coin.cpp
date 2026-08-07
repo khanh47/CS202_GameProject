@@ -12,7 +12,7 @@ Coin::Coin(sf::Texture& texture) : Item() {
 }
 
 void Coin::onPickup(Player& player) {
-    player.changeToFireState();
+    // player.changeToFireState();
     destroy();
 }
 

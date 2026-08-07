@@ -317,3 +317,34 @@ AnimationSet Animation::makeCoinAnimationSet() {
 
     return set;
 }
+
+AnimationSet Animation::makeCoinBlockAnimationSet() {
+    AnimationSet set;
+    set.defaultClip = "shining";
+    
+    set.clips.emplace(
+        "shining", 
+        Animation::createLinearClip (
+            {0, 0},
+            {64, 64},
+            4, 
+            {72, 0},
+            1.0f / 4.0f,
+            true
+        )
+    );
+
+    set.clips.emplace(
+        "final",
+        Animation::createLinearClip(
+            {288, 0},
+            {64, 64},
+            1,
+            {0, 0},
+            1.0f,
+            false
+        )
+    );
+
+    return set;
+}
