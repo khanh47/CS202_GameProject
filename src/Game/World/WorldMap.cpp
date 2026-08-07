@@ -55,7 +55,9 @@ void spawnFromSpec(
                 &texture
             );
             block->spawn(context.physicsWorld, spawnPosition, spec.size);
-            context.tileMap.setTile(column, screenY, 1, &texture);
+            if (spec.typeKey == "Block") {
+                context.tileMap.setTile(column, screenY, 1, &texture);
+            }
             if (spec.addSeamFilter) {
                 context.terrainSeamFilter.addBlock(
                     block,

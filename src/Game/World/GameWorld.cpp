@@ -95,8 +95,8 @@ void GameWorld::loadMap(const LevelData& levelData) {
 void GameWorld::loadLevel(const std::string& levelPath) {
     loadMap(LevelDataLoader::load(
         levelPath,
-        _worldMap.getGridWidth(),
-        _worldMap.getGridHeight()
+        _worldMap.getGridWidth() * 2,
+        _worldMap.getGridHeight() * 2
     ));
     for (const std::shared_ptr<GameObject>& object : _objectStore.objects()) {
         if (auto player = std::dynamic_pointer_cast<Player>(object)) {
