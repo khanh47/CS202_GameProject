@@ -10,7 +10,7 @@
 #include "Game/GameSettings.h"
 #include "Game/Objects/Block/Block.h"
 #include "Game/Objects/GameObject.h"
-#include "Game/Objects/Item/FireballPool.h"
+#include "Game/Objects/Projectile/FireballPool.h"
 #include "Game/World/WorldMap.h"
 #include "Game/World/WorldObjectStore.h"
 #include "ResourceManager.h"

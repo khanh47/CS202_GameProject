@@ -1,11 +1,12 @@
 #include "Game/Objects/Enemy/Enemy.h"
 #include "Game/Behaviours/Animatable.h"
+#include "Game/Behaviours/Damageable.h"
 #include "Game/Objects/GameObject.h"
 #include "Game/World/TerrainSeamFilter.h"
 #include "Physics/PhysicsUnits.h"
 #include "box2d/box2d.h"
 #include <cmath>
-#include <memory>
+
 
 Enemy::Enemy() : GameObject() {
     addBehaviour<Animatable>();
@@ -107,6 +108,19 @@ void Enemy::onRenderVisual(sf::RenderTarget& target, const sf::Vector2f& positio
 void Enemy::updateSimulation(const float &fixedDt) {
     (void)fixedDt;
 
+    if (_isDying) {
+        auto* animatable = getBehaviour<Animatable>();
+        if (animatable && animatable->getActiveAnimationName() != "dead") {
+            animatable->playAnimation("dead");
+        }
+
+        _deathTimer += fixedDt;
+        if (_deathTimer >= 9 / 7.0f) {
+            _pendingDestroy = true;
+        }
+        return;
+    }
+
     if (_supportGrid && (isBlockedAhead() || !isSupportedByGrid())) {
         turnAround();
     }
@@ -116,8 +130,16 @@ void Enemy::updateSimulation(const float &fixedDt) {
     b2Body_SetLinearVelocity(_body->getId(), velocity);
 }
 
-void Enemy::onDead() {
-    if (auto* animatable = getBehaviour<Animatable>()) {
+void Enemy::destroy() {
+    if (_isDying) {
+        return;
+    }
+
+    _isDying = true;
+    _deathTimer = 0.0f;
+
+    auto* animatable = getBehaviour<Animatable>();
+    if (animatable) {
         animatable->playAnimation("dead");
     }
 }

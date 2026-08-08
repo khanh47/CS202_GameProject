@@ -7,7 +7,7 @@
 #include "Game/Objects/GameObject.h"
 #include "Game/Objects/GameObjectFactory.h"
 #include "Game/Objects/Enemy/Enemy.h"
-#include "Game/Objects/Item/FireballPool.h"
+#include "Game/Objects/Projectile/FireballPool.h"
 #include "Game/Objects/Player/Player.h"
 #include "Game/UserInput/PlayerController.h"
 #include "Game/World/GameWorld.h"
@@ -126,6 +126,15 @@ void spawnFromSpec(
             );
             item->spawn(context.physicsWorld, spawnPosition, spec.size);
             object = std::move(item);
+            break;
+        }
+        case ObjectKind::Prop: {
+            auto prop = context.objectFactory.createProp(
+                spec.typeKey,
+                &texture
+            );
+            prop->spawn(context.physicsWorld, spawnPosition, spec.size);
+            object = std::move(prop);
             break;
         }
     }

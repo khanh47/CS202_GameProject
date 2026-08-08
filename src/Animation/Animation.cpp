@@ -170,7 +170,7 @@ AnimationSet Animation::makeGoombaAnimationSet() {
     animationSet.clips.emplace(
         "dead",
         Animation::createLinearClip(
-            {4, 450},   
+            {0, 733},   
             {32, 16},   
             1,          
             {0, 0},     
@@ -186,7 +186,7 @@ AnimationSet Animation::makeKoopaAnimationSet() {
     AnimationSet animationSet;
     animationSet.defaultClip = "walk";
 
-animationSet.clips.emplace(
+    animationSet.clips.emplace(
         "walk",
         Animation::createLinearClip(
             {6, 32},

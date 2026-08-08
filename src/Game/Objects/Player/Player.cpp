@@ -14,6 +14,8 @@
 #include "Game/Objects/Item/ConcreteItems/Coin.h"
 #include "ResourceManager.h"
 #include "Game/Objects/Player/PlayerShaders.h"
+#include "Game/Behaviours/Animatable.h"
+#include "Game/Behaviours/Damageable.h"
 
 #include <SFML/System/Clock.hpp>
 #include <algorithm>
@@ -287,7 +289,6 @@ void Player::onContact(GameObject& other, const b2ContactData& contactData, b2Sh
                 _world->getScoreManager()->handleEvent(ScoreEventType::EnemyStomped, enemy->getPosition());
             }
 
-            enemy->onDead();
             enemy->destroy();
             return;
         }

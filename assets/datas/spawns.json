@@ -8,6 +8,6 @@
     { "id": 6, "kind": "Item", "typeKey": "FireFlower", "texture": "mario_and_items", "size": [54, 54], "centerVertically": true },
     { "id": 7, "kind": "Item", "typeKey": "Coin", "texture": "coin_spritesheet", "size": [32, 64], "centerVertically": true },
     { "id": 8, "kind": "Item", "typeKey": "SuperMushroom", "texture": "mario_and_items", "size": [54, 54], "centerVertically": true },
-    { "id": 9, "kind": "Item", "typeKey": "SuperStar", "texture": "mario_and_items", "size": [54, 54], "centerVertically": true }
+    { "id": 9, "kind": "Item", "typeKey": "SuperStar", "texture": "mario_and_items", "size": [54, 54], "centerVertically": true },
   ]
 }

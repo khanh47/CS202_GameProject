@@ -4,7 +4,7 @@
 #include <memory>
 #include <SFML/Graphics.hpp>
 
-#include "Game/Objects/Item/Fireball.h"
+#include "Game/Objects/Projectile/Fireball.h"
 
 class PhysicsWorld;
 class GameWorld; // Forward declaration

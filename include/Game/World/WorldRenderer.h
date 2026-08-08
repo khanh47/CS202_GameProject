@@ -4,7 +4,7 @@
 #include <array>
 #include <string>
 
-#include "Game/Objects/Item/FireballPool.h"
+#include "Game/Objects/Projectile/FireballPool.h"
 
 class WorldMap;
 class WorldObjectStore;

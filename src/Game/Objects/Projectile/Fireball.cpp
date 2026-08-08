@@ -1,4 +1,4 @@
-#include "Game/Objects/Item/Fireball.h"
+#include "Game/Objects/Projectile/Fireball.h"
 #include "Game/Behaviours/Animatable.h"
 #include "Physics/PhysicsUnits.h"
 #include "ResourceManager.h"

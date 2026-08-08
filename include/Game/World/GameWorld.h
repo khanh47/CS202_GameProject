@@ -6,7 +6,7 @@
 #include <string>
 
 #include "Game/Objects/GameObjectFactory.h"
-#include "Game/Objects/Item/FireballPool.h"
+#include "Game/Objects/Projectile/FireballPool.h"
 #include "Game/World/WorldInteractionSystem.h"
 #include "Game/World/WorldMap.h"
 #include "Game/World/WorldObjectStore.h"

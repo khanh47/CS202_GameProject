@@ -15,7 +15,6 @@ public:
     Enemy(sf::Texture &texture, const std::string& animationSetId);
     ~Enemy();
     void setSupportGrid(const TerrainSeamFilter* filter, float cellSize = 64.0f);
-    virtual void onDead();
 
 protected:
     virtual void onCreateBodyDef(b2BodyDef& def) override;
