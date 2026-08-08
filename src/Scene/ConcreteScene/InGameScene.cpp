@@ -11,6 +11,7 @@ InGameScene::InGameScene(const std::string& name)
 
 void InGameScene::init() {
     _gameOverActive = false;
+    _winActive = false;
     _gameOverTexture = &ResourceManager::getInstance().getTexture("game_over");
     _gameOverOverlay.emplace(*_gameOverTexture);
     _gameOverPrompt.emplace(
@@ -19,6 +20,18 @@ void InGameScene::init() {
         67
     );
     _gameOverPrompt->setFillColor(sf::Color::White);
+    _winTitle.emplace(
+        ResourceManager::getInstance().getFont("Roboto"),
+        "COURSE CLEAR!",
+        82
+    );
+    _winTitle->setFillColor(sf::Color(255, 227, 102));
+    _winPrompt.emplace(
+        ResourceManager::getInstance().getFont("Roboto"),
+        "Press any key to continue",
+        67
+    );
+    _winPrompt->setFillColor(sf::Color::White);
     _gameWorld.loadLevel(_name);
     _gameWorld.setScoreManager(&_scoreManager); // Set score manager for the game world
 
@@ -56,6 +69,17 @@ void InGameScene::cleanup() {
 }
 
 void InGameScene::handleInput(const sf::Event& event) {
+    if (_winActive) {
+        if (event.is<sf::Event::KeyPressed>()
+            || event.is<sf::Event::MouseButtonPressed>()
+            || event.is<sf::Event::JoystickButtonPressed>()) {
+            if (auto mgr = getSceneManager()) {
+                mgr->requestPopScene();
+            }
+        }
+        return;
+    }
+
     if (_gameOverActive) {
         if (event.is<sf::Event::KeyPressed>()
             || event.is<sf::Event::MouseButtonPressed>()
@@ -80,16 +104,17 @@ void InGameScene::handleInput(const sf::Event& event) {
 }
 
 void InGameScene::updateSimulation(const float &fixedDt) {
-    if (_gameOverActive) {
+    if (_gameOverActive || _winActive) {
         return;
     }
 
     _gameWorld.updateSimulation(fixedDt);
+    _checkWin();
     _checkGameOver();
 }
 
 void InGameScene::updateVisuals(float deltaTime) {
-    if (_gameOverActive) {
+    if (_gameOverActive || _winActive) {
         return;
     }
 
@@ -123,11 +148,25 @@ void InGameScene::render(sf::RenderTarget& target) {
 
     if (_gameOverActive) {
         _drawGameOverOverlay(target);
+    } else if (_winActive) {
+        _drawWinOverlay(target);
     }
 }
 
+void InGameScene::_checkWin() {
+    if (_winActive) {
+        return;
+    }
+
+    if (!_gameWorld.hasWon()) {
+        return;
+    }
+
+    _winActive = true;
+}
+
 void InGameScene::_checkGameOver() {
-    if (_gameOverActive) {
+    if (_gameOverActive || _winActive) {
         return;
     }
 
@@ -156,6 +195,29 @@ void InGameScene::_respawnPlayer() {
     // Rebind camera tracking to the newly spawned player
     if (auto player = _gameWorld.getPrimaryPlayer()) {
         _camera.setTarget(player);
+    }
+}
+
+void InGameScene::_drawWinOverlay(sf::RenderTarget& target) {
+    const sf::View view = target.getDefaultView();
+    target.setView(view);
+
+    sf::RectangleShape backdrop(view.getSize());
+    backdrop.setFillColor(sf::Color(0, 0, 0, 190));
+    backdrop.setPosition({0.0f, 0.0f});
+    target.draw(backdrop);
+
+    if (_winTitle.has_value()) {
+        _winTitle->setOrigin(_winTitle->getLocalBounds().position + (_winTitle->getLocalBounds().size * 0.5f));
+        _winTitle->setPosition({view.getSize().x * 0.5f, view.getSize().y * 0.42f});
+        target.draw(*_winTitle);
+    }
+
+    if (_winPrompt.has_value()) {
+        _winPrompt->setOrigin(_winPrompt->getLocalBounds().position + (_winPrompt->getLocalBounds().size * 0.5f));
+        _winPrompt->setPosition({view.getSize().x * 0.5f, view.getSize().y * 0.58f});
+        _winPrompt->setFillColor(sf::Color(255, 255, 255, 235));
+        target.draw(*_winPrompt);
     }
 }
 

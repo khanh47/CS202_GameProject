@@ -29,6 +29,7 @@ public:
     void loadLevel(const std::string& levelPath);
     void loadMap(const LevelData& levelData);
     void respawnPlayer();
+    void reachFlagpole(sf::Vector2f position);
 
     bool spawnFireball(sf::Vector2f spawnPos, bool facingRight, int playerIndex);
     std::shared_ptr<GameObject> spawnItem(const std::string& itemTypeKey, sf::Vector2f position, sf::Vector2f size = {54.0f, 54.0f});
@@ -41,6 +42,8 @@ public:
     float getCellSize() const { return _worldMap.getCellSize(); }
     std::shared_ptr<GameObject> getPrimaryPlayer() const;
     bool hasLivingPlayers() const;
+    bool hasWon() const { return _levelCleared; }
+    sf::Vector2f getFlagpolePosition() const { return _flagpolePosition; }
     sf::FloatRect getBounds() const;
 
     // Add getter & setter for ScoreManager
@@ -52,6 +55,8 @@ private:
     LevelData _currentLevelData;
     ScoreManager* _scoreManager = nullptr;
     float _freezeTimer = 0.0f;
+    bool _levelCleared = false;
+    sf::Vector2f _flagpolePosition{0.0f, 0.0f};
     PhysicsWorld _physicsWorld;
     GameObjectFactory _objectFactory;
     std::array<FireballPool, 2> _fireballPools;

@@ -379,3 +379,22 @@ AnimationSet Animation::makeLuckyBlockAnimationSet() {
 
     return set;
 }
+
+AnimationSet Animation::makeFlagpoleAnimationSet() {
+    AnimationSet animationSet;
+    animationSet.defaultClip = "idle";
+
+    animationSet.clips.emplace(
+        "idle",
+        Animation::createLinearClip(
+            {217, 0},
+            {29, 168},
+            3,
+            {29, 0},
+            1.0f,
+            true
+        )
+    );
+
+    return animationSet;
+}

@@ -24,4 +24,5 @@ namespace Animation {
     AnimationSet makeCoinAnimationSet();
     AnimationSet makeCoinBlockAnimationSet();
     AnimationSet makeLuckyBlockAnimationSet();
+    AnimationSet makeFlagpoleAnimationSet();
 }

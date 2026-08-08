@@ -32,14 +32,19 @@ public:
 
 private:
     void _checkGameOver();
+    void _checkWin();
     void _respawnPlayer();
     void _drawGameOverOverlay(sf::RenderTarget& target);
+    void _drawWinOverlay(sf::RenderTarget& target);
 
     std::string _name;
     bool _gameOverActive = false;
+    bool _winActive = false;
     std::optional<sf::Sprite> _gameOverOverlay;
     std::optional<sf::Text> _gameOverPrompt;
     const sf::Texture* _gameOverTexture = nullptr;
+    std::optional<sf::Text> _winTitle;
+    std::optional<sf::Text> _winPrompt;
 
     GameWorld _gameWorld;
     Camera _camera;
