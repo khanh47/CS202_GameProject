@@ -185,6 +185,31 @@ bool GameWorld::spawnFireball(
     );
 }
 
+std::shared_ptr<GameObject> GameWorld::spawnItem(
+    const std::string& itemTypeKey,
+    sf::Vector2f position,
+    sf::Vector2f size
+) {
+    sf::Texture* texture = nullptr;
+    auto& resources = ResourceManager::getInstance();
+    if (itemTypeKey == "Coin") {
+        texture = &resources.getTexture("coin_spritesheet");
+    } else {
+        texture = &resources.getTexture("mario_and_items");
+    }
+
+    try {
+        auto item = _objectFactory.createItem(itemTypeKey, texture);
+        if (item) {
+            item->spawn(_physicsWorld, position, size);
+            _objectStore.addObject(item);
+        }
+        return item;
+    } catch (...) {
+        return nullptr;
+    }
+}
+
 void GameWorld::freeze(float durationSeconds) {
     _freezeTimer = std::max(_freezeTimer, durationSeconds);
 }

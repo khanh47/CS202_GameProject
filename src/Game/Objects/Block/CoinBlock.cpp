@@ -47,7 +47,7 @@ void CoinBlock::onContact(GameObject& other, const b2ContactData& contactData, b
             // Detect Player hitting from below (upward contact normal or player below block)
             if (normal.y >= 0.3f || player->getPosition().y > getPosition().y) {
                 capacity--;
-                _hitCooldown = 0.1f; // Cooldown to prevent multi-hits in 1 jump
+                _hitCooldown = 0.0f; // Cooldown to prevent multi-hits in 1 jump
                 _bumpTimer = 0.15f;  // Trigger bump/enlarge animation (0.15 seconds)
 
                 // Spawn popping coin animation

@@ -11,11 +11,13 @@
 #include "Game/Objects/Player/Player.h"
 #include "Game/Objects/Item/Coin.h"
 #include "Game/Objects/Block/CoinBlock.h"
+#include "Game/Objects/Block/LuckyBlock.h"
 
 GameObjectFactory::GameObjectFactory() {
     registerPlayer("Player", createAnimated<Player>);
     registerBlock("Block", createStatic<Block>);
     registerBlock("CoinBlock", createStatic<CoinBlock>);
+    registerBlock("LuckyBlock", createStatic<LuckyBlock>);
     registerEnemy("Goomba", createAnimated<Goomba>);
     registerEnemy("Koopa", createAnimated<Koopa>);
     registerItem("Item", createStatic<Item>);

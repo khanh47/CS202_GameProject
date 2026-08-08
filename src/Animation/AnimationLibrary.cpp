@@ -57,6 +57,9 @@ void AnimationLibrary::preloadItemAnimationSets() {
 
     const AnimationSet coinBlockSet = Animation::makeCoinBlockAnimationSet();
     registerAnimationSet("coin_block", coinBlockSet);
+
+    const AnimationSet luckyBlockSet = Animation::makeLuckyBlockAnimationSet();
+    registerAnimationSet("lucky_block", luckyBlockSet);
 }
 
 const AnimationSet& AnimationLibrary::getAnimationSet(const std::string& name) const {
