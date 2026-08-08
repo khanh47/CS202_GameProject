@@ -468,7 +468,7 @@ void Player::onUpdateVisuals(float deltaTime) {
         }
 
         // Lerp from the pre-transformation scale to target scale
-        float targetScale = (_transformTarget == TransformTarget::StarMan) ? _transformStartScale : 1.25f;
+        float targetScale = (_transformTarget == TransformTarget::StarMan) ? _transformStartScale : 1.3f;
         float progress = 1.0f - (_transformTimer / _transformDuration);
         progress = std::max(0.0f, std::min(1.0f, progress));
         float currentScale = _transformStartScale + (targetScale - _transformStartScale) * progress;

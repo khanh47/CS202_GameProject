@@ -19,7 +19,7 @@ public:
 
     float getMoveSpeedMultiplier() const override { return 1.1f; }
     float getJumpSpeedMultiplier() const override { return 1.15f; }
-    sf::Vector2f getScaleMultiplier() const override { return {1.25f, 1.25f}; }
+    sf::Vector2f getScaleMultiplier() const override { return {1.3f, 1.3f}; }
     bool canShootFireballs() const override { return false; }
 
     void handleSuperMushroom(Player& player) override;

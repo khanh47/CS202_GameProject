@@ -20,7 +20,7 @@ public:
 
     float getMoveSpeedMultiplier() const override { return 1.1f; }
     float getJumpSpeedMultiplier() const override { return 1.1f; }
-    sf::Vector2f getScaleMultiplier() const override { return {1.25f, 1.25f}; }
+    sf::Vector2f getScaleMultiplier() const override { return {1.3f, 1.3f}; }
     bool canShootFireballs() const override { return true; }
     std::unique_ptr<IAttackStrategy> createAttackStrategy() const override {
         return std::make_unique<FireballAttackStrategy>();
