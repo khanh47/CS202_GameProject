@@ -64,10 +64,6 @@ void GameWorld::updateSimulation(const float& fixedDt) {
 }
 
 void GameWorld::updateVisuals(float deltaTime) {
-    if (_levelCleared) {
-        return;
-    }
-
     _objectStore.updateVisuals(deltaTime);
     for (FireballPool& pool : _fireballPools) {
         pool.updateVisuals(deltaTime);
