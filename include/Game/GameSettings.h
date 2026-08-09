@@ -33,6 +33,7 @@ public:
     sf::Keyboard::Key keyMoveRight = sf::Keyboard::Key::D;
     sf::Keyboard::Key keyJump = sf::Keyboard::Key::W;
     sf::Keyboard::Key keyAttack = sf::Keyboard::Key::X;
+    sf::Keyboard::Key keyInteract = sf::Keyboard::Key::LShift;
 
     sf::Keyboard::Key getKeyForAction(ActionType action) const;
     void setKeyForAction(ActionType action, sf::Keyboard::Key key);

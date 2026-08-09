@@ -37,6 +37,7 @@ private:
     std::shared_ptr<UI::Button> _btnMoveRight;
     std::shared_ptr<UI::Button> _btnJump;
     std::shared_ptr<UI::Button> _btnAttack;
+    std::shared_ptr<UI::Button> _btnButton;
     std::shared_ptr<UI::Button> _btnBack;
 
     std::optional<ActionType> _rebindingAction;

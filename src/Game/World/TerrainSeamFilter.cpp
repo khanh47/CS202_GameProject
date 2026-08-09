@@ -3,12 +3,11 @@
 #include <cmath>
 
 #include "Game/Objects/GameObject.h"
+#include "Physics/CollisionFilter.h"
 #include "Physics/PhysicsUnits.h"
 #include "Physics/PhysicsWorld.h"
 
 namespace {
-constexpr uint64_t environmentCategory = 0x0001;
-constexpr uint64_t playerCategory = 0x0002;
 constexpr float seamToleranceMeters = 3.0f / PhysicsUnits::pixelsPerMeter;
 constexpr float minimumLateralNormal = 0.05f;
 
@@ -79,14 +78,20 @@ bool TerrainSeamFilter::shouldEnableContact(
     b2Pos point,
     b2Vec2 normal
 ) const {
-    const bool playerIsA = belongsTo(playerCategory, shapeA);
-    const bool playerIsB = belongsTo(playerCategory, shapeB);
-    if (playerIsA == playerIsB) {
+    const bool walkerIsA = belongsTo(
+        CollisionFilter::PLAYER | CollisionFilter::SHELL,
+        shapeA
+    );
+    const bool walkerIsB = belongsTo(
+        CollisionFilter::PLAYER | CollisionFilter::SHELL,
+        shapeB
+    );
+    if (walkerIsA == walkerIsB) {
         return true;
     }
 
-    const b2ShapeId terrainShape = playerIsA ? shapeB : shapeA;
-    if (!belongsTo(environmentCategory, terrainShape)) {
+    const b2ShapeId terrainShape = walkerIsA ? shapeB : shapeA;
+    if (!belongsTo(CollisionFilter::ENV, terrainShape)) {
         return true;
     }
 
@@ -115,14 +120,14 @@ bool TerrainSeamFilter::shouldEnableContact(
         return true;
     }
 
-    const b2Vec2 playerToTerrain = playerIsA
+    const b2Vec2 walkerToTerrain = walkerIsA
         ? normal
         : b2Vec2{-normal.x, -normal.y};
 
     // A vertical top/underside manifold is legitimate. A lateral or diagonal
     // manifold on a shared tile edge describes an edge that is inside the
     // union of the two adjacent blocks and must not reach the solver.
-    return std::abs(playerToTerrain.x) < minimumLateralNormal;
+    return std::abs(walkerToTerrain.x) < minimumLateralNormal;
 }
 
 void TerrainSeamFilter::setBoundaryColumns(int leftColumn, int rightColumn) {

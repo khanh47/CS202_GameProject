@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Game/Behaviours/SparkleEffect.h"
-#include "Game/Objects/Item/Item.h"
+#include "../Item.h"
 
 class Player;
 

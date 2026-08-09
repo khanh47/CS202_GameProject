@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Game/Objects/Item/Item.h"
+#include "../Item.h"
 
 class Player;
 
@@ -8,11 +8,11 @@ class Player;
  * @brief Represents a Fire Flower pickup item.
  * When touched by Mario, changes Mario's state to FireState.
  */
-class Coin : public Item {
+class FireFlower : public Item {
 public:
-    Coin();
-    Coin(sf::Texture& texture);
-    ~Coin() override = default;
+    FireFlower();
+    FireFlower(sf::Texture& texture);
+    ~FireFlower() override = default;
 
     void onPickup(Player& player);
 

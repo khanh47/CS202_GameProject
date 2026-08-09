@@ -4,6 +4,7 @@
 
 #include "Game/GameSettings.h"
 #include "Game/Objects/Player/Player.h"
+#include "Game/Objects/Projectile/KoopaShell.h"
 #include "Game/World/LevelDataLoader.h"
 
 GameWorld::GameWorld() = default;
@@ -195,6 +196,15 @@ bool GameWorld::spawnFireball(
         spawnPosition,
         facingRight
     );
+}
+
+bool GameWorld::spawnKoopaShell(sf::Vector2f spawnPosition, bool facingRight) {
+    sf::Texture& itemsTexture = ResourceManager::getInstance().getTexture("koopa_spritesheet");
+    auto shell = std::make_shared<KoopaShell>(itemsTexture);
+    shell->setGameWorld(this);
+    shell->spawn(_physicsWorld, spawnPosition, {60.0f, 48.0f});
+    _objectStore.addObject(std::move(shell));
+    return true;
 }
 
 std::shared_ptr<GameObject> GameWorld::spawnItem(

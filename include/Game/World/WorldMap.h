@@ -7,7 +7,7 @@
 #include <string>
 #include <vector>
 
-#include "Game/Objects/Item/FireballPool.h"
+#include "Game/Objects/Projectile/FireballPool.h"
 #include "Game/World/LevelDataLoader.h"
 #include "Game/World/TerrainSeamFilter.h"
 #include "Game/World/TileMap.h"

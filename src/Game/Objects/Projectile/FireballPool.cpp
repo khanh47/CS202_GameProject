@@ -1,4 +1,4 @@
-#include "Game/Objects/Item/FireballPool.h"
+#include "Game/Objects/Projectile/FireballPool.h"
 #include "Physics/PhysicsWorld.h"
 
 void FireballPool::initialize(const PhysicsWorld& physicsWorld, sf::Texture& texture) {

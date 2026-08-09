@@ -125,6 +125,30 @@ AnimationSet Animation::makeDefaultPlayerAnimationSet() {
     );
 
     animationSet.clips.emplace(
+        "hold_stand",
+        Animation::createLinearClip(
+            {140, 176},
+            {28, 32},
+            1,
+            {0, 0},
+            1.0f,
+            false
+        )
+    );
+
+    animationSet.clips.emplace(
+        "hold_walk",
+        Animation::createLinearClip(
+            {48, 224},
+            {32, 32},
+            6,
+            {32, 0},
+            1.0f / 6.0f,
+            true
+        )
+    );
+
+    animationSet.clips.emplace(
         "victory",
         Animation::createLinearClip(
             {48, 320},   
@@ -170,8 +194,20 @@ AnimationSet Animation::makeGoombaAnimationSet() {
     animationSet.clips.emplace(
         "dead",
         Animation::createLinearClip(
-            {4, 450},   
-            {32, 32},   
+            {2, 302},
+            {17, 18},
+            1,       
+            {0, 0}, 
+            1.0f,
+            false 
+        )
+    );
+
+    animationSet.clips.emplace(
+        "stomped",
+        Animation::createLinearClip(
+            {0, 730},   
+            {32, 16},   
             1,          
             {0, 0},     
             1.0f,       
@@ -186,7 +222,7 @@ AnimationSet Animation::makeKoopaAnimationSet() {
     AnimationSet animationSet;
     animationSet.defaultClip = "walk";
 
-animationSet.clips.emplace(
+    animationSet.clips.emplace(
         "walk",
         Animation::createLinearClip(
             {6, 32},
@@ -201,8 +237,8 @@ animationSet.clips.emplace(
     animationSet.clips.emplace(
         "dead",
         Animation::createLinearClip(
-            {180, 160},
-            {20, 16},
+            {10, 159},
+            {19, 15},
             1,          
             {0, 0},      
             1.0f,
@@ -213,11 +249,11 @@ animationSet.clips.emplace(
     animationSet.clips.emplace(
         "slide",
         Animation::createLinearClip(
-            {216, 269},
-            {16, 14},
-            4,          
-            {19, 0},
-            1.0f / 4.0f,        
+            {10, 159},
+            {19, 15},
+            8,          
+            {24, 0},
+            1.0f / 8.0f,        
             true 
         )
     );

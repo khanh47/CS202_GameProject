@@ -7,13 +7,15 @@
 #include "Game/Objects/Player/State/FireState.h"
 #include "Game/Objects/Player/State/MegaStateDecorator.h"
 #include "Game/Objects/Player/State/StarManStateDecorator.h"
+#include "Physics/CollisionFilter.h"
 #include "Physics/PhysicsUnits.h"
 #include "Game/Objects/Block/CoinBlock.h"
 #include "Game/Objects/Enemy/Enemy.h"
-#include "Game/Objects/Item/FireFlower.h"
-#include "Game/Objects/Item/SuperMushroom.h"
-#include "Game/Objects/Item/SuperStar.h"
-#include "Game/Objects/Item/Coin.h"
+#include "Game/Objects/Item/ConcreteItems/FireFlower.h"
+#include "Game/Objects/Item/ConcreteItems/SuperMushroom.h"
+#include "Game/Objects/Item/ConcreteItems/SuperStar.h"
+#include "Game/Objects/Item/ConcreteItems/Coin.h"
+#include "Game/Objects/Projectile/KoopaShell.h"
 #include "ResourceManager.h"
 #include "Game/Objects/Player/PlayerShaders.h"
 #include "Game/Behaviours/Invincible.h"
@@ -56,11 +58,15 @@ Player::~Player() = default;
 void Player::destroy() {
     if (auto* invincible = getBehaviour<Invincible>()) return;
 
+    b2ShapeId shape = _body->getHitbox();
+    b2Filter filter = b2Shape_GetFilter(shape);
+    filter.maskBits ^= CollisionFilter::ENEMY | CollisionFilter::SHELL;
+    if (GameSettings::getInstance().gameMode == GameMode::Minigame) {
+      filter.maskBits ^= CollisionFilter::MINIGAME_MASK;
+    }
+    b2Shape_SetFilter(shape, filter);
+
     if (_isDying) {
-        b2ShapeId shape = _body->getHitbox();
-        b2Filter filter = b2Shape_GetFilter(shape);
-        filter.maskBits = 0;
-        b2Shape_SetFilter(shape, filter);
         return;
     }
 
@@ -300,6 +306,46 @@ void Player::onContact(GameObject& other, const b2ContactData& contactData, b2Sh
         return;
     }
 
+    if (auto* shell = dynamic_cast<KoopaShell*>(&other)) {
+        // StarMan invincibility: instantly destroy any shell on contact
+        if (_state && _state->isInvincible()) {
+
+            if (_world && _world->getScoreManager()) {
+                _world->getScoreManager()->handleEvent(ScoreEventType::EnemyStomped, shell->getPosition());
+            }
+
+            shell->destroy();
+            return;
+        }
+
+        if (b2Shape_IsValid(ownShape)) {
+            b2Vec2 normal = contactData.manifold.normal;
+            if (!B2_ID_EQUALS(contactData.shapeIdA, ownShape)) {
+                normal = {-normal.x, -normal.y};
+            }
+            if (contactData.manifold.pointCount > 0 && normal.y >= 0.5f) {
+                // Stomping the shell: stop a sliding shell, kick a resting one
+                if (shell->isSliding()) {
+                    shell->stop();
+                } else {
+                    shell->kick(!isFacingLeft());
+                }
+                b2BodyId bodyId = b2Shape_GetBody(ownShape);
+                b2Vec2 vel = b2Body_GetLinearVelocity(bodyId);
+                vel.y = -12.0f;
+                b2Body_SetLinearVelocity(bodyId, vel);
+            } else {
+                // Side contact: sliding shells hurt, resting shells get kicked
+                if (shell->isSliding() && _state) {
+                    _state->handleEnemy(*this);
+                } else {
+                    shell->kick(!isFacingLeft());
+                }
+            }
+        }
+        return;
+    }
+
     if (auto* enemy = dynamic_cast<Enemy*>(&other)) {
         // StarMan invincibility: instantly destroy any enemy on contact
         if (_state && _state->isInvincible()) {
@@ -324,7 +370,7 @@ void Player::onContact(GameObject& other, const b2ContactData& contactData, b2Sh
                     _world->getScoreManager()->handleEvent(ScoreEventType::EnemyStomped, enemy->getPosition());
                 }
                 
-                enemy->destroy();
+                enemy->onStomp();
                 b2BodyId bodyId = b2Shape_GetBody(ownShape);
                 b2Vec2 vel = b2Body_GetLinearVelocity(bodyId);
                 vel.y = -12.0f;
@@ -370,12 +416,10 @@ void Player::onCreateShapeDef(b2ShapeDef& def) {
     def.material.friction = 0.0f;
     def.enablePreSolveEvents = true;
 
-    // Category 0x0002 (Player), Mask 0x0001 | 0x0008 (Environment + Enemy)
-    // Excludes Category 0x0004 (Fireball) so fireballs pass completely through Player
-    def.filter.categoryBits = 0x0002;
-    def.filter.maskBits = 0x0001 | 0x0008 | 0x0010 | 0x0002;
-    if (GameSettings::getInstance().gameMode == GameMode::Coop)
-        def.filter.maskBits ^= 0x0002; // exclues player if in coop so that they can phase thru each other.
+    def.filter.categoryBits = CollisionFilter::PLAYER;
+    def.filter.maskBits = CollisionFilter::PLAYER_MASK;
+    if (GameSettings::getInstance().gameMode == GameMode::Minigame)
+        def.filter.maskBits |= CollisionFilter::MINIGAME_MASK;
 }
 
 b2Polygon Player::makeHitbox(sf::Vector2f hitboxPixels) const {
@@ -472,7 +516,7 @@ void Player::onUpdateVisuals(float deltaTime) {
         }
 
         // Lerp from the pre-transformation scale to target scale
-        float targetScale = (_transformTarget == TransformTarget::StarMan) ? _transformStartScale : 1.3f;
+        float targetScale = (_transformTarget == TransformTarget::StarMan) ? _transformStartScale : 1.5f;
         float progress = 1.0f - (_transformTimer / _transformDuration);
         progress = std::max(0.0f, std::min(1.0f, progress));
         float currentScale = _transformStartScale + (targetScale - _transformStartScale) * progress;
@@ -480,7 +524,7 @@ void Player::onUpdateVisuals(float deltaTime) {
         sf::Vector2f scaledHitbox = {_baseHitboxPixels.x * currentScale, _baseHitboxPixels.y * currentScale};
         updateHitboxSize(scaledHitbox);
         if (auto* animatable = getBehaviour<Animatable>()) {
-            animatable->setVisualScale({1.8f, 1.0f});
+            animatable->setVisualScale({2.5f, 1.1f});
             animatable->updateVisualState(deltaTime, scaledHitbox, facingLeft);
         }
         return;
@@ -502,7 +546,7 @@ void Player::onUpdateVisuals(float deltaTime) {
     sf::Vector2f scaledHitbox = {_baseHitboxPixels.x * scaleMult.x, _baseHitboxPixels.y * scaleMult.y};
     updateHitboxSize(scaledHitbox);
     if (auto* animatable = getBehaviour<Animatable>()) {
-        animatable->setVisualScale({1.8f, 1.0f});
+        animatable->setVisualScale({2.5f, 1.1f});
         animatable->updateVisualState(deltaTime, scaledHitbox, facingLeft);
     }
 

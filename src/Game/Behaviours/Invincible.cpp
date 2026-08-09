@@ -26,7 +26,7 @@ void Invincible::refreshCollisionMask() {
     }
 
     b2Filter filter = _savedFilter;
-    filter.maskBits &= ~enemyCategoryBits;
+    filter.maskBits &= ~CollisionFilter::ENEMY;
     b2Shape_SetFilter(hitbox, filter);
 }
 

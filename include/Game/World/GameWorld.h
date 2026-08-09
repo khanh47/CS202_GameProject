@@ -6,7 +6,7 @@
 #include <string>
 
 #include "Game/Objects/GameObjectFactory.h"
-#include "Game/Objects/Item/FireballPool.h"
+#include "Game/Objects/Projectile/FireballPool.h"
 #include "Game/World/WorldInteractionSystem.h"
 #include "Game/World/WorldMap.h"
 #include "Game/World/WorldObjectStore.h"
@@ -32,6 +32,7 @@ public:
     void reachFlagpole(sf::Vector2f position);
 
     bool spawnFireball(sf::Vector2f spawnPos, bool facingRight, int playerIndex);
+    bool spawnKoopaShell(sf::Vector2f spawnPos, bool facingRight);
     std::shared_ptr<GameObject> spawnItem(const std::string& itemTypeKey, sf::Vector2f position, sf::Vector2f size = {54.0f, 54.0f});
     void freeze(float durationSeconds);
     bool isFrozen() const { return _freezeTimer > 0.0f; }

@@ -1,6 +1,7 @@
-#include "Game/Objects/Item/Coin.h"
+#include "Game/Objects/Item/ConcreteItems/Coin.h"
 #include "Game/Behaviours/Animatable.h"
 #include "Game/Objects/Player/Player.h"
+#include "Physics/CollisionFilter.h"
 
 Coin::Coin() : Item() {
 }
@@ -24,8 +25,8 @@ void Coin::onCreateShapeDef(b2ShapeDef& def) {
     def.isSensor = true;
     def.density = 0.0f;
 
-    def.filter.categoryBits = 0x0010;
-    def.filter.maskBits = 0x0002;
+    def.filter.categoryBits = CollisionFilter::PICKUP;
+    def.filter.maskBits = CollisionFilter::PLAYER;
 }
 
 void Coin::onUpdateVisuals(float deltaTime) {
