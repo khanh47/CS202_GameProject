@@ -46,7 +46,7 @@ LevelData LevelDataLoader::load(
     rows.reserve(encodedRows.size());
     for (const auto& encodedRow : encodedRows) {
         if (!encodedRow.is_string()) {
-            throw std::runtime_error("Every level row must be a digit string");
+            throw std::runtime_error("Every level row must be a tile string");
         }
         const std::string rowText = encodedRow.get<std::string>();
         if (rowText.empty() || rowText.size() > static_cast<std::size_t>(maximumWidth)) {
@@ -54,12 +54,18 @@ LevelData LevelDataLoader::load(
         }
 
         std::vector<int> row;
+        int tileId = 0;
         row.reserve(rowText.size());
         for (const char tile : rowText) {
+            if (tile == ' ') {
+                row.push_back(tileId);
+                tileId = 0;
+                continue;
+            }
             if (tile < '0' || tile > '9') {
                 throw std::runtime_error("Level contains an unsupported tile id");
             }
-            row.push_back(tile - '0');
+            tileId = tileId * 10 + (tile - '0');
         }
         rows.push_back(std::move(row));
     }

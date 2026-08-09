@@ -15,6 +15,9 @@ public:
     Enemy(sf::Texture &texture, const std::string& animationSetId);
     ~Enemy();
     void setSupportGrid(const TerrainSeamFilter* filter, float cellSize = 64.0f);
+    virtual void onStomp() = 0;
+    void destroy() override;
+    bool isDying() { return _isDying; }
 
 protected:
     virtual void onCreateBodyDef(b2BodyDef& def) override;
@@ -22,6 +25,9 @@ protected:
     virtual void onUpdateVisuals(float deltaTime) override;
     virtual void onRenderVisual(sf::RenderTarget& target, const sf::Vector2f& position, float angleDegrees) override;
     virtual void updateSimulation(const float &fixedDt) override;
+
+    bool _isDying = false;
+    float _deathTimer = 0.0f;
 
 private:
     bool isSupportedByGrid() const;

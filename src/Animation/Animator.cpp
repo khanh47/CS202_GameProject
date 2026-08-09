@@ -25,6 +25,7 @@ void Animator::play(const std::string& name) {
     _currentFrameId = 0;
     _elapsedTime = 0.f;
     _paused = false;
+    _animationDone = false;
 }
 
 void Animator::stop() {
@@ -32,6 +33,7 @@ void Animator::stop() {
     _currentFrameId = 0;
     _elapsedTime = 0.f;
     _paused = false;
+    _animationDone = false;
 }
 
 void Animator::pause() {
@@ -80,8 +82,9 @@ bool Animator::update(float deltaTime) {
             continue;
         }
 
-        stop();
-
+        _currentFrameId = animation.getFrameCount() - 1;
+        _paused = true;
+        _animationDone = true;
         frameChanged = true;
         break;
     }
@@ -116,6 +119,10 @@ bool Animator::isPlaying() const {
 
 bool Animator::isPaused() const {
     return hasActiveAnimation() && _paused;
+}
+
+bool Animator::isAnimationDone() const {
+    return hasActiveAnimation() && _animationDone;
 }
 
 std::string Animator::getActiveAnimationName() const {

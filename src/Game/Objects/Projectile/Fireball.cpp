@@ -5,9 +5,11 @@
 #include "Game/Objects/Block/Block.h"
 #include "Game/Objects/Player/Player.h"
 #include "Game/Objects/Enemy/Enemy.h"
+#include "Game/Objects/Projectile/KoopaShell.h"
 #include "Game/World/GameWorld.h"
 #include "Game/ScoreManager.h"
 #include "Game/GameSettings.h"
+#include "Physics/CollisionFilter.h"
 
 Fireball::Fireball() : GameObject() {
     addBehaviour<Animatable>();
@@ -101,6 +103,13 @@ void Fireball::onContact(GameObject& other, const b2ContactData&, b2ShapeId) {
         other.destroy();
         deactivate();
     }
+
+    if (auto* shell = dynamic_cast<KoopaShell*>(&other)) {
+        shell->destroy();
+        deactivate();
+        return;
+    }
+
     if (auto* player = dynamic_cast<Player*>(&other)) {
         other.destroy();
         deactivate();
@@ -122,10 +131,10 @@ void Fireball::onCreateShapeDef(b2ShapeDef& def) {
 
     // Filter bits: Category 0x0004 (Fireball), Mask 0x0001 (Collides ONLY with environment/blocks)
     // Fireballs pass freely through player (0x0002) and other fireballs (0x0004)
-    def.filter.categoryBits = 0x0004;
-    def.filter.maskBits = 0x0001 | 0x0008;
+    def.filter.categoryBits = CollisionFilter::FIREBALL;
+    def.filter.maskBits = CollisionFilter::FIREBALL_MASK;
     if (GameSettings::getInstance().gameMode == GameMode::Minigame) {
-        def.filter.maskBits |= 0x0002;
+        def.filter.maskBits |= CollisionFilter::PLAYER;
     }
 }
 

@@ -10,6 +10,7 @@
 #include "Game/Behaviours/Behaviour.h"
 #include "Physics/PhysicsBody.h"
 #include "Physics/PhysicsWorld.h"
+#include "box2d/id.h"
 
 class GameObject {
 public:
@@ -22,13 +23,14 @@ public:
     virtual void render(sf::RenderTarget &target);
 
     virtual void spawn(const PhysicsWorld &physicsWorld, sf::Vector2f spawnPixels, sf::Vector2f hitboxPixels);
-    virtual void destroy() { _pendingDestroy = true; }
+    virtual void destroy();
     
     bool isPendingDestroy() { return _pendingDestroy; }
     sf::Vector2f getPosition() const;
     virtual sf::Vector2f getVelocity() const;
 
     sf::Vector2f getHitboxPixels() const { return _hitboxPixels; }
+    std::shared_ptr<PhysicsBody> getPhysicsBody() const { return _body; }
 
     virtual void onContact(GameObject& other, const b2ContactData& contactData, b2ShapeId ownShape) {}
     virtual void finalizeGroundContacts() {}

@@ -7,12 +7,14 @@
 #include "Game/Objects/GameObject.h"
 #include "Game/Objects/GameObjectFactory.h"
 #include "Game/Objects/Enemy/Enemy.h"
+#include "Game/Objects/Enemy/ConcreteEnemy/Koopa.h"
 #include "Game/Objects/Projectile/FireballPool.h"
 #include "Game/Objects/Player/Player.h"
 #include "Game/UserInput/PlayerController.h"
 #include "Game/World/GameWorld.h"
 #include "Game/World/SpawnSpec.h"
 #include "Game/World/WorldObjectStore.h"
+#include "Physics/CollisionFilter.h"
 #include "Physics/PhysicsUnits.h"
 #include "Physics/PhysicsWorld.h"
 #include "ResourceManager.h"
@@ -55,7 +57,9 @@ void spawnFromSpec(
                 &texture
             );
             block->spawn(context.physicsWorld, spawnPosition, spec.size);
-            context.tileMap.setTile(column, screenY, 1, &texture);
+            if (spec.typeKey == "Block") {
+                context.tileMap.setTile(column, screenY, 1, &texture);
+            }
             if (spec.addSeamFilter) {
                 context.terrainSeamFilter.addBlock(
                     block,
@@ -116,6 +120,9 @@ void spawnFromSpec(
             if (auto e = std::dynamic_pointer_cast<Enemy>(enemy)) {
                 e->setSupportGrid(&context.terrainSeamFilter, context.cellSize);
             }
+            if (auto koopa = std::dynamic_pointer_cast<Koopa>(enemy)) {
+                koopa->setGameWorld(&context.gameWorld);
+            }
             object = std::move(enemy);
             break;
         }
@@ -126,15 +133,6 @@ void spawnFromSpec(
             );
             item->spawn(context.physicsWorld, spawnPosition, spec.size);
             object = std::move(item);
-            break;
-        }
-        case ObjectKind::Prop: {
-            auto prop = context.objectFactory.createProp(
-                spec.typeKey,
-                &texture
-            );
-            prop->spawn(context.physicsWorld, spawnPosition, spec.size);
-            object = std::move(prop);
             break;
         }
     }
@@ -261,7 +259,7 @@ void WorldMap::createBoundaryWalls(PhysicsWorld& physicsWorld) {
     wallDef.type = b2_staticBody;
 
     b2ShapeDef shapeDef = b2DefaultShapeDef();
-    shapeDef.filter.categoryBits = 0x0001;
+    shapeDef.filter.categoryBits = CollisionFilter::ENV;
     shapeDef.enableContactEvents = false;
     shapeDef.enableSensorEvents = false;
 

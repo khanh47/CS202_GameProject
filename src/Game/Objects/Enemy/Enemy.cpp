@@ -1,10 +1,11 @@
 #include "Game/Objects/Enemy/Enemy.h"
-#include "Game/Behaviours/Animatable.h"
-#include "Game/Behaviours/Damageable.h"
 #include "Game/Objects/GameObject.h"
 #include "Game/World/TerrainSeamFilter.h"
+#include "Physics/CollisionFilter.h"
 #include "Physics/PhysicsUnits.h"
 #include "box2d/box2d.h"
+#include "box2d/id.h"
+#include "box2d/types.h"
 #include <cmath>
 
 
@@ -87,9 +88,8 @@ void Enemy::onCreateBodyDef(b2BodyDef& def) {
 void Enemy::onCreateShapeDef(b2ShapeDef& def) {
     def.density = 1.0f;
     def.material.friction = 0.0f;
-    
-    // Category 0x0008 (Enemy)
-    def.filter.categoryBits = 0x0008;
+    def.filter.maskBits = CollisionFilter::ENEMY_MASK;
+    def.filter.categoryBits = CollisionFilter::ENEMY;
 }
 
 void Enemy::onUpdateVisuals(float deltaTime) {
@@ -108,19 +108,17 @@ void Enemy::onRenderVisual(sf::RenderTarget& target, const sf::Vector2f& positio
 void Enemy::updateSimulation(const float &fixedDt) {
     (void)fixedDt;
 
+    auto* animatable = getBehaviour<Animatable>();
+
     if (_isDying) {
-        auto* animatable = getBehaviour<Animatable>();
-        if (animatable && animatable->getActiveAnimationName() != "dead") {
-            animatable->playAnimation("dead");
-        }
+        animatable->playAnimation("dead");
 
         _deathTimer += fixedDt;
-        if (_deathTimer >= 9 / 7.0f) {
+        if (_deathTimer >= 3.0f) {
             _pendingDestroy = true;
         }
         return;
     }
-
     if (_supportGrid && (isBlockedAhead() || !isSupportedByGrid())) {
         turnAround();
     }
@@ -137,9 +135,9 @@ void Enemy::destroy() {
 
     _isDying = true;
     _deathTimer = 0.0f;
-
-    auto* animatable = getBehaviour<Animatable>();
-    if (animatable) {
-        animatable->playAnimation("dead");
-    }
+    
+    b2ShapeId shape = _body->getHitbox();
+    b2Filter filter = b2Shape_GetFilter(shape);
+    filter.categoryBits ^= CollisionFilter::ENEMY;
+    b2Shape_SetFilter(shape, filter);
 }

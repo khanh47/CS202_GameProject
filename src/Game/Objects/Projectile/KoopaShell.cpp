@@ -1,0 +1,130 @@
+#include "Game/Objects/Projectile/KoopaShell.h"
+
+#include "Game/Behaviours/Animatable.h"
+#include "Game/Objects/Block/Block.h"
+#include "Game/Objects/Enemy/Enemy.h"
+#include "Game/ScoreManager.h"
+#include "Game/World/GameWorld.h"
+#include "Physics/CollisionFilter.h"
+#include "ResourceManager.h"
+
+#include <cmath>
+
+KoopaShell::KoopaShell() : GameObject() {
+    addBehaviour<Animatable>();
+    sf::Texture& itemsTexture = ResourceManager::getInstance().getTexture("koopa_spritesheet");
+    if (auto* animatable = getBehaviour<Animatable>()) {
+        animatable->configureVisuals(itemsTexture, "koopa");
+        animatable->playAnimation("dead");
+    }
+}
+
+KoopaShell::KoopaShell(sf::Texture& texture) : GameObject() {
+    addBehaviour<Animatable>();
+    if (auto* animatable = getBehaviour<Animatable>()) {
+        animatable->configureVisuals(texture, "koopa");
+        animatable->playAnimation("slide");
+    }
+}
+
+void KoopaShell::kick(bool facingRight) {
+    _sliding = true;
+    if (auto* animatable = getBehaviour<Animatable>()) {
+        animatable->playAnimation("slide");
+    }
+    if (!hasValidBody()) {
+        return;
+    }
+
+    const b2BodyId bodyId = _body->getId();
+    b2Vec2 vel = b2Body_GetLinearVelocity(bodyId);
+    vel.x = facingRight ? _slideSpeedMeters : -_slideSpeedMeters;
+    b2Body_SetLinearVelocity(bodyId, vel);
+}
+
+void KoopaShell::stop() {
+    _sliding = false;
+    if (auto* animatable = getBehaviour<Animatable>()) {
+        animatable->playAnimation("dead");
+    }
+    if (!hasValidBody()) {
+        return;
+    }
+
+    b2Vec2 vel = b2Body_GetLinearVelocity(_body->getId());
+    vel.x = 0.0f;
+    b2Body_SetLinearVelocity(_body->getId(), vel);
+}
+
+void KoopaShell::onCreateBodyDef(b2BodyDef& def) {
+    def.type = b2_dynamicBody;
+    def.motionLocks.angularZ = true;
+}
+
+void KoopaShell::onCreateShapeDef(b2ShapeDef& def) {
+    def.density = 1.0f;
+    def.material.friction = 0.0f;
+    def.filter.categoryBits = CollisionFilter::SHELL;
+    def.filter.maskBits = CollisionFilter::SHELL_MASK;
+}
+
+void KoopaShell::updateSimulation(const float& fixedDt) {
+    (void)fixedDt;
+    if (!hasValidBody()) {
+        return;
+    }
+
+    _lifetime += fixedDt;
+    if (_lifetime >= 30.0f) {
+        _pendingDestroy = true;
+        return;
+    }
+
+    if (_sliding) {
+        // Maintain constant horizontal slide speed in the current direction
+        const b2BodyId bodyId = _body->getId();
+        b2Vec2 vel = b2Body_GetLinearVelocity(bodyId);
+        vel.x = vel.x < 0.0f ? -_slideSpeedMeters : _slideSpeedMeters;
+        b2Body_SetLinearVelocity(bodyId, vel);
+    }
+}
+
+void KoopaShell::onContact(GameObject& other, const b2ContactData& contactData, b2ShapeId ownShape) {
+    (void)ownShape;
+
+    if (auto* enemy = dynamic_cast<Enemy*>(&other)) {
+        if (_world && _world->getScoreManager()) {
+            _world->getScoreManager()->handleEvent(ScoreEventType::EnemyStomped, enemy->getPosition());
+        }
+        enemy->destroy();
+        return;
+    }
+
+    if (auto* block = dynamic_cast<Block*>(&other)) {
+        if (_sliding && contactData.manifold.pointCount > 0) {
+            b2Vec2 normal = contactData.manifold.normal;
+            if (!B2_ID_EQUALS(contactData.shapeIdA, ownShape)) {
+                normal = {-normal.x, -normal.y};
+            }
+            // Side hit against a wall -> bounce back in the opposite direction
+            if (std::abs(normal.x) >= 0.5f) {
+                b2Vec2 vel = b2Body_GetLinearVelocity(_body->getId());
+                vel.x = -vel.x;
+                b2Body_SetLinearVelocity(_body->getId(), vel);
+            }
+        }
+        return;
+    }
+}
+
+void KoopaShell::onUpdateVisuals(float deltaTime) {
+    if (auto* animatable = getBehaviour<Animatable>()) {
+        animatable->updateVisualState(deltaTime, _hitboxPixels);
+    }
+}
+
+void KoopaShell::onRenderVisual(sf::RenderTarget& target, const sf::Vector2f& position, float angleDegrees) {
+    if (auto* animatable = getBehaviour<Animatable>()) {
+        animatable->renderVisualState(target, position, angleDegrees);
+    }
+}

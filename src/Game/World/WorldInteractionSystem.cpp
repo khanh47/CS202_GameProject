@@ -4,12 +4,12 @@
 
 #include "Game/Objects/GameObject.h"
 #include "Game/Objects/Player/Player.h"
+#include "Physics/CollisionFilter.h"
 #include "box2d/box2d.h"
 
 namespace {
 constexpr float minimumGroundNormalY = 0.9f;
 constexpr float minimumSupportOverlapMeters = 1.0f / 64.0f;
-constexpr uint64_t environmentCategory = 0x0001;
 
 Player* getPlayer(GameObject* objectA, GameObject* objectB) {
     if (auto* player = dynamic_cast<Player*>(objectA)) {
@@ -33,7 +33,7 @@ void processGroundContactBegin(
     const b2ShapeId otherShape =
         player == objectA ? event.shapeIdB : event.shapeIdA;
     if ((b2Shape_GetFilter(otherShape).categoryBits
-         & environmentCategory) == 0) {
+         & CollisionFilter::ENV) == 0) {
         return;
     }
 

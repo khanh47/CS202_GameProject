@@ -3,6 +3,26 @@
 #include <iostream>
 #include <string_view>
 
+// ─── Ghost shader ────────────────────────────────────────────────────────────
+// Rapidly alternates every pixel between empty and the raw texture color.
+// Uses a square-wave derived from sin() so the transition is an abrupt toggle
+// rather than a smooth fade, giving the classic NES-style power-up blink.
+static constexpr std::string_view kGhostFragmentSrc = R"glsl(
+    uniform sampler2D texture;
+    uniform float u_time;
+
+    void main() {
+        vec4 pixel = texture2D(texture, gl_TexCoord[0].xy);
+
+        // Square-wave at ~8 Hz: positive half → white, negative half → raw
+        float wave = sin(u_time * 50.2655);   // 8 * 2π ≈ 50.2655
+        float blend = step(0.0, wave);
+
+        vec4 white = vec4(1.0, 1.0, 1.0, 0.0);
+        gl_FragColor = mix(pixel, white, blend);
+    }
+)glsl";
+
 // ─── Blink shader ────────────────────────────────────────────────────────────
 // Rapidly alternates every pixel between pure white and the raw texture color.
 // Uses a square-wave derived from sin() so the transition is an abrupt toggle
@@ -74,6 +94,9 @@ PlayerShaders::PlayerShaders() {
         return;
     }
 
+    bool ghostOk = _ghostShader.loadFromMemory(
+        std::string(kGhostFragmentSrc), sf::Shader::Type::Fragment
+    );
     bool blinkOk = _blinkShader.loadFromMemory(
         std::string(kBlinkFragmentSrc), sf::Shader::Type::Fragment
     );
@@ -88,9 +111,10 @@ PlayerShaders::PlayerShaders() {
         std::cerr << "[PlayerShaders] Failed to compile rainbow shader.\n";
     }
 
-    _shadersAvailable = blinkOk && rainbowOk;
+    _shadersAvailable = ghostOk && blinkOk && rainbowOk;
 
     if (_shadersAvailable) {
+        _ghostShader.setUniform("texture", sf::Shader::CurrentTexture);
         _blinkShader.setUniform("texture", sf::Shader::CurrentTexture);
         _rainbowShader.setUniform("texture", sf::Shader::CurrentTexture);
     }
@@ -98,6 +122,13 @@ PlayerShaders::PlayerShaders() {
 
 void PlayerShaders::update(float deltaTime) {
     _time += deltaTime;
+}
+
+
+sf::Shader* PlayerShaders::getGhostShader() {
+    if (!_shadersAvailable) return nullptr;
+    _ghostShader.setUniform("u_time", _time);
+    return &_ghostShader;
 }
 
 sf::Shader* PlayerShaders::getBlinkShader() {

@@ -20,7 +20,7 @@ public:
 
     float getMoveSpeedMultiplier() const override { return 1.1f; }
     float getJumpSpeedMultiplier() const override { return 1.1f; }
-    sf::Vector2f getScaleMultiplier() const override { return {1.25f, 1.25f}; }
+    sf::Vector2f getScaleMultiplier() const override { return {1.5f, 1.5f}; }
     bool canShootFireballs() const override { return true; }
     std::unique_ptr<IAttackStrategy> createAttackStrategy() const override {
         return std::make_unique<FireballAttackStrategy>();
@@ -29,6 +29,7 @@ public:
     void handleSuperMushroom(Player& player) override;
     void handleFireFlower(Player& player) override;
     void handleSuperStar(Player& player) override;
+    void handleEnemy(Player& player) override;
 
 private:
     std::string _character;

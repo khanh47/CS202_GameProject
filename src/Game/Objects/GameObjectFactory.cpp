@@ -10,11 +10,12 @@
 #include "Game/Objects/Item/ConcreteItems/SuperStar.h"
 #include "Game/Objects/Player/Player.h"
 #include "Game/Objects/Item/ConcreteItems/Coin.h"
-#include "Game/Objects/Prop/Prop.h"
+#include "Game/Objects/Block/CoinBlock.h"
 
 GameObjectFactory::GameObjectFactory() {
     registerPlayer("Player", createAnimated<Player>);
     registerBlock("Block", createStatic<Block>);
+    registerBlock("CoinBlock", createStatic<CoinBlock>);
     registerEnemy("Goomba", createAnimated<Goomba>);
     registerEnemy("Koopa", createAnimated<Koopa>);
     registerItem("Item", createStatic<Item>);
@@ -22,7 +23,6 @@ GameObjectFactory::GameObjectFactory() {
     registerItem("SuperMushroom", createStatic<SuperMushroom>);
     registerItem("SuperStar", createStatic<SuperStar>);
     registerItem("Coin", createStatic<Coin>);
-    registerProp("Prop", createStatic<Prop>);
 }
 
 void GameObjectFactory::registerPlayer(const std::string& key, AnimatedCreator creator) {
@@ -39,10 +39,6 @@ void GameObjectFactory::registerEnemy(const std::string& key, AnimatedCreator cr
 
 void GameObjectFactory::registerItem(const std::string& key, Creator creator) {
     _itemCreators[key] = std::move(creator);
-}
-
-void GameObjectFactory::registerProp(const std::string& key, Creator creator) {
-    _propCreators[key] = std::move(creator);
 }
 
 std::shared_ptr<GameObject> GameObjectFactory::createPlayer(const std::string& key, sf::Texture* texture, const std::string& animationSetId) const {
@@ -76,15 +72,6 @@ std::shared_ptr<GameObject> GameObjectFactory::createItem(const std::string& key
     const auto it = _itemCreators.find(key);
     if (it == _itemCreators.end()) {
         throw std::runtime_error("Unknown item type: " + key);
-    }
-
-    return it->second(texture);
-}
-
-std::shared_ptr<GameObject> GameObjectFactory::createProp(const std::string& key, sf::Texture* texture) const {
-    const auto it = _propCreators.find(key);
-    if (it == _propCreators.end()) {
-        throw std::runtime_error("Unknown prop type: " + key);
     }
 
     return it->second(texture);

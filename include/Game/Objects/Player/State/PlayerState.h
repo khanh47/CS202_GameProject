@@ -38,4 +38,5 @@ public:
     virtual void handleSuperMushroom(Player& player) { (void)player; }
     virtual void handleFireFlower(Player& player) { (void)player; }
     virtual void handleSuperStar(Player& player) { (void)player; }
+    virtual void handleEnemy(Player& player) { (void)player; }
 };

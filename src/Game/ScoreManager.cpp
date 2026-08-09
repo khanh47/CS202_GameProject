@@ -1,4 +1,5 @@
 #include "Game/ScoreManager.h"
+#include "Game/Objects/Block/CoinBlock.h"
 #include <cmath>
 
 ScoreManager::ScoreManager() {
@@ -55,6 +56,19 @@ void ScoreManager::handleEvent(ScoreEventType event, sf::Vector2f position, int 
         case ScoreEventType::FlagpoleReached:
             pointsAwarded = (detail > 0) ? detail : 1000;
             displayText = std::to_string(pointsAwarded);
+            break;
+
+        case ScoreEventType::LostLive:
+            // Reset stomp combo ladder when a life is lost
+            _stompComboIndex = 0;
+            _lives--;
+            break;
+
+        case ScoreEventType::CoinBlockTouched:
+            // Reset stomp combo ladder when a coin block is touched
+            addCoins(1);
+            pointsAwarded = 200;
+            displayText = "200";
             break;
     }
 

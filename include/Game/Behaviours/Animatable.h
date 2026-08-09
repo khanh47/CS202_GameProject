@@ -28,6 +28,7 @@ public:
     void playAnimation(const std::string& name);
     void stopAnimation();
     std::string getActiveAnimationName() const;
+    bool isAnimationDone() const;
     bool hasSprite() const;
 
 private:

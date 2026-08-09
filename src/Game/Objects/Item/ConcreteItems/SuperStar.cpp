@@ -2,6 +2,7 @@
 #include "Game/Behaviours/Animatable.h"
 #include "Game/Objects/Player/Player.h"
 #include "Game/GameSettings.h"
+#include "Physics/CollisionFilter.h"
 
 SuperStar::SuperStar() : Item() {
 }
@@ -27,8 +28,8 @@ void SuperStar::onCreateShapeDef(b2ShapeDef& def) {
     def.material.restitution = 0.95f;
 
     // PICKUP category, interacts with ENV (bouncing) + PLAYER (pickup)
-    def.filter.categoryBits = 0x0010;
-    def.filter.maskBits = 0x0001 | 0x0002;
+    def.filter.categoryBits = CollisionFilter::PICKUP;
+    def.filter.maskBits = CollisionFilter::ENV | CollisionFilter::PLAYER;
 }
 
 void SuperStar::updateSimulation(const float& fixedDt) {

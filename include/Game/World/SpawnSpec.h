@@ -12,8 +12,7 @@ enum class ObjectKind {
     Block,
     Player,
     Enemy,
-    Item,
-    Prop
+    Item
 };
 
 struct SpawnSpec {

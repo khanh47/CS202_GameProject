@@ -1,8 +1,10 @@
 #include "Game/Objects/GameObject.h"
 #include "Game/GameSettings.h"
 #include "Physics/PhysicsUnits.h"
+#include "Game/Behaviours/Invincible.h"
 #include <cmath>
 #include <SFML/System/Vector2.hpp>
+#include <iostream>
 #include <memory>
 #include <stdexcept>
 #include "box2d/box2d.h"
@@ -97,6 +99,11 @@ void GameObject::spawn(const PhysicsWorld &physicsWorld, sf::Vector2f spawnPixel
     createBody(physicsWorld, spawnPixels);
     createHitbox(hitboxPixels);
     updateVisuals(0.f);
+}
+
+void GameObject::destroy() {
+    if (auto* invincible = getBehaviour<Invincible>()) return;
+    _pendingDestroy = true;
 }
 
 void GameObject::onCreateBodyDef(b2BodyDef& def) {

@@ -1,21 +1,25 @@
 #include "Game/Objects/Player/Player.h"
 #include "Game/GameSettings.h"
+#include "Game/Objects/GameObject.h"
 #include "Game/World/GameWorld.h"
 #include "Game/Objects/Player/State/NormalState.h"
 #include "Game/Objects/Player/State/SuperState.h"
 #include "Game/Objects/Player/State/FireState.h"
 #include "Game/Objects/Player/State/MegaStateDecorator.h"
 #include "Game/Objects/Player/State/StarManStateDecorator.h"
+#include "Physics/CollisionFilter.h"
 #include "Physics/PhysicsUnits.h"
+#include "Game/Objects/Block/CoinBlock.h"
 #include "Game/Objects/Enemy/Enemy.h"
 #include "Game/Objects/Item/ConcreteItems/FireFlower.h"
 #include "Game/Objects/Item/ConcreteItems/SuperMushroom.h"
 #include "Game/Objects/Item/ConcreteItems/SuperStar.h"
 #include "Game/Objects/Item/ConcreteItems/Coin.h"
+#include "Game/Objects/Projectile/KoopaShell.h"
 #include "ResourceManager.h"
 #include "Game/Objects/Player/PlayerShaders.h"
-#include "Game/Behaviours/Animatable.h"
-#include "Game/Behaviours/Damageable.h"
+#include "Game/Behaviours/Invincible.h"
+#include "box2d/id.h"
 
 #include <SFML/System/Clock.hpp>
 #include <algorithm>
@@ -52,12 +56,13 @@ Player::Player(sf::Texture &texture, const std::string& animationSetId)
 Player::~Player() = default;
 
 void Player::destroy() {
+    if (auto* invincible = getBehaviour<Invincible>()) return;
+
     if (_isDying) {
         return;
     }
 
     _isDying = true;
-    _deathTimer = 0.0f;
 
     removeBehaviour<Moveable>();
     auto* animatable = getBehaviour<Animatable>();
@@ -160,16 +165,28 @@ void Player::updateSimulation(const float &fixedDt) {
         return;
     }
 
+    if (auto* invincible = getBehaviour<Invincible>()) {
+        invincible->updateSimulation(fixedDt);
+
+        if(invincible->getTime() < 0.001f){
+            removeBehaviour<Invincible>();
+
+        };
+    }
     auto* animatable = getBehaviour<Animatable>();
     auto* moveable = getBehaviour<Moveable>();
 
     if (_isDying) {
-        if (animatable && animatable->getActiveAnimationName() != "knockout") {
+        if (!animatable) {
+            _pendingDestroy = true;
+            return;
+        }
+
+        if (animatable->getActiveAnimationName() != "knockout") {
             animatable->playAnimation("knockout");
         }
 
-        _deathTimer += fixedDt;
-        if (_deathTimer >= 9 / 7.0f) {
+        if (animatable->isAnimationDone()) {
             _pendingDestroy = true;
         }
         return;
@@ -281,6 +298,46 @@ void Player::onContact(GameObject& other, const b2ContactData& contactData, b2Sh
         return;
     }
 
+    if (auto* shell = dynamic_cast<KoopaShell*>(&other)) {
+        // StarMan invincibility: instantly destroy any shell on contact
+        if (_state && _state->isInvincible()) {
+
+            if (_world && _world->getScoreManager()) {
+                _world->getScoreManager()->handleEvent(ScoreEventType::EnemyStomped, shell->getPosition());
+            }
+
+            shell->destroy();
+            return;
+        }
+
+        if (b2Shape_IsValid(ownShape)) {
+            b2Vec2 normal = contactData.manifold.normal;
+            if (!B2_ID_EQUALS(contactData.shapeIdA, ownShape)) {
+                normal = {-normal.x, -normal.y};
+            }
+            if (contactData.manifold.pointCount > 0 && normal.y >= 0.5f) {
+                // Stomping the shell: stop a sliding shell, kick a resting one
+                if (shell->isSliding()) {
+                    shell->stop();
+                } else {
+                    shell->kick(!isFacingLeft());
+                }
+                b2BodyId bodyId = b2Shape_GetBody(ownShape);
+                b2Vec2 vel = b2Body_GetLinearVelocity(bodyId);
+                vel.y = -12.0f;
+                b2Body_SetLinearVelocity(bodyId, vel);
+            } else {
+                // Side contact: sliding shells hurt, resting shells get kicked
+                if (shell->isSliding() && _state) {
+                    _state->handleEnemy(*this);
+                } else {
+                    shell->kick(!isFacingLeft());
+                }
+            }
+        }
+        return;
+    }
+
     if (auto* enemy = dynamic_cast<Enemy*>(&other)) {
         // StarMan invincibility: instantly destroy any enemy on contact
         if (_state && _state->isInvincible()) {
@@ -305,16 +362,13 @@ void Player::onContact(GameObject& other, const b2ContactData& contactData, b2Sh
                     _world->getScoreManager()->handleEvent(ScoreEventType::EnemyStomped, enemy->getPosition());
                 }
                 
-                enemy->destroy();
+                enemy->onStomp();
                 b2BodyId bodyId = b2Shape_GetBody(ownShape);
                 b2Vec2 vel = b2Body_GetLinearVelocity(bodyId);
                 vel.y = -12.0f;
                 b2Body_SetLinearVelocity(bodyId, vel);
             } else {
-                destroy();
-                if (auto* damageable = getBehaviour<Damageable>()) {
-                    damageable->takeDamage(50);
-                }
+                _state->handleEnemy(*this);
             }
         }
     }
@@ -356,10 +410,10 @@ void Player::onCreateShapeDef(b2ShapeDef& def) {
 
     // Category 0x0002 (Player), Mask 0x0001 | 0x0008 (Environment + Enemy)
     // Excludes Category 0x0004 (Fireball) so fireballs pass completely through Player
-    def.filter.categoryBits = 0x0002;
-    def.filter.maskBits = 0x0001 | 0x0008 | 0x0010 | 0x0002;
+    def.filter.categoryBits = CollisionFilter::PLAYER;
+    def.filter.maskBits = CollisionFilter::PLAYER_MASK | CollisionFilter::PLAYER;
     if (GameSettings::getInstance().gameMode == GameMode::Coop)
-        def.filter.maskBits ^= 0x0002; // exclues player if in coop so that they can phase thru each other.
+        def.filter.maskBits ^= CollisionFilter::PLAYER; // exclues player if in coop so that they can phase thru each other.
 }
 
 b2Polygon Player::makeHitbox(sf::Vector2f hitboxPixels) const {
@@ -435,7 +489,10 @@ void Player::onUpdateVisuals(float deltaTime) {
                 b2Body_SetLinearVelocity(bodyId, vel);
             }
             // Transformation finished -> enter the correct target state
-            if (_transformTarget == TransformTarget::Fire) {
+            if (_transformTarget == TransformTarget::Normal) {
+                changeToNormalState();
+            }
+            else if (_transformTarget == TransformTarget::Fire) {
                 changeToFireState();
             } else if (_transformTarget == TransformTarget::StarMan) {
                 applyStarManState(10.0f);
@@ -453,7 +510,7 @@ void Player::onUpdateVisuals(float deltaTime) {
         }
 
         // Lerp from the pre-transformation scale to target scale
-        float targetScale = (_transformTarget == TransformTarget::StarMan) ? _transformStartScale : 1.25f;
+        float targetScale = (_transformTarget == TransformTarget::StarMan) ? _transformStartScale : 1.5f;
         float progress = 1.0f - (_transformTimer / _transformDuration);
         progress = std::max(0.0f, std::min(1.0f, progress));
         float currentScale = _transformStartScale + (targetScale - _transformStartScale) * progress;
@@ -499,10 +556,16 @@ void Player::onRenderVisual(sf::RenderTarget& target, const sf::Vector2f& positi
 
     // Select the appropriate shader effect for the current visual state
     sf::Shader* activeShader = nullptr;
+
+    
+    
     if (_isTransforming) {
         activeShader = PlayerShaders::getInstance().getBlinkShader();
     } else if (_state && _state->isInvincible()) {
         activeShader = PlayerShaders::getInstance().getRainbowShader();
+    }
+    else if (auto* tempInvincible = getBehaviour<Invincible>()) {
+        activeShader = PlayerShaders::getInstance().getGhostShader();
     }
 
     if (auto* animatable = getBehaviour<Animatable>()) {
@@ -518,5 +581,9 @@ void Player::onRenderVisual(sf::RenderTarget& target, const sf::Vector2f& positi
 void Player::onHitboxRecreated() {
     if (auto* moveable = getBehaviour<Moveable>()) {
         moveable->resetGroundContacts();
+    }
+
+    if (auto* invincible = getBehaviour<Invincible>()) {
+        invincible->refreshCollisionMask();
     }
 }

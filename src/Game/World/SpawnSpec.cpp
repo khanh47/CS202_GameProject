@@ -17,9 +17,6 @@ ObjectKind parseKind(const nlohmann::json& json) {
     if (kind == "Item") {
         return ObjectKind::Item;
     }
-    if (kind == "Prop") {
-        return ObjectKind::Prop;
-    }
     throw std::runtime_error("Unknown spawn kind: " + kind);
 }
 

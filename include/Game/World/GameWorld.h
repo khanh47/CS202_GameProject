@@ -28,8 +28,10 @@ public:
 
     void loadLevel(const std::string& levelPath);
     void loadMap(const LevelData& levelData);
+    void respawnPlayer();
 
     bool spawnFireball(sf::Vector2f spawnPos, bool facingRight, int playerIndex);
+    bool spawnKoopaShell(sf::Vector2f spawnPos, bool facingRight);
     void freeze(float durationSeconds);
     bool isFrozen() const { return _freezeTimer > 0.0f; }
     void syncPlayerControllers();
@@ -44,8 +46,10 @@ public:
     // Add getter & setter for ScoreManager
     void setScoreManager(ScoreManager* scoreManager) { _scoreManager = scoreManager; }
     ScoreManager* getScoreManager() const { return _scoreManager; }
+    int getLives() const { return _scoreManager ? _scoreManager->getLives() : 0; }
 
 private:
+    LevelData _currentLevelData;
     ScoreManager* _scoreManager = nullptr;
     float _freezeTimer = 0.0f;
     PhysicsWorld _physicsWorld;
