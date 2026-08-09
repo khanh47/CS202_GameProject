@@ -13,6 +13,7 @@ namespace CollisionFilter {
 
     // Common masks
     inline constexpr uint64_t PLAYER_MASK = ENV | ENEMY | PICKUP | SHELL;
+    inline constexpr uint64_t MINIGAME_MASK = FIREBALL | PLAYER;
     inline constexpr uint64_t ENEMY_MASK = ENV | PLAYER | FIREBALL | SHELL;
     inline constexpr uint64_t FIREBALL_MASK = ENV | ENEMY | SHELL;
     inline constexpr uint64_t PICKUP_MASK = PLAYER;

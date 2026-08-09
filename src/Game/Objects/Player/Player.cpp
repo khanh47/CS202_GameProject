@@ -58,11 +58,15 @@ Player::~Player() = default;
 void Player::destroy() {
     if (auto* invincible = getBehaviour<Invincible>()) return;
 
+    b2ShapeId shape = _body->getHitbox();
+    b2Filter filter = b2Shape_GetFilter(shape);
+    filter.maskBits ^= CollisionFilter::ENEMY | CollisionFilter::SHELL;
+    if (GameSettings::getInstance().gameMode == GameMode::Minigame) {
+      filter.maskBits ^= CollisionFilter::MINIGAME_MASK;
+    }
+    b2Shape_SetFilter(shape, filter);
+
     if (_isDying) {
-        b2ShapeId shape = _body->getHitbox();
-        b2Filter filter = b2Shape_GetFilter(shape);
-        filter.maskBits = 0;
-        b2Shape_SetFilter(shape, filter);
         return;
     }
 
@@ -412,12 +416,10 @@ void Player::onCreateShapeDef(b2ShapeDef& def) {
     def.material.friction = 0.0f;
     def.enablePreSolveEvents = true;
 
-    // Category 0x0002 (Player), Mask 0x0001 | 0x0008 (Environment + Enemy)
-    // Excludes Category 0x0004 (Fireball) so fireballs pass completely through Player
     def.filter.categoryBits = CollisionFilter::PLAYER;
-    def.filter.maskBits = CollisionFilter::PLAYER_MASK | CollisionFilter::PLAYER;
-    if (GameSettings::getInstance().gameMode == GameMode::Coop)
-        def.filter.maskBits ^= CollisionFilter::PLAYER; // exclues player if in coop so that they can phase thru each other.
+    def.filter.maskBits = CollisionFilter::PLAYER_MASK;
+    if (GameSettings::getInstance().gameMode == GameMode::Minigame)
+        def.filter.maskBits |= CollisionFilter::MINIGAME_MASK;
 }
 
 b2Polygon Player::makeHitbox(sf::Vector2f hitboxPixels) const {
