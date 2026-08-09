@@ -522,7 +522,7 @@ void Player::onUpdateVisuals(float deltaTime) {
         sf::Vector2f scaledHitbox = {_baseHitboxPixels.x * currentScale, _baseHitboxPixels.y * currentScale};
         updateHitboxSize(scaledHitbox);
         if (auto* animatable = getBehaviour<Animatable>()) {
-            animatable->setVisualScale({1.8f, 1.0f});
+            animatable->setVisualScale({2.5f, 1.1f});
             animatable->updateVisualState(deltaTime, scaledHitbox, facingLeft);
         }
         return;
@@ -544,7 +544,7 @@ void Player::onUpdateVisuals(float deltaTime) {
     sf::Vector2f scaledHitbox = {_baseHitboxPixels.x * scaleMult.x, _baseHitboxPixels.y * scaleMult.y};
     updateHitboxSize(scaledHitbox);
     if (auto* animatable = getBehaviour<Animatable>()) {
-        animatable->setVisualScale({1.8f, 1.0f});
+        animatable->setVisualScale({2.5f, 1.1f});
         animatable->updateVisualState(deltaTime, scaledHitbox, facingLeft);
     }
 

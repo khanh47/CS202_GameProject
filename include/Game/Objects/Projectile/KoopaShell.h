@@ -25,6 +25,7 @@ public:
     void onContact(GameObject& other, const b2ContactData& contactData, b2ShapeId ownShape) override;
 
     void setGameWorld(GameWorld* world) { _world = world; }
+    void destroy() override;
 
 protected:
     void onCreateBodyDef(b2BodyDef& def) override;
@@ -35,7 +36,9 @@ protected:
 private:
     bool _sliding = false;
     float _slideSpeedMeters = 8.0f;
-    float _lifetime = 0.0f;
+
+    bool _isDying = false;
+    float _deathTimer = 0.0f;
 
     GameWorld* _world = nullptr; // Pointer to the game world for score management
 };

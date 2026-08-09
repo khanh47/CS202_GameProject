@@ -6,7 +6,6 @@
 #include "Game/ScoreManager.h"
 #include "Game/World/GameWorld.h"
 #include "Physics/CollisionFilter.h"
-#include "ResourceManager.h"
 
 #include <cmath>
 
@@ -50,6 +49,7 @@ void KoopaShell::stop() {
 void KoopaShell::onCreateBodyDef(b2BodyDef& def) {
     def.type = b2_dynamicBody;
     def.motionLocks.angularZ = true;
+    def.gravityScale = 2.0f;
 }
 
 void KoopaShell::onCreateShapeDef(b2ShapeDef& def) {
@@ -63,6 +63,18 @@ void KoopaShell::onCreateShapeDef(b2ShapeDef& def) {
 void KoopaShell::updateSimulation(const float& fixedDt) {
     (void)fixedDt;
     if (!hasValidBody()) {
+        return;
+    }
+
+    auto* animatable = getBehaviour<Animatable>();
+
+    if (_isDying) {
+        animatable->playAnimation("dead");
+
+        _deathTimer += fixedDt;
+        if (_deathTimer >= 3.0f) {
+            _pendingDestroy = true;
+        }
         return;
     }
 
@@ -101,6 +113,20 @@ void KoopaShell::onContact(GameObject& other, const b2ContactData& contactData, 
         }
         return;
     }
+}
+
+void KoopaShell::destroy() {
+    if (_isDying) {
+        return;
+    }
+
+    _isDying = true;
+    _deathTimer = 0.0f;
+    
+    b2ShapeId shape = _body->getHitbox();
+    b2Filter filter = b2Shape_GetFilter(shape);
+    filter.categoryBits ^= CollisionFilter::SHELL;
+    b2Shape_SetFilter(shape, filter);
 }
 
 void KoopaShell::onUpdateVisuals(float deltaTime) {

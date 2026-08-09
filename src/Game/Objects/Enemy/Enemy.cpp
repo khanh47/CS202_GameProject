@@ -135,6 +135,8 @@ void Enemy::destroy() {
 
     _isDying = true;
     _deathTimer = 0.0f;
+
+    b2Body_SetGravityScale(_body->getId(), 2.0f);
     
     b2ShapeId shape = _body->getHitbox();
     b2Filter filter = b2Shape_GetFilter(shape);
