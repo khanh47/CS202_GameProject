@@ -14,7 +14,6 @@ class GameWorld; // Forward declaration — full include is in KoopaShell.cpp
  */
 class KoopaShell : public GameObject {
 public:
-    KoopaShell();
     KoopaShell(sf::Texture& texture);
     ~KoopaShell() override = default;
 

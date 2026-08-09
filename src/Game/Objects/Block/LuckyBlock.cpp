@@ -1,0 +1,187 @@
+#include "Game/Objects/Block/LuckyBlock.h"
+#include <cmath>
+#include <random>
+
+#include "Game/Behaviours/Animatable.h"
+#include "Game/Objects/Player/Player.h"
+#include "Game/World/GameWorld.h"
+#include "Game/ScoreManager.h"
+#include "ResourceManager.h"
+
+LuckyBlock::LuckyBlock() : GameObject() {
+    addBehaviour<Animatable>();
+    if (auto* animatable = getBehaviour<Animatable>()) {
+        animatable->configureVisuals(
+            ResourceManager::getInstance().getTexture("lucky_block_spritesheet"),
+            "lucky_block"
+        );
+    }
+    setupDefaultItemPool();
+}
+
+LuckyBlock::LuckyBlock(sf::Texture &texture) : GameObject() {
+    addBehaviour<Animatable>();
+    if (auto* animatable = getBehaviour<Animatable>()) {
+        animatable->configureVisuals(texture, "lucky_block");
+    }
+    setupDefaultItemPool();
+}
+
+LuckyBlock::~LuckyBlock() = default;
+
+void LuckyBlock::setupDefaultItemPool() {
+    clearOptions();
+    // Default optional objects pool with weighted probability:
+    addItemOption("Coin", 4.0f);
+    addItemOption("SuperMushroom", 2.0f);
+    addItemOption("FireFlower", 2.0f);
+    addItemOption("SuperStar", 1.0f);
+}
+
+void LuckyBlock::addItemOption(const std::string& itemTypeKey, float weight) {
+    if (weight <= 0.0f) return;
+    _itemOptions.push_back({itemTypeKey, weight, nullptr});
+}
+
+void LuckyBlock::addCustomOption(std::function<void(GameWorld&, sf::Vector2f)> spawner, float weight) {
+    if (!spawner || weight <= 0.0f) return;
+    _itemOptions.push_back({"", weight, std::move(spawner)});
+}
+
+void LuckyBlock::setItemPool(const std::vector<std::string>& itemTypeKeys) {
+    clearOptions();
+    for (const auto& key : itemTypeKeys) {
+        addItemOption(key, 1.0f);
+    }
+}
+
+void LuckyBlock::clearOptions() {
+    _itemOptions.clear();
+}
+
+const ItemOption* LuckyBlock::selectRandomOption() const {
+    if (_itemOptions.empty()) return nullptr;
+
+    float totalWeight = 0.0f;
+    for (const auto& opt : _itemOptions) {
+        totalWeight += opt.weight;
+    }
+    if (totalWeight <= 0.0f) return nullptr;
+
+    static std::mt19937 rng(std::random_device{}());
+    std::uniform_real_distribution<float> dist(0.0f, totalWeight);
+    float roll = dist(rng);
+
+    float current = 0.0f;
+    for (const auto& opt : _itemOptions) {
+        current += opt.weight;
+        if (roll <= current) {
+            return &opt;
+        }
+    }
+    return &_itemOptions.back();
+}
+
+void LuckyBlock::onCreateShapeDef(b2ShapeDef& def) {
+    def.density = 10000.0f;
+    def.material.friction = 0.0f;
+    def.enableContactEvents = true;
+}
+
+void LuckyBlock::onContact(GameObject& other, const b2ContactData& contactData, b2ShapeId ownShape) {
+    if (_hitCooldown > 0.0f || capacity <= 0) {
+        return;
+    }
+
+    if (auto* player = dynamic_cast<Player*>(&other)) {
+        if (b2Shape_IsValid(ownShape) && contactData.manifold.pointCount > 0) {
+            b2Vec2 normal = contactData.manifold.normal;
+            if (!B2_ID_EQUALS(contactData.shapeIdA, ownShape)) {
+                normal = {-normal.x, -normal.y};
+            }
+
+            // Detect Player hitting from below (upward contact normal or player below block)
+            if (normal.y >= 0.3f || player->getPosition().y > getPosition().y) {
+                capacity--;
+                _hitCooldown = 0.0f; // Cooldown to prevent multi-hits in 1 jump
+                _bumpTimer = 0.15f;  // Trigger bump/enlarge animation (0.15 seconds)
+
+                GameWorld* world = player->getGameWorld();
+                const ItemOption* chosenOption = selectRandomOption();
+
+                sf::Vector2f itemSpawnPos = getPosition();
+                itemSpawnPos.y -= 64.0f; // Spawn above the block
+
+                if (chosenOption) {
+                    if (chosenOption->customSpawner && world) {
+                        chosenOption->customSpawner(*world, itemSpawnPos);
+                    } else if (chosenOption->itemTypeKey == "Coin" || chosenOption->itemTypeKey.empty()) {
+                        // Spawn popping coin animation
+                        sf::Texture& itemsTexture = ResourceManager::getInstance().getTexture("coin_spritesheet");
+                        _bouncingCoin.spawn(getPosition(), itemsTexture);
+
+                        // Trigger ScoreManager coin event (+200 pts, +1 coin, floating text)
+                        if (world && world->getScoreManager()) {
+                            world->getScoreManager()->handleEvent(
+                                ScoreEventType::CoinCollected,
+                                getPosition()
+                            );
+                        }
+                    } else if (world) {
+                        // Spawn physical pickup item into the GameWorld
+                        world->spawnItem(chosenOption->itemTypeKey, itemSpawnPos);
+                    }
+                }
+
+                // If empty, switch animation to empty block
+                if (capacity <= 0) {
+                    if (auto* animatable = getBehaviour<Animatable>()) {
+                        animatable->playAnimation("empty");
+                    }
+                }
+            }
+        }
+    }
+}
+
+void LuckyBlock::onUpdateVisuals(float deltaTime) {
+    if (_hitCooldown > 0.0f) {
+        _hitCooldown -= deltaTime;
+    }
+
+    if (_bumpTimer > 0.0f) {
+        _bumpTimer -= deltaTime;
+        if (_bumpTimer < 0.0f) {
+            _bumpTimer = 0.0f;
+        }
+    }
+
+    _bouncingCoin.update(deltaTime);
+
+    if (auto* animatable = getBehaviour<Animatable>()) {
+        animatable->updateVisualState(deltaTime, _hitboxPixels);
+    }
+}
+
+void LuckyBlock::onRenderVisual(sf::RenderTarget& target, const sf::Vector2f& position, float angleDegrees) {
+    sf::Vector2f renderPos = position;
+
+    // Apply bump displacement and scale impulse when hit
+    if (auto* animatable = getBehaviour<Animatable>()) {
+        if (_bumpTimer > 0.0f) {
+            float progress = 1.0f - (_bumpTimer / 0.15f); // 0.0 to 1.0
+            float bumpOffset = -std::sin(progress * 3.14159f) * 14.0f; // Bumps upward by 14px
+            float scale = 1.0f + std::sin(progress * 3.14159f) * 0.25f; // Scales up to 1.25x
+
+            renderPos.y += bumpOffset;
+            animatable->setVisualScale({scale, scale});
+        } else {
+            animatable->setVisualScale({1.0f, 1.0f});
+        }
+
+        animatable->renderVisualState(target, renderPos, angleDegrees);
+    }
+
+    // Render the coin popping out of the block
+    _bouncingCoin.render(target);
+}

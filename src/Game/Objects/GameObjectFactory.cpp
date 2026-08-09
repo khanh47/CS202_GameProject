@@ -10,12 +10,15 @@
 #include "Game/Objects/Item/ConcreteItems/SuperStar.h"
 #include "Game/Objects/Player/Player.h"
 #include "Game/Objects/Item/ConcreteItems/Coin.h"
+#include "Game/Objects/Item/Flagpole.h"
 #include "Game/Objects/Block/CoinBlock.h"
+#include "Game/Objects/Block/LuckyBlock.h"
 
 GameObjectFactory::GameObjectFactory() {
     registerPlayer("Player", createAnimated<Player>);
     registerBlock("Block", createStatic<Block>);
     registerBlock("CoinBlock", createStatic<CoinBlock>);
+    registerBlock("LuckyBlock", createStatic<LuckyBlock>);
     registerEnemy("Goomba", createAnimated<Goomba>);
     registerEnemy("Koopa", createAnimated<Koopa>);
     registerItem("Item", createStatic<Item>);
@@ -23,6 +26,7 @@ GameObjectFactory::GameObjectFactory() {
     registerItem("SuperMushroom", createStatic<SuperMushroom>);
     registerItem("SuperStar", createStatic<SuperStar>);
     registerItem("Coin", createStatic<Coin>);
+    registerItem("Flagpole", createStatic<Flagpole>);
 }
 
 void GameObjectFactory::registerPlayer(const std::string& key, AnimatedCreator creator) {

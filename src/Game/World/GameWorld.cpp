@@ -32,6 +32,10 @@ void GameWorld::updateSimulation(const float& fixedDt) {
         _objectStore.suspendPlayerMotion();
     }
 
+    if (_levelCleared) {
+        return;
+    }
+
     _objectStore.updateSimulation(fixedDt);
 
     constexpr float maximumFireballDistance = 1280.0f;
@@ -50,11 +54,21 @@ void GameWorld::updateSimulation(const float& fixedDt) {
     // Events must be consumed while every fixture owner is still alive.
     handleSensors(_physicsWorld.getSensorEvents());
     handleContacts(_physicsWorld.getContactEvents());
+
+    if (_levelCleared) {
+        _objectStore.cleanupDestroyed();
+        return;
+    }
+
     _objectStore.finalizeSimulation(fixedDt);
     _objectStore.cleanupDestroyed();
 }
 
 void GameWorld::updateVisuals(float deltaTime) {
+    if (_levelCleared) {
+        return;
+    }
+
     _objectStore.updateVisuals(deltaTime);
     for (FireballPool& pool : _fireballPools) {
         pool.updateVisuals(deltaTime);
@@ -83,6 +97,8 @@ void GameWorld::handleSensors(b2SensorEvents sensorEvents) {
 
 void GameWorld::loadMap(const LevelData& levelData) {
     _currentLevelData = levelData;
+    _levelCleared = false;
+    _flagpolePosition = {0.0f, 0.0f};
     _worldMap.rebuild(
         levelData,
         _physicsWorld,
@@ -190,13 +206,53 @@ bool GameWorld::spawnKoopaShell(sf::Vector2f spawnPosition, bool facingRight) {
     sf::Texture& itemsTexture = ResourceManager::getInstance().getTexture("koopa_spritesheet");
     auto shell = std::make_shared<KoopaShell>(itemsTexture);
     shell->setGameWorld(this);
-    shell->spawn(_physicsWorld, spawnPosition, {64.0f, 48.0f});
+    shell->spawn(_physicsWorld, spawnPosition, {60.0f, 48.0f});
     _objectStore.addObject(std::move(shell));
     return true;
 }
 
+std::shared_ptr<GameObject> GameWorld::spawnItem(
+    const std::string& itemTypeKey,
+    sf::Vector2f position,
+    sf::Vector2f size
+) {
+    sf::Texture* texture = nullptr;
+    auto& resources = ResourceManager::getInstance();
+    if (itemTypeKey == "Coin") {
+        texture = &resources.getTexture("coin_spritesheet");
+    } else if (itemTypeKey == "Flagpole") {
+        texture = &resources.getTexture("goal_flag_spritesheet");
+    } else {
+        texture = &resources.getTexture("mario_and_items");
+    }
+
+    try {
+        auto item = _objectFactory.createItem(itemTypeKey, texture);
+        if (item) {
+            item->spawn(_physicsWorld, position, size);
+            _objectStore.addObject(item);
+        }
+        return item;
+    } catch (...) {
+        return nullptr;
+    }
+}
+
 void GameWorld::freeze(float durationSeconds) {
     _freezeTimer = std::max(_freezeTimer, durationSeconds);
+}
+
+void GameWorld::reachFlagpole(sf::Vector2f position) {
+    if (_levelCleared) {
+        return;
+    }
+
+    _levelCleared = true;
+    _flagpolePosition = position;
+
+    if (_scoreManager) {
+        _scoreManager->handleEvent(ScoreEventType::FlagpoleReached, position);
+    }
 }
 
 void GameWorld::syncPlayerControllers() {

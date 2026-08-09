@@ -10,20 +10,11 @@
 
 #include <cmath>
 
-KoopaShell::KoopaShell() : GameObject() {
-    addBehaviour<Animatable>();
-    sf::Texture& itemsTexture = ResourceManager::getInstance().getTexture("koopa_spritesheet");
-    if (auto* animatable = getBehaviour<Animatable>()) {
-        animatable->configureVisuals(itemsTexture, "koopa");
-        animatable->playAnimation("dead");
-    }
-}
-
 KoopaShell::KoopaShell(sf::Texture& texture) : GameObject() {
     addBehaviour<Animatable>();
     if (auto* animatable = getBehaviour<Animatable>()) {
         animatable->configureVisuals(texture, "koopa");
-        animatable->playAnimation("slide");
+        animatable->playAnimation("dead");
     }
 }
 
@@ -66,17 +57,12 @@ void KoopaShell::onCreateShapeDef(b2ShapeDef& def) {
     def.material.friction = 0.0f;
     def.filter.categoryBits = CollisionFilter::SHELL;
     def.filter.maskBits = CollisionFilter::SHELL_MASK;
+    def.enablePreSolveEvents = true;
 }
 
 void KoopaShell::updateSimulation(const float& fixedDt) {
     (void)fixedDt;
     if (!hasValidBody()) {
-        return;
-    }
-
-    _lifetime += fixedDt;
-    if (_lifetime >= 30.0f) {
-        _pendingDestroy = true;
         return;
     }
 

@@ -213,7 +213,7 @@ AnimationSet Animation::makeKoopaAnimationSet() {
     animationSet.clips.emplace(
         "dead",
         Animation::createLinearClip(
-            {10, 228},
+            {10, 159},
             {19, 15},
             1,          
             {0, 0},      
@@ -225,8 +225,8 @@ AnimationSet Animation::makeKoopaAnimationSet() {
     animationSet.clips.emplace(
         "slide",
         Animation::createLinearClip(
-            {9, 159},
-            {22, 15},
+            {10, 159},
+            {19, 15},
             8,          
             {24, 0},
             1.0f / 8.0f,        
@@ -383,4 +383,54 @@ AnimationSet Animation::makeCoinBlockAnimationSet() {
     );
 
     return set;
+}
+
+AnimationSet Animation::makeLuckyBlockAnimationSet() {
+    AnimationSet set;
+    set.defaultClip = "shining";
+    
+    set.clips.emplace(
+        "shining", 
+        Animation::createLinearClip (
+            {0, 0},
+            {64, 64},
+            4, 
+            {72, 0},
+            1.0f / 4.0f,
+            true
+        )
+    );
+
+    set.clips.emplace(
+        "empty",
+        Animation::createLinearClip(
+            {288, 0},
+            {64, 64},
+            1,
+            {0, 0},
+            1.0f,
+            false
+        )
+    );
+
+    return set;
+}
+
+AnimationSet Animation::makeFlagpoleAnimationSet() {
+    AnimationSet animationSet;
+    animationSet.defaultClip = "idle";
+
+    animationSet.clips.emplace(
+        "idle",
+        Animation::createLinearClip(
+            {217, 0},
+            {29, 168},
+            3,
+            {29, 0},
+            1.0f,
+            true
+        )
+    );
+
+    return animationSet;
 }

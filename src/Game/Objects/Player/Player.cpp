@@ -59,6 +59,10 @@ void Player::destroy() {
     if (auto* invincible = getBehaviour<Invincible>()) return;
 
     if (_isDying) {
+        b2ShapeId shape = _body->getHitbox();
+        b2Filter filter = b2Shape_GetFilter(shape);
+        filter.maskBits = 0;
+        b2Shape_SetFilter(shape, filter);
         return;
     }
 
