@@ -1,9 +1,14 @@
 #include "Game/Objects/Item/Flagpole.h"
 
 #include "Game/Behaviours/Animatable.h"
+#include "Game/Objects/GameObject.h"
 #include "Game/Objects/Player/Player.h"
 #include "Game/World/GameWorld.h"
 #include "ResourceManager.h"
+
+namespace {
+constexpr sf::Vector2f kFlagpoleVisualSize{128.f, 896.f};
+}
 
 Flagpole::Flagpole() : Item() {
     configureVisuals(ResourceManager::getInstance().getTexture("goal_flag_spritesheet"));
@@ -17,6 +22,17 @@ void Flagpole::configureVisuals(sf::Texture& texture) {
     if (auto* animatable = getBehaviour<Animatable>()) {
         animatable->configureVisuals(texture, "flagpole");
     }
+}
+
+void Flagpole::onUpdateVisuals(float deltaTime) {
+    if (auto* animatable = getBehaviour<Animatable>()) {
+        animatable->updateVisualState(deltaTime, kFlagpoleVisualSize);
+    }
+}
+
+void Flagpole::spawn(const PhysicsWorld &physicsWorld, sf::Vector2f spawnPixels, sf::Vector2f hitboxPixels) {
+    GameObject::spawn(physicsWorld, spawnPixels, hitboxPixels);
+    updateHitboxSize({16, 896});
 }
 
 void Flagpole::onCreateBodyDef(b2BodyDef& def) {
