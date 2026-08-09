@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Game/Objects/Item/Item.h"
+#include "../Item.h"
 
 class Flagpole : public Item {
 public:

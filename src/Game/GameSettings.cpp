@@ -15,6 +15,8 @@ sf::Keyboard::Key GameSettings::getKeyForAction(ActionType action) const {
             return keyJump;
         case ActionType::Attack:
             return keyAttack;
+        case ActionType::Interact:
+            return keyInteract;
         default:
             return sf::Keyboard::Key::Unknown;
     }
@@ -33,6 +35,9 @@ void GameSettings::setKeyForAction(ActionType action, sf::Keyboard::Key key) {
             break;
         case ActionType::Attack:
             keyAttack = key;
+            break;
+        case ActionType::Interact:
+            keyInteract = key;
             break;
         default:
             break;

@@ -10,7 +10,7 @@
 #include "Game/Objects/Item/ConcreteItems/SuperStar.h"
 #include "Game/Objects/Player/Player.h"
 #include "Game/Objects/Item/ConcreteItems/Coin.h"
-#include "Game/Objects/Item/Flagpole.h"
+#include "Game/Objects/Item/ConcreteItems/Flagpole.h"
 #include "Game/Objects/Block/CoinBlock.h"
 #include "Game/Objects/Block/LuckyBlock.h"
 

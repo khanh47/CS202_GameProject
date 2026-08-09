@@ -1,4 +1,5 @@
 #include "Game/UserInput/PlayerController.h"
+#include "Game/UserInput/Action.h"
 #include "Game/World/GameWorld.h"
 #include "Game/GameSettings.h"
 
@@ -43,12 +44,14 @@ void PlayerController::refreshBindings() {
         BindKey(settings.keyJump, ActionType::MoveUp);
         BindKey(sf::Keyboard::Key::S, ActionType::MoveDown);
         BindKey(settings.keyAttack, ActionType::Attack);
+        BindKey(settings.keyInteract, ActionType::Interact);
     } else {
         BindKey(sf::Keyboard::Key::Left, ActionType::MoveLeft);
         BindKey(sf::Keyboard::Key::Right, ActionType::MoveRight);
         BindKey(sf::Keyboard::Key::Up, ActionType::MoveUp);
         BindKey(sf::Keyboard::Key::Down, ActionType::MoveDown);
         BindKey(sf::Keyboard::Key::M, ActionType::Attack);
+        BindKey(sf::Keyboard::Key::RShift, ActionType::Interact);
     }
 }
 
@@ -68,6 +71,7 @@ void PlayerController::applyPressAction(ActionType action) {
         case ActionType::Attack:
             _player.attack(_gameWorld);
             break;
+        case ActionType::Interact:
         case ActionType::MoveDown:
         case ActionType::Accelerate:
         case ActionType::Decelerate:
@@ -88,6 +92,8 @@ void PlayerController::applyReleaseAction(ActionType action) {
         case ActionType::MoveDown:
         case ActionType::Accelerate:
         case ActionType::Decelerate:
+        case ActionType::Interact:
+        case ActionType::Attack:
             break;
     }
 }

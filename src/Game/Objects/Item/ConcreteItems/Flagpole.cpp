@@ -1,4 +1,4 @@
-#include "Game/Objects/Item/Flagpole.h"
+#include "Game/Objects/Item/ConcreteItems/Flagpole.h"
 
 #include "Game/Behaviours/Animatable.h"
 #include "Game/Objects/Player/Player.h"

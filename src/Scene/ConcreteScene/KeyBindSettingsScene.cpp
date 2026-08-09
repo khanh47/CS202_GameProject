@@ -54,8 +54,17 @@ void KeyBindSettingsScene::init() {
     }));
     _menu.addButton(_btnAttack);
 
+    _btnButton = std::make_shared<UI::Button>(
+        sf::Vector2f(startPos.x, startPos.y + 4.f * spacing), btnSize, btnColor,
+        "Button: " + GameSettings::keyToString(settings.keyInteract), 24, 20.0f
+    );
+    _btnButton->setCommand(std::make_unique<FunctionalCommand>("RebindButton", [this]() {
+        this->startRebinding(ActionType::Interact, _btnButton);
+    }));
+    _menu.addButton(_btnButton);
+
     _btnBack = std::make_shared<UI::Button>(
-        sf::Vector2f(startPos.x, startPos.y + 4.f * spacing), btnSize, sf::Color(180, 80, 80),
+        sf::Vector2f(startPos.x, startPos.y + 5.f * spacing), btnSize, sf::Color(180, 80, 80),
         "Back", 24, 20.0f
     );
     _btnBack->setCommand(std::make_unique<FunctionalCommand>("BackToSettings", [this]() {
@@ -101,6 +110,9 @@ void KeyBindSettingsScene::updateKeybindButtonTexts() {
     }
     if (_btnAttack) {
         _btnAttack->setText("Shoot: " + GameSettings::keyToString(settings.keyAttack));
+    }
+    if (_btnButton) {
+        _btnButton->setText("Button: " + GameSettings::keyToString(settings.keyInteract));
     }
 }
 
