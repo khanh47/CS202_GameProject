@@ -9,8 +9,10 @@ public:
     ~Flagpole() override = default;
 
     void onContact(GameObject& other, const b2ContactData& contactData, b2ShapeId ownShape) override;
+    void spawn(const PhysicsWorld &physicsWorld, sf::Vector2f spawnPixels, sf::Vector2f hitboxPixels) override;
 
 protected:
+    void onUpdateVisuals(float deltaTime) override;
     void onCreateBodyDef(b2BodyDef& def) override;
     void onCreateShapeDef(b2ShapeDef& def) override;
 

@@ -38,6 +38,7 @@ private:
     void _drawWinOverlay(sf::RenderTarget& target);
 
     std::string _name;
+    bool _winReactionActive = false;
     bool _gameOverActive = false;
     bool _winActive = false;
     std::optional<sf::Sprite> _gameOverOverlay;

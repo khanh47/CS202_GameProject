@@ -1,6 +1,8 @@
 #include <memory>
 
 #include "Scene/ConcreteScene/InGameScene.h"
+#include "Game/Behaviours/Animatable.h"
+#include "Game/Objects/Player/Player.h"
 #include "ResourceManager.h"
 #include "Scene/SceneManager.h"
 #include "Game/GameSettings.h"
@@ -10,6 +12,7 @@ InGameScene::InGameScene(const std::string& name)
 }
 
 void InGameScene::init() {
+    _winReactionActive = false;
     _gameOverActive = false;
     _winActive = false;
     _gameOverTexture = &ResourceManager::getInstance().getTexture("game_over");
@@ -69,6 +72,10 @@ void InGameScene::cleanup() {
 }
 
 void InGameScene::handleInput(const sf::Event& event) {
+    if (_winReactionActive) {
+        return;
+    }
+
     if (_winActive) {
         if (event.is<sf::Event::KeyPressed>()
             || event.is<sf::Event::MouseButtonPressed>()
@@ -104,7 +111,7 @@ void InGameScene::handleInput(const sf::Event& event) {
 }
 
 void InGameScene::updateSimulation(const float &fixedDt) {
-    if (_gameOverActive || _winActive) {
+    if (_winReactionActive || _gameOverActive || _winActive) {
         return;
     }
 
@@ -114,15 +121,24 @@ void InGameScene::updateSimulation(const float &fixedDt) {
 }
 
 void InGameScene::updateVisuals(float deltaTime) {
-    if (_gameOverActive || _winActive) {
-        return;
+    _gameWorld.updateVisuals(deltaTime);
+
+    if (_winReactionActive) {
+        auto player = std::dynamic_pointer_cast<Player>(_gameWorld.getPrimaryPlayer());
+        auto* animatable = player ? player->getBehaviour<Animatable>() : nullptr;
+        if (!animatable || animatable->isAnimationDone()) {
+            _winReactionActive = false;
+            _winActive = true;
+        }
     }
 
-    _gameWorld.updateVisuals(deltaTime);
-    _camera.update(deltaTime);
-    if (!_camera.getTarget() && _gameWorld.getPrimaryPlayer()) {
-        _camera.setTarget(_gameWorld.getPrimaryPlayer());
+    if (!_winReactionActive && !_gameOverActive && !_winActive) {
+        _camera.update(deltaTime);
+        if (!_camera.getTarget() && _gameWorld.getPrimaryPlayer()) {
+            _camera.setTarget(_gameWorld.getPrimaryPlayer());
+        }
     }
+
     _scoreManager.update(deltaTime);
 }
 
@@ -154,7 +170,7 @@ void InGameScene::render(sf::RenderTarget& target) {
 }
 
 void InGameScene::_checkWin() {
-    if (_winActive) {
+    if (_winReactionActive || _winActive || _gameOverActive) {
         return;
     }
 
@@ -162,11 +178,18 @@ void InGameScene::_checkWin() {
         return;
     }
 
-    _winActive = true;
+    _winReactionActive = true;
+
+    auto player = std::dynamic_pointer_cast<Player>(_gameWorld.getPrimaryPlayer());
+    if (player) {
+        if (auto* animatable = player->getBehaviour<Animatable>()) {
+            animatable->playAnimation("victory");
+        }
+    }
 }
 
 void InGameScene::_checkGameOver() {
-    if (_gameOverActive || _winActive) {
+    if (_winReactionActive || _gameOverActive || _winActive) {
         return;
     }
 

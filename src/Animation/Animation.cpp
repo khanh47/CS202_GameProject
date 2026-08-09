@@ -148,6 +148,30 @@ AnimationSet Animation::makeDefaultPlayerAnimationSet() {
         )
     );
 
+    animationSet.clips.emplace(
+        "victory",
+        Animation::createLinearClip(
+            {48, 320},   
+            {32, 32},   
+            4,          
+            {32, 0},     
+            1 / 3.0f,       
+            false 
+        )
+    );
+
+    animationSet.clips.emplace(
+        "lose",
+        Animation::createLinearClip(
+            {112, 368},   
+            {32, 32},   
+            2,          
+            {32, 0},     
+            1 / 3.0f,       
+            false 
+        )
+    );
+
     return animationSet;
 }
 
@@ -427,7 +451,7 @@ AnimationSet Animation::makeFlagpoleAnimationSet() {
             {29, 168},
             3,
             {29, 0},
-            1.0f,
+            1.0f / 3,
             true
         )
     );
