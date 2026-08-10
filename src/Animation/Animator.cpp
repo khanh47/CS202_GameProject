@@ -17,9 +17,9 @@ Animator::Animator(std::shared_ptr<AnimationSet> animationSet): _animations(anim
     }
 }
 
-void Animator::play(const std::string& name) {
+void Animator::play(const std::string& name, bool replay) {
     if (!_animations) return;
-    if (_animations->clips.find(name) == _animations->clips.end()) return;
+    if (!replay && _animations->clips.find(name) == _animations->clips.end()) return;
 
     _currentAnimationName = name;
     _currentFrameId = 0;
@@ -119,6 +119,10 @@ bool Animator::isPlaying() const {
 
 bool Animator::isPaused() const {
     return hasActiveAnimation() && _paused;
+}
+
+bool Animator::isLooping() const {
+    return hasActiveAnimation() && _animations->clips.at(_currentAnimationName).isLooping();
 }
 
 bool Animator::isAnimationDone() const {

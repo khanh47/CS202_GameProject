@@ -25,10 +25,11 @@ public:
 
     void setVisualScale(sf::Vector2f scale);
     sf::Vector2f getVisualScale() const;
-    void playAnimation(const std::string& name);
+    void playAnimation(const std::string& name, bool replay = false);
     void stopAnimation();
     std::string getActiveAnimationName() const;
     bool isAnimationDone() const;
+    bool isLooping() const;
     bool hasSprite() const;
 
 private:

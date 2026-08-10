@@ -83,7 +83,7 @@ AnimationSet Animation::makeDefaultPlayerAnimationSet() {
             {32, 32},
             3,
             {32, 0},
-            1.0f / 4.0f,
+            1.0f / 5.0f,
             false
         )
     );
@@ -95,7 +95,7 @@ AnimationSet Animation::makeDefaultPlayerAnimationSet() {
             {32, 32},
             3,
             {32, 0},
-            1.0f / 4.0f,
+            1.0f / 6.0f,
             false
         )
     );

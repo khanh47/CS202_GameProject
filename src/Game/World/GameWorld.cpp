@@ -36,8 +36,6 @@ void GameWorld::updateSimulation(const float& fixedDt) {
         return;
     }
 
-    _objectStore.updateSimulation(fixedDt);
-
     constexpr float maximumFireballDistance = 1280.0f;
     const float voidThreshold =
         _worldMap.getGridHeight() * _worldMap.getCellSize();
@@ -49,6 +47,7 @@ void GameWorld::updateSimulation(const float& fixedDt) {
         );
     }
 
+    _objectStore.updateSimulation(fixedDt);
     _physicsWorld.updateSimulation(fixedDt);
 
     // Events must be consumed while every fixture owner is still alive.

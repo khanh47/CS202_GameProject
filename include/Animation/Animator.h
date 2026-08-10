@@ -12,7 +12,7 @@ public:
     Animator(std::shared_ptr<AnimationSet> animationSet);
     ~Animator() = default;
 
-    void play(const std::string& name);
+    void play(const std::string& name, bool replay = false);
     void stop();
     void pause();
     void resume();
@@ -24,6 +24,7 @@ public:
     bool isPlaying() const;
     bool isPaused() const;
     bool isAnimationDone() const;
+    bool isLooping() const;
     std::string getActiveAnimationName() const;
 
 private:
