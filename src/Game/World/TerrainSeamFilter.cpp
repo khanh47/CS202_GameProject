@@ -79,11 +79,11 @@ bool TerrainSeamFilter::shouldEnableContact(
     b2Vec2 normal
 ) const {
     const bool walkerIsA = belongsTo(
-        CollisionFilter::PLAYER | CollisionFilter::SHELL,
+        CollisionFilter::PLAYER | CollisionFilter::SHELL | CollisionFilter::ENEMY,
         shapeA
     );
     const bool walkerIsB = belongsTo(
-        CollisionFilter::PLAYER | CollisionFilter::SHELL,
+        CollisionFilter::PLAYER | CollisionFilter::SHELL | CollisionFilter::ENEMY,
         shapeB
     );
     if (walkerIsA == walkerIsB) {

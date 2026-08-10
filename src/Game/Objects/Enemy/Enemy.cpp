@@ -86,6 +86,7 @@ void Enemy::onCreateBodyDef(b2BodyDef& def) {
 }
 
 void Enemy::onCreateShapeDef(b2ShapeDef& def) {
+    def.enablePreSolveEvents = true;
     def.density = 1.0f;
     def.material.friction = 0.0f;
     def.filter.maskBits = CollisionFilter::ENEMY_MASK;
