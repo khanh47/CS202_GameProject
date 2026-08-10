@@ -1,4 +1,6 @@
 #include "Scene/ConcreteScene/SettingsScene.h"
+#include "Audio/MusicManager.h"
+#include "Audio/SoundManager.h"
 #include "Button/BarSlider.h"
 #include "ResourceManager.h"
 #include "Scene/SceneManager.h"
@@ -76,6 +78,7 @@ void SettingsScene::buildMusicPanel() {
     );
     musicToggle->setToggleCallback([](bool on) {
         GameSettings::getInstance().musicEnabled = on;
+        Audio::MusicManager::getInstance().setEnabled(on);
     });
     _subMenu.addButton(musicToggle);
 
@@ -87,7 +90,7 @@ void SettingsScene::buildMusicPanel() {
         auto& s = GameSettings::getInstance();
         s.musicVolume = std::clamp(value, 0.f, 100.f);
         updateVolumeLabel();
-        refreshTitleScreenMusicVolume();
+        Audio::MusicManager::getInstance().setVolume(value);
     });
     _subMenu.addButton(_btnMusicVolume);
 
@@ -97,6 +100,7 @@ void SettingsScene::buildMusicPanel() {
     );
     soundToggle->setToggleCallback([](bool on) {
         GameSettings::getInstance().soundEnabled = on;
+        Audio::SoundManager::getInstance().setEnabled(on);
     });
     _subMenu.addButton(soundToggle);
 
@@ -108,6 +112,7 @@ void SettingsScene::buildMusicPanel() {
         auto& s = GameSettings::getInstance();
         s.soundVolume = std::clamp(value, 0.f, 100.f);
         updateVolumeLabel();
+        Audio::SoundManager::getInstance().setGlobalVolume(value);
     });
     _subMenu.addButton(_btnSoundVolume);
 

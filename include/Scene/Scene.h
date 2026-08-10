@@ -36,7 +36,6 @@ protected:
     void renderBackground(sf::RenderTarget& target);
     void playTitleScreenMusic();
     void stopTitleScreenMusic();
-    void refreshTitleScreenMusicVolume();
 
     bool _isActive = false;
     SceneManager* _sceneManager = nullptr;

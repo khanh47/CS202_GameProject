@@ -21,6 +21,10 @@ public:
     void setGlobalVolume(float v);
     float getGlobalVolume() const;
 
+    // Master switch for sound effects
+    void setEnabled(bool e);
+    bool isEnabled() const;
+
     void stopAll();
 
     // Call periodically to reclaim finished sounds (optional)
@@ -32,6 +36,7 @@ private:
 
     std::vector<sf::Sound> _pool;
     float _globalVolume = 80.f;
+    bool _enabled = true;
     size_t _maxPoolSize = 32;
 };
 

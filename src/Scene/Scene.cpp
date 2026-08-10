@@ -59,7 +59,3 @@ void Scene::stopTitleScreenMusic() {
     Audio::MusicManager::getInstance().stop();
     g_titleScreenMusicPlaying = false;
 }
-
-void Scene::refreshTitleScreenMusicVolume() {
-    Audio::MusicManager::getInstance().setVolume(GameSettings::getInstance().musicVolume);
-}

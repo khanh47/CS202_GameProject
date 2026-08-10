@@ -11,6 +11,7 @@ MusicManager &MusicManager::getInstance() {
 
 MusicManager::MusicManager() {
     _volume = GameSettings::getInstance().musicVolume;
+    _enabled = GameSettings::getInstance().musicEnabled;
 }
 
 MusicManager::~MusicManager() = default;
@@ -57,7 +58,16 @@ void MusicManager::setVolume(float v) {
 
 float MusicManager::getVolume() const { return _volume; }
 
-void MusicManager::setEnabled(bool e) { _enabled = e; if (!e) stop(); }
+void MusicManager::setEnabled(bool e) {
+    if (_enabled == e) return;
+    _enabled = e;
+    if (!e) {
+        _lastAlias = _currentAlias;
+        stop();
+    } else if (!_lastAlias.empty()) {
+        play(_lastAlias, true);
+    }
+}
 bool MusicManager::isEnabled() const { return _enabled; }
 
 void MusicManager::crossfadeTo(const std::string &alias, float /*seconds*/) {

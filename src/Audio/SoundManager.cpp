@@ -10,7 +10,11 @@ SoundManager &SoundManager::getInstance() {
     return instance;
 }
 
-SoundManager::SoundManager() = default;
+SoundManager::SoundManager() {
+    const GameSettings& settings = GameSettings::getInstance();
+    _globalVolume = settings.soundVolume;
+    _enabled = settings.soundEnabled;
+}
 SoundManager::~SoundManager() = default;
 
 void SoundManager::preload(const std::string &alias, const std::string &filepath) {
@@ -22,6 +26,7 @@ void SoundManager::preload(const std::string &alias, const std::string &filepath
 }
 
 void SoundManager::playEffect(const std::string &alias, float volumeMultiplier) {
+    if (!_enabled) return;
     try {
         auto &buf = ResourceManager::getInstance().getSoundBuffer(alias);
 
@@ -51,6 +56,13 @@ void SoundManager::setGlobalVolume(float v) {
 }
 
 float SoundManager::getGlobalVolume() const { return _globalVolume; }
+
+void SoundManager::setEnabled(bool e) {
+    _enabled = e;
+    if (!e) stopAll();
+}
+
+bool SoundManager::isEnabled() const { return _enabled; }
 
 void SoundManager::stopAll() {
     for (auto &s : _pool) {
