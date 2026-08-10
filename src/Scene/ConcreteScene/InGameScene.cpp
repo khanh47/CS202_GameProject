@@ -39,16 +39,6 @@ void InGameScene::init() {
     _gameWorld.loadLevel(_name);
     _gameWorld.setScoreManager(&_scoreManager); // Set score manager for the game world
 
-    // Debug info: report level bounds and primary player
-    std::cout << "[InGameScene] Loaded level: " << _name << std::endl;
-    sf::FloatRect bounds = _gameWorld.getBounds();
-    std::cout << "[InGameScene] World bounds: " << bounds.position.x << "," << bounds.position.y << " -> " << bounds.size.x << "x" << bounds.size.y << std::endl;
-    if (_gameWorld.getPrimaryPlayer()) {
-        std::cout << "[InGameScene] Primary player present" << std::endl;
-    } else {
-        std::cout << "[InGameScene] No primary player" << std::endl;
-    }
-
     // Configure 2D Platformer Camera System parameters
     CameraConfig config;
     config.deadzoneSize = {250.0f, 180.0f};          // Invisible rectangular deadzone box
@@ -62,10 +52,6 @@ void InGameScene::init() {
     config.useBounds = true;
 
     _camera.setConfig(config);
-    
-        // Enable debug overlays to help diagnose rendering issues
-        GameSettings::getInstance().debugDrawGrid = true;
-        GameSettings::getInstance().debugDrawCoordinates = true;
 
     // Bind camera tracking target to player
     if (auto player = _gameWorld.getPrimaryPlayer()) {
@@ -77,6 +63,7 @@ void InGameScene::init() {
 
     void InGameScene::onEnter() {
         // Ensure title-screen music is stopped and play level theme
+        _isActive = true;
         stopTitleScreenMusic();
         Audio::MusicManager::getInstance().setVolume(GameSettings::getInstance().musicVolume);
 
@@ -168,10 +155,6 @@ void InGameScene::updateVisuals(float deltaTime) {
 void InGameScene::render(sf::RenderTarget& target) {
     sf::View defaultView = target.getDefaultView();
     target.setView(_camera.getView());
-
-    // Debug: output camera view size
-    const sf::View camView = _camera.getView();
-    std::cout << "[InGameScene] Camera view center: " << camView.getCenter().x << "," << camView.getCenter().y << " size: " << camView.getSize().x << "x" << camView.getSize().y << std::endl;
 
     _gameWorld.render(target);
 

@@ -45,8 +45,6 @@ void TileMap::updateVisibleVertices(const sf::View& view) {
         const sf::Vector2f viewCenter = view.getCenter();
         const sf::Vector2f viewSize = view.getSize();
         const sf::FloatRect viewBounds(viewCenter - viewSize / 2.f, viewSize);
-        std::cout << "[TileMap] viewCenter=" << viewCenter.x << "," << viewCenter.y
-                  << " size=" << viewSize.x << "x" << viewSize.y << std::endl;
     }
 
     // Determine the view frustum bounds in pixel coordinates
@@ -111,7 +109,6 @@ void TileMap::updateVisibleVertices(const sf::View& view) {
     // Debug: report how many batches were created and total vertices
     size_t totalVerts = 0;
     for (const Batch& b : _batches) totalVerts += b.vertices.getVertexCount();
-    std::cout << "[TileMap] batches=" << _batches.size() << " totalVerts=" << totalVerts << std::endl;
 }
 
 int TileMap::getTileId(int col, int row) const {
@@ -126,7 +123,6 @@ void TileMap::draw(sf::RenderTarget& target, sf::RenderStates states) const {
         if (batch.texture == nullptr || batch.vertices.getVertexCount() == 0) {
             continue;
         }
-        std::cout << "[TileMap] draw batch verts=" << batch.vertices.getVertexCount() << std::endl;
         states.texture = batch.texture;
         target.draw(batch.vertices, states);
     }
