@@ -8,8 +8,7 @@
 #include "Game/GameSettings.h"
 
 InGameScene::InGameScene(const std::string& name)
-    : _name(name) {
-}
+    : Scene(name) {}
 
 void InGameScene::init() {
     _winReactionActive = false;
@@ -58,17 +57,6 @@ void InGameScene::init() {
     } else {
         _camera.setCenter({1920.f / 2.f, _gameWorld.getGridHeight() * _gameWorld.getCellSize() - 1080.f / 2.f});
     }
-}
-
-void InGameScene::onEnter() {
-    _isActive = true;
-}
-
-void InGameScene::onExit() {
-    _isActive = false;
-}
-
-void InGameScene::cleanup() {
 }
 
 void InGameScene::handleInput(const sf::Event& event) {

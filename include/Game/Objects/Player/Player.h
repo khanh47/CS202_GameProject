@@ -87,7 +87,7 @@ protected:
 
 private:
     float _baseMoveSpeed = 8.0f;
-    float _baseJumpSpeed = 16.0f;
+    float _baseJumpSpeed = 20.0f;
     std::unique_ptr<PlayerState> _state;
     std::unique_ptr<IAttackStrategy> _attackStrategy;
     std::string _character = "mario";

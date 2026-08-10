@@ -6,28 +6,20 @@
 #include "Scene/SceneManager.h"
 
 ModeSelectScene::ModeSelectScene()
-    : _name("ModeSelectScene"),
+    : Scene("ModeSelectScene"),
       _titleText(ResourceManager::getInstance().getFont("Roboto"), "CHOOSE GAME MODE", 64) {
     sf::FloatRect bounds = _titleText.getLocalBounds();
     _titleText.setOrigin({bounds.position.x + bounds.size.x / 2.0f,
                           bounds.position.y + bounds.size.y / 2.0f});
     _titleText.setPosition({960.0f, 220.0f});
     _titleText.setFillColor(sf::Color::Black);
-}
 
-void ModeSelectScene::init() {
+    setBackground("main_menu_background");
 }
 
 void ModeSelectScene::onEnter() {
-    _isActive = true;
+    Scene::onEnter();
     _setupButtons();
-}
-
-void ModeSelectScene::onExit() {
-    _isActive = false;
-}
-
-void ModeSelectScene::cleanup() {
 }
 
 void ModeSelectScene::handleInput(const sf::Event& event) {
@@ -43,11 +35,8 @@ void ModeSelectScene::handleInput(const sf::Event& event) {
     _buttonMenu.processEvent(event);
 }
 
-void ModeSelectScene::updateVisuals(float deltaTime) {
-    (void)deltaTime;
-}
-
 void ModeSelectScene::render(sf::RenderTarget& target) {
+    Scene::render(target);
     target.draw(_titleText);
     _buttonMenu.render(target);
 }

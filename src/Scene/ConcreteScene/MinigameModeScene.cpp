@@ -6,8 +6,8 @@
 #include "Scene/SceneManager.h"
 
 MinigameModeScene::MinigameModeScene(const std::string& mapPath)
-    : _mapPath(mapPath),
-      _name("MinigameModeScene"),
+    : Scene("MinigameModeScene"),
+      _mapPath(mapPath),
       _titleText(ResourceManager::getInstance().getFont("Roboto"), "SELECT MINIGAME MODE", 64),
       _comingSoonText(ResourceManager::getInstance().getFont("Roboto"), "VS AI - Coming Soon", 40) {
     sf::FloatRect bounds = _titleText.getLocalBounds();
@@ -21,21 +21,13 @@ MinigameModeScene::MinigameModeScene(const std::string& mapPath)
                                soonBounds.position.y + soonBounds.size.y / 2.0f});
     _comingSoonText.setPosition({960.0f, 540.0f});
     _comingSoonText.setFillColor(sf::Color::Red);
-}
 
-void MinigameModeScene::init() {
+    setBackground("main_menu_background");
 }
 
 void MinigameModeScene::onEnter() {
-    _isActive = true;
+    Scene::onEnter();
     _setupButtons();
-}
-
-void MinigameModeScene::onExit() {
-    _isActive = false;
-}
-
-void MinigameModeScene::cleanup() {
 }
 
 void MinigameModeScene::handleInput(const sf::Event& event) {
@@ -56,11 +48,8 @@ void MinigameModeScene::handleInput(const sf::Event& event) {
     _buttonMenu.processEvent(event);
 }
 
-void MinigameModeScene::updateVisuals(float deltaTime) {
-    (void)deltaTime;
-}
-
 void MinigameModeScene::render(sf::RenderTarget& target) {
+    Scene::render(target);
     target.draw(_titleText);
     _buttonMenu.render(target);
     if (_showComingSoon) {

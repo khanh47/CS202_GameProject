@@ -5,7 +5,8 @@
 #include "Game/GameSettings.h"
 
 KeyBindSettingsScene::KeyBindSettingsScene()
-    : _name("KeyBindSettingsScene") {
+    : Scene("KeyBindSettingsScene") {
+    setBackground("main_menu_background");
 }
 
 void KeyBindSettingsScene::init() {
@@ -76,17 +77,14 @@ void KeyBindSettingsScene::init() {
 }
 
 void KeyBindSettingsScene::onEnter() {
-    _isActive = true;
+    Scene::onEnter();
     updateKeybindButtonTexts();
 }
 
 void KeyBindSettingsScene::onExit() {
-    _isActive = false;
+    Scene::onExit();
     _rebindingAction.reset();
     _activeRebindingButton.reset();
-}
-
-void KeyBindSettingsScene::cleanup() {
 }
 
 void KeyBindSettingsScene::startRebinding(ActionType action, std::shared_ptr<UI::Button> button) {
@@ -153,6 +151,8 @@ void KeyBindSettingsScene::updateVisuals(float deltaTime) {
 }
 
 void KeyBindSettingsScene::render(sf::RenderTarget& target) {
+    Scene::render(target);
+
     const sf::Font& font = ResourceManager::getInstance().getFont("Roboto");
 
     // Title Header

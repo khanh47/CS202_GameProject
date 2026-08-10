@@ -6,7 +6,8 @@
 #include "Game/GameSettings.h"
 
 SettingsScene::SettingsScene()
-    : _name("SettingsScene") {
+    : Scene("SettingsScene") {
+    setBackground("main_menu_background");
 }
 
 void SettingsScene::init() {
@@ -36,17 +37,6 @@ void SettingsScene::init() {
     ), sf::Color(180, 80, 80));
 }
 
-void SettingsScene::onEnter() {
-    _isActive = true;
-}
-
-void SettingsScene::onExit() {
-    _isActive = false;
-}
-
-void SettingsScene::cleanup() {
-}
-
 void SettingsScene::handleInput(const sf::Event& event) {
     if (auto* keyEvent = event.getIf<sf::Event::KeyPressed>()) {
         if (keyEvent->code == sf::Keyboard::Key::Escape) {
@@ -64,6 +54,8 @@ void SettingsScene::updateVisuals(float deltaTime) {
 }
 
 void SettingsScene::render(sf::RenderTarget& target) {
+    Scene::render(target);
+
     const sf::Font& font = ResourceManager::getInstance().getFont("Roboto");
     sf::Text text(font, "SETTINGS", 48);
     text.setFillColor(sf::Color::Black);

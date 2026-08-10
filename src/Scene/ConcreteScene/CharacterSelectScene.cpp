@@ -5,28 +5,20 @@
 #include "Scene/SceneManager.h"
 
 CharacterSelectScene::CharacterSelectScene()
-    : _name("CharacterSelectScene"),
+    : Scene("CharacterSelectScene"),
       _titleText(ResourceManager::getInstance().getFont("Roboto"), "PICK A CHARACTER", 64) {
     sf::FloatRect bounds = _titleText.getLocalBounds();
     _titleText.setOrigin({bounds.position.x + bounds.size.x / 2.0f,
                           bounds.position.y + bounds.size.y / 2.0f});
     _titleText.setPosition({960.0f, 220.0f});
     _titleText.setFillColor(sf::Color::Black);
-}
 
-void CharacterSelectScene::init() {
+    setBackground("main_menu_background");
 }
 
 void CharacterSelectScene::onEnter() {
-    _isActive = true;
+    Scene::onEnter();
     _setupButtons();
-}
-
-void CharacterSelectScene::onExit() {
-    _isActive = false;
-}
-
-void CharacterSelectScene::cleanup() {
 }
 
 void CharacterSelectScene::handleInput(const sf::Event& event) {
@@ -42,11 +34,8 @@ void CharacterSelectScene::handleInput(const sf::Event& event) {
     _buttonMenu.processEvent(event);
 }
 
-void CharacterSelectScene::updateVisuals(float deltaTime) {
-    (void)deltaTime;
-}
-
 void CharacterSelectScene::render(sf::RenderTarget& target) {
+    Scene::render(target);
     target.draw(_titleText);
     _buttonMenu.render(target);
 }

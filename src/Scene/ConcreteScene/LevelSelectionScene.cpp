@@ -5,28 +5,20 @@
 #include "Scene/SceneManager.h"
 
 LevelSelectionScene::LevelSelectionScene()
-    : _name("LevelSelectionScene"),
+    : Scene("LevelSelectionScene"),
       _titleText(ResourceManager::getInstance().getFont("Roboto"), "SELECT LEVEL", 64) {
     sf::FloatRect bounds = _titleText.getLocalBounds();
     _titleText.setOrigin({bounds.position.x + bounds.size.x / 2.0f,
                           bounds.position.y + bounds.size.y / 2.0f});
     _titleText.setPosition({960.0f, 220.0f});
     _titleText.setFillColor(sf::Color::Black);
-}
 
-void LevelSelectionScene::init() {
+    setBackground("main_menu_background");
 }
 
 void LevelSelectionScene::onEnter() {
-    _isActive = true;
+    Scene::onEnter();
     _setupButtons();
-}
-
-void LevelSelectionScene::onExit() {
-    _isActive = false;
-}
-
-void LevelSelectionScene::cleanup() {
 }
 
 void LevelSelectionScene::handleInput(const sf::Event& event) {
@@ -42,11 +34,8 @@ void LevelSelectionScene::handleInput(const sf::Event& event) {
     _buttonMenu.processEvent(event);
 }
 
-void LevelSelectionScene::updateVisuals(float deltaTime) {
-    (void)deltaTime;
-}
-
 void LevelSelectionScene::render(sf::RenderTarget& target) {
+    Scene::render(target);
     target.draw(_titleText);
     _buttonMenu.render(target);
 }
