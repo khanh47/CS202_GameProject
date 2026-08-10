@@ -23,6 +23,6 @@ void FireState::handleSuperStar(Player& player) {
 void FireState::handleEnemy(Player& player) {
     auto* animatable = player.getBehaviour<Animatable>();
     animatable->playAnimation("hit");
-    player.startTransformation(Player::TransformTarget::Normal);
+    player.startTransformation(Player::TransformTarget::Normal, 0);
     player.addBehaviour<Invincible>(2.0f);
 }

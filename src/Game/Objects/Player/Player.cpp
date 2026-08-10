@@ -173,16 +173,21 @@ void Player::updateSimulation(const float &fixedDt) {
         return;
     }
 
-    if (auto* invincible = getBehaviour<Invincible>()) {
-        invincible->updateSimulation(fixedDt);
+    b2Vec2 velocity = b2Body_GetLinearVelocity(_body->getId());
 
-        if(invincible->getTime() < 0.001f){
-            removeBehaviour<Invincible>();
-
-        };
-    }
+    auto* invincible = getBehaviour<Invincible>();
     auto* animatable = getBehaviour<Animatable>();
     auto* moveable = getBehaviour<Moveable>();
+
+    
+    if (invincible) {
+        invincible->updateSimulation(fixedDt);
+        if(invincible->getTime() == 0.0){
+            removeBehaviour<Invincible>();
+            velocity.y -= 2.01;
+        };
+    }
+    
 
     if (_isDying) {
         if (!animatable) {
@@ -203,8 +208,6 @@ void Player::updateSimulation(const float &fixedDt) {
     if (!moveable) {
         return;
     }
-
-    b2Vec2 velocity = b2Body_GetLinearVelocity(_body->getId());
 
     float moveSpeed = _baseMoveSpeed;
     float jumpSpeed = _baseJumpSpeed;
@@ -243,6 +246,8 @@ void Player::finalizeSimulation(const float &fixedDt) {
     if (!moveable || !animatable) {
         return;
     }
+
+    if(!animatable->isLooping() && !animatable->isAnimationDone()) return;
 
     if (moveable->isAirbone() || moveable->isJumping()) {
         animatable->playAnimation("jump");

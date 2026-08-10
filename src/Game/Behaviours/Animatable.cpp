@@ -76,8 +76,8 @@ void Animatable::renderVisualState(sf::RenderTarget& target, const sf::Vector2f&
     }
 }
 
-void Animatable::playAnimation(const std::string& name) {
-    if (_animator.getActiveAnimationName() == name && !_animator.isAnimationDone()) return;
+void Animatable::playAnimation(const std::string& name, bool replay) {
+    if (!replay && _animator.getActiveAnimationName() == name && !_animator.isAnimationDone()) return;
     _animator.play(name);
 
     if (_sprite && _animator.hasActiveAnimation()) {
@@ -95,6 +95,10 @@ std::string Animatable::getActiveAnimationName() const {
 
 bool Animatable::isAnimationDone() const {
     return _animator.isAnimationDone();
+}
+
+bool Animatable::isLooping() const {
+    return _animator.isLooping();
 }
 
 bool Animatable::hasSprite() const {
