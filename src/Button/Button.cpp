@@ -9,7 +9,7 @@ namespace UI {
 Button::Button(const sf::Vector2f& position, const sf::Vector2f& size, const sf::Color& color, 
                const std::string& text, unsigned int charSize, 
                float radius, const std::string& iconAlias)
-    : label(ResourceManager::getInstance().getFont("Roboto"), text, charSize),
+    : label(ResourceManager::getInstance().getFont("moon_get"), text, charSize),
       defaultColor(color), cornerRadius(radius),basePosition(position), baseSize(size) {
       
     int r = std::min(255, color.r + 40);

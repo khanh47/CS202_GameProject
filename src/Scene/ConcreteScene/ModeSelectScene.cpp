@@ -7,14 +7,15 @@
 
 ModeSelectScene::ModeSelectScene()
     : Scene("ModeSelectScene"),
-      _titleText(ResourceManager::getInstance().getFont("Roboto"), "CHOOSE GAME MODE", 64) {
+      _titleText(ResourceManager::getInstance().getFont("SuperMario"), "CHOOSE GAME MODE", 64) {
     sf::FloatRect bounds = _titleText.getLocalBounds();
+    _titleText.setOutlineThickness(5.0f);
+    _titleText.setOutlineColor(sf::Color::Black);
+    _titleText.setFillColor(sf::Color::White);
     _titleText.setOrigin({bounds.position.x + bounds.size.x / 2.0f,
                           bounds.position.y + bounds.size.y / 2.0f});
     _titleText.setPosition({960.0f, 220.0f});
-    _titleText.setFillColor(sf::Color::Black);
-
-    setBackground("main_menu_background");
+    _titleText.setFillColor(sf::Color::White);
 }
 
 void ModeSelectScene::onEnter() {

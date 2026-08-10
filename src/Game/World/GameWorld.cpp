@@ -2,12 +2,14 @@
 
 #include <algorithm>
 
+#include "Game/Behaviours/Animatable.h"
 #include "Game/GameSettings.h"
 #include "Game/Objects/Player/Player.h"
 #include "Game/Objects/Projectile/KoopaShell.h"
 #include "Game/World/LevelDataLoader.h"
 
-GameWorld::GameWorld() = default;
+GameWorld::GameWorld(int gridWidth, int gridHeight, float cellSize)
+    : _worldMap(gridWidth, gridHeight, cellSize) {}
 
 GameWorld::~GameWorld() = default;
 
@@ -88,6 +90,7 @@ void GameWorld::handleSensors(b2SensorEvents sensorEvents) {
 }
 
 #include "ResourceManager.h"
+#include "Audio/MusicManager.h"
 #include "Game/UserInput/PlayerController.h"
 
 void GameWorld::loadMap(const LevelData& levelData) {
@@ -247,11 +250,24 @@ void GameWorld::reachFlagpole(sf::Vector2f position) {
 
     if (_scoreManager) {
         _scoreManager->handleEvent(ScoreEventType::FlagpoleReached, position);
+        // Play course clear music (non-looping)
+        Audio::MusicManager::getInstance().setVolume(GameSettings::getInstance().musicVolume);
+        Audio::MusicManager::getInstance().play("course_clear", false);
     }
 }
 
 void GameWorld::syncPlayerControllers() {
     _objectStore.syncControllersWithKeyboard();
+}
+
+void GameWorld::playVictoryAnimation() {
+    for (const std::shared_ptr<GameObject>& object : _objectStore.objects()) {
+        if (auto player = std::dynamic_pointer_cast<Player>(object)) {
+            if (auto* animatable = player->getBehaviour<Animatable>()) {
+                animatable->playAnimation("victory");
+            }
+        }
+    }
 }
 
 std::shared_ptr<GameObject> GameWorld::getPrimaryPlayer() const {

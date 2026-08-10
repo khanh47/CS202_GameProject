@@ -191,7 +191,7 @@ void WorldRenderer::renderDebugGrid(
         return;
     }
 
-    const sf::Font& font = ResourceManager::getInstance().getFont("Roboto");
+    const sf::Font& font = ResourceManager::getInstance().getFont("SuperMario");
     sf::Text text(font, "", 10);
     text.setFillColor(sf::Color::White);
     text.setOutlineColor(sf::Color::Black);

@@ -34,6 +34,34 @@ void ResourceManager::_preLoadFont(const std::string &filename, const std::strin
 	_MappingAliasToFilename[alias] = filename;
 }
 
+void ResourceManager::_preLoadMusic(const std::string &filename, const std::string &alias) {
+	if (_musics.find(filename) != _musics.end())
+		return;
+
+	auto music = std::make_unique<sf::Music>();
+	if (!music->openFromFile(filename))
+		throw std::runtime_error("Failed to load music: " + filename);
+
+	_musics.emplace(filename, std::move(music));
+	_MappingAliasToFilename[alias] = filename;
+}
+
+void ResourceManager::_preLoadSound(const std::string &filename, const std::string &alias) {
+	if (_soundBuffers.find(filename) != _soundBuffers.end())
+		return;
+
+	auto buffer = std::make_unique<sf::SoundBuffer>();
+	if (!buffer->loadFromFile(filename))
+		throw std::runtime_error("Failed to load sound: " + filename);
+
+	_soundBuffers.emplace(filename, std::move(buffer));
+	_MappingAliasToFilename[alias] = filename;
+}
+
+void ResourceManager::preLoadSound(const std::string &filePath, const std::string &alias) {
+	_preLoadSound(filePath, alias);
+}
+
 void ResourceManager::_unloadTexture(const std::string &alias) {
 	auto it = _MappingAliasToFilename.find(alias);
 	if (it != _MappingAliasToFilename.end()) {
@@ -53,6 +81,18 @@ void ResourceManager::_unloadFont(const std::string &alias) {
 		auto fontIt = _fonts.find(filename);
 		if (fontIt != _fonts.end()) {
 			_fonts.erase(fontIt);
+		}
+		_MappingAliasToFilename.erase(it);
+	}
+}
+
+void ResourceManager::_unloadMusic(const std::string &alias) {
+	auto it = _MappingAliasToFilename.find(alias);
+	if (it != _MappingAliasToFilename.end()) {
+		const std::string &filename = it->second;
+		auto musicIt = _musics.find(filename);
+		if (musicIt != _musics.end()) {
+			_musics.erase(musicIt);
 		}
 		_MappingAliasToFilename.erase(it);
 	}
@@ -89,14 +129,50 @@ sf::Font &ResourceManager::getFont(const std::string &alias) {
 	}
 }
 
+sf::Music &ResourceManager::getMusic(const std::string &alias) {
+	auto it = _MappingAliasToFilename.find(alias);
+	if (it != _MappingAliasToFilename.end()) {
+		const std::string &filename = it->second;
+		auto musicIt = _musics.find(filename);
+		if (musicIt != _musics.end()) {
+			return *musicIt->second;
+		}
+		throw std::runtime_error("Music not found: " + filename);
+	}
+
+	throw std::runtime_error("Music alias not found: " + alias);
+}
+
+sf::SoundBuffer &ResourceManager::getSoundBuffer(const std::string &alias) {
+	auto it = _MappingAliasToFilename.find(alias);
+	if (it != _MappingAliasToFilename.end()) {
+		const std::string &filename = it->second;
+		auto bufIt = _soundBuffers.find(filename);
+		if (bufIt != _soundBuffers.end()) {
+			return *bufIt->second;
+		}
+		throw std::runtime_error("Sound buffer not loaded: " + filename);
+	}
+
+	throw std::runtime_error("Sound alias not found: " + alias);
+}
+
 ResourceManager::~ResourceManager() {
 	_textures.clear();
 	_fonts.clear();
+	_musics.clear();
 	_MappingAliasToFilename.clear();
 }
 
 ResourceManager::ResourceManager() {
-	_preLoadFont("assets/fonts/Roboto-VariableFont_wdth,wght.ttf", "Roboto");
+	_preLoadFont("assets/fonts/SuperMario256.ttf", "SuperMario");
+	_preLoadFont("assets/fonts/moon_get-Heavy.ttf", "moon_get");
+
+	_preLoadMusic("assets/soundtrack/title_screen.mp3", "title_screen");
+	_preLoadMusic("assets/soundtrack/ground_theme.mp3", "ground_theme");
+	_preLoadMusic("assets/soundtrack/underground_theme.mp3", "underground_theme");
+	_preLoadMusic("assets/soundtrack/course_clear.mp3", "course_clear");
+	
 	_preLoadTexture("assets/sprites/Brick.png", "brick");
 	_preLoadTexture("assets/sprites/Tiles/mario_and_items.png", "mario_and_items");
 	_preLoadTexture("assets/sprites/Tilesets/mutiple_tilesets.png", "mutiple_tilesets");
@@ -119,5 +195,4 @@ ResourceManager::ResourceManager() {
 	_preLoadTexture("assets/spritesheets/transparent_coin_strip.png", "coin_spritesheet");
 	_preLoadTexture("assets/spritesheets/transparent_coin_block_spritesheet.png", "coin_block_spritesheet");
 	_preLoadTexture("assets/spritesheets/transparent_lucky_block_spritesheet.png", "lucky_block_spritesheet");
-	_preLoadTexture("assets/backgrounds/main_menu_background.png", "main_menu_background");
 }

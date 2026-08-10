@@ -1,10 +1,19 @@
 #include "Scene/SceneManager.h"
 #include "Scene/Scene.h"
 #include "Scene/SceneFactory.h"
+#include "ResourceManager.h"
+#include <SFML/Graphics/RenderTarget.hpp>
 #include <iostream>
+#include <vector>
 
 SceneManager::SceneManager(SceneFactory *factory)
     : _factory(factory) {
+    _gameWorld.loadLevel("assets/datas/levels/menu_map.json");
+    _worldView = sf::View(sf::FloatRect(
+        {0.0f, 0.0f},
+        {static_cast<float>(_gameWorld.getGridWidth()) * _gameWorld.getCellSize(),
+         static_cast<float>(_gameWorld.getGridHeight()) * _gameWorld.getCellSize()}
+    ));
 }
 
 SceneManager::~SceneManager() {
@@ -85,16 +94,20 @@ void SceneManager::processEvents(const sf::Event& event) {
 }
 
 void SceneManager::updateSimulation(const float &fixedDt) {
+    _gameWorld.updateSimulation(fixedDt);
     if (!_sceneStack.empty()) {
         auto &currentScene = _sceneStack.top();
         if (currentScene->isActive()) {
             currentScene->updateSimulation(fixedDt);
         }
+    } else {
     }
     processDeferredActions();
 }
 
 void SceneManager::updateVisuals(float deltaTime) {
+    _gameWorld.updateVisuals(deltaTime);
+    _gameWorld.playVictoryAnimation();
     if (!_sceneStack.empty()) {
         auto &currentScene = _sceneStack.top();
         if (currentScene->isActive()) {
@@ -104,15 +117,27 @@ void SceneManager::updateVisuals(float deltaTime) {
     processDeferredActions();
 }
 
+void SceneManager::renderGameWorld(sf::RenderTarget& target) {
+    target.setView(_worldView);
+    _gameWorld.render(target);
+    target.setView(target.getDefaultView());
+}
+
 void SceneManager::render(sf::RenderTarget& target) {
-    if (!_sceneStack.empty()) {
-        auto &currentScene = _sceneStack.top();
-        if (currentScene->isActive()) {
-            currentScene->render(target);
-        }
-    } else {
+
+    if (_sceneStack.empty()) {
         std::cerr << "Warning: No scene to render." << std::endl;
+        processDeferredActions();
+        return;
     }
+
+    auto &currentScene = _sceneStack.top();
+
+    if (currentScene->isActive()) {
+        renderGameWorld(target);
+        currentScene->render(target);
+    }
+
     processDeferredActions();
 }
 

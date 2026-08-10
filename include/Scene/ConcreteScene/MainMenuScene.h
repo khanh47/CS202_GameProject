@@ -7,8 +7,11 @@ public:
     MainMenuScene();
     ~MainMenuScene() override = default;
 
+    void init() override;
     void onEnter() override;
     void handleInput(const sf::Event& event) override;
+    void updateSimulation(const float& fixedDt) override;
+    void updateVisuals(float deltaTime) override;
     void render(sf::RenderTarget& target) override;
 
 private:

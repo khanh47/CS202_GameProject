@@ -8,21 +8,25 @@
 MinigameModeScene::MinigameModeScene(const std::string& mapPath)
     : Scene("MinigameModeScene"),
       _mapPath(mapPath),
-      _titleText(ResourceManager::getInstance().getFont("Roboto"), "SELECT MINIGAME MODE", 64),
-      _comingSoonText(ResourceManager::getInstance().getFont("Roboto"), "VS AI - Coming Soon", 40) {
+      _titleText(ResourceManager::getInstance().getFont("SuperMario"), "SELECT MINIGAME MODE", 64),
+      _comingSoonText(ResourceManager::getInstance().getFont("SuperMario"), "VS AI - Coming Soon", 40) {
+
+    _titleText.setOutlineThickness(5.0f);
+    _titleText.setOutlineColor(sf::Color::Black);
+    _titleText.setFillColor(sf::Color::White);
+
     sf::FloatRect bounds = _titleText.getLocalBounds();
     _titleText.setOrigin({bounds.position.x + bounds.size.x / 2.0f,
                           bounds.position.y + bounds.size.y / 2.0f});
     _titleText.setPosition({960.0f, 200.0f});
-    _titleText.setFillColor(sf::Color::Black);
+    _titleText.setFillColor(sf::Color::White
+    );
 
     sf::FloatRect soonBounds = _comingSoonText.getLocalBounds();
     _comingSoonText.setOrigin({soonBounds.position.x + soonBounds.size.x / 2.0f,
                                soonBounds.position.y + soonBounds.size.y / 2.0f});
     _comingSoonText.setPosition({960.0f, 540.0f});
     _comingSoonText.setFillColor(sf::Color::Red);
-
-    setBackground("main_menu_background");
 }
 
 void MinigameModeScene::onEnter() {

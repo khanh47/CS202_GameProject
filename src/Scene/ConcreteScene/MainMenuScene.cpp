@@ -5,14 +5,20 @@
 
 MainMenuScene::MainMenuScene()
     : Scene("MainMenuScene"),
-      _promptText(ResourceManager::getInstance().getFont("Roboto"), "Press any key to continue", 48) {
+      _promptText(ResourceManager::getInstance().getFont("SuperMario"), "Press any key to continue", 48) {
     sf::FloatRect bounds = _promptText.getLocalBounds();
+    _promptText.setOutlineThickness(5.0f);
+
+    _promptText.setOutlineColor(sf::Color::Black);
+    _promptText.setFillColor(sf::Color::White);
+
     _promptText.setOrigin({bounds.position.x + bounds.size.x / 2.0f,
                            bounds.position.y + bounds.size.y / 2.0f});
-    _promptText.setPosition({960.0f, 540.0f});
-    _promptText.setFillColor(sf::Color::Black);
+    _promptText.setPosition({960.0f, 1000.0f});
+    _promptText.setFillColor(sf::Color::White);
+}
 
-    setBackground("main_menu_background");
+void MainMenuScene::init() {
 }
 
 void MainMenuScene::onEnter() {
@@ -21,6 +27,12 @@ void MainMenuScene::onEnter() {
     if (!_showPrompt) {
         _setupButtons();
     }
+}
+
+void MainMenuScene::updateSimulation(const float& fixedDt) {
+}
+
+void MainMenuScene::updateVisuals(float deltaTime) {
 }
 
 void MainMenuScene::handleInput(const sf::Event& event) {
@@ -38,7 +50,6 @@ void MainMenuScene::handleInput(const sf::Event& event) {
 }
 
 void MainMenuScene::render(sf::RenderTarget& target) {
-    Scene::render(target);
 
     if (_showPrompt) {
         target.draw(_promptText);

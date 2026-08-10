@@ -16,7 +16,11 @@
 
 class GameWorld {
 public:
-    GameWorld();
+    explicit GameWorld(
+        int gridWidth = WorldMap::defaultGridWidth,
+        int gridHeight = WorldMap::defaultGridHeight,
+        float cellSize = WorldMap::defaultCellSize
+    );
     ~GameWorld();
 
     void handleInput(const sf::Event& event);
@@ -37,6 +41,7 @@ public:
     void freeze(float durationSeconds);
     bool isFrozen() const { return _freezeTimer > 0.0f; }
     void syncPlayerControllers();
+    void playVictoryAnimation();
 
     int getGridWidth() const { return _worldMap.getGridWidth(); }
     int getGridHeight() const { return _worldMap.getGridHeight(); }

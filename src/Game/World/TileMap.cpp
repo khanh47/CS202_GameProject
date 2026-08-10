@@ -40,6 +40,13 @@ void TileMap::updateVisibleVertices(const sf::View& view) {
         return;
     }
 
+    // Debug: report view bounds and grid info
+    {
+        const sf::Vector2f viewCenter = view.getCenter();
+        const sf::Vector2f viewSize = view.getSize();
+        const sf::FloatRect viewBounds(viewCenter - viewSize / 2.f, viewSize);
+    }
+
     // Determine the view frustum bounds in pixel coordinates
     const sf::Vector2f viewCenter = view.getCenter();
     const sf::Vector2f viewSize = view.getSize();
@@ -98,6 +105,10 @@ void TileMap::updateVisibleVertices(const sf::View& view) {
             batch->append(sf::Vertex({left, bottom}, sf::Color::White, {tu0, tv1}));
         }
     }
+
+    // Debug: report how many batches were created and total vertices
+    size_t totalVerts = 0;
+    for (const Batch& b : _batches) totalVerts += b.vertices.getVertexCount();
 }
 
 int TileMap::getTileId(int col, int row) const {

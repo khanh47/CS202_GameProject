@@ -13,7 +13,7 @@ public:
 
     // Lifecycle
     virtual void init() {}
-    virtual void onEnter() { _isActive = true; }
+    virtual void onEnter();
     virtual void onExit() { _isActive = false; }
     virtual void cleanup() {}
 
@@ -34,6 +34,8 @@ public:
 protected:
     void setBackground(const std::string& textureAlias);
     void renderBackground(sf::RenderTarget& target);
+    void playTitleScreenMusic();
+    void stopTitleScreenMusic();
 
     bool _isActive = false;
     SceneManager* _sceneManager = nullptr;

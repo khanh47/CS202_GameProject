@@ -4,8 +4,10 @@
 #include "Game/Behaviours/Animatable.h"
 #include "Game/Objects/Player/Player.h"
 #include "ResourceManager.h"
+#include "Audio/MusicManager.h"
 #include "Scene/SceneManager.h"
 #include "Game/GameSettings.h"
+#include <iostream>
 
 InGameScene::InGameScene(const std::string& name)
     : Scene(name) {}
@@ -17,19 +19,19 @@ void InGameScene::init() {
     _gameOverTexture = &ResourceManager::getInstance().getTexture("game_over");
     _gameOverOverlay.emplace(*_gameOverTexture);
     _gameOverPrompt.emplace(
-        ResourceManager::getInstance().getFont("Roboto"),
+        ResourceManager::getInstance().getFont("SuperMario"),
         "Press any key to continue",
         67
     );
     _gameOverPrompt->setFillColor(sf::Color::White);
     _winTitle.emplace(
-        ResourceManager::getInstance().getFont("Roboto"),
+        ResourceManager::getInstance().getFont("SuperMario"),
         "COURSE CLEAR!",
         82
     );
     _winTitle->setFillColor(sf::Color(255, 227, 102));
     _winPrompt.emplace(
-        ResourceManager::getInstance().getFont("Roboto"),
+        ResourceManager::getInstance().getFont("SuperMario"),
         "Press any key to continue",
         67
     );
@@ -58,6 +60,26 @@ void InGameScene::init() {
         _camera.setCenter({1920.f / 2.f, _gameWorld.getGridHeight() * _gameWorld.getCellSize() - 1080.f / 2.f});
     }
 }
+
+    void InGameScene::onEnter() {
+        // Ensure title-screen music is stopped and play level theme
+        _isActive = true;
+        stopTitleScreenMusic();
+        Audio::MusicManager::getInstance().setVolume(GameSettings::getInstance().musicVolume);
+
+        std::string theme = "ground_theme";
+        if (_name.find("map-2") != std::string::npos || _name.find("map-3") != std::string::npos) {
+            theme = "underground_theme";
+        }
+
+        Audio::MusicManager::getInstance().play(theme, true);
+    }
+
+    void InGameScene::onExit() {
+        // Stop any level music when leaving the scene
+        Audio::MusicManager::getInstance().stop();
+        Scene::onExit();
+    }
 
 void InGameScene::handleInput(const sf::Event& event) {
     if (_winReactionActive) {
@@ -137,7 +159,7 @@ void InGameScene::render(sf::RenderTarget& target) {
     _gameWorld.render(target);
 
     // Render floating score popups in world coordinates
-    const sf::Font& font = ResourceManager::getInstance().getFont("Roboto");
+    const sf::Font& font = ResourceManager::getInstance().getFont("SuperMario");
     _scoreManager.renderFloatingTexts(target, font);
 
     // Render camera debug overlays (deadzone, lookahead line, level bounds) when debug grid is enabled
