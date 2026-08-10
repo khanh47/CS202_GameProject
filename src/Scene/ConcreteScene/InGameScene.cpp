@@ -4,8 +4,10 @@
 #include "Game/Behaviours/Animatable.h"
 #include "Game/Objects/Player/Player.h"
 #include "ResourceManager.h"
+#include "Audio/MusicManager.h"
 #include "Scene/SceneManager.h"
 #include "Game/GameSettings.h"
+#include <iostream>
 
 InGameScene::InGameScene(const std::string& name)
     : Scene(name) {}
@@ -17,25 +19,35 @@ void InGameScene::init() {
     _gameOverTexture = &ResourceManager::getInstance().getTexture("game_over");
     _gameOverOverlay.emplace(*_gameOverTexture);
     _gameOverPrompt.emplace(
-        ResourceManager::getInstance().getFont("Roboto"),
+        ResourceManager::getInstance().getFont("SuperMario"),
         "Press any key to continue",
         67
     );
     _gameOverPrompt->setFillColor(sf::Color::White);
     _winTitle.emplace(
-        ResourceManager::getInstance().getFont("Roboto"),
+        ResourceManager::getInstance().getFont("SuperMario"),
         "COURSE CLEAR!",
         82
     );
     _winTitle->setFillColor(sf::Color(255, 227, 102));
     _winPrompt.emplace(
-        ResourceManager::getInstance().getFont("Roboto"),
+        ResourceManager::getInstance().getFont("SuperMario"),
         "Press any key to continue",
         67
     );
     _winPrompt->setFillColor(sf::Color::White);
     _gameWorld.loadLevel(_name);
     _gameWorld.setScoreManager(&_scoreManager); // Set score manager for the game world
+
+    // Debug info: report level bounds and primary player
+    std::cout << "[InGameScene] Loaded level: " << _name << std::endl;
+    sf::FloatRect bounds = _gameWorld.getBounds();
+    std::cout << "[InGameScene] World bounds: " << bounds.position.x << "," << bounds.position.y << " -> " << bounds.size.x << "x" << bounds.size.y << std::endl;
+    if (_gameWorld.getPrimaryPlayer()) {
+        std::cout << "[InGameScene] Primary player present" << std::endl;
+    } else {
+        std::cout << "[InGameScene] No primary player" << std::endl;
+    }
 
     // Configure 2D Platformer Camera System parameters
     CameraConfig config;
@@ -50,6 +62,10 @@ void InGameScene::init() {
     config.useBounds = true;
 
     _camera.setConfig(config);
+    
+        // Enable debug overlays to help diagnose rendering issues
+        GameSettings::getInstance().debugDrawGrid = true;
+        GameSettings::getInstance().debugDrawCoordinates = true;
 
     // Bind camera tracking target to player
     if (auto player = _gameWorld.getPrimaryPlayer()) {
@@ -58,6 +74,25 @@ void InGameScene::init() {
         _camera.setCenter({1920.f / 2.f, _gameWorld.getGridHeight() * _gameWorld.getCellSize() - 1080.f / 2.f});
     }
 }
+
+    void InGameScene::onEnter() {
+        // Ensure title-screen music is stopped and play level theme
+        stopTitleScreenMusic();
+        Audio::MusicManager::getInstance().setVolume(GameSettings::getInstance().musicVolume);
+
+        std::string theme = "ground_theme";
+        if (_name.find("map-2") != std::string::npos || _name.find("map-3") != std::string::npos) {
+            theme = "underground_theme";
+        }
+
+        Audio::MusicManager::getInstance().play(theme, true);
+    }
+
+    void InGameScene::onExit() {
+        // Stop any level music when leaving the scene
+        Audio::MusicManager::getInstance().stop();
+        Scene::onExit();
+    }
 
 void InGameScene::handleInput(const sf::Event& event) {
     if (_winReactionActive) {
@@ -134,10 +169,14 @@ void InGameScene::render(sf::RenderTarget& target) {
     sf::View defaultView = target.getDefaultView();
     target.setView(_camera.getView());
 
+    // Debug: output camera view size
+    const sf::View camView = _camera.getView();
+    std::cout << "[InGameScene] Camera view center: " << camView.getCenter().x << "," << camView.getCenter().y << " size: " << camView.getSize().x << "x" << camView.getSize().y << std::endl;
+
     _gameWorld.render(target);
 
     // Render floating score popups in world coordinates
-    const sf::Font& font = ResourceManager::getInstance().getFont("Roboto");
+    const sf::Font& font = ResourceManager::getInstance().getFont("SuperMario");
     _scoreManager.renderFloatingTexts(target, font);
 
     // Render camera debug overlays (deadzone, lookahead line, level bounds) when debug grid is enabled

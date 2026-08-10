@@ -5,7 +5,6 @@
 #include "Scene/ConcreteScene/MainMenuScene.h"
 #include "Scene/ConcreteScene/ModeSelectScene.h"
 #include "Scene/ConcreteScene/SettingsScene.h"
-#include "Scene/ConcreteScene/KeyBindSettingsScene.h"
 #include <iostream>
 
 SceneFactory::SceneFactory() {
@@ -14,7 +13,6 @@ SceneFactory::SceneFactory() {
     registerScene("SETTINGS", []() { return std::make_unique<SettingsScene>(); });
     registerScene("MODE_SELECT", []() { return std::make_unique<ModeSelectScene>(); });
     registerScene("CHARACTER_SELECT", []() { return std::make_unique<CharacterSelectScene>(); });
-    registerScene("KEYBIND_SETTINGS", []() { return std::make_unique<KeyBindSettingsScene>(); });
     registerScene("LEVEL_SELECT", []() { return std::make_unique<LevelSelectionScene>(); });
     registerScene("IN_GAME", []() { return std::make_unique<InGameScene>("assets/datas/levels/map-1.json"); });
 }

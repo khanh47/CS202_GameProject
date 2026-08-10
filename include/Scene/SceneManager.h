@@ -1,10 +1,12 @@
 #pragma once
 #include <SFML/Graphics.hpp>
+#include <SFML/Graphics/RenderTarget.hpp>
 #include <functional>
 #include <memory>
 #include <queue>
 #include <stack>
 #include <string>
+#include "Game/World/GameWorld.h"
 
 // Forward declaration
 class Scene;
@@ -48,4 +50,8 @@ private:
 
     void requestDeferredAction(std::function<void()> action);
     void processDeferredActions();
+    void renderGameWorld(sf::RenderTarget& target);
+
+    GameWorld _gameWorld{30, 17};
+    sf::View _worldView;
 };

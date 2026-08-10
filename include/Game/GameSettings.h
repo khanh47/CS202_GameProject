@@ -28,6 +28,11 @@ public:
     bool debugDrawHitbox = false;
     bool freeCameraMove = false;
 
+    bool musicEnabled = true;
+    float musicVolume = 80.f;
+    bool soundEnabled = true;
+    float soundVolume = 80.f;
+
     // Player controls (keybindings)
     sf::Keyboard::Key keyMoveLeft = sf::Keyboard::Key::A;
     sf::Keyboard::Key keyMoveRight = sf::Keyboard::Key::D;
