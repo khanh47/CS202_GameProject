@@ -4,31 +4,23 @@
 #include "Scene/SceneManager.h"
 
 MainMenuScene::MainMenuScene()
-    : _name("MainMenuScene"),
+    : Scene("MainMenuScene"),
       _promptText(ResourceManager::getInstance().getFont("Roboto"), "Press any key to continue", 48) {
     sf::FloatRect bounds = _promptText.getLocalBounds();
     _promptText.setOrigin({bounds.position.x + bounds.size.x / 2.0f,
                            bounds.position.y + bounds.size.y / 2.0f});
     _promptText.setPosition({960.0f, 540.0f});
     _promptText.setFillColor(sf::Color::Black);
-}
 
-void MainMenuScene::init() {
+    setBackground("main_menu_background");
 }
 
 void MainMenuScene::onEnter() {
-    _isActive = true;
+    Scene::onEnter();
 
     if (!_showPrompt) {
         _setupButtons();
     }
-}
-
-void MainMenuScene::onExit() {
-    _isActive = false;
-}
-
-void MainMenuScene::cleanup() {
 }
 
 void MainMenuScene::handleInput(const sf::Event& event) {
@@ -45,11 +37,9 @@ void MainMenuScene::handleInput(const sf::Event& event) {
     _buttonMenu.processEvent(event);
 }
 
-void MainMenuScene::updateVisuals(float deltaTime) {
-    (void)deltaTime;
-}
-
 void MainMenuScene::render(sf::RenderTarget& target) {
+    Scene::render(target);
+
     if (_showPrompt) {
         target.draw(_promptText);
         return;

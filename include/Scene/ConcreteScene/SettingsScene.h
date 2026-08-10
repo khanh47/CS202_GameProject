@@ -2,7 +2,6 @@
 
 #include "Scene/Scene.h"
 #include "Button/ButtonMenu.h"
-#include <string>
 
 class SettingsScene : public Scene {
 public:
@@ -10,18 +9,10 @@ public:
     ~SettingsScene() override = default;
 
     void init() override;
-    void onEnter() override;
-    void onExit() override;
-    void cleanup() override;
-
     void handleInput(const sf::Event& event) override;
     void updateVisuals(float deltaTime) override;
     void render(sf::RenderTarget& target) override;
 
-    std::string getName() const override { return _name; }
-    bool isActive() const override { return _isActive; }
-
 private:
-    std::string _name;
     UI::ButtonMenu _menu;
 };

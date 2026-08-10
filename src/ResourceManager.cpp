@@ -119,4 +119,5 @@ ResourceManager::ResourceManager() {
 	_preLoadTexture("assets/spritesheets/transparent_coin_strip.png", "coin_spritesheet");
 	_preLoadTexture("assets/spritesheets/transparent_coin_block_spritesheet.png", "coin_block_spritesheet");
 	_preLoadTexture("assets/spritesheets/transparent_lucky_block_spritesheet.png", "lucky_block_spritesheet");
+	_preLoadTexture("assets/backgrounds/main_menu_background.png", "main_menu_background");
 }

@@ -18,17 +18,10 @@ public:
     ~InGameScene() override = default;
 
     void init() override;
-    void onEnter() override;
-    void onExit() override;
-    void cleanup() override;
-
     void handleInput(const sf::Event& event) override;
     void updateSimulation(const float &fixedDt) override;
     void updateVisuals(float deltaTime) override;
     void render(sf::RenderTarget& target) override;
-
-    std::string getName() const override { return "InGameScene"; }
-    bool isActive() const override { return _isActive; }
 
 private:
     void _checkGameOver();
@@ -37,7 +30,6 @@ private:
     void _drawGameOverOverlay(sf::RenderTarget& target);
     void _drawWinOverlay(sf::RenderTarget& target);
 
-    std::string _name;
     bool _winReactionActive = false;
     bool _gameOverActive = false;
     bool _winActive = false;
