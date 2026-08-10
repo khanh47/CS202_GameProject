@@ -20,6 +20,6 @@ void SuperState::handleSuperStar(Player& player) {
 }
 
 void SuperState::handleEnemy(Player& player) {
-    player.startTransformation(Player::TransformTarget::Normal);
+    player.startTransformation(Player::TransformTarget::Normal, 0);
     player.addBehaviour<Invincible>(2.0f);
 }

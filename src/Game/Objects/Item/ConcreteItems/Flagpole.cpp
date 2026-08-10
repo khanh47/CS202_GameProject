@@ -4,6 +4,7 @@
 #include "Game/Objects/GameObject.h"
 #include "Game/Objects/Player/Player.h"
 #include "Game/World/GameWorld.h"
+#include "Physics/CollisionFilter.h"
 #include "ResourceManager.h"
 
 namespace {
@@ -45,8 +46,8 @@ void Flagpole::onCreateShapeDef(b2ShapeDef& def) {
     def.enableSensorEvents = true;
     def.density = 0.0f;
 
-    def.filter.categoryBits = 0x0010;
-    def.filter.maskBits = 0x0002;
+    def.filter.categoryBits = CollisionFilter::PICKUP;
+    def.filter.maskBits = CollisionFilter::PLAYER;
 }
 
 void Flagpole::onContact(GameObject& other, const b2ContactData&, b2ShapeId) {
