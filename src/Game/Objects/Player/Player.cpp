@@ -33,6 +33,7 @@ Player::Player() : GameObject() {
     addBehaviour<Animatable>();
     addBehaviour<Damageable>(100);
     addBehaviour<Moveable>();
+    addBehaviour<ShellHoldBehaviour>();
     setState(std::make_unique<NormalState>());
 }
 
@@ -45,6 +46,7 @@ Player::Player(sf::Texture &texture, const std::string& animationSetId)
     addBehaviour<Animatable>();
     addBehaviour<Damageable>(100);
     addBehaviour<Moveable>();
+    addBehaviour<ShellHoldBehaviour>();
     _character = animationSetId.find("luigi") != std::string::npos ? "luigi" : "mario";
     if (animationSetId.rfind("fire_", 0) == 0) {
         setState(std::make_unique<FireState>(_character));
@@ -57,6 +59,10 @@ Player::~Player() = default;
 
 void Player::destroy() {
     if (auto* invincible = getBehaviour<Invincible>()) return;
+
+    if (auto* hold = getBehaviour<ShellHoldBehaviour>()) {
+        hold->releaseShell(false);
+    }
 
     b2ShapeId shape = _body->getHitbox();
     b2Filter filter = b2Shape_GetFilter(shape);
@@ -117,6 +123,12 @@ void Player::setState(std::unique_ptr<PlayerState> newState) {
 }
 
 void Player::attack(GameWorld& world) {
+    // Can't shoot fireballs while carrying a shell.
+    if (auto* hold = getBehaviour<ShellHoldBehaviour>()) {
+        if (hold->isHoldingShell()) {
+            return;
+        }
+    }
     if (_state) {
         _attackStrategy = _state->createAttackStrategy();
     }
@@ -209,6 +221,10 @@ void Player::updateSimulation(const float &fixedDt) {
         return;
     }
 
+    if (auto* hold = getBehaviour<ShellHoldBehaviour>()) {
+        hold->updateSimulation(fixedDt);
+    }
+
     float moveSpeed = _baseMoveSpeed;
     float jumpSpeed = _baseJumpSpeed;
     if (_state) {
@@ -249,7 +265,15 @@ void Player::finalizeSimulation(const float &fixedDt) {
 
     if(!animatable->isLooping() && !animatable->isAnimationDone()) return;
 
-    if (moveable->isAirbone() || moveable->isJumping()) {
+    const auto* hold = getBehaviour<ShellHoldBehaviour>();
+    const bool holding = hold && hold->isHoldingShell();
+    if (holding) {
+        if (!moveable->isMovingLeft() && !moveable->isMovingRight()) {
+            animatable->playAnimation("hold_stand");
+        } else {
+            animatable->playAnimation("hold_walk");
+        }
+    } else if (moveable->isAirbone() || moveable->isJumping()) {
         animatable->playAnimation("jump");
     } else if (!moveable->isMovingLeft() && !moveable->isMovingRight()) {
         animatable->playAnimation("idle");
@@ -312,6 +336,11 @@ void Player::onContact(GameObject& other, const b2ContactData& contactData, b2Sh
     }
 
     if (auto* shell = dynamic_cast<KoopaShell*>(&other)) {
+        // A shell held by this player must not be kicked or damage us.
+        if (shell->isHeld()) {
+            return;
+        }
+
         // StarMan invincibility: instantly destroy any shell on contact
         if (_state && _state->isInvincible()) {
 
@@ -483,6 +512,10 @@ void Player::onUpdateVisuals(float deltaTime) {
     PlayerShaders::getInstance().update(deltaTime);
     auto* moveable = getBehaviour<Moveable>();
     const bool facingLeft = moveable ? moveable->isFacingLeft() : false;
+
+    if (auto* hold = getBehaviour<ShellHoldBehaviour>()) {
+        hold->updateVisuals(deltaTime);
+    }
 
     if (_isTransforming) {
         _transformTimer -= deltaTime;

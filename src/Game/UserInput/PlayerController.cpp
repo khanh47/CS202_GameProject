@@ -72,6 +72,8 @@ void PlayerController::applyPressAction(ActionType action) {
             _player.attack(_gameWorld);
             break;
         case ActionType::Interact:
+            _player.setInteractHeld(true);
+            break;
         case ActionType::MoveDown:
         case ActionType::Accelerate:
         case ActionType::Decelerate:
@@ -89,10 +91,13 @@ void PlayerController::applyReleaseAction(ActionType action) {
             break;
         case ActionType::MoveUp:
             _player.stopJump();
+            break;
+        case ActionType::Interact:
+            _player.setInteractHeld(false);
+            break;
         case ActionType::MoveDown:
         case ActionType::Accelerate:
         case ActionType::Decelerate:
-        case ActionType::Interact:
         case ActionType::Attack:
             break;
     }
@@ -102,6 +107,7 @@ void PlayerController::syncStateWithKeyboard() {
     refreshBindings();
     bool moveLeftPressed = false;
     bool moveRightPressed = false;
+    bool interactPressed = false;
 
     for (const auto& [key, action] : getKeyActionMap()) {
         if (sf::Keyboard::isKeyPressed(key)) {
@@ -109,9 +115,13 @@ void PlayerController::syncStateWithKeyboard() {
                 moveLeftPressed = true;
             } else if (action == ActionType::MoveRight) {
                 moveRightPressed = true;
+            } else if (action == ActionType::Interact) {
+                interactPressed = true;
             }
         }
     }
+
+    _player.setInteractHeld(interactPressed);
 
     if (moveLeftPressed && !moveRightPressed) {
         _player.stopMoveRight();

@@ -184,7 +184,6 @@ ResourceManager::ResourceManager() {
 	_preLoadTexture("assets/spritesheets/fire_luigi_spritesheet.png", "fire_luigi_spritesheet");
 
 	_preLoadTexture("assets/backgrounds/far_sky.png", "far_sky");
-	_preLoadTexture("assets/backgrounds/far_sky.png", "far_sky");
 	_preLoadTexture("assets/backgrounds/close_bush.png", "close_bush");
 	_preLoadTexture("assets/backgrounds/far_underground.png", "far_underground");
 	_preLoadTexture("assets/backgrounds/close_underground.png", "close_underground");
@@ -192,6 +191,7 @@ ResourceManager::ResourceManager() {
 	_preLoadTexture("assets/spritesheets/goal_flag_spritesheet.png", "goal_flag_spritesheet");
 	_preLoadTexture("assets/spritesheets/goomba_spritesheet.png", "goomba_spritesheet");
 	_preLoadTexture("assets/spritesheets/koopa_spritesheet.png", "koopa_spritesheet");
+	_preLoadTexture("assets/spritesheets/piranha_plant_spritesheet.png", "piranha_plant_spritesheet");
 	_preLoadTexture("assets/spritesheets/transparent_coin_strip.png", "coin_spritesheet");
 	_preLoadTexture("assets/spritesheets/transparent_coin_block_spritesheet.png", "coin_block_spritesheet");
 	_preLoadTexture("assets/spritesheets/transparent_lucky_block_spritesheet.png", "lucky_block_spritesheet");

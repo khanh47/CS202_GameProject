@@ -127,12 +127,12 @@ AnimationSet Animation::makeDefaultPlayerAnimationSet() {
     animationSet.clips.emplace(
         "hold_stand",
         Animation::createLinearClip(
-            {140, 176},
-            {28, 32},
+            {144, 176},
+            {32, 32},
             1,
             {0, 0},
             1.0f,
-            false
+            true 
         )
     );
 
@@ -145,6 +145,18 @@ AnimationSet Animation::makeDefaultPlayerAnimationSet() {
             {32, 0},
             1.0f / 6.0f,
             true
+        )
+    );
+
+    animationSet.clips.emplace(
+        "throw",
+        Animation::createLinearClip(
+            {55, 272},
+            {32, 32},
+            2,
+            {32, 0},
+            0.5f / 2.0f,
+            false
         )
     );
 
@@ -218,6 +230,25 @@ AnimationSet Animation::makeGoombaAnimationSet() {
     return animationSet;
 }
 
+AnimationSet Animation::makePiranhaPlantAnimationSet() {
+    AnimationSet animationSet;
+    animationSet.defaultClip = "bite";
+
+    animationSet.clips.emplace(
+        "bite",
+        Animation::createLinearClip(
+            {7, 12},
+            {26, 35},
+            3,       
+            {33, 0}, 
+            1.0f / 3.0f,
+            true        
+        )
+    );
+
+    return animationSet;
+}
+
 AnimationSet Animation::makeKoopaAnimationSet() {
     AnimationSet animationSet;
     animationSet.defaultClip = "walk";
@@ -254,6 +285,18 @@ AnimationSet Animation::makeKoopaAnimationSet() {
             8,          
             {24, 0},
             1.0f / 8.0f,        
+            true 
+        )
+    );
+
+    animationSet.clips.emplace(
+        "shake",
+        Animation::createLinearClip(
+            {100, 90},
+            {19, 16},
+            6,          
+            {24, 0},
+            0.5f / 6.0f,        
             true 
         )
     );
