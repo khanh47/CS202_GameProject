@@ -1,6 +1,7 @@
 #include "Game/Behaviours/Invincible.h"
 
 #include "Game/Objects/GameObject.h"
+#include "Physics/CollisionFilter.h"
 
 #include <algorithm>
 
@@ -26,7 +27,7 @@ void Invincible::refreshCollisionMask() {
     }
 
     b2Filter filter = _savedFilter;
-    filter.maskBits &= ~CollisionFilter::ENEMY;
+    filter.maskBits &= ~(CollisionFilter::ENEMY | CollisionFilter::SHELL);
     b2Shape_SetFilter(hitbox, filter);
 }
 

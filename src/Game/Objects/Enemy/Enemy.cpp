@@ -34,6 +34,16 @@ void Enemy::setSupportGrid(const TerrainSeamFilter* filter, float cellSize) {
     _supportCellSize = cellSize;
 }
 
+void Enemy::setFacingRight(bool facingRight) {
+    if (facingRight) {
+        _moveSpeed = std::abs(_moveSpeed);
+        _moveDirection = 1;
+    } else {
+        _moveSpeed = -std::abs(_moveSpeed);
+        _moveDirection = -1;
+    }
+}
+
 bool Enemy::isSupportedByGrid() const {
     if (!_supportGrid) {
         return false;
@@ -68,7 +78,7 @@ int Enemy::probeColumn() const {
 }
 
 int Enemy::rowAt(float pixelY) const {
-    return static_cast<int>(std::floor((pixelY + _supportCellSize * 0.5f) / _supportCellSize));
+    return static_cast<int>(std::floor(pixelY / _supportCellSize));
 }
 
 void Enemy::turnAround() {

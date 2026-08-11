@@ -14,7 +14,7 @@ elseif(UNIX)
     set(SFML_DIR "/home/linuxbrew/.linuxbrew/lib/cmake/SFML")
 endif()
 
-find_package(SFML 3 REQUIRED COMPONENTS Graphics Window System)
+find_package(SFML 3 REQUIRED COMPONENTS Graphics Window System Audio)
 
 include_directories(include)
 
@@ -37,12 +37,7 @@ target_link_libraries(${PROJECT_NAME}
         SFML::Graphics
         SFML::Window
         SFML::System
-    "${CMAKE_SOURCE_DIR}/external/SFML-3.0.2/lib/libsfml-audio-s-d.a"
-    "${CMAKE_SOURCE_DIR}/external/SFML-3.0.2/lib/libvorbisfiled.a"
-    "${CMAKE_SOURCE_DIR}/external/SFML-3.0.2/lib/libvorbisd.a"
-    "${CMAKE_SOURCE_DIR}/external/SFML-3.0.2/lib/libvorbisencd.a"
-    "${CMAKE_SOURCE_DIR}/external/SFML-3.0.2/lib/liboggd.a"
-    "${CMAKE_SOURCE_DIR}/external/SFML-3.0.2/lib/libFLACd.a"
+        SFML::Audio
 )
 
 add_custom_target(copy_assets ALL

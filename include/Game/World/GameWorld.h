@@ -37,6 +37,7 @@ public:
 
     bool spawnFireball(sf::Vector2f spawnPos, bool facingRight, int playerIndex);
     bool spawnKoopaShell(sf::Vector2f spawnPos, bool facingRight);
+    bool spawnKoopa(sf::Vector2f spawnPos, bool facingRight);
     std::shared_ptr<GameObject> spawnItem(const std::string& itemTypeKey, sf::Vector2f position, sf::Vector2f size = {54.0f, 54.0f});
     void freeze(float durationSeconds);
     bool isFrozen() const { return _freezeTimer > 0.0f; }

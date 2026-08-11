@@ -6,6 +6,7 @@
 #include "Game/GameSettings.h"
 #include "Game/Objects/Player/Player.h"
 #include "Game/Objects/Projectile/KoopaShell.h"
+#include "Game/Objects/Enemy/ConcreteEnemy/Koopa.h"
 #include "Game/World/LevelDataLoader.h"
 
 GameWorld::GameWorld(int gridWidth, int gridHeight, float cellSize)
@@ -203,9 +204,23 @@ bool GameWorld::spawnFireball(
 bool GameWorld::spawnKoopaShell(sf::Vector2f spawnPosition, bool facingRight) {
     sf::Texture& itemsTexture = ResourceManager::getInstance().getTexture("koopa_spritesheet");
     auto shell = std::make_shared<KoopaShell>(itemsTexture);
+    shell->setFacingRight(facingRight);
     shell->setGameWorld(this);
     shell->spawn(_physicsWorld, spawnPosition, {60.0f, 48.0f});
     _objectStore.addObject(std::move(shell));
+    return true;
+}
+
+bool GameWorld::spawnKoopa(sf::Vector2f spawnPosition, bool facingRight) {
+    sf::Texture& itemsTexture = ResourceManager::getInstance().getTexture("koopa_spritesheet");
+    // Bottom-align the koopa (100px tall) with the shell (48px tall) so it spawns resting on the ground.
+    spawnPosition.y -= (100.0f - 48.0f) * 0.5f;
+    auto koopa = std::make_shared<Koopa>(itemsTexture, "koopa", true);
+    koopa->setGameWorld(this);
+    koopa->setFacingRight(facingRight);
+    koopa->setSupportGrid(&_worldMap.getTerrainSeamFilter(), _worldMap.getCellSize());
+    koopa->spawn(_physicsWorld, spawnPosition, {64.0f, 100.0f});
+    _objectStore.addObject(std::move(koopa));
     return true;
 }
 

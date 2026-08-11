@@ -20,6 +20,7 @@ public:
     void kick(bool facingRight);
     void stop();
     bool isSliding() const { return _sliding; }
+    void setFacingRight(bool facingRight) { _facingRight = facingRight; }
 
     void updateSimulation(const float& fixedDt) override;
     void onContact(GameObject& other, const b2ContactData& contactData, b2ShapeId ownShape) override;
@@ -36,9 +37,11 @@ protected:
 private:
     bool _sliding = false;
     float _slideSpeedMeters = 8.0f;
+    bool _facingRight = true;
 
     bool _isDying = false;
     float _deathTimer = 0.0f;
+    float _stopTimer = 0.0f;
 
     GameWorld* _world = nullptr; // Pointer to the game world for score management
 };

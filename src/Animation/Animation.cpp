@@ -226,7 +226,7 @@ AnimationSet Animation::makeKoopaAnimationSet() {
         "walk",
         Animation::createLinearClip(
             {6, 32},
-            {24, 32},
+            {28, 32},
             8,        
             {28, 0},
             1.0f / 8.0f,
@@ -237,7 +237,7 @@ AnimationSet Animation::makeKoopaAnimationSet() {
     animationSet.clips.emplace(
         "dead",
         Animation::createLinearClip(
-            {10, 159},
+            {12, 228},
             {19, 15},
             1,          
             {0, 0},      
@@ -255,6 +255,18 @@ AnimationSet Animation::makeKoopaAnimationSet() {
             {24, 0},
             1.0f / 8.0f,        
             true 
+        )
+    );
+
+    animationSet.clips.emplace(
+        "revive",
+        Animation::createLinearClip(
+            {6, 211},
+            {28, 32},
+            8,          
+            {28, 0},
+            2.0f / 8.0f,        
+            false 
         )
     );
 
