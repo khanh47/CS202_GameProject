@@ -48,6 +48,34 @@ void KoopaShell::stop() {
     b2Body_SetLinearVelocity(_body->getId(), vel);
 }
 
+void KoopaShell::setHeld(bool held) {
+    if (_held == held) {
+        return;
+    }
+    _held = held;
+    if (!hasValidBody()) {
+        return;
+    }
+
+    b2ShapeId shape = _body->getHitbox();
+    if (!b2Shape_IsValid(shape)) {
+        return;
+    }
+
+    if (held) {
+        _savedFilter = b2Shape_GetFilter(shape);
+        _hasSavedFilter = true;
+        b2Filter filter = _savedFilter;
+        // Don't collide with players while carried, so the shell on the
+        // holder's head can't absorb their jump impulses.
+        filter.maskBits &= ~CollisionFilter::PLAYER;
+        b2Shape_SetFilter(shape, filter);
+    } else if (_hasSavedFilter) {
+        b2Shape_SetFilter(shape, _savedFilter);
+        _hasSavedFilter = false;
+    }
+}
+
 void KoopaShell::onCreateBodyDef(b2BodyDef& def) {
     def.type = b2_dynamicBody;
     def.motionLocks.angularZ = true;
@@ -80,7 +108,17 @@ void KoopaShell::updateSimulation(const float& fixedDt) {
         return;
     }
 
-    if (_sliding) {
+    if (_held) {
+        // Held by a player: freeze physics so the shell follows the holder,
+        // but keep the revive timer running so the shell shakes and the Koopa
+        // revives even while it's being carried.
+        const b2BodyId bodyId = _body->getId();
+        b2Vec2 vel = b2Body_GetLinearVelocity(bodyId);
+        vel.x = 0.0f;
+        vel.y = 0.0f;
+        b2Body_SetLinearVelocity(bodyId, vel);
+        _stopTimer += fixedDt;
+    } else if (_sliding) {
         // Maintain constant horizontal slide speed in the current direction
         const b2BodyId bodyId = _body->getId();
         b2Vec2 vel = b2Body_GetLinearVelocity(bodyId);
@@ -88,15 +126,21 @@ void KoopaShell::updateSimulation(const float& fixedDt) {
         b2Body_SetLinearVelocity(bodyId, vel);
     } else {
         _stopTimer += fixedDt;
-        if (_stopTimer >= 5.0f) {
-            if (_world) {
-                _world->spawnKoopa(getPosition(), _facingRight);
-            }
-            _pendingDestroy = true;
-            if (_body) {
-                _body->destroy();
-            }
+    }
+
+    if (_stopTimer >= 10.0f) {
+        if (_world) {
+            _world->spawnKoopa(getPosition(), _facingRight);
         }
+        _pendingDestroy = true;
+        if (_body) {
+            _body->destroy();
+        }
+        return;
+    }
+    if (_stopTimer >= 7.0f && animatable && animatable->getActiveAnimationName() != "shake") {
+        // Shake for the 2s before the Koopa pops back out.
+        animatable->playAnimation("shake");
     }
 }
 
@@ -104,6 +148,9 @@ void KoopaShell::onContact(GameObject& other, const b2ContactData& contactData, 
     (void)ownShape;
 
     if (auto* enemy = dynamic_cast<Enemy*>(&other)) {
+        if (!_sliding) {
+            return;
+        }
         if (_world && _world->getScoreManager()) {
             _world->getScoreManager()->handleEvent(ScoreEventType::EnemyStomped, enemy->getPosition());
         }

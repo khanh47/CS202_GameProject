@@ -28,6 +28,7 @@ public:
     bool isPendingDestroy() { return _pendingDestroy; }
     sf::Vector2f getPosition() const;
     virtual sf::Vector2f getVelocity() const;
+    void setPosition(sf::Vector2f positionPixels);
 
     sf::Vector2f getHitboxPixels() const { return _hitboxPixels; }
     std::shared_ptr<PhysicsBody> getPhysicsBody() const { return _body; }

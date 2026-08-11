@@ -7,6 +7,7 @@
 
 #include "Game/Behaviours/Moveable.h"
 #include "Game/Behaviours/SparkleEffect.h"
+#include "Game/Behaviours/ShellHoldBehaviour.h"
 #include "Game/Objects/GameObject.h"
 #include "Game/Objects/Player/State/PlayerState.h"
 
@@ -67,6 +68,9 @@ public:
     }
     void stopJump() {
         if (auto* moveable = getBehaviour<Moveable>()) moveable->stopJump();
+    }
+    void setInteractHeld(bool held) {
+        if (auto* hold = getBehaviour<ShellHoldBehaviour>()) hold->setInteractHeld(held);
     }
     void beginGroundContact(b2ShapeId visitor) {
         if (auto* moveable = getBehaviour<Moveable>()) moveable->beginGroundContact(visitor);

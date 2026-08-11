@@ -52,6 +52,7 @@ public:
     bool hasWon() const { return _levelCleared; }
     sf::Vector2f getFlagpolePosition() const { return _flagpolePosition; }
     sf::FloatRect getBounds() const;
+    const std::vector<std::shared_ptr<GameObject>>& objects() const { return _objectStore.objects(); }
 
     // Add getter & setter for ScoreManager
     void setScoreManager(ScoreManager* scoreManager) { _scoreManager = scoreManager; }
