@@ -8,10 +8,10 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 if(WIN32)
     set(SFML_STATIC_LIBRARIES TRUE)
-    set(SFML_DIR "${CMAKE_SOURCE_DIR}/external/SFML-3.0.2/lib/cmake/SFML")
+    list(APPEND CMAKE_PREFIX_PATH "${CMAKE_SOURCE_DIR}/external/SFML-3.0.2/lib/cmake")
 elseif(UNIX)
     set(SFML_STATIC_LIBRARIES FALSE)
-    set(SFML_DIR "/home/linuxbrew/.linuxbrew/lib/cmake/SFML")
+    list(APPEND CMAKE_PREFIX_PATH "/home/linuxbrew/.linuxbrew")
 endif()
 
 find_package(SFML 3 REQUIRED COMPONENTS Graphics Window System Audio)
@@ -21,7 +21,7 @@ include_directories(include)
 file(GLOB_RECURSE SRC_FILES CONFIGURE_DEPENDS "src/*.cpp")
 
 add_executable(${PROJECT_NAME} ${SRC_FILES})
-set_property(TARGET ${PROJECT_NAME} PROPERTY WIN32_EXECUTABLE FALSE) #Set TRUE in the final product
+set_property(TARGET ${PROJECT_NAME} PROPERTY WIN32_EXECUTABLE FALSE)
 
 target_include_directories(${PROJECT_NAME}
     PRIVATE
