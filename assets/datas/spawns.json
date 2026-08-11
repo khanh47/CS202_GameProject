@@ -12,6 +12,7 @@
     { "id": 10, "kind": "Block", "typeKey": "CoinBlock", "texture": "coin_block_spritesheet", "size": [64, 64], "addSeamFilter": true },
     { "id": 11, "kind": "Block", "typeKey": "LuckyBlock", "texture": "lucky_block_spritesheet", "size": [64, 64], "addSeamFilter": true },
     { "id": 12, "kind": "Item", "typeKey": "Flagpole", "texture": "goal_flag_spritesheet", "size": [128, 896], "centerVertically": true },
+    { "id": 13, "kind": "Enemy", "typeKey": "PiranhaPlant", "texture": "piranha_plant_spritesheet", "animationId": "piranha_plant", "size": [78, 105], "offset": [0, 5] },
     { "id": 19, "kind": "Player", "typeKey": "Player", "texture": "mario_spritesheet", "animationId": "mario", "size": [54, 120], "offset": [10, 0], "addController": false },
     { "id": 20, "kind": "Player", "typeKey": "Player", "texture": "luigi_spritesheet", "animationId": "luigi", "size": [54, 120], "offset": [10, 0], "addController": false }
   ]

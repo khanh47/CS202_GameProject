@@ -4,6 +4,7 @@
 #include "Game/Objects/Block/Block.h"
 #include "Game/Objects/Enemy/ConcreteEnemy/Goomba.h"
 #include "Game/Objects/Enemy/ConcreteEnemy/Koopa.h"
+#include "Game/Objects/Enemy/ConcreteEnemy/PiranhaPlant.h"
 #include "Game/Objects/Item/Item.h"
 #include "Game/Objects/Item/ConcreteItems/FireFlower.h"
 #include "Game/Objects/Item/ConcreteItems/SuperMushroom.h"
@@ -21,6 +22,7 @@ GameObjectFactory::GameObjectFactory() {
     registerBlock("LuckyBlock", createStatic<LuckyBlock>);
     registerEnemy("Goomba", createAnimated<Goomba>);
     registerEnemy("Koopa", createAnimated<Koopa>);
+    registerEnemy("PiranhaPlant", createAnimated<PiranhaPlant>);
     registerItem("Item", createStatic<Item>);
     registerItem("FireFlower", createStatic<FireFlower>);
     registerItem("SuperMushroom", createStatic<SuperMushroom>);
