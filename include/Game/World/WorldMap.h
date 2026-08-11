@@ -39,6 +39,10 @@ public:
         GameWorld& gameWorld
     );
 
+    const TerrainSeamFilter& getTerrainSeamFilter() const noexcept {
+        return _terrainSeamFilter;
+    }
+
     void renderTiles(sf::RenderTarget& target);
     sf::FloatRect getBounds() const;
     sf::Vector2f mapCellCenter(int column, int mapRow) const;

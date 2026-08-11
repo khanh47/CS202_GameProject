@@ -14,7 +14,7 @@ MainMenuScene::MainMenuScene()
 
     _promptText.setOrigin({bounds.position.x + bounds.size.x / 2.0f,
                            bounds.position.y + bounds.size.y / 2.0f});
-    _promptText.setPosition({960.0f, 1000.0f});
+    _promptText.setPosition({960.0f, 900.0f});
     _promptText.setFillColor(sf::Color::White);
 }
 

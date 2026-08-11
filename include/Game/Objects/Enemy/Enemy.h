@@ -15,6 +15,8 @@ public:
     Enemy(sf::Texture &texture, const std::string& animationSetId);
     ~Enemy();
     void setSupportGrid(const TerrainSeamFilter* filter, float cellSize = 64.0f);
+    void setFacingRight(bool facingRight);
+    int getMoveDirection() const { return _moveDirection; }
     virtual void onStomp() = 0;
     void destroy() override;
     bool isDying() { return _isDying; }

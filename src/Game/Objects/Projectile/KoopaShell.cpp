@@ -18,7 +18,9 @@ KoopaShell::KoopaShell(sf::Texture& texture) : GameObject() {
 }
 
 void KoopaShell::kick(bool facingRight) {
+    _facingRight = facingRight;
     _sliding = true;
+    _stopTimer = 0.0f;
     if (auto* animatable = getBehaviour<Animatable>()) {
         animatable->playAnimation("slide");
     }
@@ -84,6 +86,17 @@ void KoopaShell::updateSimulation(const float& fixedDt) {
         b2Vec2 vel = b2Body_GetLinearVelocity(bodyId);
         vel.x = vel.x < 0.0f ? -_slideSpeedMeters : _slideSpeedMeters;
         b2Body_SetLinearVelocity(bodyId, vel);
+    } else {
+        _stopTimer += fixedDt;
+        if (_stopTimer >= 5.0f) {
+            if (_world) {
+                _world->spawnKoopa(getPosition(), _facingRight);
+            }
+            _pendingDestroy = true;
+            if (_body) {
+                _body->destroy();
+            }
+        }
     }
 }
 
@@ -122,6 +135,7 @@ void KoopaShell::destroy() {
 
     _isDying = true;
     _deathTimer = 0.0f;
+    _stopTimer = 0.0f;
     
     b2ShapeId shape = _body->getHitbox();
     b2Filter filter = b2Shape_GetFilter(shape);
@@ -130,8 +144,9 @@ void KoopaShell::destroy() {
 }
 
 void KoopaShell::onUpdateVisuals(float deltaTime) {
+    bool facingLeft = _facingRight;
     if (auto* animatable = getBehaviour<Animatable>()) {
-        animatable->updateVisualState(deltaTime, _hitboxPixels);
+        animatable->updateVisualState(deltaTime, _hitboxPixels, facingLeft);
     }
 }
 
