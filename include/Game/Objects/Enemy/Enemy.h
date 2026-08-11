@@ -18,6 +18,7 @@ public:
     void setFacingRight(bool facingRight);
     int getMoveDirection() const { return _moveDirection; }
     virtual void onStomp() = 0;
+    virtual bool canBeStomped() const { return true; }
     void destroy() override;
     bool isDying() { return _isDying; }
 

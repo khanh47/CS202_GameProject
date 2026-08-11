@@ -37,6 +37,9 @@ void AnimationLibrary::preloadEnemyAnimationSets() {
 
     const AnimationSet koopaSet = Animation::makeKoopaAnimationSet();
     registerAnimationSet("koopa", koopaSet);
+
+    const AnimationSet piranhaPlantSet = Animation::makePiranhaPlantAnimationSet();
+    registerAnimationSet("piranha_plant", piranhaPlantSet);
 }
 
 void AnimationLibrary::preloadItemAnimationSets() {

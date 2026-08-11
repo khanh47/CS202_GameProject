@@ -397,13 +397,12 @@ void Player::onContact(GameObject& other, const b2ContactData& contactData, b2Sh
             if (!B2_ID_EQUALS(contactData.shapeIdA, ownShape)) {
                 normal = {-normal.x, -normal.y};
             }
-            if (contactData.manifold.pointCount > 0 && normal.y >= 0.5f) {
-                
+            if (contactData.manifold.pointCount > 0 && normal.y >= 0.5f && enemy->canBeStomped()) {
                 if (_world && _world->getScoreManager()) {
                     // Triggers 100 -> 200 -> 400 -> 800 -> 1000 -> 2000 -> 4000 -> 8000 -> 1UP
                     _world->getScoreManager()->handleEvent(ScoreEventType::EnemyStomped, enemy->getPosition());
                 }
-                
+
                 enemy->onStomp();
                 b2BodyId bodyId = b2Shape_GetBody(ownShape);
                 b2Vec2 vel = b2Body_GetLinearVelocity(bodyId);
