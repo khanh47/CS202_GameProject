@@ -86,10 +86,10 @@ void Player::finalizeGroundContacts() {
         return;
     }
 
-    bool wasAirborne = moveable->isAirbone();
     moveable->finalizeGroundContacts();
-    // If Mario was in the air and just landed on solid ground -> Reset stomp combo
-    if (wasAirborne && !moveable->isAirbone()) {
+    // Reset the stomp combo whenever the player is on solid ground,
+    // so the ladder only grows during genuine airborne chains.
+    if (!moveable->isAirbone()) {
         if (_world && _world->getScoreManager()) {
             _world->getScoreManager()->handleEvent(ScoreEventType::MarioLanded);
         }
