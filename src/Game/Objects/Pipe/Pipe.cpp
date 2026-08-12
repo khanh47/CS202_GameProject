@@ -17,12 +17,14 @@ constexpr float kRenderTileSize = 64.0f;
 Pipe::Pipe() : GameObject() {}
 
 Pipe::Pipe(sf::Texture& texture, Orientation orientation, EndSide endSide,
-           int bodyLength, bool isWarp)
+           int bodyLength, bool isWarp, int warpID, int warpTarget)
     : GameObject(),
       _orientation(orientation),
       _endSide(endSide),
       _bodyLength(std::max(bodyLength, 0)),
       _isWarp(isWarp),
+      _warpID(warpID),
+      _warpTarget(warpTarget),
       _texture(&texture) {
     buildVertexArray(kRenderTileSize);
 }

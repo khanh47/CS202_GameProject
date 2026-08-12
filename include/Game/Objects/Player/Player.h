@@ -70,8 +70,13 @@ public:
         if (auto* moveable = getBehaviour<Moveable>()) moveable->stopJump();
     }
     void setInteractHeld(bool held) {
+        _interactHeld = held;
         if (auto* hold = getBehaviour<ShellHoldBehaviour>()) hold->setInteractHeld(held);
     }
+    void setMoveDownHeld(bool held) { _moveDownHeld = held; }
+    void setMoveUpHeld(bool held) { _moveUpHeld = held; }
+    bool isMoveDownHeld() const { return _moveDownHeld; }
+    bool isMoveUpHeld() const { return _moveUpHeld; }
     void beginGroundContact(b2ShapeId visitor) {
         if (auto* moveable = getBehaviour<Moveable>()) moveable->beginGroundContact(visitor);
     }
@@ -105,4 +110,8 @@ private:
     SparkleEffect _starSparkle{30.0f, 0.5f};
     float _effectTime = 0.0f;
     GameWorld* _world = nullptr;
+    bool _interactHeld = false;
+    bool _moveDownHeld = false;
+    bool _moveUpHeld = false;
+    float _warpCooldown = 0.0f;
 };

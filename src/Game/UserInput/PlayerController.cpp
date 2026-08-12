@@ -67,6 +67,7 @@ void PlayerController::applyPressAction(ActionType action) {
             _player.startMoveRight();
             break;
         case ActionType::MoveUp:
+            _player.setMoveUpHeld(true);
             _player.startJump();
             break;
         case ActionType::Attack:
@@ -76,6 +77,8 @@ void PlayerController::applyPressAction(ActionType action) {
             _player.setInteractHeld(true);
             break;
         case ActionType::MoveDown:
+            _player.setMoveDownHeld(true);
+            break;
         case ActionType::Accelerate:
         case ActionType::Decelerate:
             break;
@@ -91,12 +94,15 @@ void PlayerController::applyReleaseAction(ActionType action) {
             _player.stopMoveRight();
             break;
         case ActionType::MoveUp:
+            _player.setMoveUpHeld(false);
             _player.stopJump();
             break;
         case ActionType::Interact:
             _player.setInteractHeld(false);
             break;
         case ActionType::MoveDown:
+            _player.setMoveDownHeld(false);
+            break;
         case ActionType::Accelerate:
         case ActionType::Decelerate:
         case ActionType::Attack:

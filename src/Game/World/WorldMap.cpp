@@ -144,7 +144,9 @@ void spawnFromSpec(
                 spec.pipeOrientation,
                 spec.pipeEndSide,
                 spec.pipeBodyLength,
-                spec.pipeIsWarp
+                spec.pipeIsWarp,
+                spec.warpID,
+                spec.warpTarget
             );
 
             // Auto-compute hitbox size from pipe configuration so changing

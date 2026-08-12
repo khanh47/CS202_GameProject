@@ -33,6 +33,8 @@ struct SpawnSpec {
     std::string pipeEndSide;     // "top", "bottom", "left", "right"
     int pipeBodyLength = 1;      // Number of repeating body segments
     bool pipeIsWarp = false;
+    int warpID = -1;
+    int warpTarget = -1;
     bool contentsStatic = false; // Keep Pipe contents stationary
 };
 

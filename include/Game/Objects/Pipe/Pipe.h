@@ -24,13 +24,15 @@ public:
 
     Pipe();
     Pipe(sf::Texture& texture, Orientation orientation, EndSide endSide,
-         int bodyLength, bool isWarp);
+         int bodyLength, bool isWarp, int warpID, int warpTarget);
     ~Pipe() override = default;
 
     Orientation getOrientation() const { return _orientation; }
     EndSide getEndSide() const { return _endSide; }
     int getBodyLength() const { return _bodyLength; }
     bool isWarp() const { return _isWarp; }
+    int getWarpID() const { return _warpID; }
+    int getWarpTarget() const { return _warpTarget; }
 
     /// Computes the total pixel size of this pipe based on orientation and body length.
     /// Each tile is rendered at renderTileSize (default 32px), and the pipe is
@@ -60,6 +62,8 @@ private:
     EndSide _endSide = EndSide::Top;
     int _bodyLength = 1;
     bool _isWarp = false;
+    int _warpID = -1;
+    int _warpTarget = -1;
     sf::Texture* _texture = nullptr;
     sf::VertexArray _vertices{sf::PrimitiveType::Triangles};
 };

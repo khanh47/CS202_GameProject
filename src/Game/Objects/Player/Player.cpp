@@ -16,6 +16,7 @@
 #include "Game/Objects/Item/ConcreteItems/SuperStar.h"
 #include "Game/Objects/Item/ConcreteItems/Coin.h"
 #include "Game/Objects/Projectile/KoopaShell.h"
+#include "Game/Objects/Pipe/Pipe.h"
 #include "ResourceManager.h"
 #include "Game/Objects/Player/PlayerShaders.h"
 #include "Game/Behaviours/Invincible.h"
@@ -183,6 +184,15 @@ void Player::revertDecoratedState() {
 void Player::updateSimulation(const float &fixedDt) {
     if (!_body || !_body->isValid()) {
         return;
+    }
+
+    _warpCooldown = std::max(0.0f, _warpCooldown - fixedDt);
+    if (_world && _warpCooldown <= 0.0f
+        && (_interactHeld || _moveDownHeld || _moveUpHeld)) {
+        if (_world->tryWarpPlayer(*this)) {
+            _warpCooldown = 0.35f;
+            return;
+        }
     }
 
     b2Vec2 velocity = b2Body_GetLinearVelocity(_body->getId());

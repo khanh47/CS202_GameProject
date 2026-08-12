@@ -7,6 +7,7 @@
 #include "Game/Behaviours/Invincible.h"
 #include "Game/GameSettings.h"
 #include "Game/Objects/Player/Player.h"
+#include "Game/Objects/Pipe/Pipe.h"
 #include "Game/Objects/Projectile/KoopaShell.h"
 #include "Game/Objects/Enemy/ConcreteEnemy/Koopa.h"
 #include "Game/World/LevelDataLoader.h"
@@ -231,6 +232,77 @@ bool GameWorld::spawnKoopa(sf::Vector2f spawnPosition, bool facingRight) {
     koopa->setSupportGrid(&_worldMap.getTerrainSeamFilter(), _worldMap.getCellSize());
     koopa->spawn(_physicsWorld, spawnPosition, {64.0f, 100.0f});
     _objectStore.addObject(std::move(koopa));
+    return true;
+}
+
+bool GameWorld::tryWarpPlayer(Player& player) {
+    const sf::Vector2f playerPosition = player.getPosition();
+    const sf::Vector2f playerSize = player.getHitboxPixels();
+    const float halfWidth = playerSize.x * 0.5f;
+    const float halfHeight = playerSize.y * 0.5f;
+    const Pipe* source = nullptr;
+
+    for (const auto& object : _objectStore.objects()) {
+        const auto pipe = std::dynamic_pointer_cast<Pipe>(object);
+        if (!pipe || !pipe->isWarp()) continue;
+        const sf::Vector2f pipePosition = pipe->getPosition();
+        const sf::Vector2f pipeSize = pipe->getHitboxPixels();
+        const float left = pipePosition.x - pipeSize.x * 0.5f;
+        const float right = pipePosition.x + pipeSize.x * 0.5f;
+        const float top = pipePosition.y - pipeSize.y * 0.5f;
+        const float bottom = pipePosition.y + pipeSize.y * 0.5f;
+        const bool verticalOverlap = playerPosition.x + halfWidth > left + 4.0f
+            && playerPosition.x - halfWidth < right - 4.0f;
+        const bool horizontalOverlap = playerPosition.y + halfHeight > top + 4.0f
+            && playerPosition.y - halfHeight < bottom - 4.0f;
+        const sf::Vector2f velocity = player.getVelocity();
+        bool entering = false;
+        switch (pipe->getEndSide()) {
+            case Pipe::EndSide::Top:
+                entering = verticalOverlap && std::abs(playerPosition.y + halfHeight - top) < 20.0f && player.isMoveDownHeld();
+                break;
+            case Pipe::EndSide::Bottom:
+                entering = verticalOverlap && std::abs(playerPosition.y - halfHeight - bottom) < 20.0f && player.isMoveUpHeld();
+                break;
+            case Pipe::EndSide::Left:
+                entering = horizontalOverlap && std::abs(playerPosition.x + halfWidth - left) < 20.0f && velocity.x < -20.0f;
+                break;
+            case Pipe::EndSide::Right:
+                entering = horizontalOverlap && std::abs(playerPosition.x - halfWidth - right) < 20.0f && velocity.x > 20.0f;
+                break;
+        }
+        if (entering) {
+            source = pipe.get();
+            break;
+        }
+    }
+    if (!source) return false;
+
+    const Pipe* destination = nullptr;
+    for (const auto& object : _objectStore.objects()) {
+        const auto pipe = std::dynamic_pointer_cast<Pipe>(object);
+        if (pipe && pipe->isWarp() && pipe.get() != source
+            && source->getWarpTarget() >= 0
+            && pipe->getWarpID() == source->getWarpTarget()) {
+            destination = pipe.get();
+            break;
+        }
+    }
+    if (!destination) return false;
+
+    const sf::Vector2f destinationPosition = destination->getPosition();
+    const sf::Vector2f destinationSize = destination->getHitboxPixels();
+    sf::Vector2f arrival = destinationPosition;
+    switch (destination->getEndSide()) {
+        case Pipe::EndSide::Top: arrival.y -= destinationSize.y * 0.5f + halfHeight + 4.0f; break;
+        case Pipe::EndSide::Bottom: arrival.y += destinationSize.y * 0.5f + halfHeight + 4.0f; break;
+        case Pipe::EndSide::Left: arrival.x -= destinationSize.x * 0.5f + halfWidth + 4.0f; break;
+        case Pipe::EndSide::Right: arrival.x += destinationSize.x * 0.5f + halfWidth + 4.0f; break;
+    }
+    player.setPosition(arrival);
+    if (auto body = player.getPhysicsBody()) {
+        b2Body_SetLinearVelocity(body->getId(), {0.0f, 0.0f});
+    }
     return true;
 }
 

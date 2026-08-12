@@ -66,6 +66,8 @@ void from_json(const nlohmann::json& json, SpawnSpec& spec) {
     spec.pipeEndSide = json.value("pipeEndSide", "");
     spec.pipeBodyLength = json.value("pipeBodyLength", 1);
     spec.pipeIsWarp = json.value("pipeIsWarp", false);
+    spec.warpID = json.value("warpID", -1);
+    spec.warpTarget = json.value("warpTarget", -1);
     spec.contentsStatic = json.value("contentsStatic", false);
     spec.addController = json.value("addController", false);
 
