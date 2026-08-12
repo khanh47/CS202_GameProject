@@ -4,6 +4,8 @@
 #include <windows.h>
 #endif
 
+#include "Game/GameSettings.h"
+
 App::App() : window(sf::VideoMode({1920, 1080}), "SUPER MARIO") {
 #ifdef _WIN32
     ShowWindow((HWND)window.getNativeHandle(), SW_MAXIMIZE); //to maximize window
@@ -26,6 +28,7 @@ void App::run() {
         updateVisuals(deltaTime);
         render();
     }
+    GameSettings::getInstance().save();
 }
 
 void App::processEvents() {

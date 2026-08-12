@@ -40,10 +40,23 @@ public:
     sf::Keyboard::Key keyAttack = sf::Keyboard::Key::X;
     sf::Keyboard::Key keyInteract = sf::Keyboard::Key::LShift;
 
+    // Player 2 controls (keybindings)
+    sf::Keyboard::Key key2MoveLeft = sf::Keyboard::Key::Left;
+    sf::Keyboard::Key key2MoveRight = sf::Keyboard::Key::Right;
+    sf::Keyboard::Key key2Jump = sf::Keyboard::Key::Up;
+    sf::Keyboard::Key key2Attack = sf::Keyboard::Key::M;
+    sf::Keyboard::Key key2Interact = sf::Keyboard::Key::RShift;
+
     sf::Keyboard::Key getKeyForAction(ActionType action) const;
     void setKeyForAction(ActionType action, sf::Keyboard::Key key);
 
+    sf::Keyboard::Key getKeyForAction2(ActionType action) const;
+    void setKeyForAction2(ActionType action, sf::Keyboard::Key key);
+
     static std::string keyToString(sf::Keyboard::Key key);
+
+    void save() const;
+    void load();
 
 private:
     GameSettings() = default;

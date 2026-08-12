@@ -3,6 +3,7 @@
 #include "Scene/Scene.h"
 #include "Button/ButtonMenu.h"
 #include "Button/BarSlider.h"
+#include "Button/ToggleButton.h"
 #include "Game/UserInput/Action.h"
 
 #include <memory>
@@ -47,8 +48,16 @@ private:
     std::shared_ptr<UI::Button> _btnJump;
     std::shared_ptr<UI::Button> _btnAttack;
     std::shared_ptr<UI::Button> _btnButton;
+    std::shared_ptr<UI::Button> _btnMoveLeft2;
+    std::shared_ptr<UI::Button> _btnMoveRight2;
+    std::shared_ptr<UI::Button> _btnJump2;
+    std::shared_ptr<UI::Button> _btnAttack2;
+    std::shared_ptr<UI::Button> _btnButton2;
+    std::shared_ptr<UI::ToggleButton> _btnPlayerToggle;
     std::shared_ptr<UI::BarSlider> _btnMusicVolume;
     std::shared_ptr<UI::BarSlider> _btnSoundVolume;
+
+    bool _editingPlayer2 = false;
 
     std::optional<ActionType> _rebindingAction;
     std::shared_ptr<UI::Button> _activeRebindingButton;

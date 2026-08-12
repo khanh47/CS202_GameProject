@@ -41,6 +41,7 @@ void SettingsScene::onExit() {
     Scene::onExit();
     _rebindingAction.reset();
     _activeRebindingButton.reset();
+    _editingPlayer2 = false;
 }
 
 void SettingsScene::buildTopMenu() {
@@ -129,50 +130,107 @@ void SettingsScene::buildKeybindPanel() {
 
     auto& settings = GameSettings::getInstance();
 
-    _btnMoveLeft = std::make_shared<UI::Button>(
+    _btnPlayerToggle = std::make_shared<UI::ToggleButton>(
         sf::Vector2f(startPos.x, startPos.y + 0.f * spacing), btnSize, btnColor,
-        "Move Left: " + GameSettings::keyToString(settings.keyMoveLeft), 24, 20.0f
+        "Player 2 Keys", 24, _editingPlayer2, 20.0f
     );
-    _btnMoveLeft->setCommand(std::make_unique<FunctionalCommand>("RebindLeft", [this]() {
-        startRebinding(ActionType::MoveLeft, _btnMoveLeft);
-    }));
-    _subMenu.addButton(_btnMoveLeft);
+    _btnPlayerToggle->setToggleCallback([this](bool on) {
+        _editingPlayer2 = on;
+        setActiveTab(SettingsTab::Keybind);
+    });
+    _subMenu.addButton(_btnPlayerToggle);
 
-    _btnMoveRight = std::make_shared<UI::Button>(
-        sf::Vector2f(startPos.x, startPos.y + 1.f * spacing), btnSize, btnColor,
-        "Move Right: " + GameSettings::keyToString(settings.keyMoveRight), 24, 20.0f
-    );
-    _btnMoveRight->setCommand(std::make_unique<FunctionalCommand>("RebindRight", [this]() {
-        startRebinding(ActionType::MoveRight, _btnMoveRight);
-    }));
-    _subMenu.addButton(_btnMoveRight);
+    if (!_editingPlayer2) {
+        _btnMoveLeft = std::make_shared<UI::Button>(
+            sf::Vector2f(startPos.x, startPos.y + 1.f * spacing), btnSize, btnColor,
+            "Move Left: " + GameSettings::keyToString(settings.keyMoveLeft), 24, 20.0f
+        );
+        _btnMoveLeft->setCommand(std::make_unique<FunctionalCommand>("RebindLeft", [this]() {
+            startRebinding(ActionType::MoveLeft, _btnMoveLeft);
+        }));
+        _subMenu.addButton(_btnMoveLeft);
 
-    _btnJump = std::make_shared<UI::Button>(
-        sf::Vector2f(startPos.x, startPos.y + 2.f * spacing), btnSize, btnColor,
-        "Jump: " + GameSettings::keyToString(settings.keyJump), 24, 20.0f
-    );
-    _btnJump->setCommand(std::make_unique<FunctionalCommand>("RebindJump", [this]() {
-        startRebinding(ActionType::MoveUp, _btnJump);
-    }));
-    _subMenu.addButton(_btnJump);
+        _btnMoveRight = std::make_shared<UI::Button>(
+            sf::Vector2f(startPos.x, startPos.y + 2.f * spacing), btnSize, btnColor,
+            "Move Right: " + GameSettings::keyToString(settings.keyMoveRight), 24, 20.0f
+        );
+        _btnMoveRight->setCommand(std::make_unique<FunctionalCommand>("RebindRight", [this]() {
+            startRebinding(ActionType::MoveRight, _btnMoveRight);
+        }));
+        _subMenu.addButton(_btnMoveRight);
 
-    _btnAttack = std::make_shared<UI::Button>(
-        sf::Vector2f(startPos.x, startPos.y + 3.f * spacing), btnSize, btnColor,
-        "Shoot: " + GameSettings::keyToString(settings.keyAttack), 24, 20.0f
-    );
-    _btnAttack->setCommand(std::make_unique<FunctionalCommand>("RebindAttack", [this]() {
-        startRebinding(ActionType::Attack, _btnAttack);
-    }));
-    _subMenu.addButton(_btnAttack);
+        _btnJump = std::make_shared<UI::Button>(
+            sf::Vector2f(startPos.x, startPos.y + 3.f * spacing), btnSize, btnColor,
+            "Jump: " + GameSettings::keyToString(settings.keyJump), 24, 20.0f
+        );
+        _btnJump->setCommand(std::make_unique<FunctionalCommand>("RebindJump", [this]() {
+            startRebinding(ActionType::MoveUp, _btnJump);
+        }));
+        _subMenu.addButton(_btnJump);
 
-    _btnButton = std::make_shared<UI::Button>(
-        sf::Vector2f(startPos.x, startPos.y + 4.f * spacing), btnSize, btnColor,
-        "Button: " + GameSettings::keyToString(settings.keyInteract), 24, 20.0f
-    );
-    _btnButton->setCommand(std::make_unique<FunctionalCommand>("RebindButton", [this]() {
-        startRebinding(ActionType::Interact, _btnButton);
-    }));
-    _subMenu.addButton(_btnButton);
+        _btnAttack = std::make_shared<UI::Button>(
+            sf::Vector2f(startPos.x, startPos.y + 4.f * spacing), btnSize, btnColor,
+            "Shoot: " + GameSettings::keyToString(settings.keyAttack), 24, 20.0f
+        );
+        _btnAttack->setCommand(std::make_unique<FunctionalCommand>("RebindAttack", [this]() {
+            startRebinding(ActionType::Attack, _btnAttack);
+        }));
+        _subMenu.addButton(_btnAttack);
+
+        _btnButton = std::make_shared<UI::Button>(
+            sf::Vector2f(startPos.x, startPos.y + 5.f * spacing), btnSize, btnColor,
+            "Button: " + GameSettings::keyToString(settings.keyInteract), 24, 20.0f
+        );
+        _btnButton->setCommand(std::make_unique<FunctionalCommand>("RebindButton", [this]() {
+            startRebinding(ActionType::Interact, _btnButton);
+        }));
+        _subMenu.addButton(_btnButton);
+    } else {
+        _btnMoveLeft2 = std::make_shared<UI::Button>(
+            sf::Vector2f(startPos.x, startPos.y + 1.f * spacing), btnSize, btnColor,
+            "Move Left: " + GameSettings::keyToString(settings.key2MoveLeft), 24, 20.0f
+        );
+        _btnMoveLeft2->setCommand(std::make_unique<FunctionalCommand>("RebindLeft2", [this]() {
+            startRebinding(ActionType::MoveLeft, _btnMoveLeft2);
+        }));
+        _subMenu.addButton(_btnMoveLeft2);
+
+        _btnMoveRight2 = std::make_shared<UI::Button>(
+            sf::Vector2f(startPos.x, startPos.y + 2.f * spacing), btnSize, btnColor,
+            "Move Right: " + GameSettings::keyToString(settings.key2MoveRight), 24, 20.0f
+        );
+        _btnMoveRight2->setCommand(std::make_unique<FunctionalCommand>("RebindRight2", [this]() {
+            startRebinding(ActionType::MoveRight, _btnMoveRight2);
+        }));
+        _subMenu.addButton(_btnMoveRight2);
+
+        _btnJump2 = std::make_shared<UI::Button>(
+            sf::Vector2f(startPos.x, startPos.y + 3.f * spacing), btnSize, btnColor,
+            "Jump: " + GameSettings::keyToString(settings.key2Jump), 24, 20.0f
+        );
+        _btnJump2->setCommand(std::make_unique<FunctionalCommand>("RebindJump2", [this]() {
+            startRebinding(ActionType::MoveUp, _btnJump2);
+        }));
+        _subMenu.addButton(_btnJump2);
+
+        _btnAttack2 = std::make_shared<UI::Button>(
+            sf::Vector2f(startPos.x, startPos.y + 4.f * spacing), btnSize, btnColor,
+            "Shoot: " + GameSettings::keyToString(settings.key2Attack), 24, 20.0f
+        );
+        _btnAttack2->setCommand(std::make_unique<FunctionalCommand>("RebindAttack2", [this]() {
+            startRebinding(ActionType::Attack, _btnAttack2);
+        }));
+        _subMenu.addButton(_btnAttack2);
+
+        _btnButton2 = std::make_shared<UI::Button>(
+            sf::Vector2f(startPos.x, startPos.y + 5.f * spacing), btnSize, btnColor,
+            "Button: " + GameSettings::keyToString(settings.key2Interact), 24, 20.0f
+        );
+        _btnButton2->setCommand(std::make_unique<FunctionalCommand>("RebindButton2", [this]() {
+            startRebinding(ActionType::Interact, _btnButton2);
+        }));
+        _subMenu.addButton(_btnButton2);
+    }
 }
 
 void SettingsScene::buildDevModePanel() {
@@ -219,6 +277,25 @@ void SettingsScene::startRebinding(ActionType action, std::shared_ptr<UI::Button
 
 void SettingsScene::updateKeybindButtonTexts() {
     auto& settings = GameSettings::getInstance();
+    if (_editingPlayer2) {
+        if (_btnMoveLeft2) {
+            _btnMoveLeft2->setText("Move Left: " + GameSettings::keyToString(settings.key2MoveLeft));
+        }
+        if (_btnMoveRight2) {
+            _btnMoveRight2->setText("Move Right: " + GameSettings::keyToString(settings.key2MoveRight));
+        }
+        if (_btnJump2) {
+            _btnJump2->setText("Jump: " + GameSettings::keyToString(settings.key2Jump));
+        }
+        if (_btnAttack2) {
+            _btnAttack2->setText("Shoot: " + GameSettings::keyToString(settings.key2Attack));
+        }
+        if (_btnButton2) {
+            _btnButton2->setText("Button: " + GameSettings::keyToString(settings.key2Interact));
+        }
+        return;
+    }
+
     if (_btnMoveLeft) {
         _btnMoveLeft->setText("Move Left: " + GameSettings::keyToString(settings.keyMoveLeft));
     }
@@ -264,7 +341,11 @@ void SettingsScene::handleInput(const sf::Event& event) {
                 return;
             }
             if (keyEvent->code != sf::Keyboard::Key::Unknown) {
-                GameSettings::getInstance().setKeyForAction(*_rebindingAction, keyEvent->code);
+                if (_editingPlayer2) {
+                    GameSettings::getInstance().setKeyForAction2(*_rebindingAction, keyEvent->code);
+                } else {
+                    GameSettings::getInstance().setKeyForAction(*_rebindingAction, keyEvent->code);
+                }
                 updateKeybindButtonTexts();
                 _rebindingAction.reset();
                 _activeRebindingButton.reset();

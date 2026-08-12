@@ -24,6 +24,7 @@ public:
     void suspendPlayerMotion();
     void finalizeGroundContacts();
     void syncControllersWithKeyboard();
+    void sortOut();
 
     std::shared_ptr<GameObject> getPrimaryPlayer() const;
     bool hasLivingPlayers() const;
