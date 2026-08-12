@@ -81,7 +81,7 @@ void CheckpointFlag::onContact(
 
     _triggered = true;
     if (auto* animatable = getBehaviour<Animatable>()) {
-        animatable->playAnimation("idle");
+        animatable->playAnimation("captured");
     }
     onCheckpointReached(*player);
 }

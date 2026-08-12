@@ -531,13 +531,13 @@ AnimationSet Animation::makeCheckpointFlagAnimationSet() {
     animationSet.defaultClip = "waving";
 
     animationSet.clips.emplace(
-        "idle",
+        "captured",
         Animation::createLinearClip(
-            {0, 132},
+            {33, 165},
             {32, 32},
-            1,
+            4,
             {33, 0},
-            67.67f,
+            1.0f / 4,
             true
         )
     );
