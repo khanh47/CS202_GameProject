@@ -25,7 +25,6 @@ void GameWorld::handleInput(const sf::Event& event) {
 }
 
 void GameWorld::updateSimulation(const float& fixedDt) {
-    _objectStore.sortOut();
     if (isFrozen()) {
         _freezeTimer -= fixedDt;
         if (_freezeTimer <= 0.0f) {

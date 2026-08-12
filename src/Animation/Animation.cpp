@@ -63,7 +63,7 @@ AnimationSet Animation::makeDefaultPlayerAnimationSet() {
             true
         )
     );
-
+//
     animationSet.clips.emplace(
         "bump",
         Animation::createLinearClip(
@@ -71,7 +71,7 @@ AnimationSet Animation::makeDefaultPlayerAnimationSet() {
             {32, 32},
             2,
             {32, 0},
-            1.0f / 4.0f,
+            1.0f / 6.0f,
             false
         )
     );

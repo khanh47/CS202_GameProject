@@ -114,13 +114,3 @@ bool WorldObjectStore::hasLivingPlayers() const {
     }
     return false;
 }
-static bool cmp(std::shared_ptr<GameObject> object1, std::shared_ptr<GameObject> object2) {
-    bool isPlayer1 = (dynamic_cast<Player *>(object1.get()));
-    return isPlayer1;
-}
-void WorldObjectStore::sortOut() {
-    std::sort(_objects.begin(), _objects.end(), [this] 
-    (shared_ptr<GameObject> object1, shared_ptr<GameObject> object2) {
-        return cmp(object1, object2);
-    });
-}
