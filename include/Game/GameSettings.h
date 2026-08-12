@@ -37,6 +37,7 @@ public:
     sf::Keyboard::Key keyMoveLeft = sf::Keyboard::Key::A;
     sf::Keyboard::Key keyMoveRight = sf::Keyboard::Key::D;
     sf::Keyboard::Key keyJump = sf::Keyboard::Key::W;
+    sf::Keyboard::Key keyMoveDown = sf::Keyboard::Key::S;
     sf::Keyboard::Key keyAttack = sf::Keyboard::Key::X;
     sf::Keyboard::Key keyInteract = sf::Keyboard::Key::LShift;
 
@@ -44,6 +45,7 @@ public:
     sf::Keyboard::Key key2MoveLeft = sf::Keyboard::Key::Left;
     sf::Keyboard::Key key2MoveRight = sf::Keyboard::Key::Right;
     sf::Keyboard::Key key2Jump = sf::Keyboard::Key::Up;
+    sf::Keyboard::Key key2MoveDown = sf::Keyboard::Key::Down;
     sf::Keyboard::Key key2Attack = sf::Keyboard::Key::M;
     sf::Keyboard::Key key2Interact = sf::Keyboard::Key::RShift;
 

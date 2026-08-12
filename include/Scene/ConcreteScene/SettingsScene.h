@@ -46,11 +46,13 @@ private:
     std::shared_ptr<UI::Button> _btnMoveLeft;
     std::shared_ptr<UI::Button> _btnMoveRight;
     std::shared_ptr<UI::Button> _btnJump;
+    std::shared_ptr<UI::Button> _btnMoveDown;
     std::shared_ptr<UI::Button> _btnAttack;
     std::shared_ptr<UI::Button> _btnButton;
     std::shared_ptr<UI::Button> _btnMoveLeft2;
     std::shared_ptr<UI::Button> _btnMoveRight2;
     std::shared_ptr<UI::Button> _btnJump2;
+    std::shared_ptr<UI::Button> _btnMoveDown2;
     std::shared_ptr<UI::Button> _btnAttack2;
     std::shared_ptr<UI::Button> _btnButton2;
     std::shared_ptr<UI::ToggleButton> _btnPlayerToggle;

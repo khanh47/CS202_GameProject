@@ -168,8 +168,17 @@ void SettingsScene::buildKeybindPanel() {
         }));
         _subMenu.addButton(_btnJump);
 
-        _btnAttack = std::make_shared<UI::Button>(
+        _btnMoveDown = std::make_shared<UI::Button>(
             sf::Vector2f(startPos.x, startPos.y + 4.f * spacing), btnSize, btnColor,
+            "Pipe Down: " + GameSettings::keyToString(settings.keyMoveDown), 24, 20.0f
+        );
+        _btnMoveDown->setCommand(std::make_unique<FunctionalCommand>("RebindPipeDown", [this]() {
+            startRebinding(ActionType::MoveDown, _btnMoveDown);
+        }));
+        _subMenu.addButton(_btnMoveDown);
+
+        _btnAttack = std::make_shared<UI::Button>(
+            sf::Vector2f(startPos.x, startPos.y + 5.f * spacing), btnSize, btnColor,
             "Shoot: " + GameSettings::keyToString(settings.keyAttack), 24, 20.0f
         );
         _btnAttack->setCommand(std::make_unique<FunctionalCommand>("RebindAttack", [this]() {
@@ -178,7 +187,7 @@ void SettingsScene::buildKeybindPanel() {
         _subMenu.addButton(_btnAttack);
 
         _btnButton = std::make_shared<UI::Button>(
-            sf::Vector2f(startPos.x, startPos.y + 5.f * spacing), btnSize, btnColor,
+            sf::Vector2f(startPos.x, startPos.y + 6.f * spacing), btnSize, btnColor,
             "Button: " + GameSettings::keyToString(settings.keyInteract), 24, 20.0f
         );
         _btnButton->setCommand(std::make_unique<FunctionalCommand>("RebindButton", [this]() {
@@ -213,8 +222,17 @@ void SettingsScene::buildKeybindPanel() {
         }));
         _subMenu.addButton(_btnJump2);
 
-        _btnAttack2 = std::make_shared<UI::Button>(
+        _btnMoveDown2 = std::make_shared<UI::Button>(
             sf::Vector2f(startPos.x, startPos.y + 4.f * spacing), btnSize, btnColor,
+            "Pipe Down: " + GameSettings::keyToString(settings.key2MoveDown), 24, 20.0f
+        );
+        _btnMoveDown2->setCommand(std::make_unique<FunctionalCommand>("RebindPipeDown2", [this]() {
+            startRebinding(ActionType::MoveDown, _btnMoveDown2);
+        }));
+        _subMenu.addButton(_btnMoveDown2);
+
+        _btnAttack2 = std::make_shared<UI::Button>(
+            sf::Vector2f(startPos.x, startPos.y + 5.f * spacing), btnSize, btnColor,
             "Shoot: " + GameSettings::keyToString(settings.key2Attack), 24, 20.0f
         );
         _btnAttack2->setCommand(std::make_unique<FunctionalCommand>("RebindAttack2", [this]() {
@@ -223,7 +241,7 @@ void SettingsScene::buildKeybindPanel() {
         _subMenu.addButton(_btnAttack2);
 
         _btnButton2 = std::make_shared<UI::Button>(
-            sf::Vector2f(startPos.x, startPos.y + 5.f * spacing), btnSize, btnColor,
+            sf::Vector2f(startPos.x, startPos.y + 6.f * spacing), btnSize, btnColor,
             "Button: " + GameSettings::keyToString(settings.key2Interact), 24, 20.0f
         );
         _btnButton2->setCommand(std::make_unique<FunctionalCommand>("RebindButton2", [this]() {
@@ -287,6 +305,9 @@ void SettingsScene::updateKeybindButtonTexts() {
         if (_btnJump2) {
             _btnJump2->setText("Jump: " + GameSettings::keyToString(settings.key2Jump));
         }
+        if (_btnMoveDown2) {
+            _btnMoveDown2->setText("Pipe Down: " + GameSettings::keyToString(settings.key2MoveDown));
+        }
         if (_btnAttack2) {
             _btnAttack2->setText("Shoot: " + GameSettings::keyToString(settings.key2Attack));
         }
@@ -304,6 +325,9 @@ void SettingsScene::updateKeybindButtonTexts() {
     }
     if (_btnJump) {
         _btnJump->setText("Jump: " + GameSettings::keyToString(settings.keyJump));
+    }
+    if (_btnMoveDown) {
+        _btnMoveDown->setText("Pipe Down: " + GameSettings::keyToString(settings.keyMoveDown));
     }
     if (_btnAttack) {
         _btnAttack->setText("Shoot: " + GameSettings::keyToString(settings.keyAttack));
