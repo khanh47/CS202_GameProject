@@ -8,6 +8,7 @@
 #include "Game/Objects/GameObjectFactory.h"
 #include "Game/Objects/Enemy/Enemy.h"
 #include "Game/Objects/Enemy/ConcreteEnemy/Koopa.h"
+#include "Game/Objects/Enemy/ConcreteEnemy/PiranhaPlant.h"
 #include "Game/Objects/Pipe/Pipe.h"
 #include "Game/Objects/Projectile/FireballPool.h"
 #include "Game/Objects/Player/Player.h"
@@ -188,6 +189,44 @@ void spawnFromSpec(
             }
 
             pipe->spawn(context.physicsWorld, pipeSpawnPos, pipeSize);
+
+            if (spec.contents && spec.contents->kind == ObjectKind::Enemy) {
+                const SpawnSpec& content = *spec.contents;
+                auto enemy = context.objectFactory.createEnemy(
+                    content.typeKey,
+                    &ResourceManager::getInstance().getTexture(content.textureKey),
+                    content.animationId
+                );
+
+                sf::Vector2f contentSpawnPos = pipeSpawnPos + content.offset;
+                if (spec.pipeOrientation == "vertical"
+                    && spec.pipeEndSide == "top") {
+                    const float pipeTopY = pipeSpawnPos.y - pipeSize.y * 0.5f;
+                    // Keep the hidden hitbox completely below the pipe rim,
+                    // and stop the rise with its bottom exactly at that rim.
+                    constexpr float hiddenDepthPixels = 8.0f;
+                    const float hiddenY = pipeTopY + content.size.y * 0.5f
+                        + hiddenDepthPixels;
+                    const float emergedY = pipeTopY - content.size.y * 0.5f;
+                    contentSpawnPos.y = spec.contentsStatic
+                        ? emergedY
+                        : hiddenY + content.offset.y;
+                    enemy->spawn(context.physicsWorld, contentSpawnPos, content.size);
+
+                    if (!spec.contentsStatic) {
+                        if (auto plant = std::dynamic_pointer_cast<PiranhaPlant>(enemy)) {
+                        plant->setPipeTravel(
+                            hiddenY + content.offset.y,
+                            emergedY
+                        );
+                        }
+                    }
+                } else {
+                    enemy->spawn(context.physicsWorld, contentSpawnPos, content.size);
+                }
+                context.objectStore.addObject(std::move(enemy));
+            }
+
             if (spec.addSeamFilter) {
                 context.terrainSeamFilter.addBlock(
                     pipe,

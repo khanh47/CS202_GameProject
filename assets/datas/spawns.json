@@ -16,6 +16,7 @@
     { "id": 14, "kind": "Item", "typeKey": "CheckpointFlag", "texture": "checkpoint_flag_spritesheet", "size": [16, 96], "centerVertically": false },
     { "id": 15, "kind": "Pipe", "typeKey": "Pipe", "texture": "pipes_spritesheet", "size": [128, 256], "pipeOrientation": "horizontal", "pipeEndSide": "right", "pipeBodyLength": 3, "pipeIsWarp": false, "addSeamFilter": true },
     { "id": 16, "kind": "Pipe", "typeKey": "Pipe", "texture": "pipes_spritesheet", "size": [128, 384], "pipeOrientation": "vertical", "pipeEndSide": "top", "pipeBodyLength": 3, "pipeIsWarp": true, "addSeamFilter": true, 
+    "contentsStatic": false,
     "contents": { "kind": "Enemy", "typeKey": "PiranhaPlant", "texture": "piranha_plant_spritesheet", "animationId": "piranha_plant", "size": [78, 105], "offset": [0, 5] } },
     { "id": 17, "kind": "Pipe", "typeKey": "Pipe", "texture": "pipes_spritesheet", "size": [128, 192], "pipeOrientation": "vertical", "pipeEndSide": "bottom", "pipeBodyLength": 2, "pipeIsWarp": false, "addSeamFilter": true },
     { "id": 19, "kind": "Player", "typeKey": "Player", "texture": "mario_spritesheet", "animationId": "mario", "size": [54, 120], "offset": [10, 0], "addController": false },

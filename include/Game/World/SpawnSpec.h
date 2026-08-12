@@ -33,6 +33,7 @@ struct SpawnSpec {
     std::string pipeEndSide;     // "top", "bottom", "left", "right"
     int pipeBodyLength = 1;      // Number of repeating body segments
     bool pipeIsWarp = false;
+    bool contentsStatic = false; // Keep Pipe contents stationary
 };
 
 void from_json(const nlohmann::json& json, SpawnSpec& spec);
