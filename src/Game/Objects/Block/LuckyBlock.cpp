@@ -8,7 +8,7 @@
 #include "Game/ScoreManager.h"
 #include "ResourceManager.h"
 
-LuckyBlock::LuckyBlock() : GameObject() {
+LuckyBlock::LuckyBlock() : Block() {
     addBehaviour<Animatable>();
     if (auto* animatable = getBehaviour<Animatable>()) {
         animatable->configureVisuals(
@@ -19,7 +19,7 @@ LuckyBlock::LuckyBlock() : GameObject() {
     setupDefaultItemPool();
 }
 
-LuckyBlock::LuckyBlock(sf::Texture &texture) : GameObject() {
+LuckyBlock::LuckyBlock(sf::Texture &texture) : Block() {
     addBehaviour<Animatable>();
     if (auto* animatable = getBehaviour<Animatable>()) {
         animatable->configureVisuals(texture, "lucky_block");
@@ -94,50 +94,47 @@ void LuckyBlock::onContact(GameObject& other, const b2ContactData& contactData, 
     }
 
     if (auto* player = dynamic_cast<Player*>(&other)) {
-        if (b2Shape_IsValid(ownShape) && contactData.manifold.pointCount > 0) {
-            b2Vec2 normal = contactData.manifold.normal;
-            if (!B2_ID_EQUALS(contactData.shapeIdA, ownShape)) {
-                normal = {-normal.x, -normal.y};
+        if (isBumped(other, contactData, ownShape)) {
+            capacity--;
+            _hitCooldown = 0.0f; // Cooldown to prevent multi-hits in 1 jump
+            _bumpTimer = 0.15f;  // Trigger bump/enlarge animation (0.15 seconds)
+
+            GameWorld* world = player->getGameWorld();
+            const ItemOption* chosenOption = selectRandomOption();
+
+            sf::Vector2f itemSpawnPos = getPosition();
+            itemSpawnPos.y -= 64.0f; // Spawn above the block
+
+            if (chosenOption) {
+                if (chosenOption->customSpawner && world) {
+                    chosenOption->customSpawner(*world, itemSpawnPos);
+                } else if (chosenOption->itemTypeKey == "Coin" || chosenOption->itemTypeKey.empty()) {
+                    // Spawn popping coin animation
+                    sf::Texture& itemsTexture = ResourceManager::getInstance().getTexture("coin_spritesheet");
+                    _bouncingCoin.spawn(getPosition(), itemsTexture);
+
+                    // Trigger ScoreManager coin event (+200 pts, +1 coin, floating text)
+                    if (world && world->getScoreManager()) {
+                        world->getScoreManager()->handleEvent(
+                            ScoreEventType::CoinCollected,
+                            getPosition()
+                        );
+                    }
+                } else if (world) {
+                    // Spawn physical pickup item into the GameWorld
+                    world->spawnItem(chosenOption->itemTypeKey, itemSpawnPos);
+                }
             }
 
-            // Detect Player hitting from below (upward contact normal or player below block)
-            if (normal.y >= 0.3f || player->getPosition().y > getPosition().y) {
-                capacity--;
-                _hitCooldown = 0.0f; // Cooldown to prevent multi-hits in 1 jump
-                _bumpTimer = 0.15f;  // Trigger bump/enlarge animation (0.15 seconds)
-
-                GameWorld* world = player->getGameWorld();
-                const ItemOption* chosenOption = selectRandomOption();
-
-                sf::Vector2f itemSpawnPos = getPosition();
-                itemSpawnPos.y -= 64.0f; // Spawn above the block
-
-                if (chosenOption) {
-                    if (chosenOption->customSpawner && world) {
-                        chosenOption->customSpawner(*world, itemSpawnPos);
-                    } else if (chosenOption->itemTypeKey == "Coin" || chosenOption->itemTypeKey.empty()) {
-                        // Spawn popping coin animation
-                        sf::Texture& itemsTexture = ResourceManager::getInstance().getTexture("coin_spritesheet");
-                        _bouncingCoin.spawn(getPosition(), itemsTexture);
-
-                        // Trigger ScoreManager coin event (+200 pts, +1 coin, floating text)
-                        if (world && world->getScoreManager()) {
-                            world->getScoreManager()->handleEvent(
-                                ScoreEventType::CoinCollected,
-                                getPosition()
-                            );
-                        }
-                    } else if (world) {
-                        // Spawn physical pickup item into the GameWorld
-                        world->spawnItem(chosenOption->itemTypeKey, itemSpawnPos);
-                    }
-                }
-
-                // If empty, switch animation to empty block
-                if (capacity <= 0) {
-                    if (auto* animatable = getBehaviour<Animatable>()) {
-                        animatable->playAnimation("empty");
-                    }
+            // If empty, switch animation to empty block
+            auto* animatable = getBehaviour<Animatable>();
+            if (capacity <= 0) {
+                if(animatable)
+                    animatable->playAnimation("empty");
+            }
+            else {
+                if(auto* playerAnimatable = player->getBehaviour<Animatable>()) {
+                    playerAnimatable->playAnimation("bump");
                 }
             }
         }

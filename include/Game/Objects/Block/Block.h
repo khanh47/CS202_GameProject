@@ -12,7 +12,10 @@ public:
     Block(sf::Texture &texture);
     ~Block();
 
+    void onContact(GameObject& other, const b2ContactData& contactData, b2ShapeId ownShape) override;
+
 protected:
+    bool isBumped(GameObject& other, const b2ContactData& contactData, b2ShapeId ownShape);
     void onCreateShapeDef(b2ShapeDef& def) override;
     void onUpdateVisuals(float deltaTime) override;
     void onRenderVisual(sf::RenderTarget& target, const sf::Vector2f& position, float angleDegrees) override;

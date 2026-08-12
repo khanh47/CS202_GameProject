@@ -26,7 +26,7 @@ struct ItemOption {
     std::function<void(GameWorld&, sf::Vector2f)> customSpawner = nullptr;
 };
 
-class LuckyBlock: public GameObject {
+class LuckyBlock: public Block {
 public:
     LuckyBlock();
     LuckyBlock(sf::Texture &texture);

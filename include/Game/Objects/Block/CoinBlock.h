@@ -4,6 +4,7 @@
 #include <SFML/System.hpp>
 #include <SFML/Graphics.hpp>
 
+#include "Game/Objects/Block/Block.h"
 #include "Game/Objects/GameObject.h"
 #include "Physics/PhysicsWorld.h"
 #include "Game/Behaviours/Animatable.h"
@@ -44,7 +45,7 @@ struct BouncingCoin {
     }
 };
 
-class CoinBlock: public GameObject {
+class CoinBlock: public Block {
 public:
     CoinBlock();
     CoinBlock(sf::Texture &texture);

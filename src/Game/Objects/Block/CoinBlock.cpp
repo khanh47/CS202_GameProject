@@ -7,7 +7,7 @@
 #include "Game/ScoreManager.h"
 #include "ResourceManager.h"
 
-CoinBlock::CoinBlock() : GameObject() {
+CoinBlock::CoinBlock() : Block() {
     addBehaviour<Animatable>();
     if (auto* animatable = getBehaviour<Animatable>()) {
         animatable->configureVisuals(
@@ -17,7 +17,7 @@ CoinBlock::CoinBlock() : GameObject() {
     }
 }
 
-CoinBlock::CoinBlock(sf::Texture &texture) : GameObject() {
+CoinBlock::CoinBlock(sf::Texture &texture) : Block() {
     addBehaviour<Animatable>();
     if (auto* animatable = getBehaviour<Animatable>()) {
         animatable->configureVisuals(texture, "coin_block");
@@ -38,38 +38,35 @@ void CoinBlock::onContact(GameObject& other, const b2ContactData& contactData, b
     }
 
     if (auto* player = dynamic_cast<Player*>(&other)) {
-        if (b2Shape_IsValid(ownShape) && contactData.manifold.pointCount > 0) {
-            b2Vec2 normal = contactData.manifold.normal;
-            if (!B2_ID_EQUALS(contactData.shapeIdA, ownShape)) {
-                normal = {-normal.x, -normal.y};
+        if (isBumped(other, contactData, ownShape)) {
+            capacity--;
+            _hitCooldown = 0.0f; // Cooldown to prevent multi-hits in 1 jump
+            _bumpTimer = 0.15f;  // Trigger bump/enlarge animation (0.15 seconds)
+
+            // Spawn popping coin animation
+            sf::Texture& itemsTexture = ResourceManager::getInstance().getTexture("coin_spritesheet");
+            _bouncingCoin.spawn(getPosition(), itemsTexture);
+
+            // 🪙 Trigger ScoreManager coin event (+200 pts, +1 coin, floating text)
+            if (player->getGameWorld() && player->getGameWorld()->getScoreManager()) {
+                player->getGameWorld()->getScoreManager()->handleEvent(
+                    ScoreEventType::CoinCollected,
+                    getPosition()
+                );
             }
 
-            // Detect Player hitting from below (upward contact normal or player below block)
-            if (normal.y >= 0.3f || player->getPosition().y > getPosition().y) {
-                capacity--;
-                _hitCooldown = 0.0f; // Cooldown to prevent multi-hits in 1 jump
-                _bumpTimer = 0.15f;  // Trigger bump/enlarge animation (0.15 seconds)
-
-                // Spawn popping coin animation
-                sf::Texture& itemsTexture = ResourceManager::getInstance().getTexture("coin_spritesheet");
-                _bouncingCoin.spawn(getPosition(), itemsTexture);
-
-                // 🪙 Trigger ScoreManager coin event (+200 pts, +1 coin, floating text)
-                if (player->getGameWorld() && player->getGameWorld()->getScoreManager()) {
-                    player->getGameWorld()->getScoreManager()->handleEvent(
-                        ScoreEventType::CoinCollected,
-                        getPosition()
-                    );
-                }
-
-                // If empty, switch animation to empty block
-                if (capacity <= 0) {
-                    if (auto* animatable = getBehaviour<Animatable>()) {
-                        animatable->playAnimation("empty");
-                    }
+            // If empty, switch animation to empty block
+            auto* animatable = getBehaviour<Animatable>();
+            if (capacity <= 0) {
+                if(animatable)
+                    animatable->playAnimation("empty");
+            }
+            else {
+                if(auto* playerAnimatable = player->getBehaviour<Animatable>()) {
+                    playerAnimatable->playAnimation("bump");
                 }
             }
-        }
+        }  
     }
 }
 

@@ -10,7 +10,7 @@
 
 namespace {
 constexpr sf::Vector2f checkpointFlagVisualSize{96.0f, 96.0f};
-constexpr sf::Vector2f checkpointFlagHitboxSize{16.0f, 96.0f};
+constexpr sf::Vector2f checkpointFlagHitboxSize{48.0f, 96.0f};
 }
 
 class GameWorld;
