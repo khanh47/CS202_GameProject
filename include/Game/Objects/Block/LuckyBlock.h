@@ -33,6 +33,7 @@ public:
     ~LuckyBlock() override;
 
     void onContact(GameObject& other, const b2ContactData& contactData, b2ShapeId ownShape) override;
+    bool isRenderedByTileMap() const noexcept override { return false; }
 
     /**
      * @brief Add a standard item type key to the random spawn pool.

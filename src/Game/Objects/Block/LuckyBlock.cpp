@@ -9,7 +9,7 @@
 #include "ResourceManager.h"
 
 LuckyBlock::LuckyBlock() : Block() {
-    addBehaviour<Animatable>();
+    // addBehaviour<Animatable>();
     if (auto* animatable = getBehaviour<Animatable>()) {
         animatable->configureVisuals(
             ResourceManager::getInstance().getTexture("lucky_block_spritesheet"),
@@ -20,7 +20,7 @@ LuckyBlock::LuckyBlock() : Block() {
 }
 
 LuckyBlock::LuckyBlock(sf::Texture &texture) : Block() {
-    addBehaviour<Animatable>();
+    // addBehaviour<Animatable>();
     if (auto* animatable = getBehaviour<Animatable>()) {
         animatable->configureVisuals(texture, "lucky_block");
     }

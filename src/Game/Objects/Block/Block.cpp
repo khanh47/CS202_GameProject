@@ -1,17 +1,12 @@
 #include "Game/Objects/Block/Block.h"
 #include "Game/Objects/Player/Player.h"
 #include "Game/Behaviours/Animatable.h"
-#include "ResourceManager.h"
 
 Block::Block() : GameObject() {
     addBehaviour<Animatable>();
-    if (auto* animatable = getBehaviour<Animatable>()) {
-        animatable->configureVisuals(ResourceManager::getInstance().getTexture("tiles"));
-    }
 }
 
-Block::Block(sf::Texture &texture) : GameObject() {
-    addBehaviour<Animatable>();
+Block::Block(sf::Texture &texture) : Block() {
     if (auto* animatable = getBehaviour<Animatable>()) {
         animatable->configureVisuals(texture);
     }

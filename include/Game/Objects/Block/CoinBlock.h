@@ -52,6 +52,7 @@ public:
     ~CoinBlock() override;
 
     void onContact(GameObject& other, const b2ContactData& contactData, b2ShapeId ownShape) override;
+    bool isRenderedByTileMap() const noexcept override { return false; }
 
 protected:
     void onCreateShapeDef(b2ShapeDef& def) override;

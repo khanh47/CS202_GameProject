@@ -8,7 +8,7 @@
 #include "ResourceManager.h"
 
 CoinBlock::CoinBlock() : Block() {
-    addBehaviour<Animatable>();
+    // addBehaviour<Animatable>();
     if (auto* animatable = getBehaviour<Animatable>()) {
         animatable->configureVisuals(
             ResourceManager::getInstance().getTexture("coin_block_spritesheet"),
@@ -18,7 +18,7 @@ CoinBlock::CoinBlock() : Block() {
 }
 
 CoinBlock::CoinBlock(sf::Texture &texture) : Block() {
-    addBehaviour<Animatable>();
+    // addBehaviour<Animatable>();
     if (auto* animatable = getBehaviour<Animatable>()) {
         animatable->configureVisuals(texture, "coin_block");
     }

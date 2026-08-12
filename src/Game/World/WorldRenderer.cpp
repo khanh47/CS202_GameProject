@@ -65,7 +65,12 @@ void WorldRenderer::render(
     );
 
     for (const std::shared_ptr<GameObject>& object : objectStore.objects()) {
-        if (!object || std::dynamic_pointer_cast<Block>(object)) {
+        if (!object) {
+            continue;
+        }
+        const std::shared_ptr<Block> block =
+            std::dynamic_pointer_cast<Block>(object);
+        if (block && block->isRenderedByTileMap()) {
             continue;
         }
         if (culledBounds.contains(object->getPosition())) {

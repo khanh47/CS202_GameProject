@@ -13,6 +13,7 @@ public:
     ~Block();
 
     void onContact(GameObject& other, const b2ContactData& contactData, b2ShapeId ownShape) override;
+    virtual bool isRenderedByTileMap() const noexcept { return true; }
 
 protected:
     bool isBumped(GameObject& other, const b2ContactData& contactData, b2ShapeId ownShape);
