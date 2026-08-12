@@ -130,11 +130,6 @@ void LuckyBlock::onContact(GameObject& other, const b2ContactData& contactData, 
                 if(animatable)
                     animatable->playAnimation("empty");
             }
-            else {
-                if(auto* playerAnimatable = player->getBehaviour<Animatable>()) {
-                    playerAnimatable->playAnimation("bump");
-                }
-            }
         }
     }
 }

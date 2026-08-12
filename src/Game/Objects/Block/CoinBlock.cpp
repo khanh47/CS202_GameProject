@@ -61,11 +61,6 @@ void CoinBlock::onContact(GameObject& other, const b2ContactData& contactData, b
                 if(animatable)
                     animatable->playAnimation("empty");
             }
-            else {
-                if(auto* playerAnimatable = player->getBehaviour<Animatable>()) {
-                    playerAnimatable->playAnimation("bump");
-                }
-            }
         }  
     }
 }

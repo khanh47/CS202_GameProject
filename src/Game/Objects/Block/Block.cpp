@@ -1,4 +1,5 @@
 #include "Game/Objects/Block/Block.h"
+#include "Game/Behaviours/ShellHoldBehaviour.h"
 #include "Game/Objects/Player/Player.h"
 #include "Game/Behaviours/Animatable.h"
 
@@ -46,10 +47,13 @@ bool Block::isBumped(GameObject& other, const b2ContactData& contactData, b2Shap
 
             // Detect Player hitting from below (upward contact normal or player below block)
             if (normal.y >= 0.3f || player->getPosition().y > getPosition().y) {
-                if(auto* playerAnimatable = player->getBehaviour<Animatable>()) {
-                    playerAnimatable->playAnimation("bump");
-                    return true;
+                auto* playerAnimatable = player->getBehaviour<Animatable>();
+                auto* holdingShell = player->getBehaviour<ShellHoldBehaviour>();
+                if (playerAnimatable &&
+                    (!holdingShell || !holdingShell->isHoldingShell())) {
+                    playerAnimatable->playAnimation("bump", true);
                 }
+                return true;
             }
             else return false;
         }
