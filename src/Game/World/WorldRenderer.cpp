@@ -10,6 +10,8 @@
 #include "Game/GameSettings.h"
 #include "Game/Objects/Block/Block.h"
 #include "Game/Objects/GameObject.h"
+#include "Game/Objects/Item/Item.h"
+#include "Game/Objects/Player/Player.h"
 #include "Game/Objects/Projectile/FireballPool.h"
 #include "Game/World/WorldMap.h"
 #include "Game/World/WorldObjectStore.h"
@@ -64,16 +66,33 @@ void WorldRenderer::render(
         {viewBounds.size.x + margin * 2.0f, viewBounds.size.y + margin * 2.0f}
     );
 
+    const auto isVisibleDynamicObject = [&culledBounds](
+        const std::shared_ptr<GameObject>& object
+    ) {
+        if (!object || !culledBounds.contains(object->getPosition())) {
+            return false;
+        }
+
+        const auto block = std::dynamic_pointer_cast<Block>(object);
+        return !block || !block->isRenderedByTileMap();
+    };
+
+    const auto isEarlyRenderObject = [](
+        const std::shared_ptr<GameObject>& object
+    ) {
+        return std::dynamic_pointer_cast<Player>(object)
+            || std::dynamic_pointer_cast<Block>(object)
+            || std::dynamic_pointer_cast<Item>(object);
+    };
+
     for (const std::shared_ptr<GameObject>& object : objectStore.objects()) {
-        if (!object) {
-            continue;
+        if (isVisibleDynamicObject(object) && isEarlyRenderObject(object)) {
+            object->render(target);
         }
-        const std::shared_ptr<Block> block =
-            std::dynamic_pointer_cast<Block>(object);
-        if (block && block->isRenderedByTileMap()) {
-            continue;
-        }
-        if (culledBounds.contains(object->getPosition())) {
+    }
+
+    for (const std::shared_ptr<GameObject>& object : objectStore.objects()) {
+        if (isVisibleDynamicObject(object) && !isEarlyRenderObject(object)) {
             object->render(target);
         }
     }
