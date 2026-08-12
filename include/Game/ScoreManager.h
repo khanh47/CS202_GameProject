@@ -17,7 +17,8 @@ enum class ScoreEventType {
     FlagpoleReached,
     MarioLanded,
     LostLive,
-    CoinBlockTouched      // Resets the airborne stomp combo ladder
+    CoinBlockTouched,
+    MegaCoinCollected      // Resets the airborne stomp combo ladder
 };
 
 // Visual floating score text (+200, 1UP, etc.) in world space

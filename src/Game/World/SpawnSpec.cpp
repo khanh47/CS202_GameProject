@@ -17,6 +17,9 @@ ObjectKind parseKind(const nlohmann::json& json) {
     if (kind == "Item") {
         return ObjectKind::Item;
     }
+    if (kind == "Pipe") {
+        return ObjectKind::Pipe;
+    }
     throw std::runtime_error("Unknown spawn kind: " + kind);
 }
 
@@ -57,6 +60,15 @@ void from_json(const nlohmann::json& json, SpawnSpec& spec) {
     }
     spec.centerVertically = json.value("centerVertically", false);
     spec.addSeamFilter = json.value("addSeamFilter", false);
+
+    // Pipe-specific fields
+    spec.pipeOrientation = json.value("pipeOrientation", "");
+    spec.pipeEndSide = json.value("pipeEndSide", "");
+    spec.pipeBodyLength = json.value("pipeBodyLength", 1);
+    spec.pipeIsWarp = json.value("pipeIsWarp", false);
+    spec.warpID = json.value("warpID", -1);
+    spec.warpTarget = json.value("warpTarget", -1);
+    spec.contentsStatic = json.value("contentsStatic", false);
     spec.addController = json.value("addController", false);
 
     if (json.contains("contents")) {

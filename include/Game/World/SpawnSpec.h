@@ -12,7 +12,8 @@ enum class ObjectKind {
     Block,
     Player,
     Enemy,
-    Item
+    Item,
+    Pipe
 };
 
 struct SpawnSpec {
@@ -26,6 +27,15 @@ struct SpawnSpec {
     bool addSeamFilter = false; // = true for Block so that Player wont flickering 
     bool addController = false; // add controller for player
     std::shared_ptr<SpawnSpec> contents; // to contains other objects inside of it
+
+    // Pipe-specific fields
+    std::string pipeOrientation; // "vertical" or "horizontal"
+    std::string pipeEndSide;     // "top", "bottom", "left", "right"
+    int pipeBodyLength = 1;      // Number of repeating body segments
+    bool pipeIsWarp = false;
+    int warpID = -1;
+    int warpTarget = -1;
+    bool contentsStatic = false; // Keep Pipe contents stationary
 };
 
 void from_json(const nlohmann::json& json, SpawnSpec& spec);

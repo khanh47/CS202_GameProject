@@ -63,7 +63,7 @@ AnimationSet Animation::makeDefaultPlayerAnimationSet() {
             true
         )
     );
-
+//
     animationSet.clips.emplace(
         "bump",
         Animation::createLinearClip(
@@ -71,7 +71,7 @@ AnimationSet Animation::makeDefaultPlayerAnimationSet() {
             {32, 32},
             2,
             {32, 0},
-            1.0f / 4.0f,
+            1.0f / 6.0f,
             false
         )
     );
@@ -555,4 +555,23 @@ AnimationSet Animation::makeCheckpointFlagAnimationSet() {
     );
 
     return animationSet;
+}
+
+AnimationSet Animation::makeMegaCoinAnimationSet() {
+    AnimationSet set;
+    set.defaultClip = "spin";
+    
+    set.clips.emplace(
+        "spin",
+        Animation::createLinearClip(
+            {0, 0},
+            {36, 36},
+            4,
+            {36, 0},
+            1.0f / 6.0f,
+            true
+        )
+    );
+
+    return set;
 }

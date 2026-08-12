@@ -70,6 +70,8 @@ void AnimationLibrary::preloadItemAnimationSets() {
     const AnimationSet checkpointFlagSet = Animation::makeCheckpointFlagAnimationSet();
     registerAnimationSet("checkpoint_flag", checkpointFlagSet);
 
+    const AnimationSet megaCoinSet = Animation::makeMegaCoinAnimationSet();
+    registerAnimationSet("mega_coin", megaCoinSet);
 }
 
 const AnimationSet& AnimationLibrary::getAnimationSet(const std::string& name) const {

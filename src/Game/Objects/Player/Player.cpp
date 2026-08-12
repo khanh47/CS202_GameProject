@@ -15,7 +15,9 @@
 #include "Game/Objects/Item/ConcreteItems/SuperMushroom.h"
 #include "Game/Objects/Item/ConcreteItems/SuperStar.h"
 #include "Game/Objects/Item/ConcreteItems/Coin.h"
+#include "Game/Objects/Item/ConcreteItems/MegaCoin.h"
 #include "Game/Objects/Projectile/KoopaShell.h"
+#include "Game/Objects/Pipe/Pipe.h"
 #include "ResourceManager.h"
 #include "Game/Objects/Player/PlayerShaders.h"
 #include "Game/Behaviours/Invincible.h"
@@ -185,6 +187,15 @@ void Player::updateSimulation(const float &fixedDt) {
         return;
     }
 
+    _warpCooldown = std::max(0.0f, _warpCooldown - fixedDt);
+    if (_world && _warpCooldown <= 0.0f
+        && (_interactHeld || _moveDownHeld || _moveUpHeld)) {
+        if (_world->tryWarpPlayer(*this)) {
+            _warpCooldown = 0.35f;
+            return;
+        }
+    }
+
     b2Vec2 velocity = b2Body_GetLinearVelocity(_body->getId());
 
     auto* invincible = getBehaviour<Invincible>();
@@ -332,6 +343,19 @@ void Player::onContact(GameObject& other, const b2ContactData& contactData, b2Sh
         }
 
         coin->destroy();
+        return;
+    }
+
+    if (auto* megaCoin = dynamic_cast<MegaCoin*>(&other)) {
+        if (_world) {
+            //_world->incrementScore(100);
+        }
+
+        if (_world && _world->getScoreManager()) {
+            _world->getScoreManager()->handleEvent(ScoreEventType::MegaCoinCollected, getPosition());
+        }
+
+        megaCoin->destroy();
         return;
     }
 

@@ -13,8 +13,10 @@
 #include "Game/Objects/Item/ConcreteItems/Coin.h"
 #include "Game/Objects/Item/ConcreteItems/Flagpole.h"
 #include "Game/Objects/Item/ConcreteItems/CheckpointFlag.h"
+#include "Game/Objects/Item/ConcreteItems/MegaCoin.h"
 #include "Game/Objects/Block/CoinBlock.h"
 #include "Game/Objects/Block/LuckyBlock.h"
+#include "Game/Objects/Pipe/Pipe.h"
 
 GameObjectFactory::GameObjectFactory() {
     registerPlayer("Player", createAnimated<Player>);
@@ -31,6 +33,29 @@ GameObjectFactory::GameObjectFactory() {
     registerItem("Coin", createStatic<Coin>);
     registerItem("Flagpole", createStatic<Flagpole>);
     registerItem("CheckpointFlag", createStatic<CheckpointFlag>);
+    registerItem("MegaCoin", createStatic<MegaCoin>);
+
+    registerPipe("Pipe", [](sf::Texture* texture, const std::string& orientationStr,
+                            const std::string& endSideStr, int bodyLength, bool isWarp,
+                            int warpID, int warpTarget)
+        -> std::shared_ptr<GameObject> {
+        // Parse orientation
+        Pipe::Orientation orientation = Pipe::Orientation::Vertical;
+        if (orientationStr == "horizontal") {
+            orientation = Pipe::Orientation::Horizontal;
+        }
+
+        // Parse end side
+        Pipe::EndSide endSide = Pipe::EndSide::Top;
+        if (endSideStr == "bottom") endSide = Pipe::EndSide::Bottom;
+        else if (endSideStr == "left") endSide = Pipe::EndSide::Left;
+        else if (endSideStr == "right") endSide = Pipe::EndSide::Right;
+
+        if (texture) {
+            return std::make_shared<Pipe>(*texture, orientation, endSide, bodyLength, isWarp, warpID, warpTarget);
+        }
+        return std::make_shared<Pipe>();
+    });
 }
 
 void GameObjectFactory::registerPlayer(const std::string& key, AnimatedCreator creator) {
@@ -47,6 +72,10 @@ void GameObjectFactory::registerEnemy(const std::string& key, AnimatedCreator cr
 
 void GameObjectFactory::registerItem(const std::string& key, Creator creator) {
     _itemCreators[key] = std::move(creator);
+}
+
+void GameObjectFactory::registerPipe(const std::string& key, PipeCreator creator) {
+    _pipeCreators[key] = std::move(creator);
 }
 
 std::shared_ptr<GameObject> GameObjectFactory::createPlayer(const std::string& key, sf::Texture* texture, const std::string& animationSetId) const {
@@ -83,4 +112,17 @@ std::shared_ptr<GameObject> GameObjectFactory::createItem(const std::string& key
     }
 
     return it->second(texture);
+}
+
+std::shared_ptr<GameObject> GameObjectFactory::createPipe(
+    const std::string& key, sf::Texture* texture,
+    const std::string& orientation, const std::string& endSide,
+    int bodyLength, bool isWarp, int warpID, int warpTarget
+) const {
+    const auto it = _pipeCreators.find(key);
+    if (it == _pipeCreators.end()) {
+        throw std::runtime_error("Unknown pipe type: " + key);
+    }
+
+    return it->second(texture, orientation, endSide, bodyLength, isWarp, warpID, warpTarget);
 }

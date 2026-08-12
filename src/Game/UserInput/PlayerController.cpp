@@ -42,7 +42,7 @@ void PlayerController::refreshBindings() {
         BindKey(settings.keyMoveLeft, ActionType::MoveLeft);
         BindKey(settings.keyMoveRight, ActionType::MoveRight);
         BindKey(settings.keyJump, ActionType::MoveUp);
-        BindKey(sf::Keyboard::Key::S, ActionType::MoveDown);
+        BindKey(settings.keyMoveDown, ActionType::MoveDown);
         BindKey(settings.keyAttack, ActionType::Attack);
         BindKey(settings.keyInteract, ActionType::Interact);
     } else {
@@ -50,7 +50,7 @@ void PlayerController::refreshBindings() {
         BindKey(settings.key2MoveLeft, ActionType::MoveLeft);
         BindKey(settings.key2MoveRight, ActionType::MoveRight);
         BindKey(settings.key2Jump, ActionType::MoveUp);
-        BindKey(sf::Keyboard::Key::Down, ActionType::MoveDown);
+        BindKey(settings.key2MoveDown, ActionType::MoveDown);
         BindKey(settings.key2Attack, ActionType::Attack);
         BindKey(settings.key2Interact, ActionType::Interact);
     }
@@ -67,6 +67,7 @@ void PlayerController::applyPressAction(ActionType action) {
             _player.startMoveRight();
             break;
         case ActionType::MoveUp:
+            _player.setMoveUpHeld(true);
             _player.startJump();
             break;
         case ActionType::Attack:
@@ -76,6 +77,8 @@ void PlayerController::applyPressAction(ActionType action) {
             _player.setInteractHeld(true);
             break;
         case ActionType::MoveDown:
+            _player.setMoveDownHeld(true);
+            break;
         case ActionType::Accelerate:
         case ActionType::Decelerate:
             break;
@@ -91,12 +94,15 @@ void PlayerController::applyReleaseAction(ActionType action) {
             _player.stopMoveRight();
             break;
         case ActionType::MoveUp:
+            _player.setMoveUpHeld(false);
             _player.stopJump();
             break;
         case ActionType::Interact:
             _player.setInteractHeld(false);
             break;
         case ActionType::MoveDown:
+            _player.setMoveDownHeld(false);
+            break;
         case ActionType::Accelerate:
         case ActionType::Decelerate:
         case ActionType::Attack:
@@ -109,6 +115,7 @@ void PlayerController::syncStateWithKeyboard() {
     bool moveLeftPressed = false;
     bool moveRightPressed = false;
     bool interactPressed = false;
+    bool moveDownPressed = false;
 
     for (const auto& [key, action] : getKeyActionMap()) {
         if (sf::Keyboard::isKeyPressed(key)) {
@@ -116,13 +123,16 @@ void PlayerController::syncStateWithKeyboard() {
                 moveLeftPressed = true;
             } else if (action == ActionType::MoveRight) {
                 moveRightPressed = true;
-            } else if (action == ActionType::Interact) {
+        } else if (action == ActionType::Interact) {
                 interactPressed = true;
+            } else if (action == ActionType::MoveDown) {
+                moveDownPressed = true;
             }
         }
     }
 
     _player.setInteractHeld(interactPressed);
+    _player.setMoveDownHeld(moveDownPressed);
 
     if (moveLeftPressed && !moveRightPressed) {
         _player.stopMoveRight();
