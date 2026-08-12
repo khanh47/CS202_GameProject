@@ -36,7 +36,7 @@ public:
     void startTransformation(TransformTarget target, float duration = 1.0f);
 
     void setGameWorld(GameWorld& world) { _world = &world; }
-    GameWorld* getGameWorld() const { return _world; }
+    GameWorld* getGameWorld() { return _world; }
     const std::string& getCharacter() const { return _character; }
     void onContact(GameObject& other, const b2ContactData& contactData, b2ShapeId ownShape) override;
     void finalizeGroundContacts() override;

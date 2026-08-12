@@ -1,7 +1,9 @@
 #pragma once
 
 #include <SFML/Graphics.hpp>
+#include <SFML/System/Vector2.hpp>
 #include <array>
+#include <cstddef>
 #include <memory>
 #include <string>
 
@@ -32,6 +34,7 @@ public:
 
     void loadLevel(const std::string& levelPath);
     void loadMap(const LevelData& levelData);
+    void saveCheckpoint(sf::Vector2f position);
     void respawnPlayer();
     void reachFlagpole(sf::Vector2f position);
 
@@ -50,7 +53,6 @@ public:
     std::shared_ptr<GameObject> getPrimaryPlayer() const;
     bool hasLivingPlayers() const;
     bool hasWon() const { return _levelCleared; }
-    sf::Vector2f getFlagpolePosition() const { return _flagpolePosition; }
     sf::FloatRect getBounds() const;
     const std::vector<std::shared_ptr<GameObject>>& objects() const { return _objectStore.objects(); }
 
@@ -64,7 +66,7 @@ private:
     ScoreManager* _scoreManager = nullptr;
     float _freezeTimer = 0.0f;
     bool _levelCleared = false;
-    sf::Vector2f _flagpolePosition{0.0f, 0.0f};
+    std::shared_ptr<sf::Vector2f> _checkpointPos = nullptr;
     PhysicsWorld _physicsWorld;
     GameObjectFactory _objectFactory;
     std::array<FireballPool, 2> _fireballPools;

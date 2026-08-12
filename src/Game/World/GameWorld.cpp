@@ -1,8 +1,10 @@
 #include "Game/World/GameWorld.h"
 
 #include <algorithm>
+#include <memory>
 
 #include "Game/Behaviours/Animatable.h"
+#include "Game/Behaviours/Invincible.h"
 #include "Game/GameSettings.h"
 #include "Game/Objects/Player/Player.h"
 #include "Game/Objects/Projectile/KoopaShell.h"
@@ -98,7 +100,6 @@ void GameWorld::handleSensors(b2SensorEvents sensorEvents) {
 void GameWorld::loadMap(const LevelData& levelData) {
     _currentLevelData = levelData;
     _levelCleared = false;
-    _flagpolePosition = {0.0f, 0.0f};
     _worldMap.rebuild(
         levelData,
         _physicsWorld,
@@ -123,6 +124,10 @@ void GameWorld::loadLevel(const std::string& levelPath) {
     for (FireballPool& pool : _fireballPools) {
         pool.setGameWorld(this);
     }
+}
+
+void GameWorld::saveCheckpoint(sf::Vector2f position) {
+    _checkpointPos = make_shared<sf::Vector2f>(position);
 }
 
 void GameWorld::respawnPlayer() {
@@ -157,10 +162,13 @@ void GameWorld::respawnPlayer() {
                         column * _worldMap.getCellSize() + _worldMap.getCellSize() * 0.5f,
                         screenY * _worldMap.getCellSize() + _worldMap.getCellSize() * 0.5f
                     };
-                    const sf::Vector2f spawnPosition = {
+
+                    sf::Vector2f spawnPosition = {
                         cellPosition.x + spec.offset.x,
                         cellPosition.y + spec.offset.y + verticalOffset
                     };
+
+                    if(_checkpointPos) spawnPosition = (*_checkpointPos);
 
                     auto player = _objectFactory.createPlayer(spec.typeKey, &texture, spec.animationId);
                     player->spawn(_physicsWorld, spawnPosition, spec.size);
@@ -180,6 +188,7 @@ void GameWorld::respawnPlayer() {
                             );
                         }
                     }
+                    player->addBehaviour<Invincible>(2.0f);
                     _objectStore.addObject(std::move(player));
                 }
             }
@@ -264,7 +273,6 @@ void GameWorld::reachFlagpole(sf::Vector2f position) {
     }
 
     _levelCleared = true;
-    _flagpolePosition = position;
 
     if (_scoreManager) {
         _scoreManager->handleEvent(ScoreEventType::FlagpoleReached, position);
