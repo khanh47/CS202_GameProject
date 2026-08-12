@@ -76,14 +76,26 @@ AnimationSet Animation::makeDefaultPlayerAnimationSet() {
         )
     );
 
+    // animationSet.clips.emplace(
+    //     "shoot",
+    //     Animation::createLinearClip(
+    //         {288, 352},
+    //         {32, 32},
+    //         3,
+    //         {32, 0},
+    //         1.0f / 5.0f,
+    //         false
+    //     )
+    // );
+
     animationSet.clips.emplace(
         "shoot",
         Animation::createLinearClip(
-            {288, 352},
-            {32, 32},
+            {288, 128},
+            {48, 32},
             3,
-            {32, 0},
-            1.0f / 5.0f,
+            {48, 0},
+            1.0f / 10.0f,
             false
         )
     );
@@ -95,7 +107,7 @@ AnimationSet Animation::makeDefaultPlayerAnimationSet() {
             {32, 32},
             3,
             {32, 0},
-            1.0f / 6.0f,
+            1.0f / 10.0f,
             false
         )
     );
@@ -507,6 +519,37 @@ AnimationSet Animation::makeFlagpoleAnimationSet() {
             3,
             {29, 0},
             1.0f / 3,
+            true
+        )
+    );
+
+    return animationSet;
+}
+
+AnimationSet Animation::makeCheckpointFlagAnimationSet() {
+    AnimationSet animationSet;
+    animationSet.defaultClip = "waving";
+
+    animationSet.clips.emplace(
+        "idle",
+        Animation::createLinearClip(
+            {0, 132},
+            {32, 32},
+            1,
+            {33, 0},
+            67.67f,
+            true
+        )
+    );
+
+    animationSet.clips.emplace(
+        "waving",
+        Animation::createLinearClip(
+            {0, 132},
+            {32, 32},
+            4,
+            {33, 0},
+            1.0f / 4,
             true
         )
     );
