@@ -556,3 +556,22 @@ AnimationSet Animation::makeCheckpointFlagAnimationSet() {
 
     return animationSet;
 }
+
+AnimationSet Animation::makeMegaCoinAnimationSet() {
+    AnimationSet set;
+    set.defaultClip = "spin";
+    
+    set.clips.emplace(
+        "spin",
+        Animation::createLinearClip(
+            {0, 0},
+            {36, 36},
+            4,
+            {36, 0},
+            1.0f / 6.0f,
+            true
+        )
+    );
+
+    return set;
+}

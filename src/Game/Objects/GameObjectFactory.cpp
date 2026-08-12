@@ -13,6 +13,7 @@
 #include "Game/Objects/Item/ConcreteItems/Coin.h"
 #include "Game/Objects/Item/ConcreteItems/Flagpole.h"
 #include "Game/Objects/Item/ConcreteItems/CheckpointFlag.h"
+#include "Game/Objects/Item/ConcreteItems/MegaCoin.h"
 #include "Game/Objects/Block/CoinBlock.h"
 #include "Game/Objects/Block/LuckyBlock.h"
 #include "Game/Objects/Pipe/Pipe.h"
@@ -32,6 +33,7 @@ GameObjectFactory::GameObjectFactory() {
     registerItem("Coin", createStatic<Coin>);
     registerItem("Flagpole", createStatic<Flagpole>);
     registerItem("CheckpointFlag", createStatic<CheckpointFlag>);
+    registerItem("MegaCoin", createStatic<MegaCoin>);
 
     registerPipe("Pipe", [](sf::Texture* texture, const std::string& orientationStr,
                             const std::string& endSideStr, int bodyLength, bool isWarp,

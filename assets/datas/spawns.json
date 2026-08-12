@@ -21,6 +21,7 @@
     { "id": 17, "kind": "Pipe", "typeKey": "Pipe", "texture": "pipes_spritesheet", "size": [128, 192], "pipeOrientation": "vertical", "pipeEndSide": "bottom", "pipeBodyLength": 2, "pipeIsWarp": false, "addSeamFilter": true },
     { "id": 18, "kind": "Pipe", "typeKey": "Pipe", "texture": "pipes_spritesheet", "size": [128, 384], "pipeOrientation": "vertical", "pipeEndSide": "top", "pipeBodyLength": 3, "pipeIsWarp": true, "warpID": 2, "warpTarget": 1, "addSeamFilter": true },
     { "id": 19, "kind": "Player", "typeKey": "Player", "texture": "mario_spritesheet", "animationId": "mario", "size": [54, 120], "offset": [10, 0], "addController": false },
-    { "id": 20, "kind": "Player", "typeKey": "Player", "texture": "luigi_spritesheet", "animationId": "luigi", "size": [54, 120], "offset": [10, 0], "addController": false }
+    { "id": 20, "kind": "Player", "typeKey": "Player", "texture": "luigi_spritesheet", "animationId": "luigi", "size": [54, 120], "offset": [10, 0], "addController": false },
+    { "id": 21, "kind": "Item", "typeKey": "MegaCoin", "texture": "mega_coin_spritesheet", "size": [96, 96], "centerVertically": true }
   ]
 }

@@ -21,6 +21,14 @@ void ScoreManager::handleEvent(ScoreEventType event, sf::Vector2f position, int 
             displayText = "200";
             break;
 
+        case ScoreEventType::MegaCoinCollected:
+            // Reset stomp combo ladder when a Mega Coin is collected
+            _stompComboIndex = 0;
+            // addCoins(1);
+            pointsAwarded = 1000; // Mega Coin gives more points
+            displayText = "1000";
+            break;
+
         case ScoreEventType::EnemyStomped: {
             size_t index = std::min(static_cast<size_t>(_stompComboIndex), _stompSequence.size() - 1);
             auto reward = _stompSequence[index];
