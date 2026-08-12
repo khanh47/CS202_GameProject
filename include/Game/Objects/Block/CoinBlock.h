@@ -4,6 +4,7 @@
 #include <SFML/System.hpp>
 #include <SFML/Graphics.hpp>
 
+#include "Game/Objects/Block/Block.h"
 #include "Game/Objects/GameObject.h"
 #include "Physics/PhysicsWorld.h"
 #include "Game/Behaviours/Animatable.h"
@@ -44,13 +45,14 @@ struct BouncingCoin {
     }
 };
 
-class CoinBlock: public GameObject {
+class CoinBlock: public Block {
 public:
     CoinBlock();
     CoinBlock(sf::Texture &texture);
     ~CoinBlock() override;
 
     void onContact(GameObject& other, const b2ContactData& contactData, b2ShapeId ownShape) override;
+    bool isRenderedByTileMap() const noexcept override { return false; }
 
 protected:
     void onCreateShapeDef(b2ShapeDef& def) override;
