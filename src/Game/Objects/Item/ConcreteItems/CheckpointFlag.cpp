@@ -2,17 +2,18 @@
 
 #include "Game/Behaviours/Animatable.h"
 #include "Game/Objects/GameObject.h"
+#include "Game/World/GameWorld.h"
 #include "Game/Objects/Player/Player.h"
 #include "Physics/CollisionFilter.h"
 #include "ResourceManager.h"
-
-    #include <iostream>
-
+#include <SFML/System/Vector2.hpp>
 
 namespace {
 constexpr sf::Vector2f checkpointFlagVisualSize{96.0f, 96.0f};
 constexpr sf::Vector2f checkpointFlagHitboxSize{16.0f, 96.0f};
 }
+
+class GameWorld;
 
 CheckpointFlag::CheckpointFlag() : Item() {
     configureVisuals(
@@ -86,6 +87,7 @@ void CheckpointFlag::onContact(
 }
 
 void CheckpointFlag::onCheckpointReached(Player& player) {
-    // TODO: store the player's checkpoint position in GameWorld/save data.
     (void)player;
+    auto* gameWorld = player.getGameWorld();
+    gameWorld->saveCheckpoint(player.getPosition());
 }
