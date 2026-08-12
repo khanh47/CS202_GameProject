@@ -66,6 +66,10 @@ void AnimationLibrary::preloadItemAnimationSets() {
 
     const AnimationSet flagpoleSet = Animation::makeFlagpoleAnimationSet();
     registerAnimationSet("flagpole", flagpoleSet);
+
+    const AnimationSet checkpointFlagSet = Animation::makeCheckpointFlagAnimationSet();
+    registerAnimationSet("checkpoint_flag", checkpointFlagSet);
+
 }
 
 const AnimationSet& AnimationLibrary::getAnimationSet(const std::string& name) const {

@@ -236,6 +236,8 @@ std::shared_ptr<GameObject> GameWorld::spawnItem(
         texture = &resources.getTexture("coin_spritesheet");
     } else if (itemTypeKey == "Flagpole") {
         texture = &resources.getTexture("goal_flag_spritesheet");
+    } else if (itemTypeKey == "CheckpointFlag") {
+        texture = &resources.getTexture("checkpoint_flag_spritesheet");
     } else {
         texture = &resources.getTexture("mario_and_items");
     }

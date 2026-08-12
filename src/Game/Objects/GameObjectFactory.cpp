@@ -12,6 +12,7 @@
 #include "Game/Objects/Player/Player.h"
 #include "Game/Objects/Item/ConcreteItems/Coin.h"
 #include "Game/Objects/Item/ConcreteItems/Flagpole.h"
+#include "Game/Objects/Item/ConcreteItems/CheckpointFlag.h"
 #include "Game/Objects/Block/CoinBlock.h"
 #include "Game/Objects/Block/LuckyBlock.h"
 
@@ -29,6 +30,7 @@ GameObjectFactory::GameObjectFactory() {
     registerItem("SuperStar", createStatic<SuperStar>);
     registerItem("Coin", createStatic<Coin>);
     registerItem("Flagpole", createStatic<Flagpole>);
+    registerItem("CheckpointFlag", createStatic<CheckpointFlag>);
 }
 
 void GameObjectFactory::registerPlayer(const std::string& key, AnimatedCreator creator) {
