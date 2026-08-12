@@ -23,6 +23,8 @@ sf::Keyboard::Key GameSettings::getKeyForAction(ActionType action) const {
             return keyMoveRight;
         case ActionType::MoveUp:
             return keyJump;
+        case ActionType::MoveDown:
+            return keyMoveDown;
         case ActionType::Attack:
             return keyAttack;
         case ActionType::Interact:
@@ -43,6 +45,9 @@ void GameSettings::setKeyForAction(ActionType action, sf::Keyboard::Key key) {
         case ActionType::MoveUp:
             keyJump = key;
             break;
+        case ActionType::MoveDown:
+            keyMoveDown = key;
+            break;
         case ActionType::Attack:
             keyAttack = key;
             break;
@@ -62,6 +67,8 @@ sf::Keyboard::Key GameSettings::getKeyForAction2(ActionType action) const {
             return key2MoveRight;
         case ActionType::MoveUp:
             return key2Jump;
+        case ActionType::MoveDown:
+            return key2MoveDown;
         case ActionType::Attack:
             return key2Attack;
         case ActionType::Interact:
@@ -81,6 +88,9 @@ void GameSettings::setKeyForAction2(ActionType action, sf::Keyboard::Key key) {
             break;
         case ActionType::MoveUp:
             key2Jump = key;
+            break;
+        case ActionType::MoveDown:
+            key2MoveDown = key;
             break;
         case ActionType::Attack:
             key2Attack = key;
@@ -133,12 +143,14 @@ void GameSettings::save() const {
     j["keyMoveLeft"] = static_cast<int>(keyMoveLeft);
     j["keyMoveRight"] = static_cast<int>(keyMoveRight);
     j["keyJump"] = static_cast<int>(keyJump);
+    j["keyMoveDown"] = static_cast<int>(keyMoveDown);
     j["keyAttack"] = static_cast<int>(keyAttack);
     j["keyInteract"] = static_cast<int>(keyInteract);
 
     j["key2MoveLeft"] = static_cast<int>(key2MoveLeft);
     j["key2MoveRight"] = static_cast<int>(key2MoveRight);
     j["key2Jump"] = static_cast<int>(key2Jump);
+    j["key2MoveDown"] = static_cast<int>(key2MoveDown);
     j["key2Attack"] = static_cast<int>(key2Attack);
     j["key2Interact"] = static_cast<int>(key2Interact);
 
@@ -178,12 +190,14 @@ void GameSettings::load() {
     keyMoveLeft = static_cast<sf::Keyboard::Key>(j.value("keyMoveLeft", static_cast<int>(keyMoveLeft)));
     keyMoveRight = static_cast<sf::Keyboard::Key>(j.value("keyMoveRight", static_cast<int>(keyMoveRight)));
     keyJump = static_cast<sf::Keyboard::Key>(j.value("keyJump", static_cast<int>(keyJump)));
+    keyMoveDown = static_cast<sf::Keyboard::Key>(j.value("keyMoveDown", static_cast<int>(keyMoveDown)));
     keyAttack = static_cast<sf::Keyboard::Key>(j.value("keyAttack", static_cast<int>(keyAttack)));
     keyInteract = static_cast<sf::Keyboard::Key>(j.value("keyInteract", static_cast<int>(keyInteract)));
 
     key2MoveLeft = static_cast<sf::Keyboard::Key>(j.value("key2MoveLeft", static_cast<int>(key2MoveLeft)));
     key2MoveRight = static_cast<sf::Keyboard::Key>(j.value("key2MoveRight", static_cast<int>(key2MoveRight)));
     key2Jump = static_cast<sf::Keyboard::Key>(j.value("key2Jump", static_cast<int>(key2Jump)));
+    key2MoveDown = static_cast<sf::Keyboard::Key>(j.value("key2MoveDown", static_cast<int>(key2MoveDown)));
     key2Attack = static_cast<sf::Keyboard::Key>(j.value("key2Attack", static_cast<int>(key2Attack)));
     key2Interact = static_cast<sf::Keyboard::Key>(j.value("key2Interact", static_cast<int>(key2Interact)));
 

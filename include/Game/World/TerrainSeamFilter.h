@@ -20,6 +20,11 @@ public:
         float leftPixels,
         float rightPixels
     );
+    void addOccupiedCell(
+        const std::shared_ptr<GameObject>& block,
+        int column,
+        int row
+    );
     void setBoundaryColumns(int leftColumn, int rightColumn);
     bool isCellOccupied(int column, int row) const;
 

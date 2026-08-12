@@ -197,4 +197,5 @@ ResourceManager::ResourceManager() {
 
 	_preLoadTexture("assets/spritesheets/goal_flag_spritesheet.png", "goal_flag_spritesheet");
 	_preLoadTexture("assets/spritesheets/checkpoint_flag_spritesheet.png", "checkpoint_flag_spritesheet");
+	_preLoadTexture("assets/spritesheets/pipes_spritesheet.png", "pipes_spritesheet");
 }
