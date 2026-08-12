@@ -10,6 +10,7 @@
 #include "Game/GameSettings.h"
 #include "Game/Objects/Block/Block.h"
 #include "Game/Objects/GameObject.h"
+#include "Game/Objects/Player/Player.h"
 #include "Game/Objects/Projectile/FireballPool.h"
 #include "Game/World/WorldMap.h"
 #include "Game/World/WorldObjectStore.h"
@@ -65,7 +66,13 @@ void WorldRenderer::render(
     );
 
     for (const std::shared_ptr<GameObject>& object : objectStore.objects()) {
-        if (!object || std::dynamic_pointer_cast<Block>(object)) {
+        if (auto *player = dynamic_cast<Player*>(object.get())) {
+            player->render(target);
+        }
+    }
+
+    for (const std::shared_ptr<GameObject>& object : objectStore.objects()) {
+        if (!object || std::dynamic_pointer_cast<Block>(object) || std::dynamic_pointer_cast<Player>(object)) {
             continue;
         }
         if (culledBounds.contains(object->getPosition())) {
