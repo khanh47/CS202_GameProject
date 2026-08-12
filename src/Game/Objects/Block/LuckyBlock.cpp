@@ -89,12 +89,10 @@ void LuckyBlock::onCreateShapeDef(b2ShapeDef& def) {
 }
 
 void LuckyBlock::onContact(GameObject& other, const b2ContactData& contactData, b2ShapeId ownShape) {
-    if (_hitCooldown > 0.0f || capacity <= 0) {
-        return;
-    }
-
     if (auto* player = dynamic_cast<Player*>(&other)) {
         if (isBumped(other, contactData, ownShape)) {
+            if (_hitCooldown > 0.0f || capacity <= 0) return;
+
             capacity--;
             _hitCooldown = 0.0f; // Cooldown to prevent multi-hits in 1 jump
             _bumpTimer = 0.15f;  // Trigger bump/enlarge animation (0.15 seconds)
