@@ -1,0 +1,20 @@
+{
+    "debugDrawCoordinates": false,
+    "debugDrawGrid": false,
+    "debugDrawHitbox": true,
+    "freeCameraMove": false,
+    "key2Attack": 12,
+    "key2Interact": 42,
+    "key2Jump": 73,
+    "key2MoveLeft": 71,
+    "key2MoveRight": 72,
+    "keyAttack": 23,
+    "keyInteract": 25,
+    "keyJump": 2,
+    "keyMoveLeft": 71,
+    "keyMoveRight": 72,
+    "musicEnabled": true,
+    "musicVolume": 60.0,
+    "soundEnabled": true,
+    "soundVolume": 80.0
+}

@@ -1,5 +1,15 @@
 #include "Game/GameSettings.h"
 
+#include <fstream>
+#include <filesystem>
+#include <nlohmann/json.hpp>
+
+namespace {
+std::filesystem::path settingsFilePath() {
+    return "assets/SaveGameFiles/settings.json";
+}
+} // namespace
+
 GameSettings& GameSettings::getInstance() {
     static GameSettings instance;
     return instance;
@@ -44,6 +54,45 @@ void GameSettings::setKeyForAction(ActionType action, sf::Keyboard::Key key) {
     }
 }
 
+sf::Keyboard::Key GameSettings::getKeyForAction2(ActionType action) const {
+    switch (action) {
+        case ActionType::MoveLeft:
+            return key2MoveLeft;
+        case ActionType::MoveRight:
+            return key2MoveRight;
+        case ActionType::MoveUp:
+            return key2Jump;
+        case ActionType::Attack:
+            return key2Attack;
+        case ActionType::Interact:
+            return key2Interact;
+        default:
+            return sf::Keyboard::Key::Unknown;
+    }
+}
+
+void GameSettings::setKeyForAction2(ActionType action, sf::Keyboard::Key key) {
+    switch (action) {
+        case ActionType::MoveLeft:
+            key2MoveLeft = key;
+            break;
+        case ActionType::MoveRight:
+            key2MoveRight = key;
+            break;
+        case ActionType::MoveUp:
+            key2Jump = key;
+            break;
+        case ActionType::Attack:
+            key2Attack = key;
+            break;
+        case ActionType::Interact:
+            key2Interact = key;
+            break;
+        default:
+            break;
+    }
+}
+
 std::string GameSettings::keyToString(sf::Keyboard::Key key) {
     if (key >= sf::Keyboard::Key::A && key <= sf::Keyboard::Key::Z) {
         char c = static_cast<char>('A' + (static_cast<int>(key) - static_cast<int>(sf::Keyboard::Key::A)));
@@ -77,4 +126,74 @@ std::string GameSettings::keyToString(sf::Keyboard::Key key) {
         default:
             return "Key " + std::to_string(static_cast<int>(key));
     }
+}
+
+void GameSettings::save() const {
+    nlohmann::json j;
+    j["keyMoveLeft"] = static_cast<int>(keyMoveLeft);
+    j["keyMoveRight"] = static_cast<int>(keyMoveRight);
+    j["keyJump"] = static_cast<int>(keyJump);
+    j["keyAttack"] = static_cast<int>(keyAttack);
+    j["keyInteract"] = static_cast<int>(keyInteract);
+
+    j["key2MoveLeft"] = static_cast<int>(key2MoveLeft);
+    j["key2MoveRight"] = static_cast<int>(key2MoveRight);
+    j["key2Jump"] = static_cast<int>(key2Jump);
+    j["key2Attack"] = static_cast<int>(key2Attack);
+    j["key2Interact"] = static_cast<int>(key2Interact);
+
+    j["musicEnabled"] = musicEnabled;
+    j["musicVolume"] = musicVolume;
+    j["soundEnabled"] = soundEnabled;
+    j["soundVolume"] = soundVolume;
+
+    j["debugDrawGrid"] = debugDrawGrid;
+    j["debugDrawCoordinates"] = debugDrawCoordinates;
+    j["debugDrawHitbox"] = debugDrawHitbox;
+    j["freeCameraMove"] = freeCameraMove;
+
+    const std::filesystem::path path = settingsFilePath();
+    std::error_code ec;
+    std::filesystem::create_directories(path.parent_path(), ec);
+
+    std::ofstream outFile(path);
+    if (outFile.is_open()) {
+        outFile << j.dump(4);
+    }
+}
+
+void GameSettings::load() {
+    std::ifstream inFile(settingsFilePath());
+    if (!inFile.is_open()) {
+        return;
+    }
+
+    nlohmann::json j;
+    try {
+        inFile >> j;
+    } catch (const nlohmann::json::exception&) {
+        return;
+    }
+
+    keyMoveLeft = static_cast<sf::Keyboard::Key>(j.value("keyMoveLeft", static_cast<int>(keyMoveLeft)));
+    keyMoveRight = static_cast<sf::Keyboard::Key>(j.value("keyMoveRight", static_cast<int>(keyMoveRight)));
+    keyJump = static_cast<sf::Keyboard::Key>(j.value("keyJump", static_cast<int>(keyJump)));
+    keyAttack = static_cast<sf::Keyboard::Key>(j.value("keyAttack", static_cast<int>(keyAttack)));
+    keyInteract = static_cast<sf::Keyboard::Key>(j.value("keyInteract", static_cast<int>(keyInteract)));
+
+    key2MoveLeft = static_cast<sf::Keyboard::Key>(j.value("key2MoveLeft", static_cast<int>(key2MoveLeft)));
+    key2MoveRight = static_cast<sf::Keyboard::Key>(j.value("key2MoveRight", static_cast<int>(key2MoveRight)));
+    key2Jump = static_cast<sf::Keyboard::Key>(j.value("key2Jump", static_cast<int>(key2Jump)));
+    key2Attack = static_cast<sf::Keyboard::Key>(j.value("key2Attack", static_cast<int>(key2Attack)));
+    key2Interact = static_cast<sf::Keyboard::Key>(j.value("key2Interact", static_cast<int>(key2Interact)));
+
+    musicEnabled = j.value("musicEnabled", musicEnabled);
+    musicVolume = j.value("musicVolume", musicVolume);
+    soundEnabled = j.value("soundEnabled", soundEnabled);
+    soundVolume = j.value("soundVolume", soundVolume);
+
+    debugDrawGrid = j.value("debugDrawGrid", debugDrawGrid);
+    debugDrawCoordinates = j.value("debugDrawCoordinates", debugDrawCoordinates);
+    debugDrawHitbox = j.value("debugDrawHitbox", debugDrawHitbox);
+    freeCameraMove = j.value("freeCameraMove", freeCameraMove);
 }

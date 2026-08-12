@@ -46,12 +46,13 @@ void PlayerController::refreshBindings() {
         BindKey(settings.keyAttack, ActionType::Attack);
         BindKey(settings.keyInteract, ActionType::Interact);
     } else {
-        BindKey(sf::Keyboard::Key::Left, ActionType::MoveLeft);
-        BindKey(sf::Keyboard::Key::Right, ActionType::MoveRight);
-        BindKey(sf::Keyboard::Key::Up, ActionType::MoveUp);
+        const auto& settings = GameSettings::getInstance();
+        BindKey(settings.key2MoveLeft, ActionType::MoveLeft);
+        BindKey(settings.key2MoveRight, ActionType::MoveRight);
+        BindKey(settings.key2Jump, ActionType::MoveUp);
         BindKey(sf::Keyboard::Key::Down, ActionType::MoveDown);
-        BindKey(sf::Keyboard::Key::M, ActionType::Attack);
-        BindKey(sf::Keyboard::Key::RShift, ActionType::Interact);
+        BindKey(settings.key2Attack, ActionType::Attack);
+        BindKey(settings.key2Interact, ActionType::Interact);
     }
 }
 
