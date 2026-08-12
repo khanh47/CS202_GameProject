@@ -55,6 +55,18 @@ void TerrainSeamFilter::addBlock(
     _occupancy.insert_or_assign(cellKey(column, row), block);
 }
 
+void TerrainSeamFilter::addOccupiedCell(
+    const std::shared_ptr<GameObject>& block,
+    int column,
+    int row
+) {
+    if (!block) {
+        return;
+    }
+
+    _occupancy.insert_or_assign(cellKey(column, row), block);
+}
+
 bool TerrainSeamFilter::preSolve(
     b2ShapeId shapeA,
     b2ShapeId shapeB,

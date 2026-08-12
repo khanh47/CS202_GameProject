@@ -8,6 +8,7 @@
 #include "Game/Objects/GameObjectFactory.h"
 #include "Game/Objects/Enemy/Enemy.h"
 #include "Game/Objects/Enemy/ConcreteEnemy/Koopa.h"
+#include "Game/Objects/Pipe/Pipe.h"
 #include "Game/Objects/Projectile/FireballPool.h"
 #include "Game/Objects/Player/Player.h"
 #include "Game/UserInput/PlayerController.h"
@@ -133,6 +134,98 @@ void spawnFromSpec(
             );
             item->spawn(context.physicsWorld, spawnPosition, spec.size);
             object = std::move(item);
+            break;
+        }
+        case ObjectKind::Pipe: {
+            auto pipe = context.objectFactory.createPipe(
+                spec.typeKey,
+                &texture,
+                spec.pipeOrientation,
+                spec.pipeEndSide,
+                spec.pipeBodyLength,
+                spec.pipeIsWarp
+            );
+
+            // Auto-compute hitbox size from pipe configuration so changing
+            // pipeBodyLength alone adjusts both visuals and physics correctly.
+            constexpr float pipeTileSize = 64.0f;
+            const int mainAxisTiles = 1 + std::max(spec.pipeBodyLength, 0);
+            sf::Vector2f pipeSize;
+            if (spec.pipeOrientation == "vertical") {
+                pipeSize = {2.0f * pipeTileSize,
+                            static_cast<float>(mainAxisTiles) * pipeTileSize};
+            } else {
+                pipeSize = {static_cast<float>(mainAxisTiles) * pipeTileSize,
+                            2.0f * pipeTileSize};
+            }
+
+            // A Pipe marker denotes the top-left cell of its grid footprint.
+            // Its cross-axis is two cells wide, so move its centre by half a
+            // cell along that axis. This makes the Box2D hitbox and the
+            // occupied cells below cover exactly the same grid cells.
+            sf::Vector2f pipeSpawnPos = spawnPosition;
+            const float halfCell = context.cellSize * 0.5f;
+            if (spec.pipeOrientation == "vertical") {
+                pipeSpawnPos.x += halfCell;
+
+                // The marker identifies the bottom cell for a top-ended pipe
+                // and the top cell for a bottom-ended pipe.
+                if (spec.pipeEndSide == "bottom") {
+                    pipeSpawnPos.y = cellPosition.y - halfCell + pipeSize.y * 0.5f;
+                } else {
+                    pipeSpawnPos.y = cellPosition.y + halfCell - pipeSize.y * 0.5f;
+                }
+            } else if (spec.pipeOrientation == "horizontal") {
+                pipeSpawnPos.y += halfCell;
+
+                // The marker identifies the left/right end cell according to
+                // the pipe orientation along its main axis.
+                if (spec.pipeEndSide == "right") {
+                    pipeSpawnPos.x = cellPosition.x - halfCell + pipeSize.x * 0.5f;
+                } else {
+                    pipeSpawnPos.x = cellPosition.x + halfCell - pipeSize.x * 0.5f;
+                }
+            }
+
+            pipe->spawn(context.physicsWorld, pipeSpawnPos, pipeSize);
+            if (spec.addSeamFilter) {
+                context.terrainSeamFilter.addBlock(
+                    pipe,
+                    column,
+                    screenY,
+                    column * context.cellSize,
+                    (column + 1) * context.cellSize
+                );
+
+                // The pipe body spans more cells than its map spawn marker.
+                // Register its complete footprint so enemies can detect the
+                // pipe with their forward grid probe and turn around.
+                const int pipeTiles = 1 + std::max(spec.pipeBodyLength, 0);
+                if (spec.pipeOrientation == "vertical") {
+                    const int firstRow = spec.pipeEndSide == "bottom"
+                        ? screenY
+                        : screenY - pipeTiles + 1;
+                    for (int row = firstRow; row < firstRow + pipeTiles; ++row) {
+                        context.terrainSeamFilter.addOccupiedCell(pipe, column, row);
+                        context.terrainSeamFilter.addOccupiedCell(pipe, column + 1, row);
+                    }
+                } else if (spec.pipeOrientation == "horizontal") {
+                    const int firstColumn = spec.pipeEndSide == "right"
+                        ? column
+                        : column - pipeTiles + 1;
+                    for (int pipeColumn = firstColumn;
+                         pipeColumn < firstColumn + pipeTiles;
+                         ++pipeColumn) {
+                        context.terrainSeamFilter.addOccupiedCell(
+                            pipe, pipeColumn, screenY
+                        );
+                        context.terrainSeamFilter.addOccupiedCell(
+                            pipe, pipeColumn, screenY + 1
+                        );
+                    }
+                }
+            }
+            object = std::move(pipe);
             break;
         }
     }
