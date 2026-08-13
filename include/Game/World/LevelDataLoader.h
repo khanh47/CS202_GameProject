@@ -5,11 +5,15 @@
 #include <unordered_map>
 #include <vector>
 
+#include "Game/World/PrefabRegistry.h"
 #include "Game/World/SpawnSpec.h"
 
 struct LevelData {
-    std::vector<std::vector<int>> rows;
-    std::unordered_map<int, std::vector<SpawnSpec>> spawns;
+    // Every cell uses one character. The character can resolve to either a
+    // drawable/solid tile prefab or a live object prefab.
+    std::unordered_map<char, std::string> tileMapping;
+    std::vector<std::string> layer;
+    PrefabRegistry prefabs;
     std::string background;
 };
 
@@ -19,7 +23,7 @@ public:
         const std::filesystem::path& filePath,
         int maximumWidth = 500,
         int maximumHeight = 60,
-        const std::filesystem::path& sharedSpawnsPath =
-            "assets/datas/spawns.json"
+        const std::filesystem::path& sharedPrefabsPath =
+            "assets/datas/prefabs.json"
     );
 };

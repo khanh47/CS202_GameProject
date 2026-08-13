@@ -11,6 +11,7 @@
 #include "Game/Objects/Projectile/KoopaShell.h"
 #include "Game/Objects/Enemy/ConcreteEnemy/Koopa.h"
 #include "Game/World/LevelDataLoader.h"
+#include "Game/World/PrefabSpawner.h"
 
 GameWorld::GameWorld(int gridWidth, int gridHeight, float cellSize)
     : _worldMap(gridWidth, gridHeight, cellSize) {}
@@ -131,66 +132,54 @@ void GameWorld::saveCheckpoint(sf::Vector2f position) {
 }
 
 void GameWorld::respawnPlayer() {
-    auto& resources = ResourceManager::getInstance();
-    const GameSettings& settings = GameSettings::getInstance();
+    PrefabSpawner spawner(
+        _physicsWorld,
+        _objectFactory,
+        _objectStore,
+        *this,
+        _worldMap.getTerrainSeamFilter(),
+        _worldMap.getCellSize()
+    );
 
-    const std::vector<std::vector<int>>& mapData = _currentLevelData.rows;
-    const int loadedRows = std::min(static_cast<int>(mapData.size()), _worldMap.getGridHeight());
-
-    for (int mapRow = 0; mapRow < loadedRows; ++mapRow) {
-        const int columns = std::min(static_cast<int>(mapData[mapRow].size()), _worldMap.getGridWidth());
-        const int screenY = WorldMap::screenRowFor(mapRow, loadedRows, _worldMap.getGridHeight());
-
+    const std::vector<std::string>& layer = _currentLevelData.layer;
+    for (int mapRow = 0; mapRow < _worldMap.getLoadedRows(); ++mapRow) {
+        const int columns = std::min(
+            static_cast<int>(layer[mapRow].size()),
+            _worldMap.getLoadedColumns()
+        );
         for (int column = 0; column < columns; ++column) {
-            const int tileId = mapData[mapRow][column];
-            if (tileId == 0) continue;
+            const auto mappingIt = _currentLevelData.tileMapping.find(
+                layer[mapRow][column]
+            );
+            if (mappingIt == _currentLevelData.tileMapping.end()) {
+                continue;
+            }
 
-            auto spawnIt = _currentLevelData.spawns.find(tileId);
-            if (spawnIt == _currentLevelData.spawns.end()) continue;
+            const SpawnSpec spec = _currentLevelData.prefabs.resolve(
+                mappingIt->second
+            );
+            if (!spec.objectKind || *spec.objectKind != ObjectKind::Player) {
+                continue;
+            }
 
-            for (const SpawnSpec& spec : spawnIt->second) {
-                if (spec.kind == ObjectKind::Player) {
-                    const bool isLuigi = spec.animationId.find("luigi") != std::string::npos;
-                    const std::string specCharacter = isLuigi ? "luigi" : "mario";
-                    if (settings.gameMode == GameMode::Solo && specCharacter != settings.player1Character) {
-                        continue;
-                    }
-
-                    sf::Texture& texture = resources.getTexture(spec.textureKey);
-                    const float verticalOffset = spec.centerVertically ? (_worldMap.getCellSize() - spec.size.y) * 0.5f : 0.0f;
-                    const sf::Vector2f cellPosition = {
-                        column * _worldMap.getCellSize() + _worldMap.getCellSize() * 0.5f,
-                        screenY * _worldMap.getCellSize() + _worldMap.getCellSize() * 0.5f
-                    };
-
-                    sf::Vector2f spawnPosition = {
-                        cellPosition.x + spec.offset.x,
-                        cellPosition.y + spec.offset.y + verticalOffset
-                    };
-
-                    if(_checkpointPos) spawnPosition = (*_checkpointPos);
-
-                    auto player = _objectFactory.createPlayer(spec.typeKey, &texture, spec.animationId);
-                    player->spawn(_physicsWorld, spawnPosition, spec.size);
-
-                    if (auto mario = std::dynamic_pointer_cast<Player>(player)) {
-                        mario->changeToNormalState();
-                        mario->setGameWorld(*this);
-
-                        if (spec.addController) {
-                            const bool useWasd = settings.gameMode == GameMode::Solo || spec.animationId == "mario";
-                            _objectStore.addController(
-                                std::make_unique<PlayerController>(
-                                    *mario,
-                                    *this,
-                                    useWasd ? PlayerController::ControlScheme::Wasd : PlayerController::ControlScheme::ArrowKeys
-                                )
-                            );
-                        }
-                    }
-                    player->addBehaviour<Invincible>(2.0f);
-                    _objectStore.addObject(std::move(player));
-                }
+            const sf::Vector2f cellPosition = _worldMap.mapCellCenter(
+                column,
+                mapRow
+            );
+            const std::shared_ptr<GameObject> object = _checkpointPos
+                ? spawner.spawnAtPosition(spec, *_checkpointPos)
+                : spawner.spawnAtGrid(
+                    spec,
+                    column,
+                    WorldMap::screenRowFor(
+                        mapRow,
+                        _worldMap.getLoadedRows(),
+                        _worldMap.getGridHeight()
+                    ),
+                    cellPosition
+                );
+            if (object) {
+                object->addBehaviour<Invincible>(2.0f);
             }
         }
     }

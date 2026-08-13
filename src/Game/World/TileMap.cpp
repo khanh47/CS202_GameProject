@@ -9,43 +9,40 @@ void TileMap::initialize(int gridWidth, int gridHeight, float cellSize) {
     _gridHeight = gridHeight;
     _cellSize = cellSize;
 
-    _tiles.assign(
-        _gridHeight,
-        std::vector<TileInfo>(_gridWidth, TileInfo{0, nullptr})
-    );
+    const std::size_t cellCount = static_cast<std::size_t>(_gridWidth)
+        * static_cast<std::size_t>(_gridHeight);
+    _tiles.assign(cellCount, TileInfo{});
 }
 
 void TileMap::setTile(
     int col,
     int row,
-    int tileId,
+    char tileCharacter,
     const sf::Texture* texture,
-    sf::IntRect texRect
+    sf::IntRect textureRect
 ) {
     if (row >= 0 && row < _gridHeight && col >= 0 && col < _gridWidth) {
-        _tiles[row][col] = TileInfo{tileId, texture, texRect};
+        const std::size_t index = static_cast<std::size_t>(row)
+            * static_cast<std::size_t>(_gridWidth)
+            + static_cast<std::size_t>(col);
+        _tiles[index] = TileInfo{tileCharacter, texture, textureRect};
     }
 }
 
 void TileMap::clear() {
     _tiles.assign(
-        _gridHeight,
-        std::vector<TileInfo>(_gridWidth, TileInfo{0, nullptr})
+        static_cast<std::size_t>(_gridWidth)
+            * static_cast<std::size_t>(_gridHeight),
+        TileInfo{}
     );
     _batches.clear();
 }
 
 void TileMap::updateVisibleVertices(const sf::View& view) {
     _batches.clear();
-    if (_tiles.empty() || _gridWidth <= 0 || _gridHeight <= 0) {
+    if (_tiles.empty()
+        || _gridWidth <= 0 || _gridHeight <= 0) {
         return;
-    }
-
-    // Debug: report view bounds and grid info
-    {
-        const sf::Vector2f viewCenter = view.getCenter();
-        const sf::Vector2f viewSize = view.getSize();
-        const sf::FloatRect viewBounds(viewCenter - viewSize / 2.f, viewSize);
     }
 
     // Determine the view frustum bounds in pixel coordinates
@@ -64,37 +61,45 @@ void TileMap::updateVisibleVertices(const sf::View& view) {
 
     for (int r = startRow; r <= endRow; ++r) {
         for (int c = startCol; c <= endCol; ++c) {
-            const TileInfo& tile = _tiles[r][c];
-            if (tile.tileId <= 0 || tile.texture == nullptr) {
+            const std::size_t index = static_cast<std::size_t>(r)
+                * static_cast<std::size_t>(_gridWidth)
+                + static_cast<std::size_t>(c);
+            const TileInfo& tile = _tiles[index];
+            if (tile.character == '.' || tile.texture == nullptr) {
                 continue;
             }
 
-            // Determine UV coordinates:
-            // If texRect has a non-zero size, use it as the sub-rectangle;
-            // otherwise sample the full texture (backward-compatible path).
-            float tu0, tv0, tu1, tv1;
-            if (tile.texRect.size.x > 0 && tile.texRect.size.y > 0) {
-                tu0 = static_cast<float>(tile.texRect.position.x);
-                tv0 = static_cast<float>(tile.texRect.position.y);
-                tu1 = static_cast<float>(tile.texRect.position.x + tile.texRect.size.x);
-                tv1 = static_cast<float>(tile.texRect.position.y + tile.texRect.size.y);
-            } else {
-                tu0 = 0.f;
-                tv0 = 0.f;
-                tu1 = static_cast<float>(tile.texture->getSize().x);
-                tv1 = static_cast<float>(tile.texture->getSize().y);
+            const sf::Texture* texture = tile.texture;
+            sf::IntRect textureRect = tile.textureRect;
+            if (textureRect.size.x <= 0 || textureRect.size.y <= 0) {
+                textureRect = sf::IntRect(
+                    {0, 0},
+                    {
+                        static_cast<int>(texture->getSize().x),
+                        static_cast<int>(texture->getSize().y)
+                    }
+                );
             }
+
+            const float tu0 = static_cast<float>(textureRect.position.x);
+            const float tv0 = static_cast<float>(textureRect.position.y);
+            const float tu1 = static_cast<float>(
+                textureRect.position.x + textureRect.size.x
+            );
+            const float tv1 = static_cast<float>(
+                textureRect.position.y + textureRect.size.y
+            );
 
             sf::VertexArray* batch = nullptr;
             for (Batch& candidate : _batches) {
-                if (candidate.texture == tile.texture) {
+                if (candidate.texture == texture) {
                     batch = &candidate.vertices;
                     break;
                 }
             }
             if (batch == nullptr) {
                 _batches.push_back(Batch{
-                    tile.texture,
+                    texture,
                     sf::VertexArray(sf::PrimitiveType::Triangles)
                 });
                 batch = &_batches.back().vertices;
@@ -118,16 +123,16 @@ void TileMap::updateVisibleVertices(const sf::View& view) {
         }
     }
 
-    // Debug: report how many batches were created and total vertices
-    size_t totalVerts = 0;
-    for (const Batch& b : _batches) totalVerts += b.vertices.getVertexCount();
 }
 
-int TileMap::getTileId(int col, int row) const {
+char TileMap::getTile(int col, int row) const {
     if (row >= 0 && row < _gridHeight && col >= 0 && col < _gridWidth) {
-        return _tiles[row][col].tileId;
+        const std::size_t index = static_cast<std::size_t>(row)
+            * static_cast<std::size_t>(_gridWidth)
+            + static_cast<std::size_t>(col);
+        return _tiles[index].character;
     }
-    return 0;
+    return '.';
 }
 
 void TileMap::draw(sf::RenderTarget& target, sf::RenderStates states) const {

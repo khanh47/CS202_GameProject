@@ -3,10 +3,9 @@
 #include <SFML/Graphics.hpp>
 #include <vector>
 
-// TileMap manages static map tile graphics using SFML 3 Vertex Arrays.
-// Performs tile culling (frustum culling) to batch draw calls for visible tiles.
-// Tiles may reference different textures; geometry is grouped into one batch
-// per texture so the layer can mix multiple tile sheets.
+// TileMap is the rendering half of the tile layer. It owns a dense character
+// grid and texture references, but it never creates game objects or physics
+// bodies. WorldMap owns the separate collision representation.
 class TileMap : public sf::Drawable {
 public:
     TileMap();
@@ -16,14 +15,12 @@ public:
     void initialize(int gridWidth, int gridHeight, float cellSize);
 
     // Sets the texture for a specific grid cell (screen space col/row).
-    // texRect: sub-rectangle within the texture to sample.
-    //          Pass a zero-size rect (default) to use the full texture.
     void setTile(
         int col,
         int row,
-        int tileId,
+        char tileCharacter,
         const sf::Texture* texture,
-        sf::IntRect texRect = {}
+        sf::IntRect textureRect = {}
     );
 
     // Clears all tile data
@@ -32,8 +29,8 @@ public:
     // Rebuilds the internal vertex arrays containing only visible tiles within view bounds
     void updateVisibleVertices(const sf::View& view);
 
-    // Returns tile ID at specified grid cell
-    int getTileId(int col, int row) const;
+    // Returns the dense tile character at a specified grid cell.
+    char getTile(int col, int row) const;
 
 private:
     // Overridden from sf::Drawable to draw batched vertices grouped by texture
@@ -44,12 +41,12 @@ private:
     float _cellSize = 64.0f;
 
     struct TileInfo {
-        int            tileId  = 0;
+        char character = '.';
         const sf::Texture* texture = nullptr;
-        // Sub-rectangle within the texture. {0,0,0,0} means "full texture".
-        sf::IntRect    texRect = {};
+        sf::IntRect textureRect{};
     };
-    std::vector<std::vector<TileInfo>> _tiles;
+
+    std::vector<TileInfo> _tiles;
 
     struct Batch {
         const sf::Texture* texture = nullptr;
