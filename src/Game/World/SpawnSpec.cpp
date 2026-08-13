@@ -60,6 +60,7 @@ void from_json(const nlohmann::json& json, SpawnSpec& spec) {
     }
     spec.centerVertically = json.value("centerVertically", false);
     spec.addSeamFilter = json.value("addSeamFilter", false);
+    spec.autotileId    = json.value("autotile", "");
 
     // Pipe-specific fields
     spec.pipeOrientation = json.value("pipeOrientation", "");
