@@ -28,6 +28,8 @@ struct SpawnSpec {
     bool addSeamFilter = false;
     bool addController = false;
     bool solid = false;
+    std::string autotileId;
+    std::string slopeType;
     std::shared_ptr<SpawnSpec> contents;
 
     // Pipe-specific fields

@@ -82,6 +82,8 @@ void from_json(const nlohmann::json& json, SpawnSpec& spec) {
         "solid",
         !spec.objectKind.has_value()
     );
+    spec.autotileId = json.value("autotile", "");
+    spec.slopeType = json.value("slopeType", "");
 
     // Pipe-specific fields
     spec.pipeOrientation = json.value("pipeOrientation", "");

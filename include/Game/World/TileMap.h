@@ -19,7 +19,8 @@ public:
         int col,
         int row,
         char tileCharacter,
-        const sf::Texture* texture
+        const sf::Texture* texture,
+        sf::IntRect textureRect = {}
     );
 
     // Clears all tile data
@@ -39,8 +40,13 @@ private:
     int _gridHeight = 0;
     float _cellSize = 64.0f;
 
-    std::vector<char> _tiles;
-    std::vector<const sf::Texture*> _textures;
+    struct TileInfo {
+        char character = '.';
+        const sf::Texture* texture = nullptr;
+        sf::IntRect textureRect{};
+    };
+
+    std::vector<TileInfo> _tiles;
 
     struct Batch {
         const sf::Texture* texture = nullptr;

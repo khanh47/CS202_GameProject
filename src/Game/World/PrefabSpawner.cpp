@@ -7,6 +7,7 @@
 
 #include "Game/GameSettings.h"
 #include "Game/Objects/Block/Block.h"
+#include "Game/Objects/Block/SlopeBlock.h"
 #include "Game/Objects/Enemy/ConcreteEnemy/Koopa.h"
 #include "Game/Objects/Enemy/ConcreteEnemy/PiranhaPlant.h"
 #include "Game/Objects/Enemy/Enemy.h"
@@ -120,6 +121,14 @@ std::shared_ptr<GameObject> PrefabSpawner::spawnObjectAtPosition(
     switch (*spec.objectKind) {
         case ObjectKind::Block: {
             auto block = _objectFactory.createBlock(spec.typeKey, texture);
+            if (!spec.slopeType.empty() && texture != nullptr) {
+                if (auto slope = std::dynamic_pointer_cast<SlopeBlock>(block)) {
+                    slope->configureSlopeVisuals(
+                        *texture,
+                        SlopeBlock::parseSlopeType(spec.slopeType)
+                    );
+                }
+            }
             block->spawn(_physicsWorld, position, spec.size);
             if (spec.addSeamFilter && column >= 0 && screenRow >= 0) {
                 _terrainSeamFilter.addBlock(

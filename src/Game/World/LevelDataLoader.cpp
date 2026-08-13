@@ -73,9 +73,11 @@ void parseTileMapping(
     }
 
     for (const auto& [tileCharacter, prefabId] : json.items()) {
-        if (tileCharacter.size() != 1 || !prefabId.is_string()) {
+        if (tileCharacter.size() != 1
+            || static_cast<unsigned char>(tileCharacter.front()) > 0x7F
+            || !prefabId.is_string()) {
             throw std::runtime_error(
-                "Every tileMapping entry must map one character to a prefab id"
+                "Every tileMapping entry must map one ASCII character to a prefab id"
             );
         }
         levelData.tileMapping.insert_or_assign(

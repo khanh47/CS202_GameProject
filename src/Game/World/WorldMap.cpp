@@ -1,7 +1,14 @@
 #include "Game/World/WorldMap.h"
 
 #include <algorithm>
+#include <fstream>
 #include <memory>
+#include <stdexcept>
+#include <unordered_map>
+#include <unordered_set>
+#include <utility>
+
+#include <nlohmann/json.hpp>
 
 #include "Game/Objects/Block/Block.h"
 #include "Game/Objects/GameObject.h"
@@ -24,6 +31,40 @@ WorldMap::~WorldMap() {
     destroyTileCollisionObjects();
 }
 
+void WorldMap::loadAutotileDefs(const std::filesystem::path& path) {
+    std::ifstream input(path);
+    if (!input) {
+        throw std::runtime_error(
+            "Unable to open autotile definitions: " + path.string()
+        );
+    }
+
+    nlohmann::json document;
+    input >> document;
+    const auto definitionsIt = document.find("autotile_defs");
+    if (definitionsIt == document.end() || !definitionsIt->is_array()) {
+        throw std::runtime_error(
+            "Autotile definition file must contain an autotile_defs array"
+        );
+    }
+
+    _autotileDefs.clear();
+    for (const nlohmann::json& definition : *definitionsIt) {
+        if (!definition.is_object()
+            || !definition.contains("id")
+            || !definition["id"].is_string()) {
+            throw std::runtime_error(
+                "Every autotile definition must contain a string id"
+            );
+        }
+
+        _autotileDefs.insert_or_assign(
+            definition["id"].get<std::string>(),
+            AutotileTilesetDef::fromJson(definition)
+        );
+    }
+}
+
 void WorldMap::rebuild(
     const LevelData& levelData,
     PhysicsWorld& physicsWorld,
@@ -38,6 +79,7 @@ void WorldMap::rebuild(
     sf::Texture& itemsTexture = resources.getTexture("mario_and_items");
 
     _background = levelData.background;
+    _autotileDefs.clear();
     objectStore.clear();
     for (FireballPool& pool : fireballPools) {
         pool.initialize(physicsWorld, itemsTexture);
@@ -73,6 +115,26 @@ void WorldMap::rebuild(
         _cellSize
     );
 
+    std::unordered_map<char, SpawnSpec> specsBySymbol;
+    bool hasAutotiles = false;
+    for (const auto& [symbol, prefabId] : levelData.tileMapping) {
+        SpawnSpec spec = levelData.prefabs.resolve(prefabId);
+        hasAutotiles = hasAutotiles || !spec.autotileId.empty();
+        specsBySymbol.insert_or_assign(symbol, std::move(spec));
+    }
+    if (hasAutotiles) {
+        loadAutotileDefs("assets/datas/autotile_defs.json");
+    }
+
+    const auto tileIdFor = [](char symbol) {
+        return static_cast<int>(static_cast<unsigned char>(symbol)) + 1;
+    };
+    std::vector<std::vector<int>> screenGrid(
+        static_cast<std::size_t>(_gridHeight),
+        std::vector<int>(static_cast<std::size_t>(_gridWidth), 0)
+    );
+    std::unordered_set<int> solidIds;
+
     // The single dense layer can describe either a static tile or a live
     // object. The mapped prefab decides which path the cell takes.
     for (int mapRow = 0; mapRow < _loadedRows; ++mapRow) {
@@ -84,15 +146,21 @@ void WorldMap::rebuild(
 
         for (int column = 0; column < columns; ++column) {
             const char symbol = layer[mapRow][column];
-            const auto mappingIt = levelData.tileMapping.find(symbol);
-            if (mappingIt == levelData.tileMapping.end()) {
+            const auto specIt = specsBySymbol.find(symbol);
+            if (specIt == specsBySymbol.end()) {
                 continue;
             }
 
-            const SpawnSpec spec = levelData.prefabs.resolve(
-                mappingIt->second
-            );
+            const SpawnSpec& spec = specIt->second;
             const sf::Vector2f cellCenter = mapCellCenter(column, mapRow);
+
+            const int tileId = tileIdFor(symbol);
+            screenGrid[screenRow][column] = tileId;
+            if (spec.solid
+                || (spec.objectKind
+                    && *spec.objectKind == ObjectKind::Block)) {
+                solidIds.insert(tileId);
+            }
 
             if (!spec.objectKind) {
                 sf::Texture* texture = nullptr;
@@ -117,6 +185,83 @@ void WorldMap::rebuild(
                 screenRow,
                 cellCenter
             );
+        }
+    }
+
+    // Autotile definitions affect only static tiles. Dynamic blocks keep
+    // their own sprites and physics bodies; static terrain remains entirely
+    // owned by TileMap plus the one collision body created above.
+    if (hasAutotiles) {
+        for (int mapRow = 0; mapRow < _loadedRows; ++mapRow) {
+            const int screenRow = screenYForMapRow(mapRow);
+            const int columns = std::min(
+                static_cast<int>(layer[mapRow].size()),
+                _gridWidth
+            );
+
+            for (int column = 0; column < columns; ++column) {
+                const char symbol = layer[mapRow][column];
+                const auto specIt = specsBySymbol.find(symbol);
+                if (specIt == specsBySymbol.end()) {
+                    continue;
+                }
+
+                const SpawnSpec& spec = specIt->second;
+                if (spec.objectKind || spec.autotileId.empty()) {
+                    continue;
+                }
+
+                sf::Texture* fallbackTexture = nullptr;
+                if (!spec.textureKey.empty()) {
+                    fallbackTexture = &resources.getTexture(
+                        spec.textureKey
+                    );
+                }
+                if (fallbackTexture == nullptr) {
+                    continue;
+                }
+
+                const auto definitionIt = _autotileDefs.find(
+                    spec.autotileId
+                );
+                if (definitionIt == _autotileDefs.end()
+                    || _autotileResolver.isFloating(
+                        screenGrid,
+                        column,
+                        screenRow,
+                        _gridWidth,
+                        _gridHeight,
+                        solidIds
+                    )) {
+                    _tileMap.setTile(
+                        column,
+                        screenRow,
+                        symbol,
+                        fallbackTexture
+                    );
+                    continue;
+                }
+
+                const AutotileTilesetDef& definition = definitionIt->second;
+                sf::Texture& autotileTexture = resources.getTexture(
+                    definition.textureAlias
+                );
+                _tileMap.setTile(
+                    column,
+                    screenRow,
+                    symbol,
+                    &autotileTexture,
+                    _autotileResolver.resolve(
+                        screenGrid,
+                        column,
+                        screenRow,
+                        _gridWidth,
+                        _gridHeight,
+                        solidIds,
+                        definition
+                    )
+                );
+            }
         }
     }
 }
