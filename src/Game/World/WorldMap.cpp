@@ -95,7 +95,13 @@ void spawnFromSpec(
             );
             if (auto mario = std::dynamic_pointer_cast<Player>(player)) {
                 mario->changeToNormalState();
-                if (spec.addController) {
+                mario->setPlayerSlot(spec.playerSlot);
+                mario->setGameWorld(context.gameWorld);
+                const bool aiOwnsPlayerTwo =
+                    settings.gameMode == GameMode::Minigame
+                    && settings.minigameMode == MinigameMode::VsAi
+                    && spec.playerSlot == PlayerSlot::Two;
+                if (spec.addController && !aiOwnsPlayerTwo) {
                     const bool useWasd =
                         settings.gameMode == GameMode::Solo
                         || spec.animationId == "mario";

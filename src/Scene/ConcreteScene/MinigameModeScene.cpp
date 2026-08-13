@@ -1,15 +1,18 @@
 #include "Scene/ConcreteScene/MinigameModeScene.h"
 #include "Commands/FunctionalCommand.h"
 #include "Game/GameSettings.h"
+#include "Game/AI/AiGenomeCodec.h"
 #include "ResourceManager.h"
 #include "Scene/ConcreteScene/InGameScene.h"
 #include "Scene/SceneManager.h"
+
+#include <exception>
 
 MinigameModeScene::MinigameModeScene(const std::string& mapPath)
     : Scene("MinigameModeScene"),
       _mapPath(mapPath),
       _titleText(ResourceManager::getInstance().getFont("SuperMario"), "SELECT MINIGAME MODE", 64),
-      _comingSoonText(ResourceManager::getInstance().getFont("SuperMario"), "VS AI - Coming Soon", 40) {
+      _statusText(ResourceManager::getInstance().getFont("SuperMario"), "", 32) {
 
     _titleText.setOutlineThickness(5.0f);
     _titleText.setOutlineColor(sf::Color::Black);
@@ -22,24 +25,19 @@ MinigameModeScene::MinigameModeScene(const std::string& mapPath)
     _titleText.setFillColor(sf::Color::White
     );
 
-    sf::FloatRect soonBounds = _comingSoonText.getLocalBounds();
-    _comingSoonText.setOrigin({soonBounds.position.x + soonBounds.size.x / 2.0f,
-                               soonBounds.position.y + soonBounds.size.y / 2.0f});
-    _comingSoonText.setPosition({960.0f, 540.0f});
-    _comingSoonText.setFillColor(sf::Color::Red);
+    _statusText.setPosition({960.0f, 570.0f});
+    _statusText.setFillColor(sf::Color::Red);
+    _statusText.setOutlineColor(sf::Color::Black);
+    _statusText.setOutlineThickness(2.0f);
 }
 
 void MinigameModeScene::onEnter() {
     Scene::onEnter();
+    _showStatus = false;
     _setupButtons();
 }
 
 void MinigameModeScene::handleInput(const sf::Event& event) {
-    if (_showComingSoon) {
-        _showComingSoon = false;
-        return;
-    }
-
     if (auto* keyEvent = event.getIf<sf::Event::KeyPressed>()) {
         if (keyEvent->code == sf::Keyboard::Key::Escape) {
             if (auto mgr = getSceneManager()) {
@@ -56,8 +54,13 @@ void MinigameModeScene::render(sf::RenderTarget& target) {
     Scene::render(target);
     target.draw(_titleText);
     _buttonMenu.render(target);
-    if (_showComingSoon) {
-        target.draw(_comingSoonText);
+    if (_showStatus) {
+        const sf::FloatRect bounds = _statusText.getLocalBounds();
+        _statusText.setOrigin({
+            bounds.position.x + bounds.size.x * 0.5f,
+            bounds.position.y + bounds.size.y * 0.5f
+        });
+        target.draw(_statusText);
     }
 }
 
@@ -88,10 +91,23 @@ void MinigameModeScene::_setupButtons() {
         "VS AI", [this]() {
             GameSettings::getInstance().minigameMode = MinigameMode::VsAi;
             std::string modeDir = "ai";
-
-            if (auto mgr = getSceneManager()) {
-                mgr->pushScene(std::make_unique<InGameScene>(
-                    "assets/datas/minigames/" + modeDir + "/" + _mapPath + ".json"));
+            try {
+                (void)AiGenomeCodec::load(
+                    "assets/ai/" + _mapPath + ".json"
+                );
+                _showStatus = false;
+                if (auto mgr = getSceneManager()) {
+                    mgr->pushScene(std::make_unique<InGameScene>(
+                        "assets/datas/minigames/" + modeDir + "/"
+                        + _mapPath + ".json"
+                    ));
+                }
+            } catch (const std::exception& error) {
+                _statusText.setString(
+                    "AI model unavailable. Run MarioAiTrainer.\n"
+                    + std::string(error.what())
+                );
+                _showStatus = true;
             }
         }
     ));

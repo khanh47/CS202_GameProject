@@ -8,6 +8,7 @@
 #include <string>
 
 #include "Game/Objects/GameObjectFactory.h"
+#include "Game/Minigame/MinigameTypes.h"
 #include "Game/Objects/Projectile/FireballPool.h"
 #include "Game/World/WorldInteractionSystem.h"
 #include "Game/World/WorldMap.h"
@@ -17,6 +18,7 @@
 #include "Physics/PhysicsWorld.h"
 
 class Player;
+class IPlayerController;
 
 class GameWorld {
 public:
@@ -49,6 +51,14 @@ public:
     bool isFrozen() const { return _freezeTimer > 0.0f; }
     void syncPlayerControllers();
     void playVictoryAnimation();
+    void addController(std::unique_ptr<IPlayerController> controller);
+
+    std::shared_ptr<Player> getPlayer(PlayerSlot slot) const;
+    void reportPlayerStomp(Player& winner, Player& loser);
+    void finishMinigameAsTimeout();
+    MinigameResult getMinigameResult() const noexcept {
+        return _minigameResult;
+    }
 
     int getGridWidth() const { return _worldMap.getGridWidth(); }
     int getGridHeight() const { return _worldMap.getGridHeight(); }
@@ -69,6 +79,7 @@ private:
     ScoreManager* _scoreManager = nullptr;
     float _freezeTimer = 0.0f;
     bool _levelCleared = false;
+    MinigameResult _minigameResult = MinigameResult::Running;
     std::shared_ptr<sf::Vector2f> _checkpointPos = nullptr;
     PhysicsWorld _physicsWorld;
     GameObjectFactory _objectFactory;
@@ -77,4 +88,6 @@ private:
     WorldMap _worldMap;
     WorldInteractionSystem _interactionSystem;
     WorldRenderer _renderer;
+
+    void resolveMinigameFalls();
 };

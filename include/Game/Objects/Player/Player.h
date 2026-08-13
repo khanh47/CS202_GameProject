@@ -10,6 +10,7 @@
 #include "Game/Behaviours/ShellHoldBehaviour.h"
 #include "Game/Objects/GameObject.h"
 #include "Game/Objects/Player/State/PlayerState.h"
+#include "Game/Minigame/MinigameTypes.h"
 
 class GameWorld;
 
@@ -38,6 +39,8 @@ public:
     void setGameWorld(GameWorld& world) { _world = &world; }
     GameWorld* getGameWorld() { return _world; }
     const std::string& getCharacter() const { return _character; }
+    void setPlayerSlot(PlayerSlot slot) noexcept { _playerSlot = slot; }
+    PlayerSlot getPlayerSlot() const noexcept { return _playerSlot; }
     void onContact(GameObject& other, const b2ContactData& contactData, b2ShapeId ownShape) override;
     void finalizeGroundContacts() override;
 
@@ -100,6 +103,7 @@ private:
     std::unique_ptr<PlayerState> _state;
     std::unique_ptr<IAttackStrategy> _attackStrategy;
     std::string _character = "mario";
+    PlayerSlot _playerSlot = PlayerSlot::Unassigned;
 
     bool _isDying = false;
     bool _isTransforming = false;

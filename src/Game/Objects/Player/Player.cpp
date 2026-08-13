@@ -1,4 +1,5 @@
 #include "Game/Objects/Player/Player.h"
+#include "Game/Minigame/MinigameContactRules.h"
 #include "Game/GameSettings.h"
 #include "Game/Objects/GameObject.h"
 #include "Game/World/GameWorld.h"
@@ -447,16 +448,21 @@ void Player::onContact(GameObject& other, const b2ContactData& contactData, b2Sh
             if (!B2_ID_EQUALS(contactData.shapeIdA, ownShape)) {
                 normal = {-normal.x, -normal.y};
             }
-            if (contactData.manifold.pointCount > 0 && normal.y >= 0.5f) {
+            if (isPlayerStompContact(
+                    contactData.manifold.pointCount,
+                    normal.y
+                )) {
+                if (_world) {
+                    _world->reportPlayerStomp(*this, *player);
+                }
                 player->destroy();
                 b2BodyId bodyId = b2Shape_GetBody(ownShape);
                 b2Vec2 vel = b2Body_GetLinearVelocity(bodyId);
                 vel.y = -12.0f;
                 b2Body_SetLinearVelocity(bodyId, vel);
             } else {
-                if (auto* damageable = getBehaviour<Damageable>()) {
-                    damageable->takeDamage(50);
-                }
+                // Player side contacts are physical but do not decide the
+                // head-stomp minigame or reduce player health.
             }
         }
         return;

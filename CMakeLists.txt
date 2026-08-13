@@ -15,37 +15,78 @@ elseif(UNIX)
 endif()
 
 find_package(SFML 3 REQUIRED COMPONENTS Graphics Window System Audio)
+add_subdirectory(external/Box2D-3.1.1)
 
-include_directories(include)
+file(GLOB_RECURSE MARIO_CORE_SOURCES CONFIGURE_DEPENDS "src/*.cpp")
+list(REMOVE_ITEM MARIO_CORE_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp")
 
-file(GLOB_RECURSE SRC_FILES CONFIGURE_DEPENDS "src/*.cpp")
-
-add_executable(${PROJECT_NAME} ${SRC_FILES})
-set_property(TARGET ${PROJECT_NAME} PROPERTY WIN32_EXECUTABLE FALSE)
-
-target_include_directories(${PROJECT_NAME}
-    PRIVATE
+add_library(MarioCore STATIC ${MARIO_CORE_SOURCES})
+target_include_directories(MarioCore
+    PUBLIC
         ${CMAKE_SOURCE_DIR}/include
         ${CMAKE_SOURCE_DIR}/external
 )
-
-add_subdirectory(external/Box2D-3.1.1)
-target_link_libraries(${PROJECT_NAME} PRIVATE box2d::box2d)
-
-target_link_libraries(${PROJECT_NAME}
-        PRIVATE
+target_link_libraries(MarioCore
+    PUBLIC
+        box2d::box2d
         SFML::Graphics
         SFML::Window
         SFML::System
         SFML::Audio
 )
+target_compile_options(MarioCore PRIVATE -O2)
+
+add_executable(Mario src/main.cpp)
+set_property(TARGET Mario PROPERTY WIN32_EXECUTABLE FALSE)
+target_link_libraries(Mario PRIVATE MarioCore)
+
+add_executable(MarioAiTrainer tests/ai.cpp)
+target_link_libraries(MarioAiTrainer PRIVATE MarioCore)
 
 add_custom_target(copy_assets ALL
-        COMMAND ${CMAKE_COMMAND} -E copy_directory
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
         "${CMAKE_SOURCE_DIR}/assets"
         "${CMAKE_BINARY_DIR}/assets"
 )
+add_dependencies(Mario copy_assets)
+add_dependencies(MarioAiTrainer copy_assets)
 
-add_dependencies(${PROJECT_NAME} copy_assets)
+include(CTest)
+if(BUILD_TESTING)
+    add_executable(MarioAiTests tests/AiTests.cpp)
+    target_link_libraries(MarioAiTests PRIVATE MarioCore)
+    target_compile_definitions(MarioAiTests PRIVATE
+        PROJECT_SOURCE_DIR="${CMAKE_SOURCE_DIR}"
+    )
+    add_dependencies(MarioAiTests copy_assets)
 
-target_compile_options(${PROJECT_NAME} PRIVATE -O2)
+    add_test(NAME MarioAiTests COMMAND MarioAiTests)
+    set_tests_properties(MarioAiTests PROPERTIES
+        WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+    )
+
+    add_test(
+        NAME MarioAiTrainerSmoke
+        COMMAND MarioAiTrainer
+            --map "${CMAKE_SOURCE_DIR}/assets/datas/minigames/ai/minigame.json"
+            --output "${CMAKE_BINARY_DIR}/ai-smoke-model.json"
+            --population 2
+            --generations 1
+            --max-steps 5
+            --seed 1337
+    )
+    set_tests_properties(MarioAiTrainerSmoke PROPERTIES
+        WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+        TIMEOUT 60
+    )
+
+    add_test(
+        NAME MarioAiTrainerOutputLoads
+        COMMAND MarioAiTests
+            --model "${CMAKE_BINARY_DIR}/ai-smoke-model.json"
+    )
+    set_tests_properties(MarioAiTrainerOutputLoads PROPERTIES
+        DEPENDS MarioAiTrainerSmoke
+        WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+    )
+endif()

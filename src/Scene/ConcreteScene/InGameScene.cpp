@@ -2,12 +2,17 @@
 
 #include "Scene/ConcreteScene/InGameScene.h"
 #include "Game/Behaviours/Animatable.h"
+#include "Game/AI/AiGenomeCodec.h"
+#include "Game/AI/AiPlayerController.h"
+#include "Game/Minigame/MinigameTypes.h"
 #include "Game/Objects/Player/Player.h"
 #include "ResourceManager.h"
 #include "Audio/MusicManager.h"
 #include "Scene/SceneManager.h"
 #include "Game/GameSettings.h"
+#include <filesystem>
 #include <iostream>
+#include <stdexcept>
 
 InGameScene::InGameScene(const std::string& name)
     : Scene(name) {}
@@ -38,6 +43,35 @@ void InGameScene::init() {
     _winPrompt->setFillColor(sf::Color::White);
     _gameWorld.loadLevel(_name);
     _gameWorld.setScoreManager(&_scoreManager); // Set score manager for the game world
+
+    const GameSettings& settings = GameSettings::getInstance();
+    if (settings.gameMode == GameMode::Minigame
+        && settings.minigameMode == MinigameMode::VsAi) {
+        try {
+            const std::string mapId = std::filesystem::path(_name).stem().string();
+            AiPolicy policy(AiGenomeCodec::load(
+                "assets/ai/" + mapId + ".json"
+            ));
+            const std::shared_ptr<Player> human =
+                _gameWorld.getPlayer(PlayerSlot::One);
+            const std::shared_ptr<Player> ai =
+                _gameWorld.getPlayer(PlayerSlot::Two);
+            if (!human || !ai) {
+                throw std::runtime_error(
+                    "VS AI level must contain player slots one and two"
+                );
+            }
+            _gameWorld.addController(std::make_unique<AiPlayerController>(
+                *ai, *human, _gameWorld, std::move(policy)
+            ));
+        } catch (const std::exception& error) {
+            _winActive = true;
+            _winTitle->setString("AI MODEL ERROR");
+            _winPrompt->setString(
+                std::string(error.what()) + "\nPress any key to return"
+            );
+        }
+    }
 
     // Configure 2D Platformer Camera System parameters
     CameraConfig config;
@@ -126,8 +160,43 @@ void InGameScene::updateSimulation(const float &fixedDt) {
     }
 
     _gameWorld.updateSimulation(fixedDt);
+    _checkMinigameEnd();
+    if (_winActive) {
+        return;
+    }
     _checkWin();
     _checkGameOver();
+}
+
+void InGameScene::_checkMinigameEnd() {
+    if (GameSettings::getInstance().gameMode != GameMode::Minigame
+        || _winActive || _gameOverActive) {
+        return;
+    }
+
+    const MinigameResult result = _gameWorld.getMinigameResult();
+    if (result == MinigameResult::Running) {
+        return;
+    }
+
+    _winActive = true;
+    const bool vsAi = GameSettings::getInstance().minigameMode
+        == MinigameMode::VsAi;
+    switch (result) {
+        case MinigameResult::PlayerOneWon:
+            _winTitle->setString(vsAi ? "YOU WIN!" : "PLAYER 1 WINS!");
+            break;
+        case MinigameResult::PlayerTwoWon:
+            _winTitle->setString(vsAi ? "AI WINS!" : "PLAYER 2 WINS!");
+            break;
+        case MinigameResult::Draw:
+        case MinigameResult::Timeout:
+            _winTitle->setString("DRAW!");
+            break;
+        case MinigameResult::Running:
+            return;
+    }
+    _winPrompt->setString("Press any key to continue");
 }
 
 void InGameScene::updateVisuals(float deltaTime) {

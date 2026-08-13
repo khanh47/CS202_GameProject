@@ -8,6 +8,8 @@
 #include <SFML/System/Vector2.hpp>
 #include <nlohmann/json.hpp>
 
+#include "Game/Minigame/MinigameTypes.h"
+
 enum class ObjectKind {
     Block,
     Player,
@@ -26,6 +28,7 @@ struct SpawnSpec {
     bool centerVertically = false;
     bool addSeamFilter = false; // = true for Block so that Player wont flickering 
     bool addController = false; // add controller for player
+    PlayerSlot playerSlot = PlayerSlot::Unassigned;
     std::shared_ptr<SpawnSpec> contents; // to contains other objects inside of it
 
     // Pipe-specific fields

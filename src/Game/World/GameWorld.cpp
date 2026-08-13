@@ -11,6 +11,7 @@
 #include "Game/Objects/Projectile/KoopaShell.h"
 #include "Game/Objects/Enemy/ConcreteEnemy/Koopa.h"
 #include "Game/World/LevelDataLoader.h"
+#include "Game/UserInput/IPlayerController.h"
 
 GameWorld::GameWorld(int gridWidth, int gridHeight, float cellSize)
     : _worldMap(gridWidth, gridHeight, cellSize) {}
@@ -25,6 +26,9 @@ void GameWorld::handleInput(const sf::Event& event) {
 }
 
 void GameWorld::updateSimulation(const float& fixedDt) {
+    if (_minigameResult != MinigameResult::Running) {
+        return;
+    }
     if (isFrozen()) {
         _freezeTimer -= fixedDt;
         if (_freezeTimer <= 0.0f) {
@@ -59,6 +63,11 @@ void GameWorld::updateSimulation(const float& fixedDt) {
     // Events must be consumed while every fixture owner is still alive.
     handleSensors(_physicsWorld.getSensorEvents());
     handleContacts(_physicsWorld.getContactEvents());
+    resolveMinigameFalls();
+
+    if (_minigameResult != MinigameResult::Running) {
+        return;
+    }
 
     if (_levelCleared) {
         _objectStore.cleanupDestroyed();
@@ -100,6 +109,7 @@ void GameWorld::handleSensors(b2SensorEvents sensorEvents) {
 void GameWorld::loadMap(const LevelData& levelData) {
     _currentLevelData = levelData;
     _levelCleared = false;
+    _minigameResult = MinigameResult::Running;
     _worldMap.rebuild(
         levelData,
         _physicsWorld,
@@ -108,6 +118,66 @@ void GameWorld::loadMap(const LevelData& levelData) {
         _objectStore,
         *this
     );
+}
+
+void GameWorld::addController(
+    std::unique_ptr<IPlayerController> controller
+) {
+    _objectStore.addController(std::move(controller));
+}
+
+std::shared_ptr<Player> GameWorld::getPlayer(PlayerSlot slot) const {
+    return _objectStore.getPlayer(slot);
+}
+
+void GameWorld::reportPlayerStomp(Player& winner, Player& loser) {
+    if (GameSettings::getInstance().gameMode != GameMode::Minigame
+        || _minigameResult != MinigameResult::Running
+        || &winner == &loser) {
+        return;
+    }
+
+    if (winner.getPlayerSlot() == PlayerSlot::One
+        && loser.getPlayerSlot() == PlayerSlot::Two) {
+        _minigameResult = MinigameResult::PlayerOneWon;
+    } else if (winner.getPlayerSlot() == PlayerSlot::Two
+               && loser.getPlayerSlot() == PlayerSlot::One) {
+        _minigameResult = MinigameResult::PlayerTwoWon;
+    }
+}
+
+void GameWorld::finishMinigameAsTimeout() {
+    if (_minigameResult == MinigameResult::Running) {
+        _minigameResult = MinigameResult::Timeout;
+    }
+}
+
+void GameWorld::resolveMinigameFalls() {
+    if (GameSettings::getInstance().gameMode != GameMode::Minigame
+        || _minigameResult != MinigameResult::Running) {
+        return;
+    }
+
+    const std::shared_ptr<Player> playerOne = getPlayer(PlayerSlot::One);
+    const std::shared_ptr<Player> playerTwo = getPlayer(PlayerSlot::Two);
+    if (!playerOne || !playerTwo) {
+        return;
+    }
+
+    const sf::FloatRect bounds = getBounds();
+    const float fallBoundary = bounds.position.y + bounds.size.y
+        + _worldMap.getCellSize();
+    const bool playerOneFell = playerOne->getPosition().y > fallBoundary;
+    const bool playerTwoFell = playerTwo->getPosition().y > fallBoundary;
+    if (playerOneFell && playerTwoFell) {
+        _minigameResult = MinigameResult::Draw;
+    } else if (playerOneFell) {
+        _minigameResult = MinigameResult::PlayerTwoWon;
+        playerOne->destroy();
+    } else if (playerTwoFell) {
+        _minigameResult = MinigameResult::PlayerOneWon;
+        playerTwo->destroy();
+    }
 }
 
 void GameWorld::loadLevel(const std::string& levelPath) {
@@ -176,6 +246,7 @@ void GameWorld::respawnPlayer() {
                     if (auto mario = std::dynamic_pointer_cast<Player>(player)) {
                         mario->changeToNormalState();
                         mario->setGameWorld(*this);
+                        mario->setPlayerSlot(spec.playerSlot);
 
                         if (spec.addController) {
                             const bool useWasd = settings.gameMode == GameMode::Solo || spec.animationId == "mario";

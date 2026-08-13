@@ -1,7 +1,7 @@
 #include "Game/World/WorldObjectStore.h"
 #include "Game/Objects/GameObject.h"
 #include "Game/Objects/Player/Player.h"
-#include "Game/UserInput/PlayerController.h"
+#include "Game/UserInput/IPlayerController.h"
 #include <memory>
 
 WorldObjectStore::WorldObjectStore() = default;
@@ -19,7 +19,7 @@ void WorldObjectStore::addObject(std::shared_ptr<GameObject> object) {
 }
 
 void WorldObjectStore::addController(
-    std::unique_ptr<PlayerController> controller
+    std::unique_ptr<IPlayerController> controller
 ) {
     if (controller) {
         _controllers.push_back(std::move(controller));
@@ -28,7 +28,7 @@ void WorldObjectStore::addController(
 
 bool WorldObjectStore::handleInput(const sf::Event& event) {
     bool handled = false;
-    for (const std::unique_ptr<PlayerController>& controller : _controllers) {
+    for (const std::unique_ptr<IPlayerController>& controller : _controllers) {
         if (controller) {
             handled = controller->handleEvent(event) || handled;
         }
@@ -37,6 +37,11 @@ bool WorldObjectStore::handleInput(const sf::Event& event) {
 }
 
 void WorldObjectStore::updateSimulation(float fixedDt) {
+    for (const std::unique_ptr<IPlayerController>& controller : _controllers) {
+        if (controller) {
+            controller->fixedUpdate(fixedDt);
+        }
+    }
     for (const std::shared_ptr<GameObject>& object : _objects) {
         if (object) {
             object->updateSimulation(fixedDt);
@@ -62,7 +67,7 @@ void WorldObjectStore::updateVisuals(float deltaTime) {
 }
 
 void WorldObjectStore::cleanupDestroyed() {
-    std::erase_if(_controllers, [](const std::unique_ptr<PlayerController>& controller) {
+    std::erase_if(_controllers, [](const std::unique_ptr<IPlayerController>& controller) {
         return !controller || controller->isPlayerPendingDestroy();
     });
     std::erase_if(_objects, [](const std::shared_ptr<GameObject>& object) {
@@ -89,14 +94,17 @@ void WorldObjectStore::finalizeGroundContacts() {
 }
 
 void WorldObjectStore::syncControllersWithKeyboard() {
-    for (const std::unique_ptr<PlayerController>& controller : _controllers) {
+    for (const std::unique_ptr<IPlayerController>& controller : _controllers) {
         if (controller) {
-            controller->syncStateWithKeyboard();
+            controller->syncState();
         }
     }
 }
 
 std::shared_ptr<GameObject> WorldObjectStore::getPrimaryPlayer() const {
+    if (const auto playerOne = getPlayer(PlayerSlot::One)) {
+        return playerOne;
+    }
     for (const std::shared_ptr<GameObject>& object : _objects) {
         if (std::dynamic_pointer_cast<Player>(object)) {
             return object;
@@ -113,4 +121,14 @@ bool WorldObjectStore::hasLivingPlayers() const {
         }
     }
     return false;
+}
+
+std::shared_ptr<Player> WorldObjectStore::getPlayer(PlayerSlot slot) const {
+    for (const std::shared_ptr<GameObject>& object : _objects) {
+        const auto player = std::dynamic_pointer_cast<Player>(object);
+        if (player && player->getPlayerSlot() == slot) {
+            return player;
+        }
+    }
+    return nullptr;
 }

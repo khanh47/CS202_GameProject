@@ -28,6 +28,7 @@ public:
 private:
     void _checkGameOver();
     void _checkWin();
+    void _checkMinigameEnd();
     void _respawnPlayer();
     void _drawGameOverOverlay(sf::RenderTarget& target);
     void _drawWinOverlay(sf::RenderTarget& target);

@@ -3,6 +3,7 @@
 #include <fstream>
 #include <stdexcept>
 #include <string>
+#include <unordered_set>
 
 #include <nlohmann/json.hpp>
 
@@ -49,8 +50,8 @@ LevelData LevelDataLoader::load(
             throw std::runtime_error("Every level row must be a tile string");
         }
         const std::string rowText = encodedRow.get<std::string>();
-        if (rowText.empty() || rowText.size() > static_cast<std::size_t>(maximumWidth)) {
-            throw std::runtime_error("Level row width is outside configured limits");
+        if (rowText.empty()) {
+            throw std::runtime_error("Level row must not be empty");
         }
 
         std::vector<int> row;
@@ -66,6 +67,13 @@ LevelData LevelDataLoader::load(
                 throw std::runtime_error("Level contains an unsupported tile id");
             }
             tileId = tileId * 10 + (tile - '0');
+        }
+        if (rowText.back() != ' ') {
+            row.push_back(tileId);
+        }
+        if (row.empty()
+            || row.size() > static_cast<std::size_t>(maximumWidth)) {
+            throw std::runtime_error("Level row width is outside configured limits");
         }
         rows.push_back(std::move(row));
     }
@@ -100,6 +108,28 @@ LevelData LevelDataLoader::load(
                     "Level references tile id " + std::to_string(tileId)
                     + " that has no spawn definition"
                 );
+            }
+        }
+    }
+
+    std::unordered_set<int> occupiedPlayerSlots;
+    for (const auto& row : rows) {
+        for (const int tileId : row) {
+            const auto spawnIt = spawns.find(tileId);
+            if (spawnIt == spawns.end()) {
+                continue;
+            }
+            for (const SpawnSpec& spec : spawnIt->second) {
+                if (spec.kind != ObjectKind::Player) {
+                    continue;
+                }
+                const int slot = static_cast<int>(spec.playerSlot);
+                if (!occupiedPlayerSlots.insert(slot).second) {
+                    throw std::runtime_error(
+                        "Level contains more than one player in slot "
+                        + std::to_string(slot)
+                    );
+                }
             }
         }
     }

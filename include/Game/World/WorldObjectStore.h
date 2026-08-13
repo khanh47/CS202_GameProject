@@ -4,8 +4,11 @@
 #include <memory>
 #include <vector>
 
+#include "Game/Minigame/MinigameTypes.h"
+
 class GameObject;
-class PlayerController;
+class IPlayerController;
+class Player;
 
 class WorldObjectStore {
 public:
@@ -14,7 +17,7 @@ public:
 
     void clear();
     void addObject(std::shared_ptr<GameObject> object);
-    void addController(std::unique_ptr<PlayerController> controller);
+    void addController(std::unique_ptr<IPlayerController> controller);
 
     bool handleInput(const sf::Event& event);
     void updateSimulation(float fixedDt);
@@ -26,6 +29,7 @@ public:
     void syncControllersWithKeyboard();
 
     std::shared_ptr<GameObject> getPrimaryPlayer() const;
+    std::shared_ptr<Player> getPlayer(PlayerSlot slot) const;
     bool hasLivingPlayers() const;
     const std::vector<std::shared_ptr<GameObject>>& objects() const noexcept {
         return _objects;
@@ -36,5 +40,5 @@ public:
 
 private:
     std::vector<std::shared_ptr<GameObject>> _objects;
-    std::vector<std::unique_ptr<PlayerController>> _controllers;
+    std::vector<std::unique_ptr<IPlayerController>> _controllers;
 };

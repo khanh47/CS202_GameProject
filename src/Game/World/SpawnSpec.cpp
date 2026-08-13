@@ -30,6 +30,20 @@ sf::Vector2f parseSize(const nlohmann::json& json) {
     }
     return {json[0].get<float>(), json[1].get<float>()};
 }
+
+PlayerSlot parsePlayerSlot(const nlohmann::json& json) {
+    if (!json.is_number_integer()) {
+        throw std::runtime_error("Player slot must be the integer 1 or 2");
+    }
+    const int value = json.get<int>();
+    if (value == 1) {
+        return PlayerSlot::One;
+    }
+    if (value == 2) {
+        return PlayerSlot::Two;
+    }
+    throw std::runtime_error("Player slot must be the integer 1 or 2");
+}
 }
 
 void from_json(const nlohmann::json& json, SpawnSpec& spec) {
@@ -70,6 +84,15 @@ void from_json(const nlohmann::json& json, SpawnSpec& spec) {
     spec.warpTarget = json.value("warpTarget", -1);
     spec.contentsStatic = json.value("contentsStatic", false);
     spec.addController = json.value("addController", false);
+
+    if (spec.kind == ObjectKind::Player) {
+        if (!json.contains("playerSlot")) {
+            throw std::runtime_error("Player spawn is missing required field: playerSlot");
+        }
+        spec.playerSlot = parsePlayerSlot(json["playerSlot"]);
+    } else {
+        spec.playerSlot = PlayerSlot::Unassigned;
+    }
 
     if (json.contains("contents")) {
         if (json["contents"].is_null()) {
