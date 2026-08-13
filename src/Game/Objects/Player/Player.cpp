@@ -16,6 +16,7 @@
 #include "Game/Objects/Item/ConcreteItems/SuperStar.h"
 #include "Game/Objects/Item/ConcreteItems/Coin.h"
 #include "Game/Objects/Item/ConcreteItems/MegaCoin.h"
+#include "Game/Objects/Item/Item.h"
 #include "Game/Objects/Projectile/KoopaShell.h"
 #include "Game/Objects/Pipe/Pipe.h"
 #include "ResourceManager.h"
@@ -294,172 +295,136 @@ void Player::finalizeSimulation(const float &fixedDt) {
 }
 
 void Player::onContact(GameObject& other, const b2ContactData& contactData, b2ShapeId ownShape) {
-    if (auto* mushroom = dynamic_cast<SuperMushroom*>(&other)) {
-        if (_state) {
-            _state->handleSuperMushroom(*this);
-        }
-
-        if (_world && _world->getScoreManager()) {
-            _world->getScoreManager()->handleEvent(ScoreEventType::PowerupCollected, getPosition());
-        }
-
-        mushroom->destroy();
+    if (auto* item = dynamic_cast<Item*>(&other)) {
+        handleItemContact(*item);
         return;
     }
-
-    if (auto* fireFlower = dynamic_cast<FireFlower*>(&other)) {
-        if (_state) {
-            _state->handleFireFlower(*this);
-        }
-
-        if (_world && _world->getScoreManager()) {
-            _world->getScoreManager()->handleEvent(ScoreEventType::PowerupCollected, getPosition());
-        }
-
-        fireFlower->destroy();
-        return;
-    }
-
-    if (auto* star = dynamic_cast<SuperStar*>(&other)) {
-        if (_state) {
-            _state->handleSuperStar(*this);
-        }
-
-        if (_world && _world->getScoreManager()) {
-            _world->getScoreManager()->handleEvent(ScoreEventType::PowerupCollected, getPosition());
-        }
-
-        star->destroy();
-        return;
-    }
-
-    if (auto* coin = dynamic_cast<Coin*>(&other)) {
-        if (_world) {
-            //_world->incrementScore(100);
-        }
-
-        if (_world && _world->getScoreManager()) {
-            _world->getScoreManager()->handleEvent(ScoreEventType::CoinCollected, getPosition());
-        }
-
-        coin->destroy();
-        return;
-    }
-
-    if (auto* megaCoin = dynamic_cast<MegaCoin*>(&other)) {
-        if (_world) {
-            //_world->incrementScore(100);
-        }
-
-        if (_world && _world->getScoreManager()) {
-            _world->getScoreManager()->handleEvent(ScoreEventType::MegaCoinCollected, getPosition());
-        }
-
-        megaCoin->destroy();
-        return;
-    }
-
     if (auto* shell = dynamic_cast<KoopaShell*>(&other)) {
-        // A shell held by this player must not be kicked or damage us.
-        if (shell->isHeld()) {
-            return;
-        }
-
-        // StarMan invincibility: instantly destroy any shell on contact
-        if (_state && _state->isInvincible()) {
-
-            if (_world && _world->getScoreManager()) {
-                _world->getScoreManager()->handleEvent(ScoreEventType::EnemyStomped, shell->getPosition());
-            }
-
-            shell->destroy();
-            return;
-        }
-
-        if (b2Shape_IsValid(ownShape)) {
-            b2Vec2 normal = contactData.manifold.normal;
-            if (!B2_ID_EQUALS(contactData.shapeIdA, ownShape)) {
-                normal = {-normal.x, -normal.y};
-            }
-            if (contactData.manifold.pointCount > 0 && normal.y >= 0.5f) {
-                // Stomping the shell: stop a sliding shell, kick a resting one
-                if (shell->isSliding()) {
-                    shell->stop();
-                } else {
-                    shell->kick(!isFacingLeft());
-                }
-                b2BodyId bodyId = b2Shape_GetBody(ownShape);
-                b2Vec2 vel = b2Body_GetLinearVelocity(bodyId);
-                vel.y = -12.0f;
-                b2Body_SetLinearVelocity(bodyId, vel);
-            } else {
-                // Side contact: sliding shells hurt, resting shells get kicked
-                if (shell->isSliding() && _state) {
-                    _state->handleEnemy(*this);
-                } else {
-                    shell->kick(!isFacingLeft());
-                }
-            }
-        }
+        handleShellContact(*shell, contactData, ownShape);
         return;
     }
-
     if (auto* enemy = dynamic_cast<Enemy*>(&other)) {
-        // StarMan invincibility: instantly destroy any enemy on contact
-        if (_state && _state->isInvincible()) {
+        handleEnemyContact(*enemy, contactData, ownShape);
+        return;
+    }
+    if (auto* player = dynamic_cast<Player*>(&other)) {
+        handlePlayerContact(*player, contactData, ownShape);
+    }
+}
 
-            if (_world && _world->getScoreManager()) {
-                _world->getScoreManager()->handleEvent(ScoreEventType::EnemyStomped, enemy->getPosition());
-            }
+void Player::handleItemContact(Item& item) {
+    if (auto* mushroom = dynamic_cast<SuperMushroom*>(&item)) {
+        if (_state) _state->handleSuperMushroom(*this);
+        awardScore(ScoreEventType::PowerupCollected, getPosition());
+        mushroom->destroy();
+    } else if (auto* fireFlower = dynamic_cast<FireFlower*>(&item)) {
+        if (_state) _state->handleFireFlower(*this);
+        awardScore(ScoreEventType::PowerupCollected, getPosition());
+        fireFlower->destroy();
+    } else if (auto* star = dynamic_cast<SuperStar*>(&item)) {
+        if (_state) _state->handleSuperStar(*this);
+        awardScore(ScoreEventType::PowerupCollected, getPosition());
+        star->destroy();
+    } else if (auto* coin = dynamic_cast<Coin*>(&item)) {
+        awardScore(ScoreEventType::CoinCollected, getPosition());
+        coin->destroy();
+    } else if (auto* megaCoin = dynamic_cast<MegaCoin*>(&item)) {
+        awardScore(ScoreEventType::MegaCoinCollected, getPosition());
+        megaCoin->destroy();
+    }
+}
 
-            enemy->destroy();
-            return;
-        }
+void Player::handleShellContact(
+    KoopaShell& shell,
+    const b2ContactData& contactData,
+    b2ShapeId ownShape
+) {
+    if (shell.isHeld()) return;
 
-        if (b2Shape_IsValid(ownShape)) {
-            b2Vec2 normal = contactData.manifold.normal;
-            if (!B2_ID_EQUALS(contactData.shapeIdA, ownShape)) {
-                normal = {-normal.x, -normal.y};
-            }
-            if (contactData.manifold.pointCount > 0 && normal.y >= 0.5f && enemy->canBeStomped()) {
-                if (_world && _world->getScoreManager()) {
-                    // Triggers 100 -> 200 -> 400 -> 800 -> 1000 -> 2000 -> 4000 -> 8000 -> 1UP
-                    _world->getScoreManager()->handleEvent(ScoreEventType::EnemyStomped, enemy->getPosition());
-                }
-
-                enemy->onStomp();
-                b2BodyId bodyId = b2Shape_GetBody(ownShape);
-                b2Vec2 vel = b2Body_GetLinearVelocity(bodyId);
-                vel.y = -12.0f;
-                b2Body_SetLinearVelocity(bodyId, vel);
-            } else {
-                _state->handleEnemy(*this);
-            }
-        }
+    if (_state && _state->isInvincible()) {
+        awardScore(ScoreEventType::EnemyStomped, shell.getPosition());
+        shell.destroy();
+        return;
     }
 
-    if (auto* player = dynamic_cast<Player*>(&other)) {
-        if (GameSettings::getInstance().gameMode != GameMode::Minigame) {
-            return;
-        }
-        if (b2Shape_IsValid(ownShape)) {
-            b2Vec2 normal = contactData.manifold.normal;
-            if (!B2_ID_EQUALS(contactData.shapeIdA, ownShape)) {
-                normal = {-normal.x, -normal.y};
-            }
-            if (contactData.manifold.pointCount > 0 && normal.y >= 0.5f) {
-                player->destroy();
-                b2BodyId bodyId = b2Shape_GetBody(ownShape);
-                b2Vec2 vel = b2Body_GetLinearVelocity(bodyId);
-                vel.y = -12.0f;
-                b2Body_SetLinearVelocity(bodyId, vel);
-            } else {
-                if (auto* damageable = getBehaviour<Damageable>()) {
-                    damageable->takeDamage(50);
-                }
-            }
-        }
+    if (!b2Shape_IsValid(ownShape)) return;
+
+    if (isTopContact(contactData, ownShape)) {
+        if (shell.isSliding()) shell.stop();
+        else shell.kick(!isFacingLeft());
+        bounce();
+    } else if (shell.isSliding() && _state) {
+        _state->handleEnemy(*this);
+    } else {
+        shell.kick(!isFacingLeft());
+    }
+}
+
+void Player::handleEnemyContact(
+    Enemy& enemy,
+    const b2ContactData& contactData,
+    b2ShapeId ownShape
+) {
+    if (_state && _state->isInvincible()) {
+        awardScore(ScoreEventType::EnemyStomped, enemy.getPosition());
+        enemy.destroy();
         return;
+    }
+
+    if (isTopContact(contactData, ownShape) && enemy.canBeStomped()) {
+        awardScore(ScoreEventType::EnemyStomped, enemy.getPosition());
+        enemy.onStomp();
+        bounce();
+    } else if (_state) {
+        _state->handleEnemy(*this);
+    }
+}
+
+void Player::handlePlayerContact(
+    Player& player,
+    const b2ContactData& contactData,
+    b2ShapeId ownShape
+) {
+    if (GameSettings::getInstance().gameMode != GameMode::Minigame
+        || !b2Shape_IsValid(ownShape)) {
+        return;
+    }
+
+    if (isTopContact(contactData, ownShape)) {
+        player.destroy();
+        bounce();
+    } else if (auto* damageable = getBehaviour<Damageable>()) {
+        damageable->takeDamage(50);
+    }
+}
+
+bool Player::isTopContact(
+    const b2ContactData& contactData,
+    b2ShapeId ownShape
+) const {
+    if (!b2Shape_IsValid(ownShape) || contactData.manifold.pointCount == 0) {
+        return false;
+    }
+
+    b2Vec2 normal = contactData.manifold.normal;
+    if (!B2_ID_EQUALS(contactData.shapeIdA, ownShape)) {
+        normal = {-normal.x, -normal.y};
+    }
+    return normal.y >= 0.5f;
+}
+
+void Player::bounce(float verticalVelocity) {
+    if (!_body) return;
+
+    const b2BodyId bodyId = b2Shape_GetBody(_body->getHitbox());
+    b2Vec2 velocity = b2Body_GetLinearVelocity(bodyId);
+    velocity.y = verticalVelocity;
+    b2Body_SetLinearVelocity(bodyId, velocity);
+}
+
+void Player::awardScore(ScoreEventType event, sf::Vector2f position) {
+    if (_world && _world->getScoreManager()) {
+        _world->getScoreManager()->handleEvent(event, position);
     }
 }
 

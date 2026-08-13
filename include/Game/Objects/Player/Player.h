@@ -12,6 +12,10 @@
 #include "Game/Objects/Player/State/PlayerState.h"
 
 class GameWorld;
+class Enemy;
+class Item;
+class KoopaShell;
+enum class ScoreEventType;
 
 class Player: public GameObject {
 public:
@@ -95,6 +99,29 @@ protected:
     b2Polygon makeHitbox(sf::Vector2f hitboxPixels) const override;
 
 private:
+    void handleItemContact(Item& item);
+    void handleShellContact(
+        KoopaShell& shell,
+        const b2ContactData& contactData,
+        b2ShapeId ownShape
+    );
+    void handleEnemyContact(
+        Enemy& enemy,
+        const b2ContactData& contactData,
+        b2ShapeId ownShape
+    );
+    void handlePlayerContact(
+        Player& player,
+        const b2ContactData& contactData,
+        b2ShapeId ownShape
+    );
+    bool isTopContact(
+        const b2ContactData& contactData,
+        b2ShapeId ownShape
+    ) const;
+    void bounce(float verticalVelocity = -12.0f);
+    void awardScore(ScoreEventType event, sf::Vector2f position);
+
     float _baseMoveSpeed = 8.0f;
     float _baseJumpSpeed = 20.0f;
     std::unique_ptr<PlayerState> _state;
