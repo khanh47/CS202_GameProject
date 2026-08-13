@@ -19,10 +19,11 @@ void TileMap::setTile(
     int col,
     int row,
     int tileId,
-    const sf::Texture* texture
+    const sf::Texture* texture,
+    sf::IntRect texRect
 ) {
     if (row >= 0 && row < _gridHeight && col >= 0 && col < _gridWidth) {
-        _tiles[row][col] = TileInfo{tileId, texture};
+        _tiles[row][col] = TileInfo{tileId, texture, texRect};
     }
 }
 
@@ -68,10 +69,21 @@ void TileMap::updateVisibleVertices(const sf::View& view) {
                 continue;
             }
 
-            const float tu0 = 0.f;
-            const float tv0 = 0.f;
-            const float tu1 = static_cast<float>(tile.texture->getSize().x);
-            const float tv1 = static_cast<float>(tile.texture->getSize().y);
+            // Determine UV coordinates:
+            // If texRect has a non-zero size, use it as the sub-rectangle;
+            // otherwise sample the full texture (backward-compatible path).
+            float tu0, tv0, tu1, tv1;
+            if (tile.texRect.size.x > 0 && tile.texRect.size.y > 0) {
+                tu0 = static_cast<float>(tile.texRect.position.x);
+                tv0 = static_cast<float>(tile.texRect.position.y);
+                tu1 = static_cast<float>(tile.texRect.position.x + tile.texRect.size.x);
+                tv1 = static_cast<float>(tile.texRect.position.y + tile.texRect.size.y);
+            } else {
+                tu0 = 0.f;
+                tv0 = 0.f;
+                tu1 = static_cast<float>(tile.texture->getSize().x);
+                tv1 = static_cast<float>(tile.texture->getSize().y);
+            }
 
             sf::VertexArray* batch = nullptr;
             for (Batch& candidate : _batches) {

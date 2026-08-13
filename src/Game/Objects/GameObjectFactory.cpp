@@ -16,6 +16,7 @@
 #include "Game/Objects/Item/ConcreteItems/MegaCoin.h"
 #include "Game/Objects/Block/CoinBlock.h"
 #include "Game/Objects/Block/LuckyBlock.h"
+#include "Game/Objects/Block/SlopeBlock.h"
 #include "Game/Objects/Pipe/Pipe.h"
 
 GameObjectFactory::GameObjectFactory() {
@@ -23,6 +24,7 @@ GameObjectFactory::GameObjectFactory() {
     registerBlock("Block", createStatic<Block>);
     registerBlock("CoinBlock", createStatic<CoinBlock>);
     registerBlock("LuckyBlock", createStatic<LuckyBlock>);
+    registerBlock("SlopeBlock", createStatic<SlopeBlock>);
     registerEnemy("Goomba", createAnimated<Goomba>);
     registerEnemy("Koopa", createAnimated<Koopa>);
     registerEnemy("PiranhaPlant", createAnimated<PiranhaPlant>);

@@ -1,7 +1,10 @@
 #include "Game/World/WorldMap.h"
 
 #include <algorithm>
+#include <filesystem>
+#include <fstream>
 #include <memory>
+#include <unordered_set>
 
 #include "Game/GameSettings.h"
 #include "Game/Objects/GameObject.h"
@@ -9,6 +12,7 @@
 #include "Game/Objects/Enemy/Enemy.h"
 #include "Game/Objects/Enemy/ConcreteEnemy/Koopa.h"
 #include "Game/Objects/Enemy/ConcreteEnemy/PiranhaPlant.h"
+#include "Game/Objects/Block/SlopeBlock.h"
 #include "Game/Objects/Pipe/Pipe.h"
 #include "Game/Objects/Projectile/FireballPool.h"
 #include "Game/Objects/Player/Player.h"
@@ -20,6 +24,7 @@
 #include "Physics/PhysicsUnits.h"
 #include "Physics/PhysicsWorld.h"
 #include "ResourceManager.h"
+#include <nlohmann/json.hpp>
 
 namespace {
 struct SpawnContext {
@@ -35,6 +40,7 @@ struct SpawnContext {
 void spawnFromSpec(
     const SpawnSpec& spec,
     const SpawnContext& context,
+    int tileId,
     int column,
     int logicY,
     int screenY,
@@ -58,8 +64,18 @@ void spawnFromSpec(
                 spec.typeKey,
                 &texture
             );
+            if (auto slope = std::dynamic_pointer_cast<SlopeBlock>(block)) {
+                SlopeBlock::SlopeType st = SlopeBlock::SlopeType::UpRightBottom;
+                if (tileId == 26) st = SlopeBlock::SlopeType::UpRightTop;
+                else if (tileId == 27) st = SlopeBlock::SlopeType::DownRightTop;
+                else if (tileId == 28) st = SlopeBlock::SlopeType::DownRightBottom;
+                slope->configureSlopeVisuals(texture, st);
+            }
             block->spawn(context.physicsWorld, spawnPosition, spec.size);
-            if (spec.typeKey == "Block") {
+            // Register in TileMap only for non-autotile blocks.
+            // Autotile blocks are registered in the post-pass (WorldMap::rebuild)
+            // once all neighbours are known and the correct sub-rect can be resolved.
+            if (spec.typeKey == "Block" && spec.autotileId.empty()) {
                 context.tileMap.setTile(column, screenY, 1, &texture);
             }
             if (spec.addSeamFilter) {
@@ -352,6 +368,7 @@ void WorldMap::rebuild(
                 spawnFromSpec(
                     spec,
                     context,
+                    tileId,
                     column,
                     logicY,
                     screenY,
@@ -360,7 +377,93 @@ void WorldMap::rebuild(
             }
         }
     }
-}
+
+    // -----------------------------------------------------------------------
+    // Autotile post-pass
+    // -----------------------------------------------------------------------
+    // Build a screen-space grid so AutotileResolver can query neighbours.
+    std::vector<std::vector<int>> screenGrid(
+        _gridHeight, std::vector<int>(_gridWidth, 0)
+    );
+    for (int mapRow = 0; mapRow < _loadedRows; ++mapRow) {
+        const int screenRow = screenYForMapRow(mapRow);
+        if (screenRow < 0 || screenRow >= _gridHeight) {
+            continue;
+        }
+        const int cols = std::min(
+            static_cast<int>(mapData[mapRow].size()), _gridWidth
+        );
+        for (int col = 0; col < cols; ++col) {
+            screenGrid[screenRow][col] = mapData[mapRow][col];
+        }
+    }
+
+    // Collect every tile ID that is spawned as a Block (solid for neighbour tests).
+    std::unordered_set<int> solidIds;
+    for (const auto& [id, specs] : levelData.spawns) {
+        for (const SpawnSpec& spec : specs) {
+            if (spec.kind == ObjectKind::Block) {
+                solidIds.insert(id);
+            }
+        }
+    }
+
+    // Load autotile definitions (fast file read, skipped if already loaded
+    // for this session — re-reads on every rebuild to pick up live edits).
+    loadAutotileDefs("assets/datas/autotile_defs.json");
+
+    // Resolve and register autotile blocks in TileMap.
+    for (int mapRow = 0; mapRow < _loadedRows; ++mapRow) {
+        const int screenRow = screenYForMapRow(mapRow);
+        if (screenRow < 0 || screenRow >= _gridHeight) {
+            continue;
+        }
+        const int cols = std::min(
+            static_cast<int>(mapData[mapRow].size()), _gridWidth
+        );
+        for (int col = 0; col < cols; ++col) {
+            const int tileId = mapData[mapRow][col];
+            if (tileId == 0) {
+                continue;
+            }
+            const auto spawnIt = levelData.spawns.find(tileId);
+            if (spawnIt == levelData.spawns.end()) {
+                continue;
+            }
+            for (const SpawnSpec& spec : spawnIt->second) {
+                if (spec.autotileId.empty()) {
+                    continue;
+                }
+                const bool floating = _autotileResolver.isFloating(
+                    screenGrid, col, screenRow,
+                    _gridWidth, _gridHeight,
+                    solidIds
+                );
+                if (floating) {
+                    // Mid-air floating block -> render as classic brick!
+                    sf::Texture& brickTex =
+                        ResourceManager::getInstance().getTexture("brick");
+                    _tileMap.setTile(col, screenRow, tileId, &brickTex, sf::IntRect({0, 0}, {0, 0}));
+                } else {
+                    // Ground-connected terrain -> render using autotile tileset!
+                    const auto defIt = _autotileDefs.find(spec.autotileId);
+                    if (defIt == _autotileDefs.end()) {
+                        continue;
+                    }
+                    const AutotileTilesetDef& def = defIt->second;
+                    const sf::IntRect texRect = _autotileResolver.resolve(
+                        screenGrid, col, screenRow,
+                        _gridWidth, _gridHeight,
+                        solidIds, def
+                    );
+                    sf::Texture& tex =
+                        ResourceManager::getInstance().getTexture(def.textureAlias);
+                    _tileMap.setTile(col, screenRow, tileId, &tex, texRect);
+                }
+            } // end for spec
+        }     // end for col
+    }         // end for mapRow
+} // end WorldMap::rebuild
 
 void WorldMap::renderTiles(sf::RenderTarget& target) {
     _tileMap.updateVisibleVertices(target.getView());
@@ -420,4 +523,39 @@ void WorldMap::destroyBoundaryWalls() {
         }
     }
     _boundaryWalls.clear();
+}
+
+void WorldMap::loadAutotileDefs(const std::filesystem::path& filePath) {
+    _autotileDefs.clear();
+
+    std::ifstream file(filePath);
+    if (!file) {
+        // No autotile defs file found — autotiling is simply disabled.
+        return;
+    }
+
+    nlohmann::json document;
+    try {
+        file >> document;
+    } catch (const nlohmann::json::exception& err) {
+        // Malformed JSON: skip autotiling gracefully.
+        return;
+    }
+
+    if (!document.is_object() || !document.contains("autotile_defs")
+        || !document["autotile_defs"].is_array()) {
+        return;
+    }
+
+    for (const auto& entry : document["autotile_defs"]) {
+        if (!entry.is_object() || !entry.contains("id")) {
+            continue;
+        }
+        const std::string id = entry["id"].get<std::string>();
+        try {
+            _autotileDefs.emplace(id, AutotileTilesetDef::fromJson(entry));
+        } catch (const std::exception&) {
+            // Skip malformed entries.
+        }
+    }
 }

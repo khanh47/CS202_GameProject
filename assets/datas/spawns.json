@@ -22,6 +22,15 @@
     { "id": 18, "kind": "Pipe", "typeKey": "Pipe", "texture": "pipes_spritesheet", "size": [128, 384], "pipeOrientation": "vertical", "pipeEndSide": "top", "pipeBodyLength": 3, "pipeIsWarp": true, "warpID": 2, "warpTarget": 1, "addSeamFilter": true },
     { "id": 19, "kind": "Player", "typeKey": "Player", "texture": "mario_spritesheet", "animationId": "mario", "size": [54, 120], "offset": [10, 0], "addController": false },
     { "id": 20, "kind": "Player", "typeKey": "Player", "texture": "luigi_spritesheet", "animationId": "luigi", "size": [54, 120], "offset": [10, 0], "addController": false },
-    { "id": 21, "kind": "Item", "typeKey": "MegaCoin", "texture": "mega_coin_spritesheet", "size": [96, 96], "centerVertically": true }
+    { "id": 21, "kind": "Item", "typeKey": "MegaCoin", "texture": "mega_coin_spritesheet", "size": [96, 96], "centerVertically": true },
+
+    { "id": 22, "kind": "Block", "typeKey": "Block", "texture": "at_grassland",   "size": [64, 64], "addSeamFilter": true, "autotile": "grassland_terrain" },
+    { "id": 23, "kind": "Block", "typeKey": "Block", "texture": "at_castle",       "size": [64, 64], "addSeamFilter": true, "autotile": "castle_terrain" },
+    { "id": 24, "kind": "Block", "typeKey": "Block", "texture": "at_underground",  "size": [64, 64], "addSeamFilter": true, "autotile": "underground_terrain" },
+
+    { "id": 25, "kind": "Block", "typeKey": "SlopeBlock", "texture": "at_grassland", "size": [64, 64], "addSeamFilter": true },
+    { "id": 26, "kind": "Block", "typeKey": "SlopeBlock", "texture": "at_grassland", "size": [64, 64], "addSeamFilter": true },
+    { "id": 27, "kind": "Block", "typeKey": "SlopeBlock", "texture": "at_grassland", "size": [64, 64], "addSeamFilter": true },
+    { "id": 28, "kind": "Block", "typeKey": "SlopeBlock", "texture": "at_grassland", "size": [64, 64], "addSeamFilter": true }
   ]
 }

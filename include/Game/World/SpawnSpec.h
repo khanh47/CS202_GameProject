@@ -24,8 +24,11 @@ struct SpawnSpec {
     sf::Vector2f size;
     sf::Vector2f offset;
     bool centerVertically = false;
-    bool addSeamFilter = false; // = true for Block so that Player wont flickering 
+    bool addSeamFilter = false; // = true for Block so that Player wont flickering
     bool addController = false; // add controller for player
+    // Non-empty: ID of an AutotileTilesetDef that drives tile appearance.
+    // The WorldMap post-pass will resolve the correct sub-rect from the tileset.
+    std::string autotileId;
     std::shared_ptr<SpawnSpec> contents; // to contains other objects inside of it
 
     // Pipe-specific fields

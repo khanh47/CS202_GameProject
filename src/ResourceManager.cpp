@@ -8,8 +8,9 @@ ResourceManager &ResourceManager::getInstance() {
 }
 
 void ResourceManager::_preLoadTexture(const std::string &filename, const std::string &alias) {
+	_MappingAliasToFilename[alias] = filename;
 	if (_textures.find(filename) != _textures.end()) {
-		std::cerr << "Texture already loaded: " << filename << std::endl;
+		// std::cerr << "Texture already loaded: " << filename << std::endl;
 		return;
 	}
 
@@ -19,7 +20,6 @@ void ResourceManager::_preLoadTexture(const std::string &filename, const std::st
 	}
 
 	_textures[filename] = texture;
-	_MappingAliasToFilename[alias] = filename;
 }
 
 void ResourceManager::_preLoadFont(const std::string &filename, const std::string &alias) {
@@ -199,4 +199,23 @@ ResourceManager::ResourceManager() {
 	_preLoadTexture("assets/spritesheets/goal_flag_spritesheet.png", "goal_flag_spritesheet");
 	_preLoadTexture("assets/spritesheets/checkpoint_flag_spritesheet.png", "checkpoint_flag_spritesheet");
 	_preLoadTexture("assets/spritesheets/pipes_spritesheet.png", "pipes_spritesheet");
+
+	// ------------------------------------------------------------------
+	// Autotile tilesets
+	// ------------------------------------------------------------------
+	// Each entry below is the PLACEHOLDER using the existing brick texture.
+	// To use a real tileset, replace the file path with your PNG and keep
+	// the alias.  The alias must match the "texture" field in
+	// assets/datas/autotile_defs.json.
+	//
+	// Real tileset layout expected: 4 x 4 grid, each cell 64 x 64 px,
+	// masks 0-15 arranged left-to-right, top-to-bottom.
+	//
+	// Example (after adding your PNGs):
+	//   _preLoadTexture("assets/sprites/Tiles/grassland_autotile.png",  "at_grassland");
+	//   _preLoadTexture("assets/sprites/Tiles/castle_autotile.png",     "at_castle");
+	//   _preLoadTexture("assets/sprites/Tiles/underground_autotile.png","at_underground");
+	_preLoadTexture("assets/sprites/Tiles/0 Grassland.png", "at_grassland");
+	_preLoadTexture("assets/sprites/Tiles/1 Castle.png", "at_castle");
+	_preLoadTexture("assets/sprites/Tiles/3 Underground (with ice).png", "at_underground");
 }

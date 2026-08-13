@@ -16,11 +16,14 @@ public:
     void initialize(int gridWidth, int gridHeight, float cellSize);
 
     // Sets the texture for a specific grid cell (screen space col/row).
+    // texRect: sub-rectangle within the texture to sample.
+    //          Pass a zero-size rect (default) to use the full texture.
     void setTile(
         int col,
         int row,
         int tileId,
-        const sf::Texture* texture
+        const sf::Texture* texture,
+        sf::IntRect texRect = {}
     );
 
     // Clears all tile data
@@ -41,8 +44,10 @@ private:
     float _cellSize = 64.0f;
 
     struct TileInfo {
-        int tileId = 0;
+        int            tileId  = 0;
         const sf::Texture* texture = nullptr;
+        // Sub-rectangle within the texture. {0,0,0,0} means "full texture".
+        sf::IntRect    texRect = {};
     };
     std::vector<std::vector<TileInfo>> _tiles;
 

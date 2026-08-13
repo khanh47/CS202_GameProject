@@ -3,11 +3,16 @@
 #include <SFML/Graphics.hpp>
 #include <array>
 #include <box2d/box2d.h>
+#include <filesystem>
 #include <memory>
 #include <string>
+#include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 #include "Game/Objects/Projectile/FireballPool.h"
+#include "Game/World/AutotileResolver.h"
+#include "Game/World/AutotileTilesetDef.h"
 #include "Game/World/LevelDataLoader.h"
 #include "Game/World/TerrainSeamFilter.h"
 #include "Game/World/TileMap.h"
@@ -67,6 +72,7 @@ private:
 
     void createBoundaryWalls(PhysicsWorld& physicsWorld);
     void destroyBoundaryWalls();
+    void loadAutotileDefs(const std::filesystem::path& filePath);
 
     float _cellSize;
     int _gridWidth;
@@ -77,4 +83,7 @@ private:
     TileMap _tileMap;
     TerrainSeamFilter _terrainSeamFilter;
     std::vector<b2BodyId> _boundaryWalls;
+    // Autotiling
+    AutotileResolver _autotileResolver;
+    std::unordered_map<std::string, AutotileTilesetDef> _autotileDefs;
 };
