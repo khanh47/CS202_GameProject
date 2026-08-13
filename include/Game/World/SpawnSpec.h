@@ -1,9 +1,8 @@
 #pragma once
 
 #include <memory>
+#include <optional>
 #include <string>
-#include <unordered_map>
-#include <vector>
 
 #include <SFML/System/Vector2.hpp>
 #include <nlohmann/json.hpp>
@@ -17,28 +16,28 @@ enum class ObjectKind {
 };
 
 struct SpawnSpec {
-    ObjectKind kind = ObjectKind::Item;
+    // A missing object kind identifies a static tile prefab. Object prefabs
+    // carry a kind so the spawner can select the matching factory.
+    std::optional<ObjectKind> objectKind;
     std::string typeKey;
     std::string animationId;
     std::string textureKey;
-    sf::Vector2f size;
+    sf::Vector2f size{64.0f, 64.0f};
     sf::Vector2f offset;
     bool centerVertically = false;
-    bool addSeamFilter = false; // = true for Block so that Player wont flickering 
-    bool addController = false; // add controller for player
-    std::shared_ptr<SpawnSpec> contents; // to contains other objects inside of it
+    bool addSeamFilter = false;
+    bool addController = false;
+    bool solid = false;
+    std::shared_ptr<SpawnSpec> contents;
 
     // Pipe-specific fields
-    std::string pipeOrientation; // "vertical" or "horizontal"
-    std::string pipeEndSide;     // "top", "bottom", "left", "right"
-    int pipeBodyLength = 1;      // Number of repeating body segments
+    std::string pipeOrientation;
+    std::string pipeEndSide;
+    int pipeBodyLength = 1;
     bool pipeIsWarp = false;
     int warpID = -1;
     int warpTarget = -1;
-    bool contentsStatic = false; // Keep Pipe contents stationary
+    bool contentsStatic = false;
 };
 
 void from_json(const nlohmann::json& json, SpawnSpec& spec);
-std::unordered_map<int, std::vector<SpawnSpec>> parseSpawnSpecs(
-    const nlohmann::json& json
-);

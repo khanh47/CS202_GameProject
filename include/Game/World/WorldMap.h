@@ -29,6 +29,7 @@ public:
         int gridHeight = defaultGridHeight,
         float cellSize = defaultCellSize
     );
+    ~WorldMap();
 
     void rebuild(
         const LevelData& levelData,
@@ -40,6 +41,9 @@ public:
     );
 
     const TerrainSeamFilter& getTerrainSeamFilter() const noexcept {
+        return _terrainSeamFilter;
+    }
+    TerrainSeamFilter& getTerrainSeamFilter() noexcept {
         return _terrainSeamFilter;
     }
 
@@ -62,11 +66,16 @@ public:
     const std::string& getBackground() const noexcept { return _background; }
 
 private:
-    int logicYForMapRow(int mapRow) const noexcept;
     int screenYForMapRow(int mapRow) const noexcept;
 
     void createBoundaryWalls(PhysicsWorld& physicsWorld);
     void destroyBoundaryWalls();
+    void destroyTileCollisionObjects();
+    void createTileCollision(
+        PhysicsWorld& physicsWorld,
+        int column,
+        int screenRow
+    );
 
     float _cellSize;
     int _gridWidth;
@@ -76,5 +85,6 @@ private:
     std::string _background;
     TileMap _tileMap;
     TerrainSeamFilter _terrainSeamFilter;
+    std::vector<std::shared_ptr<GameObject>> _tileCollisionObjects;
     std::vector<b2BodyId> _boundaryWalls;
 };

@@ -1,32 +1,49 @@
 #include "Game/World/SpawnSpec.h"
 
+#include <algorithm>
+#include <cctype>
 #include <stdexcept>
+#include <string>
 
 namespace {
 ObjectKind parseKind(const nlohmann::json& json) {
-    const std::string kind = json.get<std::string>();
-    if (kind == "Block") {
+    std::string kind = json.get<std::string>();
+    std::transform(
+        kind.begin(),
+        kind.end(),
+        kind.begin(),
+        [](unsigned char character) {
+            return static_cast<char>(std::tolower(character));
+        }
+    );
+
+    if (kind == "block") {
         return ObjectKind::Block;
     }
-    if (kind == "Player") {
+    if (kind == "player") {
         return ObjectKind::Player;
     }
-    if (kind == "Enemy") {
+    if (kind == "enemy") {
         return ObjectKind::Enemy;
     }
-    if (kind == "Item") {
+    if (kind == "item") {
         return ObjectKind::Item;
     }
-    if (kind == "Pipe") {
+    if (kind == "pipe") {
         return ObjectKind::Pipe;
     }
     throw std::runtime_error("Unknown spawn kind: " + kind);
 }
 
-sf::Vector2f parseSize(const nlohmann::json& json) {
+sf::Vector2f parseVector2(
+    const nlohmann::json& json,
+    const char* fieldName
+) {
     if (!json.is_array() || json.size() != 2
         || !json[0].is_number() || !json[1].is_number()) {
-        throw std::runtime_error("Spawn size must be a [width, height] pair");
+        throw std::runtime_error(
+            std::string(fieldName) + " must be a [x, y] pair"
+        );
     }
     return {json[0].get<float>(), json[1].get<float>()};
 }
@@ -36,30 +53,35 @@ void from_json(const nlohmann::json& json, SpawnSpec& spec) {
     if (!json.is_object()) {
         throw std::runtime_error("Spawn spec must be a JSON object");
     }
-    if (!json.contains("kind")) {
-        throw std::runtime_error("Spawn spec is missing required field: kind");
+
+    spec = SpawnSpec{};
+    if (json.contains("kind")) {
+        spec.objectKind = parseKind(json["kind"]);
     }
-    if (!json.contains("typeKey")) {
+    if (spec.objectKind && !json.contains("typeKey")) {
         throw std::runtime_error("Spawn spec is missing required field: typeKey");
     }
-    if (!json.contains("texture")) {
+    if (spec.objectKind && !json.contains("texture")) {
         throw std::runtime_error("Spawn spec is missing required field: texture");
     }
-    if (!json.contains("size")) {
-        throw std::runtime_error("Spawn spec is missing required field: size");
+    if (json.contains("size")) {
+        spec.size = parseVector2(json["size"], "Spawn size");
     }
 
-    spec.kind = parseKind(json["kind"]);
-    spec.typeKey = json["typeKey"].get<std::string>();
-    spec.textureKey = json["texture"].get<std::string>();
-    spec.size = parseSize(json["size"]);
+    spec.typeKey = json.value("typeKey", "");
+    spec.textureKey = json.value("texture", "");
 
     spec.animationId = json.value("animationId", "");
     if (json.contains("offset")) {
-        spec.offset = parseSize(json["offset"]);
+        spec.offset = parseVector2(json["offset"], "Spawn offset");
     }
     spec.centerVertically = json.value("centerVertically", false);
     spec.addSeamFilter = json.value("addSeamFilter", false);
+    spec.addController = json.value("addController", false);
+    spec.solid = json.value(
+        "solid",
+        !spec.objectKind.has_value()
+    );
 
     // Pipe-specific fields
     spec.pipeOrientation = json.value("pipeOrientation", "");
@@ -69,10 +91,14 @@ void from_json(const nlohmann::json& json, SpawnSpec& spec) {
     spec.warpID = json.value("warpID", -1);
     spec.warpTarget = json.value("warpTarget", -1);
     spec.contentsStatic = json.value("contentsStatic", false);
-    spec.addController = json.value("addController", false);
 
     if (json.contains("contents")) {
         if (json["contents"].is_null()) {
+            spec.contents.reset();
+        } else if (json["contents"].is_string()) {
+            // A string is a prefab reference. PrefabRegistry resolves it
+            // after this value has been parsed, so inline contents and
+            // reusable contents use the same SpawnSpec representation.
             spec.contents.reset();
         } else {
             spec.contents = std::make_shared<SpawnSpec>(
@@ -80,30 +106,4 @@ void from_json(const nlohmann::json& json, SpawnSpec& spec) {
             );
         }
     }
-}
-
-std::unordered_map<int, std::vector<SpawnSpec>> parseSpawnSpecs(
-    const nlohmann::json& json
-) {
-    std::unordered_map<int, std::vector<SpawnSpec>> result;
-    if (!json.is_array()) {
-        throw std::runtime_error("Spawn definitions must be an array");
-    }
-
-    for (const auto& entry : json) {
-        if (!entry.is_object() || !entry.contains("id")
-            || !entry["id"].is_number_integer()) {
-            throw std::runtime_error(
-                "Every spawn definition must have an integer id"
-            );
-        }
-        const int id = entry["id"].get<int>();
-        if (id <= 0) {
-            throw std::runtime_error("Spawn id must be positive: " + std::to_string(id));
-        }
-
-        const SpawnSpec spec = entry.get<SpawnSpec>();
-        result[id].push_back(spec);
-    }
-    return result;
 }

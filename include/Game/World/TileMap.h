@@ -3,10 +3,9 @@
 #include <SFML/Graphics.hpp>
 #include <vector>
 
-// TileMap manages static map tile graphics using SFML 3 Vertex Arrays.
-// Performs tile culling (frustum culling) to batch draw calls for visible tiles.
-// Tiles may reference different textures; geometry is grouped into one batch
-// per texture so the layer can mix multiple tile sheets.
+// TileMap is the rendering half of the tile layer. It owns a dense character
+// grid and texture references, but it never creates game objects or physics
+// bodies. WorldMap owns the separate collision representation.
 class TileMap : public sf::Drawable {
 public:
     TileMap();
@@ -19,7 +18,7 @@ public:
     void setTile(
         int col,
         int row,
-        int tileId,
+        char tileCharacter,
         const sf::Texture* texture
     );
 
@@ -29,8 +28,8 @@ public:
     // Rebuilds the internal vertex arrays containing only visible tiles within view bounds
     void updateVisibleVertices(const sf::View& view);
 
-    // Returns tile ID at specified grid cell
-    int getTileId(int col, int row) const;
+    // Returns the dense tile character at a specified grid cell.
+    char getTile(int col, int row) const;
 
 private:
     // Overridden from sf::Drawable to draw batched vertices grouped by texture
@@ -40,11 +39,8 @@ private:
     int _gridHeight = 0;
     float _cellSize = 64.0f;
 
-    struct TileInfo {
-        int tileId = 0;
-        const sf::Texture* texture = nullptr;
-    };
-    std::vector<std::vector<TileInfo>> _tiles;
+    std::vector<char> _tiles;
+    std::vector<const sf::Texture*> _textures;
 
     struct Batch {
         const sf::Texture* texture = nullptr;
