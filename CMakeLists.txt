@@ -81,6 +81,18 @@ if(BUILD_TESTING)
     )
 
     add_test(
+        NAME MarioAiEvalVsHeuristicSmoke
+        COMMAND MarioAiTrainer
+            --test-model "${CMAKE_SOURCE_DIR}/assets/ai/minigame.json"
+            --rounds 2
+            --max-steps 60
+    )
+    set_tests_properties(MarioAiEvalVsHeuristicSmoke PROPERTIES
+        WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+        TIMEOUT 60
+    )
+
+    add_test(
         NAME MarioAiTrainerOutputLoads
         COMMAND MarioAiTests
             --model "${CMAKE_BINARY_DIR}/ai-smoke-model.json"

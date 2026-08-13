@@ -12,7 +12,8 @@ enum class GameMode {
 
 enum class MinigameMode {
     TwoPlayer,
-    VsAi
+    VsAi,
+    VsHeuristic
 };
 
 class GameSettings {

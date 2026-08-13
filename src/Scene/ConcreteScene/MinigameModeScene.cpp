@@ -112,6 +112,19 @@ void MinigameModeScene::_setupButtons() {
         }
     ));
 
+    _buttonMenu.addButtonAuto("VS Heuristic", std::make_unique<FunctionalCommand>(
+        "VS Heuristic", [this]() {
+            GameSettings::getInstance().minigameMode = MinigameMode::VsHeuristic;
+            std::string modeDir = "ai";
+            if (auto mgr = getSceneManager()) {
+                mgr->pushScene(std::make_unique<InGameScene>(
+                    "assets/datas/minigames/" + modeDir + "/"
+                    + _mapPath + ".json"
+                ));
+            }
+        }
+    ));
+
     _buttonMenu.addButtonAuto("Back", std::make_unique<FunctionalCommand>(
         "Back", [this]() {
             if (auto mgr = getSceneManager()) {

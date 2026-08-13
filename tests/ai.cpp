@@ -12,6 +12,7 @@
 
 #include "Game/AI/AiGenomeCodec.h"
 #include "Game/AI/AiPlayerController.h"
+#include "Game/AI/HeuristicAiController.h"
 #include "Game/GameSettings.h"
 #include "Game/Minigame/MinigameTypes.h"
 #include "Game/Objects/Player/Player.h"
@@ -19,14 +20,22 @@
 #include "Game/World/LevelDataLoader.h"
 
 namespace {
+enum class EvaluationOpponent {
+    GenomeLeague,
+    Heuristic
+};
+
 struct TrainerConfig {
     std::filesystem::path mapPath =
         "assets/datas/minigames/ai/minigame.json";
     std::filesystem::path outputPath = "assets/ai/minigame.json";
+    std::filesystem::path modelPath;
     int populationSize = 64;
     int generations = 150;
     int maximumSteps = 900;
+    int rounds = 20;
     unsigned int seed = 1337;
+    EvaluationOpponent opponent = EvaluationOpponent::GenomeLeague;
 };
 
 constexpr float fixedDt = 1.0f / 60.0f;
@@ -57,8 +66,15 @@ TrainerConfig parseArguments(int argc, char** argv) {
                 << "  --population N\n"
                 << "  --generations N\n"
                 << "  --max-steps N\n"
-                << "  --seed N\n";
+                << "  --seed N\n"
+                << "  --heuristic-opponent\n"
+                << "  --test-model PATH\n"
+                << "  --rounds N\n";
             std::exit(0);
+        }
+        if (option == "--heuristic-opponent") {
+            config.opponent = EvaluationOpponent::Heuristic;
+            continue;
         }
         if (index + 1 >= argc) {
             throw std::runtime_error(std::string(option) + " requires a value");
@@ -68,6 +84,10 @@ TrainerConfig parseArguments(int argc, char** argv) {
             config.mapPath = value;
         } else if (option == "--output") {
             config.outputPath = value;
+        } else if (option == "--test-model") {
+            config.modelPath = value;
+        } else if (option == "--rounds") {
+            config.rounds = parsePositiveInt(value, "--rounds");
         } else if (option == "--population") {
             config.populationSize = parsePositiveInt(value, "--population");
         } else if (option == "--generations") {
@@ -82,7 +102,7 @@ TrainerConfig parseArguments(int argc, char** argv) {
             throw std::runtime_error("Unknown option: " + std::string(option));
         }
     }
-    if (config.populationSize < 2) {
+    if (config.modelPath.empty() && config.populationSize < 2) {
         throw std::runtime_error("Population must contain at least two genomes");
     }
     return config;
@@ -140,9 +160,25 @@ bool candidateLost(MinigameResult result, PlayerSlot candidateSlot) {
             && candidateSlot == PlayerSlot::One);
 }
 
-float playEpisode(
+std::unique_ptr<IPlayerController> makeController(
+    const AiGenome& genome,
+    bool heuristic,
+    Player& self,
+    Player& opponent,
+    GameWorld& world
+) {
+    if (heuristic) {
+        return std::make_unique<HeuristicAiController>(self, opponent, world);
+    }
+    return std::make_unique<AiPlayerController>(
+        self, opponent, world, AiPolicy(genome)
+    );
+}
+
+MinigameResult playEpisodeResult(
     const AiGenome& candidate,
     const AiGenome& opponentGenome,
+    EvaluationOpponent opponentKind,
     PlayerSlot candidateSlot,
     const LevelData& levelData,
     int maximumSteps
@@ -156,15 +192,66 @@ float playEpisode(
         throw std::runtime_error("Training level must contain player slots one and two");
     }
 
+    const bool opponentIsHeuristic = opponentKind == EvaluationOpponent::Heuristic;
     const AiGenome& playerOneGenome = candidateSlot == PlayerSlot::One
         ? candidate : opponentGenome;
     const AiGenome& playerTwoGenome = candidateSlot == PlayerSlot::Two
         ? candidate : opponentGenome;
-    world.addController(std::make_unique<AiPlayerController>(
-        *playerOne, *playerTwo, world, AiPolicy(playerOneGenome)
+    world.addController(makeController(
+        playerOneGenome,
+        opponentIsHeuristic && candidateSlot == PlayerSlot::Two,
+        *playerOne, *playerTwo, world
     ));
-    world.addController(std::make_unique<AiPlayerController>(
-        *playerTwo, *playerOne, world, AiPolicy(playerTwoGenome)
+    world.addController(makeController(
+        playerTwoGenome,
+        opponentIsHeuristic && candidateSlot == PlayerSlot::One,
+        *playerTwo, *playerOne, world
+    ));
+
+    for (int step = 0; step < maximumSteps; ++step) {
+        world.updateSimulation(fixedDt);
+        if (world.getMinigameResult() != MinigameResult::Running) {
+            break;
+        }
+    }
+
+    if (world.getMinigameResult() == MinigameResult::Running) {
+        world.finishMinigameAsTimeout();
+    }
+    return world.getMinigameResult();
+}
+
+float playEpisode(
+    const AiGenome& candidate,
+    const AiGenome& opponentGenome,
+    EvaluationOpponent opponentKind,
+    PlayerSlot candidateSlot,
+    const LevelData& levelData,
+    int maximumSteps
+) {
+    GameWorld world;
+    world.loadMap(levelData);
+
+    const std::shared_ptr<Player> playerOne = world.getPlayer(PlayerSlot::One);
+    const std::shared_ptr<Player> playerTwo = world.getPlayer(PlayerSlot::Two);
+    if (!playerOne || !playerTwo) {
+        throw std::runtime_error("Training level must contain player slots one and two");
+    }
+
+    const bool opponentIsHeuristic = opponentKind == EvaluationOpponent::Heuristic;
+    const AiGenome& playerOneGenome = candidateSlot == PlayerSlot::One
+        ? candidate : opponentGenome;
+    const AiGenome& playerTwoGenome = candidateSlot == PlayerSlot::Two
+        ? candidate : opponentGenome;
+    world.addController(makeController(
+        playerOneGenome,
+        opponentIsHeuristic && candidateSlot == PlayerSlot::Two,
+        *playerOne, *playerTwo, world
+    ));
+    world.addController(makeController(
+        playerTwoGenome,
+        opponentIsHeuristic && candidateSlot == PlayerSlot::One,
+        *playerTwo, *playerOne, world
     ));
 
     Player& candidatePlayer = candidateSlot == PlayerSlot::One
@@ -238,22 +325,38 @@ void evaluatePopulation(
     const std::vector<AiGenome>& hallOfFame,
     const LevelData& levelData,
     int maximumSteps,
+    EvaluationOpponent opponentKind,
     std::mt19937& random
 ) {
     for (AiGenome& candidate : population) {
-        const std::vector<AiGenome> opponents = selectLeague(
-            population, hallOfFame, random
-        );
         float totalFitness = 0.0f;
         int episodeCount = 0;
-        for (const AiGenome& opponent : opponents) {
+        if (opponentKind == EvaluationOpponent::Heuristic) {
+            const AiGenome noGenome;
             totalFitness += playEpisode(
-                candidate, opponent, PlayerSlot::One, levelData, maximumSteps
+                candidate, noGenome, opponentKind, PlayerSlot::One,
+                levelData, maximumSteps
             );
             totalFitness += playEpisode(
-                candidate, opponent, PlayerSlot::Two, levelData, maximumSteps
+                candidate, noGenome, opponentKind, PlayerSlot::Two,
+                levelData, maximumSteps
             );
             episodeCount += 2;
+        } else {
+            const std::vector<AiGenome> opponents = selectLeague(
+                population, hallOfFame, random
+            );
+            for (const AiGenome& opponent : opponents) {
+                totalFitness += playEpisode(
+                    candidate, opponent, opponentKind, PlayerSlot::One,
+                    levelData, maximumSteps
+                );
+                totalFitness += playEpisode(
+                    candidate, opponent, opponentKind, PlayerSlot::Two,
+                    levelData, maximumSteps
+                );
+                episodeCount += 2;
+            }
         }
         candidate.fitness = totalFitness / static_cast<float>(episodeCount);
     }
@@ -321,11 +424,68 @@ void createNextGeneration(
     }
     population = std::move(next);
 }
+
+std::string_view resultName(MinigameResult result) {
+    switch (result) {
+        case MinigameResult::Running: return "running";
+        case MinigameResult::PlayerOneWon: return "player one won";
+        case MinigameResult::PlayerTwoWon: return "player two won";
+        case MinigameResult::Draw: return "draw";
+        case MinigameResult::Timeout: return "timeout";
+    }
+    return "unknown";
+}
+
+int runEvaluation(const TrainerConfig& config) {
+    const AiGenome model = AiGenomeCodec::load(config.modelPath);
+    const LevelData levelData = LevelDataLoader::load(config.mapPath);
+
+    GameSettings& settings = GameSettings::getInstance();
+    settings.gameMode = GameMode::Minigame;
+    settings.minigameMode = MinigameMode::VsAi;
+
+    int wins = 0;
+    int losses = 0;
+    int draws = 0;
+    int timeouts = 0;
+    for (int round = 0; round < config.rounds; ++round) {
+        for (const PlayerSlot slot : {PlayerSlot::One, PlayerSlot::Two}) {
+            const MinigameResult result = playEpisodeResult(
+                model, model, EvaluationOpponent::Heuristic,
+                slot, levelData, config.maximumSteps
+            );
+            if (candidateWon(result, slot)) {
+                ++wins;
+            } else if (candidateLost(result, slot)) {
+                ++losses;
+            } else if (result == MinigameResult::Draw) {
+                ++draws;
+            } else {
+                ++timeouts;
+            }
+            std::cout << "Round " << round << " slot "
+                      << static_cast<int>(slot)
+                      << ": " << resultName(result) << '\n';
+        }
+    }
+
+    const int total = wins + losses + draws + timeouts;
+    const float winRate = total > 0 ? 100.0f * wins / static_cast<float>(total) : 0.0f;
+    std::cout << "Model vs heuristic: " << wins << " wins, " << losses
+              << " losses, " << draws << " draws, " << timeouts
+              << " timeouts (" << winRate << "% win rate over " << total
+              << " episodes)\n";
+    return 0;
+}
 }
 
 int main(int argc, char** argv) {
     try {
         const TrainerConfig config = parseArguments(argc, argv);
+        if (!config.modelPath.empty()) {
+            return runEvaluation(config);
+        }
+
         GameSettings& settings = GameSettings::getInstance();
         settings.gameMode = GameMode::Minigame;
         settings.minigameMode = MinigameMode::VsAi;
@@ -346,6 +506,7 @@ int main(int argc, char** argv) {
                 hallOfFame,
                 levelData,
                 config.maximumSteps,
+                config.opponent,
                 random
             );
             std::sort(

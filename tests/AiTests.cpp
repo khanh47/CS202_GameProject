@@ -8,6 +8,7 @@
 
 #include "Game/AI/AiGenomeCodec.h"
 #include "Game/AI/AiPlayerController.h"
+#include "Game/AI/HeuristicAiController.h"
 #include "Game/Behaviours/Moveable.h"
 #include "Game/GameSettings.h"
 #include "Game/Minigame/MinigameContactRules.h"
@@ -239,6 +240,92 @@ std::string trainingMapPath() {
         + "/assets/datas/minigames/ai/minigame.json";
 }
 
+void testHeuristicControllerDecisions() {
+    AiObservation observation;
+    observation.selfGrounded = 1.0f;
+
+    observation.opponentX = 0.5f;
+    const AiAction towardRight = HeuristicAiController::decide(observation);
+    expect(
+        towardRight.horizontal == 1,
+        "heuristic chases an opponent on the right"
+    );
+
+    observation.opponentX = -0.5f;
+    const AiAction towardLeft = HeuristicAiController::decide(observation);
+    expect(
+        towardLeft.horizontal == -1,
+        "heuristic chases an opponent on the left"
+    );
+
+    observation.selfX = 0.0f;
+    observation.opponentX = 0.1f;
+    const AiAction groundedAligned = HeuristicAiController::decide(observation);
+    expect(
+        groundedAligned.jump,
+        "grounded aligned heuristic jumps toward the opponent"
+    );
+
+    observation.selfGrounded = 0.0f;
+    const AiAction airborne = HeuristicAiController::decide(observation);
+    expect(
+        !airborne.jump,
+        "airborne heuristic releases jump"
+    );
+
+    observation.selfGrounded = 1.0f;
+    observation.opponentX = 0.3f;
+    observation.opponentY = -0.4f;
+    observation.selfY = 0.1f;
+    const AiAction evasive = HeuristicAiController::decide(observation);
+    expect(
+        evasive.horizontal == -1,
+        "heuristic retreats when the opponent is above and close"
+    );
+
+    observation.opponentX = 0.6f;
+    observation.opponentY = 0.1f;
+    observation.selfY = 0.1f;
+    observation.selfX = 0.95f;
+    const AiAction edgeEscape = HeuristicAiController::decide(observation);
+    expect(
+        edgeEscape.horizontal == -1,
+        "heuristic steers away from the arena edge"
+    );
+}
+
+void testHeuristicControllerEpisode() {
+    GameSettings& settings = GameSettings::getInstance();
+    settings.gameMode = GameMode::Minigame;
+    settings.minigameMode = MinigameMode::VsAi;
+
+    GameWorld world;
+    world.loadLevel(trainingMapPath());
+    const std::shared_ptr<Player> one = world.getPlayer(PlayerSlot::One);
+    const std::shared_ptr<Player> two = world.getPlayer(PlayerSlot::Two);
+    expect(one != nullptr, "heuristic episode exposes player slot one");
+    expect(two != nullptr, "heuristic episode exposes player slot two");
+    if (!one || !two) {
+        return;
+    }
+
+    world.addController(std::make_unique<HeuristicAiController>(*one, *two, world));
+    world.addController(std::make_unique<HeuristicAiController>(*two, *one, world));
+
+    bool crashed = false;
+    try {
+        for (int step = 0; step < 600; ++step) {
+            world.updateSimulation(1.0f / 60.0f);
+        }
+    } catch (const std::exception&) {
+        crashed = true;
+    }
+    expect(
+        !crashed,
+        "heuristic versus heuristic episode runs without exceptions"
+    );
+}
+
 void testSlotsAndResults() {
     GameSettings& settings = GameSettings::getInstance();
     settings.gameMode = GameMode::Minigame;
@@ -334,6 +421,8 @@ int main(int argc, char** argv) {
     testStompContactRule();
     testControllerOrdering();
     testSlotsAndResults();
+    testHeuristicControllerDecisions();
+    testHeuristicControllerEpisode();
     if (failures == 0) {
         std::cout << "All AI tests passed\n";
     }

@@ -4,6 +4,7 @@
 #include "Game/Behaviours/Animatable.h"
 #include "Game/AI/AiGenomeCodec.h"
 #include "Game/AI/AiPlayerController.h"
+#include "Game/AI/HeuristicAiController.h"
 #include "Game/Minigame/MinigameTypes.h"
 #include "Game/Objects/Player/Player.h"
 #include "ResourceManager.h"
@@ -45,13 +46,11 @@ void InGameScene::init() {
     _gameWorld.setScoreManager(&_scoreManager); // Set score manager for the game world
 
     const GameSettings& settings = GameSettings::getInstance();
-    if (settings.gameMode == GameMode::Minigame
-        && settings.minigameMode == MinigameMode::VsAi) {
+    const bool vsBot = settings.gameMode == GameMode::Minigame
+        && (settings.minigameMode == MinigameMode::VsAi
+            || settings.minigameMode == MinigameMode::VsHeuristic);
+    if (vsBot) {
         try {
-            const std::string mapId = std::filesystem::path(_name).stem().string();
-            AiPolicy policy(AiGenomeCodec::load(
-                "assets/ai/" + mapId + ".json"
-            ));
             const std::shared_ptr<Player> human =
                 _gameWorld.getPlayer(PlayerSlot::One);
             const std::shared_ptr<Player> ai =
@@ -61,9 +60,20 @@ void InGameScene::init() {
                     "VS AI level must contain player slots one and two"
                 );
             }
-            _gameWorld.addController(std::make_unique<AiPlayerController>(
-                *ai, *human, _gameWorld, std::move(policy)
-            ));
+            if (settings.minigameMode == MinigameMode::VsHeuristic) {
+                _gameWorld.addController(std::make_unique<HeuristicAiController>(
+                    *ai, *human, _gameWorld
+                ));
+            } else {
+                const std::string mapId =
+                    std::filesystem::path(_name).stem().string();
+                AiPolicy policy(AiGenomeCodec::load(
+                    "assets/ai/" + mapId + ".json"
+                ));
+                _gameWorld.addController(std::make_unique<AiPlayerController>(
+                    *ai, *human, _gameWorld, std::move(policy)
+                ));
+            }
         } catch (const std::exception& error) {
             _winActive = true;
             _winTitle->setString("AI MODEL ERROR");
@@ -180,14 +190,16 @@ void InGameScene::_checkMinigameEnd() {
     }
 
     _winActive = true;
-    const bool vsAi = GameSettings::getInstance().minigameMode
-        == MinigameMode::VsAi;
+    const bool vsBot = GameSettings::getInstance().minigameMode
+        == MinigameMode::VsAi
+        || GameSettings::getInstance().minigameMode
+            == MinigameMode::VsHeuristic;
     switch (result) {
         case MinigameResult::PlayerOneWon:
-            _winTitle->setString(vsAi ? "YOU WIN!" : "PLAYER 1 WINS!");
+            _winTitle->setString(vsBot ? "YOU WIN!" : "PLAYER 1 WINS!");
             break;
         case MinigameResult::PlayerTwoWon:
-            _winTitle->setString(vsAi ? "AI WINS!" : "PLAYER 2 WINS!");
+            _winTitle->setString(vsBot ? "AI WINS!" : "PLAYER 2 WINS!");
             break;
         case MinigameResult::Draw:
         case MinigameResult::Timeout:

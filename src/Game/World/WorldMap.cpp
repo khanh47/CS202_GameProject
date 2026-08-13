@@ -99,7 +99,8 @@ void spawnFromSpec(
                 mario->setGameWorld(context.gameWorld);
                 const bool aiOwnsPlayerTwo =
                     settings.gameMode == GameMode::Minigame
-                    && settings.minigameMode == MinigameMode::VsAi
+                    && (settings.minigameMode == MinigameMode::VsAi
+                        || settings.minigameMode == MinigameMode::VsHeuristic)
                     && spec.playerSlot == PlayerSlot::Two;
                 if (spec.addController && !aiOwnsPlayerTwo) {
                     const bool useWasd =
