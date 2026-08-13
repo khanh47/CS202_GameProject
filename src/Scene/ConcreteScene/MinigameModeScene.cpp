@@ -76,9 +76,7 @@ void MinigameModeScene::_setupButtons() {
         "2 Player", [this]() {
             GameSettings::getInstance().minigameMode = MinigameMode::TwoPlayer;
             std::string modeDir = "2p";
-            if (GameSettings::getInstance().minigameMode == MinigameMode::VsAi) {
-                modeDir = "vsai";
-            }
+
             if (auto mgr = getSceneManager()) {
                 mgr->pushScene(std::make_unique<InGameScene>(
                     "assets/datas/minigames/" + modeDir + "/" + _mapPath + ".json"));
@@ -89,7 +87,12 @@ void MinigameModeScene::_setupButtons() {
     _buttonMenu.addButtonAuto("VS AI", std::make_unique<FunctionalCommand>(
         "VS AI", [this]() {
             GameSettings::getInstance().minigameMode = MinigameMode::VsAi;
-            _showComingSoon = true;
+            std::string modeDir = "ai";
+
+            if (auto mgr = getSceneManager()) {
+                mgr->pushScene(std::make_unique<InGameScene>(
+                    "assets/datas/minigames/" + modeDir + "/" + _mapPath + ".json"));
+            }
         }
     ));
 

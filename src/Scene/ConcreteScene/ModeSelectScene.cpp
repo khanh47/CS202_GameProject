@@ -75,7 +75,7 @@ void ModeSelectScene::_setupButtons() {
         "Minigames", [this]() {
             GameSettings::getInstance().gameMode = GameMode::Minigame;
             if (auto mgr = getSceneManager()) {
-                mgr->pushScene(std::make_unique<MinigameModeScene>("minigame-2"));
+                mgr->pushScene(std::make_unique<MinigameModeScene>("minigame"));
             }
         }
     ));
