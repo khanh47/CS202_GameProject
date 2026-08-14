@@ -192,6 +192,10 @@ void WorldMap::rebuild(
     // their own sprites and physics bodies; static terrain remains entirely
     // owned by TileMap plus the one collision body created above.
     if (hasAutotiles) {
+        // Build DSU connected-component map so resolve() can use
+        // component-relative posInRow for correct wave alternation.
+        _autotileResolver.precompute(screenGrid, _gridWidth, _gridHeight, solidIds);
+
         for (int mapRow = 0; mapRow < _loadedRows; ++mapRow) {
             const int screenRow = screenYForMapRow(mapRow);
             const int columns = std::min(
@@ -224,15 +228,7 @@ void WorldMap::rebuild(
                 const auto definitionIt = _autotileDefs.find(
                     spec.autotileId
                 );
-                if (definitionIt == _autotileDefs.end()
-                    || _autotileResolver.isFloating(
-                        screenGrid,
-                        column,
-                        screenRow,
-                        _gridWidth,
-                        _gridHeight,
-                        solidIds
-                    )) {
+                if (definitionIt == _autotileDefs.end()) {
                     _tileMap.setTile(
                         column,
                         screenRow,
@@ -251,7 +247,7 @@ void WorldMap::rebuild(
                     screenRow,
                     symbol,
                     &autotileTexture,
-                    _autotileResolver.resolve(
+                    _autotileResolver.resolveDetailed(
                         screenGrid,
                         column,
                         screenRow,
@@ -259,7 +255,7 @@ void WorldMap::rebuild(
                         _gridHeight,
                         solidIds,
                         definition
-                    )
+                    ).texRect
                 );
             }
         }

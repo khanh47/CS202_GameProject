@@ -215,7 +215,7 @@ ResourceManager::ResourceManager() {
 	//   _preLoadTexture("assets/sprites/Tiles/grassland_autotile.png",  "at_grassland");
 	//   _preLoadTexture("assets/sprites/Tiles/castle_autotile.png",     "at_castle");
 	//   _preLoadTexture("assets/sprites/Tiles/underground_autotile.png","at_underground");
-	_preLoadTexture("assets/sprites/Tiles/0 Grassland.png", "at_grassland");
-	_preLoadTexture("assets/sprites/Tiles/1 Castle.png", "at_castle");
-	_preLoadTexture("assets/sprites/Tiles/3 Underground (with ice).png", "at_underground");
+	_preLoadTexture("assets/sprites/Tilesets/transparent_grassland_autotile.png", "at_grassland");
+	_preLoadTexture("assets/sprites/Tilesets/transparent_castle_autotile.png", "at_castle");
+	_preLoadTexture("assets/sprites/Tilesets/transparent_underground_autotile.png", "at_underground");
 }
