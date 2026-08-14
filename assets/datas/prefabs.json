@@ -160,6 +160,10 @@
             "size": [
                 48,
                 96
+            ],
+            "offset": [
+                0,
+                -16
             ]
         },
         "item_mega_coin": {
