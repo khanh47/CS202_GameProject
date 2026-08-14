@@ -7,7 +7,6 @@
 #include <memory>
 #include <string>
 #include <unordered_map>
-#include <unordered_set>
 #include <vector>
 
 #include "Game/Objects/Projectile/FireballPool.h"
@@ -34,6 +33,7 @@ public:
         int gridHeight = defaultGridHeight,
         float cellSize = defaultCellSize
     );
+    ~WorldMap();
 
     void rebuild(
         const LevelData& levelData,
@@ -45,6 +45,9 @@ public:
     );
 
     const TerrainSeamFilter& getTerrainSeamFilter() const noexcept {
+        return _terrainSeamFilter;
+    }
+    TerrainSeamFilter& getTerrainSeamFilter() noexcept {
         return _terrainSeamFilter;
     }
 
@@ -67,12 +70,17 @@ public:
     const std::string& getBackground() const noexcept { return _background; }
 
 private:
-    int logicYForMapRow(int mapRow) const noexcept;
     int screenYForMapRow(int mapRow) const noexcept;
+    void loadAutotileDefs(const std::filesystem::path& path);
 
     void createBoundaryWalls(PhysicsWorld& physicsWorld);
     void destroyBoundaryWalls();
-    void loadAutotileDefs(const std::filesystem::path& filePath);
+    void destroyTileCollisionObjects();
+    void createTileCollision(
+        PhysicsWorld& physicsWorld,
+        int column,
+        int screenRow
+    );
 
     float _cellSize;
     int _gridWidth;
@@ -81,9 +89,9 @@ private:
     int _loadedRows = 0;
     std::string _background;
     TileMap _tileMap;
-    TerrainSeamFilter _terrainSeamFilter;
-    std::vector<b2BodyId> _boundaryWalls;
-    // Autotiling
-    AutotileResolver _autotileResolver;
     std::unordered_map<std::string, AutotileTilesetDef> _autotileDefs;
+    AutotileResolver _autotileResolver;
+    TerrainSeamFilter _terrainSeamFilter;
+    std::vector<std::shared_ptr<GameObject>> _tileCollisionObjects;
+    std::vector<b2BodyId> _boundaryWalls;
 };

@@ -6,107 +6,189 @@
 
 #include <nlohmann/json.hpp>
 
-LevelData LevelDataLoader::load(
-    const std::filesystem::path& filePath,
-    int maximumWidth,
-    int maximumHeight,
-    const std::filesystem::path& sharedSpawnsPath
+namespace {
+void loadPrefabDefinitions(
+    const nlohmann::json& document,
+    PrefabRegistry& registry
 ) {
-    if (maximumWidth <= 0 || maximumHeight <= 0) {
-        throw std::invalid_argument("Level limits must be positive");
+    if (!document.is_object() || !document.contains("prefabs")) {
+        throw std::runtime_error(
+            "Prefab document must contain a prefabs object or array"
+        );
     }
 
+    const nlohmann::json& prefabs = document["prefabs"];
+    if (prefabs.is_object()) {
+        for (const auto& [prefabId, definition] : prefabs.items()) {
+            registry.registerPrefab(prefabId, definition);
+        }
+        return;
+    }
+
+    if (prefabs.is_array()) {
+        for (const auto& entry : prefabs) {
+            if (!entry.is_object() || !entry.contains("id")
+                || !entry["id"].is_string()) {
+                throw std::runtime_error(
+                    "Every prefab array entry must contain a string id"
+                );
+            }
+            const std::string prefabId = entry["id"].get<std::string>();
+            nlohmann::json definition = entry;
+            definition.erase("id");
+            registry.registerPrefab(prefabId, definition);
+        }
+        return;
+    }
+
+    throw std::runtime_error("prefabs must be a JSON object or array");
+}
+
+nlohmann::json readJsonFile(const std::filesystem::path& filePath) {
     std::ifstream input(filePath);
     if (!input) {
-        throw std::runtime_error("Unable to open level file: " + filePath.string());
+        throw std::runtime_error(
+            "Unable to open JSON file: " + filePath.string()
+        );
     }
 
     nlohmann::json document;
     try {
         input >> document;
     } catch (const nlohmann::json::exception& error) {
-        throw std::runtime_error("Malformed level JSON: " + std::string(error.what()));
+        throw std::runtime_error(
+            "Malformed JSON in '" + filePath.string() + "': "
+            + std::string(error.what())
+        );
     }
+    return document;
+}
+
+void parseTileMapping(
+    const nlohmann::json& json,
+    LevelData& levelData
+) {
+    if (!json.is_object() || json.empty()) {
+        throw std::runtime_error("tileMapping must be a non-empty object");
+    }
+
+    for (const auto& [tileCharacter, prefabId] : json.items()) {
+        if (tileCharacter.size() != 1
+            || static_cast<unsigned char>(tileCharacter.front()) > 0x7F
+            || !prefabId.is_string()) {
+            throw std::runtime_error(
+                "Every tileMapping entry must map one ASCII character to a prefab id"
+            );
+        }
+        levelData.tileMapping.insert_or_assign(
+            tileCharacter.front(),
+            prefabId.get<std::string>()
+        );
+    }
+}
+
+void parseLayer(
+    const nlohmann::json& json,
+    int maximumWidth,
+    int maximumHeight,
+    LevelData& levelData
+) {
+    if (!json.is_array() || json.empty()
+        || json.size() > static_cast<std::size_t>(maximumHeight)) {
+        throw std::runtime_error(
+            "layer must be a non-empty array within the configured height"
+        );
+    }
+
+    std::size_t expectedWidth = 0;
+    for (const auto& rowJson : json) {
+        if (!rowJson.is_string()) {
+            throw std::runtime_error("Every layer row must be a string");
+        }
+
+        const std::string row = rowJson.get<std::string>();
+        if (row.empty() || row.size() > static_cast<std::size_t>(maximumWidth)) {
+            throw std::runtime_error(
+                "Every layer row must be a dense string within the configured width"
+                " (row width=" + std::to_string(row.size())
+                + ", maximum=" + std::to_string(maximumWidth) + ")"
+            );
+        }
+        if (expectedWidth == 0) {
+            expectedWidth = row.size();
+        } else if (row.size() != expectedWidth) {
+            throw std::runtime_error(
+                "layer must be rectangular; all rows need the same width"
+            );
+        }
+
+        for (const char tileCharacter : row) {
+            if (levelData.tileMapping.find(tileCharacter)
+                == levelData.tileMapping.end()) {
+                throw std::runtime_error(
+                    std::string("layer contains unmapped character: '")
+                    + tileCharacter + "'"
+                );
+            }
+        }
+        levelData.layer.push_back(row);
+    }
+}
+
+void validatePrefabReferences(const LevelData& levelData) {
+    for (const auto& [mapCharacter, prefabId] : levelData.tileMapping) {
+        (void)mapCharacter;
+        // A single mapping is intentionally allowed to resolve to either a
+        // tile or an object. The dense layer determines every instance's
+        // position, while the prefab determines how that cell behaves.
+        (void)levelData.prefabs.resolve(prefabId);
+    }
+}
+}
+
+LevelData LevelDataLoader::load(
+    const std::filesystem::path& filePath,
+    int maximumWidth,
+    int maximumHeight,
+    const std::filesystem::path& sharedPrefabsPath
+) {
+    if (maximumWidth <= 0 || maximumHeight <= 0) {
+        throw std::invalid_argument("Level limits must be positive");
+    }
+
+    const nlohmann::json document = readJsonFile(filePath);
 
     if (!document.is_object()) {
         throw std::runtime_error("Level JSON must be a JSON object");
     }
 
-    if (!document.contains("rows")
-        || !document["rows"].is_array()) {
-        throw std::runtime_error("Level JSON must contain a rows array");
-    }
-
-    const auto& encodedRows = document["rows"];
-    if (encodedRows.empty() || encodedRows.size() > static_cast<std::size_t>(maximumHeight)) {
-        throw std::runtime_error("Level height is outside configured limits");
-    }
-
-    std::vector<std::vector<int>> rows;
-    rows.reserve(encodedRows.size());
-    for (const auto& encodedRow : encodedRows) {
-        if (!encodedRow.is_string()) {
-            throw std::runtime_error("Every level row must be a tile string");
-        }
-        const std::string rowText = encodedRow.get<std::string>();
-        if (rowText.empty() || rowText.size() > static_cast<std::size_t>(maximumWidth)) {
-            throw std::runtime_error("Level row width is outside configured limits");
-        }
-
-        std::vector<int> row;
-        int tileId = 0;
-        row.reserve(rowText.size());
-        for (const char tile : rowText) {
-            if (tile == ' ') {
-                row.push_back(tileId);
-                tileId = 0;
-                continue;
-            }
-            if (tile < '0' || tile > '9') {
-                throw std::runtime_error("Level contains an unsupported tile id");
-            }
-            tileId = tileId * 10 + (tile - '0');
-        }
-        rows.push_back(std::move(row));
-    }
-
-    std::unordered_map<int, std::vector<SpawnSpec>> spawns;
+    LevelData levelData;
     try {
-        std::ifstream sharedInput(sharedSpawnsPath);
-        if (!sharedInput) {
+        loadPrefabDefinitions(readJsonFile(sharedPrefabsPath), levelData.prefabs);
+        if (document.contains("prefabs")) {
+            loadPrefabDefinitions(document, levelData.prefabs);
+        }
+
+        if (!document.contains("tileMapping")
+            || !document.contains("layer")) {
             throw std::runtime_error(
-                "Unable to open shared spawns file: " + sharedSpawnsPath.string()
+                "Level JSON must contain tileMapping and layer"
             );
         }
-        nlohmann::json sharedDocument;
-        sharedInput >> sharedDocument;
-        spawns = parseSpawnSpecs(sharedDocument["spawns"]);
-        if (document.contains("spawns")) {
-            std::unordered_map<int, std::vector<SpawnSpec>> levelSpawns =
-                parseSpawnSpecs(document["spawns"]);
-            for (auto& [id, specs] : levelSpawns) {
-                spawns[id] = std::move(specs);
-            }
-        }
+
+        parseTileMapping(document["tileMapping"], levelData);
+        parseLayer(
+            document["layer"],
+            maximumWidth,
+            maximumHeight,
+            levelData
+        );
+        validatePrefabReferences(levelData);
     } catch (const std::exception& error) {
-        throw std::runtime_error("Invalid spawns definition: " + std::string(error.what()));
+        throw std::runtime_error(
+            "Invalid level data: " + std::string(error.what())
+        );
     }
-
-    for (std::size_t rowIndex = 0; rowIndex < rows.size(); ++rowIndex) {
-        for (std::size_t column = 0; column < rows[rowIndex].size(); ++column) {
-            const int tileId = rows[rowIndex][column];
-            if (tileId != 0 && spawns.find(tileId) == spawns.end()) {
-                throw std::runtime_error(
-                    "Level references tile id " + std::to_string(tileId)
-                    + " that has no spawn definition"
-                );
-            }
-        }
-    }
-
-    LevelData levelData;
-    levelData.rows = std::move(rows);
-    levelData.spawns = std::move(spawns);
     levelData.background = document.value("background", "");
 
     return levelData;
