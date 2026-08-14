@@ -434,31 +434,39 @@ void WorldMap::rebuild(
                 if (spec.autotileId.empty()) {
                     continue;
                 }
-                const bool floating = _autotileResolver.isFloating(
+                const auto defIt = _autotileDefs.find(spec.autotileId);
+                if (defIt == _autotileDefs.end()) {
+                    continue;
+                }
+                const AutotileTilesetDef& def = defIt->second;
+                const AutotileResult result = _autotileResolver.resolveDetailed(
                     screenGrid, col, screenRow,
                     _gridWidth, _gridHeight,
-                    solidIds
+                    solidIds, def
                 );
-                if (floating) {
-                    // Mid-air floating block -> render as classic brick!
-                    sf::Texture& brickTex =
-                        ResourceManager::getInstance().getTexture("brick");
-                    _tileMap.setTile(col, screenRow, tileId, &brickTex, sf::IntRect({0, 0}, {0, 0}));
-                } else {
-                    // Ground-connected terrain -> render using autotile tileset!
-                    const auto defIt = _autotileDefs.find(spec.autotileId);
-                    if (defIt == _autotileDefs.end()) {
-                        continue;
-                    }
-                    const AutotileTilesetDef& def = defIt->second;
-                    const sf::IntRect texRect = _autotileResolver.resolve(
-                        screenGrid, col, screenRow,
-                        _gridWidth, _gridHeight,
-                        solidIds, def
+                sf::Texture& tex =
+                    ResourceManager::getInstance().getTexture(def.textureAlias);
+
+                if (result.isSlope) {
+                    // Automatically spawn a SlopeBlock with slope Box2D ramp physics & texture!
+                    sf::Vector2f cellPos = mapCellCenter(col, mapRow);
+                    auto slope = std::dynamic_pointer_cast<SlopeBlock>(
+                        context.objectFactory.createBlock("SlopeBlock", &tex)
                     );
-                    sf::Texture& tex =
-                        ResourceManager::getInstance().getTexture(def.textureAlias);
-                    _tileMap.setTile(col, screenRow, tileId, &tex, texRect);
+                    if (slope) {
+                        SlopeBlock::SlopeType st = (result.slopeType == 27)
+                            ? SlopeBlock::SlopeType::DownRightTop
+                            : SlopeBlock::SlopeType::UpRightBottom;
+                        slope->configureSlopeVisuals(tex, st);
+                        slope->spawn(context.physicsWorld, cellPos, spec.size);
+                        context.terrainSeamFilter.addBlock(
+                            slope, col, screenRow,
+                            col * _cellSize, (col + 1) * _cellSize
+                        );
+                    }
+                } else {
+                    // Standard terrain tile -> register in TileMap
+                    _tileMap.setTile(col, screenRow, tileId, &tex, result.texRect);
                 }
             } // end for spec
         }     // end for col
