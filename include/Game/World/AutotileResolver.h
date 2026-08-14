@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cstdint>
+#include <unordered_map>
 #include <unordered_set>
 #include <vector>
 
@@ -8,57 +10,107 @@
 #include "Game/World/AutotileTilesetDef.h"
 
 // ---------------------------------------------------------------------------
+// AutotileResult – returned by resolveDetailed()
+// ---------------------------------------------------------------------------
+struct AutotileResult {
+    sf::IntRect texRect;
+    bool        isSlope  = false;
+    int         slopeType = 0;   // 25 = UpRight, 27 = DownRight
+};
+
+// ---------------------------------------------------------------------------
 // AutotileResolver
 //
-// Stateless utility.  Given a screen-space tile ID grid and a set of tile IDs
-// that are considered "solid", it samples the four orthogonal neighbours of a
-// cell, builds the 4-bit bitmask, and returns the corresponding sf::IntRect
-// from the supplied AutotileTilesetDef.
+// Uses a Disjoint-Set Union (DSU / Union-Find) algorithm to group adjacent
+// solid terrain tiles into connected components. Each cell's position WITHIN
+// its component (top-edge, bottom-edge, left-edge, right-edge, and its
+// horizontal index within its row) is stored so that:
 //
-// Bit encoding (matches AutotileTilesetDef):
-//   bit 0 (1) = top     solid
-//   bit 1 (2) = right   solid
-//   bit 2 (4) = bottom  solid
-//   bit 3 (8) = left    solid
+//  1. The correct 4-neighbor bitmask variant is chosen (top / left-wall /
+//     inner / right-wall / bottom / corner etc.).
 //
-// Out-of-bounds rules (authentic Mario style):
-//   • Below the grid   → treated as SOLID   (seamless underground floor)
-//   • Above / L / R    → treated as EMPTY   (open air at edges)
+//  2. Horizontal wave alternation is driven by the cell's position INSIDE
+//     its component row (posInRow % 2) rather than its absolute column index,
+//     so even short 2-tile platforms wave correctly.
+//
+// Bit encoding for maskToRect (matches AutotileTilesetDef):
+//   bit 0 (1) = top    solid
+//   bit 1 (2) = right  solid
+//   bit 2 (4) = bottom solid
+//   bit 3 (8) = left   solid
+//
+// Call precompute() once after building screenGrid / solidIds, then call
+// resolve() / resolveDetailed() for each cell.
 // ---------------------------------------------------------------------------
 class AutotileResolver {
 public:
-    // Returns true if the tile at (col, screenRow) is suspended in mid-air
-    // (i.e. has no continuous chain of solid tiles beneath it reaching the ground).
-    bool isFloating(
+    // -----------------------------------------------------------------------
+    // precompute  –  build DSU component map from the grid
+    //
+    // Must be called before resolve() / resolveDetailed().  Internally runs a
+    // two-pass Union-Find over all solid cells to compute per-cell info.
+    // -----------------------------------------------------------------------
+    void precompute(
         const std::vector<std::vector<int>>& screenGrid,
-        int col,
-        int screenRow,
-        int gridWidth,
-        int gridHeight,
+        int                                  gridWidth,
+        int                                  gridHeight,
         const std::unordered_set<int>&       solidIds
+    );
+
+    // -----------------------------------------------------------------------
+    // resolveDetailed  –  full result including automatic slope detection
+    // -----------------------------------------------------------------------
+    AutotileResult resolveDetailed(
+        const std::vector<std::vector<int>>& screenGrid,
+        int                                  col,
+        int                                  screenRow,
+        int                                  gridWidth,
+        int                                  gridHeight,
+        const std::unordered_set<int>&       solidIds,
+        const AutotileTilesetDef&            def
     ) const;
 
-    // Returns the texture sub-rect to use for the tile at (col, screenRow).
-    //
-    // screenGrid[row][col] = raw tile ID in screen space (0 = empty).
-    // solidIds             = set of tile IDs that count as solid neighbours.
+    // -----------------------------------------------------------------------
+    // resolve  –  texture sub-rect for a single cell (no slope detection)
+    // -----------------------------------------------------------------------
     sf::IntRect resolve(
         const std::vector<std::vector<int>>& screenGrid,
-        int col,
-        int screenRow,
-        int gridWidth,
-        int gridHeight,
+        int                                  col,
+        int                                  screenRow,
+        int                                  gridWidth,
+        int                                  gridHeight,
         const std::unordered_set<int>&       solidIds,
         const AutotileTilesetDef&            def
     ) const;
 
 private:
+    // -----------------------------------------------------------------------
+    // Per-cell component info computed by precompute()
+    // -----------------------------------------------------------------------
+    struct CellInfo {
+        bool isTopEdge    = true;  // no solid neighbor above
+        bool isBottomEdge = true;  // no solid neighbor below
+        bool isLeftEdge   = true;  // no solid neighbor to the left
+        bool isRightEdge  = true;  // no solid neighbor to the right
+        // 0-based horizontal index within the continuous solid run on this
+        // row (resets at every gap), used for alternating wave variation.
+        int  posInRow     = 0;
+    };
+
+    // Dense key: row * gridWidth + col
+    static std::int64_t cellKey(int col, int row, int gridWidth) noexcept {
+        return static_cast<std::int64_t>(row) * gridWidth + col;
+    }
+
     bool isSolid(
         const std::vector<std::vector<int>>& screenGrid,
-        int col,
-        int screenRow,
-        int gridWidth,
-        int gridHeight,
+        int                                  col,
+        int                                  row,
+        int                                  gridWidth,
+        int                                  gridHeight,
         const std::unordered_set<int>&       solidIds
-    ) const;
+    ) const noexcept;
+
+    std::unordered_map<std::int64_t, CellInfo> _cellInfo;
+    int _precomputedGridWidth = 0;
 };

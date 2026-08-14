@@ -8,70 +8,49 @@
 // ---------------------------------------------------------------------------
 // AutotileTilesetDef
 //
-// Describes one "autotile family": which texture to use and how each of the
-// 16 possible 4-neighbor bitmask values maps to a sub-rectangle within that
-// texture.
+// Describes one autotile family using an 8-neighbor bitmask system (256 states).
 //
-// Bitmask bit encoding (same order as TileMap neighbour probing):
-//   bit 0 (value  1) = top    neighbour is solid
-//   bit 1 (value  2) = right  neighbour is solid
-//   bit 2 (value  4) = bottom neighbour is solid
-//   bit 3 (value  8) = left   neighbour is solid
+// Bitmask bit encoding:
+//   bit 0 (  1) = N  (top)
+//   bit 1 (  2) = NE (top-right)    — only meaningful when N AND E are set
+//   bit 2 (  4) = E  (right)
+//   bit 3 (  8) = SE (bottom-right) — only meaningful when S AND E are set
+//   bit 4 ( 16) = S  (bottom)
+//   bit 5 ( 32) = SW (bottom-left)  — only meaningful when S AND W are set
+//   bit 6 ( 64) = W  (left)
+//   bit 7 (128) = NW (top-left)     — only meaningful when N AND W are set
 //
-// maskToRect[mask] yields the sf::IntRect to pass to TileMap::setTile.
+// Diagonal masking reduces 256 raw states to 47 unique meaningful states.
+// maskToRect[mask] → sf::IntRect for that tile variant.
 //
-// ---------------------------------------------------------------------------
-// HOW TO ADD A REAL TILESET
-// ---------------------------------------------------------------------------
-// 1. Place your PNG in  assets/sprites/Tiles/  (or any sub-folder).
-//    It must contain 16 tile variants arranged in a 4 x 4 grid:
-//
-//       col→  0          1            2             3
-//    row 0  [mask  0]  [mask  1]   [mask  2]   [mask  3]
-//    row 1  [mask  4]  [mask  5]   [mask  6]   [mask  7]
-//    row 2  [mask  8]  [mask  9]   [mask 10]   [mask 11]
-//    row 3  [mask 12]  [mask 13]   [mask 14]   [mask 15]
-//
-//    Where mask = (top?1:0)|(right?2:0)|(bottom?4:0)|(left?8:0).
-//    Each cell must be exactly tileWidth × tileHeight pixels.
-//
-// 2. Register it in ResourceManager.cpp:
-//      _preLoadTexture("assets/sprites/Tiles/my_tileset.png", "my_alias");
-//
-// 3. Edit assets/datas/autotile_defs.json – change the entry:
-//      "texture" : "my_alias"
-//      "layout"  : "row_major_4x4"
-//      "tileWidth"  : <px>
-//      "tileHeight" : <px>
-//
-//    (Or keep "layout":"single" to use a single full-texture tile.)
-//
+// JSON layout field:
+//   "single"       — whole texture for every mask (placeholder)
+//   "row_major_4x4"— 4×4 grid for the 16 4-bit states (legacy)
+//   "custom8"      — explicit 256-entry "rects" array  [[x,y,w,h], ...]
 // ---------------------------------------------------------------------------
 struct AutotileTilesetDef {
-    std::string                 textureAlias;
-    std::array<sf::IntRect, 16> maskToRect{};
+    std::string                  textureAlias;
+    std::array<sf::IntRect, 256> maskToRect{};
 
-    // All 16 masks map to {0,0,w,h} — the whole texture.
-    // Useful as a placeholder before a real tileset exists.
+    // Entire texture for every mask — placeholder / fallback
     static AutotileTilesetDef singleTile(
         const std::string& textureAlias,
         int textureWidth  = 64,
         int textureHeight = 64
     );
 
-    // Masks 0-15 are laid out row-major in a 4 x 4 grid,
-    // each cell being tileW x tileH pixels.
+    // Legacy 4×4 row-major layout (16 entries, diagonals ignored)
     static AutotileTilesetDef rowMajor4x4(
         const std::string& textureAlias,
         int tileW = 64,
         int tileH = 64
     );
 
-    // Parse from a JSON object with fields:
-    //   "texture"    : string alias (required)
-    //   "layout"     : "single" | "row_major_4x4" | "custom"  (default: "single")
-    //   "tileWidth"  : int  (used for single / row_major_4x4, default 64)
-    //   "tileHeight" : int  (used for single / row_major_4x4, default 64)
-    //   "rects"      : [[x,y,w,h], ...]  16 entries  (used for "custom" only)
+    // Parse from JSON object:
+    //   "texture"    : alias string     (required)
+    //   "layout"     : "single" | "row_major_4x4" | "custom8"
+    //   "tileWidth"  : int              (single / row_major_4x4)
+    //   "tileHeight" : int              (single / row_major_4x4)
+    //   "rects"      : [[x,y,w,h],...]  256 entries  (custom8)
     static AutotileTilesetDef fromJson(const nlohmann::json& json);
 };
