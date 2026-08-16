@@ -1,7 +1,9 @@
 #pragma once
 
 #include <SFML/Graphics.hpp>
+#include <optional>
 #include <string>
+#include <vector>
 
 #include "Game/Objects/GameObject.h"
 
@@ -34,6 +36,29 @@ public:
     int getWarpID() const { return _warpID; }
     int getWarpTarget() const { return _warpTarget; }
 
+    void spawn(
+        const PhysicsWorld& physicsWorld,
+        sf::Vector2f spawnPixels,
+        sf::Vector2f hitboxPixels
+    ) override;
+
+    /// Break only the pipe segment represented by the contacted shape.
+    void breakSegment(b2ShapeId segmentShape);
+
+    /// Physically removes pipe segments queued during contact callbacks.
+    void flushBrokenSegments();
+
+    struct SegmentBreakData {
+        sf::Vector2f position;
+        sf::Vector2f size;
+        sf::IntRect textureRect;
+    };
+
+    std::optional<SegmentBreakData> getSegmentBreakData(
+        b2ShapeId segmentShape
+    ) const;
+    const sf::Texture* getTexture() const noexcept { return _texture; }
+
     /// Computes the total pixel size of this pipe based on orientation and body length.
     /// Each tile is rendered at renderTileSize (default 32px), and the pipe is
     /// 2 tiles wide in the cross-axis direction.
@@ -45,10 +70,25 @@ protected:
     void onCreateShapeDef(b2ShapeDef& def) override;
     void onRenderVisual(sf::RenderTarget& target, const sf::Vector2f& position,
                         float angleDegrees) override;
+    void onRenderDebugHitbox(sf::RenderTarget& target) const override;
 
 private:
+    struct SegmentQuad {
+        sf::Vector2f worldPosition;
+        sf::Vector2f worldSize;
+        sf::IntRect textureRect;
+    };
+
+    struct Segment {
+        std::vector<SegmentQuad> quads;
+        b2ShapeId shape = b2_nullShapeId;
+        bool active = true;
+    };
+
     /// Builds the vertex array from the spritesheet tile coordinates.
     void buildVertexArray(float renderTileSize);
+    void rebuildVertexArray();
+    void refreshPrimaryShape();
 
     /// Returns the texture rect for a spritesheet block at (gridCol, gridRow) (1-indexed).
     /// Each block is 16x16 with 1px gaps.
@@ -66,4 +106,6 @@ private:
     int _warpTarget = -1;
     sf::Texture* _texture = nullptr;
     sf::VertexArray _vertices{sf::PrimitiveType::Triangles};
+    std::vector<Segment> _segments;
+    std::vector<b2ShapeId> _pendingShapeDestruction;
 };

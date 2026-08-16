@@ -1,5 +1,9 @@
 #include "Game/Objects/Pipe/Pipe.h"
 
+#include <algorithm>
+#include <cmath>
+#include <limits>
+
 #include "Physics/CollisionFilter.h"
 #include "Physics/PhysicsUnits.h"
 #include "box2d/box2d.h"
@@ -12,6 +16,26 @@ constexpr int kSpriteGap = 1;
 /// World-space size of each rendered tile (matches one 64px cell).
 /// A pipe is 2 tiles wide = 128px = 2 grid cells.
 constexpr float kRenderTileSize = 64.0f;
+
+void drawPipeDebugRect(
+    sf::RenderTarget& target,
+    const sf::Vector2f& centerPixels,
+    const sf::Vector2f& sizePixels,
+    float angleDegrees
+) {
+    if (sizePixels.x <= 0.0f || sizePixels.y <= 0.0f) {
+        return;
+    }
+
+    sf::RectangleShape rect(sizePixels);
+    rect.setOrigin({sizePixels.x * 0.5f, sizePixels.y * 0.5f});
+    rect.setPosition(centerPixels);
+    rect.setRotation(sf::degrees(angleDegrees));
+    rect.setFillColor(sf::Color(255, 0, 255, 80));
+    rect.setOutlineThickness(1.0f);
+    rect.setOutlineColor(sf::Color::Magenta);
+    target.draw(rect);
+}
 }
 
 Pipe::Pipe() : GameObject() {}
@@ -40,6 +64,143 @@ sf::Vector2f Pipe::computePipeSize(Orientation orientation, int bodyLength,
     return {mainAxisTiles * renderTileSize, 2.0f * renderTileSize};
 }
 
+void Pipe::spawn(
+    const PhysicsWorld& physicsWorld,
+    sf::Vector2f spawnPixels,
+    sf::Vector2f hitboxPixels
+) {
+    GameObject::spawn(physicsWorld, spawnPixels, hitboxPixels);
+
+    if (!hasValidBody() || _segments.empty()) {
+        return;
+    }
+
+    // GameObject creates one full-pipe fallback shape. Replace it with one
+    // shape per visible segment so Mega can remove only the contacted part.
+    const b2ShapeId fullPipeShape = _body->getHitbox();
+    if (b2Shape_IsValid(fullPipeShape)) {
+        b2DestroyShape(fullPipeShape, true);
+    }
+    _body->setHibox(b2_nullShapeId);
+
+    for (Segment& segment : _segments) {
+        if (segment.quads.empty()) {
+            continue;
+        }
+
+        const sf::Vector2f firstPosition = segment.quads.front().worldPosition;
+        const sf::Vector2f lastPosition = segment.quads.back().worldPosition
+            + segment.quads.back().worldSize;
+        const sf::Vector2f segmentSize = lastPosition - firstPosition;
+        const sf::Vector2f segmentCenter = firstPosition
+            + segmentSize * 0.5f;
+
+        b2ShapeDef shapeDef = b2DefaultShapeDef();
+        shapeDef.enableContactEvents = true;
+        shapeDef.enableSensorEvents = true;
+        shapeDef.userData = this;
+        onCreateShapeDef(shapeDef);
+
+        const b2Polygon polygon = b2MakeOffsetBox(
+            PhysicsUnits::toMeters(segmentSize.x * 0.5f),
+            PhysicsUnits::toMeters(segmentSize.y * 0.5f),
+            PhysicsUnits::toMeters(segmentCenter),
+            b2Rot_identity
+        );
+        segment.shape = b2CreatePolygonShape(
+            _body->getId(),
+            &shapeDef,
+            &polygon
+        );
+    }
+
+    refreshPrimaryShape();
+}
+
+void Pipe::breakSegment(b2ShapeId segmentShape) {
+    if (!b2Shape_IsValid(segmentShape)) {
+        return;
+    }
+
+    for (Segment& segment : _segments) {
+        if (!B2_ID_EQUALS(segment.shape, segmentShape) || !segment.active) {
+            continue;
+        }
+
+        const b2ShapeId shape = segment.shape;
+        segment.shape = b2_nullShapeId;
+        segment.active = false;
+
+        // Contact events are still being consumed here. Queue the physical
+        // destruction until the complete event batch has been processed so
+        // Box2D's buffered event data remains valid.
+        _pendingShapeDestruction.push_back(shape);
+
+        rebuildVertexArray();
+        refreshPrimaryShape();
+        return;
+    }
+}
+
+void Pipe::flushBrokenSegments() {
+    for (const b2ShapeId shape : _pendingShapeDestruction) {
+        if (b2Shape_IsValid(shape)) {
+            b2DestroyShape(shape, true);
+        }
+    }
+
+    _pendingShapeDestruction.clear();
+    refreshPrimaryShape();
+}
+
+std::optional<Pipe::SegmentBreakData> Pipe::getSegmentBreakData(
+    b2ShapeId segmentShape
+) const {
+    if (!b2Shape_IsValid(segmentShape)) {
+        return std::nullopt;
+    }
+
+    for (const Segment& segment : _segments) {
+        if (!segment.active
+            || !B2_ID_EQUALS(segment.shape, segmentShape)
+            || segment.quads.empty()) {
+            continue;
+        }
+
+        const sf::Vector2f firstPosition = segment.quads.front().worldPosition;
+        const sf::Vector2f lastPosition = segment.quads.back().worldPosition
+            + segment.quads.back().worldSize;
+        const sf::Vector2f segmentSize = lastPosition - firstPosition;
+        const sf::Vector2f segmentCenter = firstPosition
+            + segmentSize * 0.5f;
+
+        int left = std::numeric_limits<int>::max();
+        int top = std::numeric_limits<int>::max();
+        int right = std::numeric_limits<int>::min();
+        int bottom = std::numeric_limits<int>::min();
+        for (const SegmentQuad& quad : segment.quads) {
+            left = std::min(left, quad.textureRect.position.x);
+            top = std::min(top, quad.textureRect.position.y);
+            right = std::max(
+                right,
+                quad.textureRect.position.x + quad.textureRect.size.x
+            );
+            bottom = std::max(
+                bottom,
+                quad.textureRect.position.y + quad.textureRect.size.y
+            );
+        }
+
+        return SegmentBreakData{
+            getPosition() + segmentCenter,
+            segmentSize,
+            sf::IntRect({left, top}, {right - left, bottom - top})
+        };
+    }
+
+    return std::nullopt;
+}
+
 void Pipe::onCreateBodyDef(b2BodyDef& def) {
     def.type = b2_staticBody;
 }
@@ -64,6 +225,43 @@ void Pipe::onRenderVisual(sf::RenderTarget& target, const sf::Vector2f& position
     states.texture = _texture;
     states.transform.translate(position);
     target.draw(_vertices, states);
+}
+
+void Pipe::onRenderDebugHitbox(sf::RenderTarget& target) const {
+    if (!hasValidBody()) {
+        return;
+    }
+
+    const sf::Vector2f bodyPosition = getBodyPositionPixels();
+    const float angleDegrees = getBodyAngleDegrees();
+    const float angleRadians = angleDegrees * (3.14159265f / 180.0f);
+    const float cosAngle = std::cos(angleRadians);
+    const float sinAngle = std::sin(angleRadians);
+
+    for (const Segment& segment : _segments) {
+        if (!segment.active
+            || !b2Shape_IsValid(segment.shape)
+            || segment.quads.empty()) {
+            continue;
+        }
+
+        const sf::Vector2f firstPosition = segment.quads.front().worldPosition;
+        const sf::Vector2f lastPosition = segment.quads.back().worldPosition
+            + segment.quads.back().worldSize;
+        const sf::Vector2f segmentSize = lastPosition - firstPosition;
+        const sf::Vector2f localCenter = firstPosition + segmentSize * 0.5f;
+        const sf::Vector2f rotatedCenter{
+            cosAngle * localCenter.x - sinAngle * localCenter.y,
+            sinAngle * localCenter.x + cosAngle * localCenter.y
+        };
+
+        drawPipeDebugRect(
+            target,
+            bodyPosition + rotatedCenter,
+            segmentSize,
+            angleDegrees
+        );
+    }
 }
 
 sf::IntRect Pipe::blockRect(int gridCol, int gridRow) {
@@ -97,7 +295,7 @@ void Pipe::appendQuad(sf::Vector2f worldPos, sf::Vector2f worldSize,
 }
 
 void Pipe::buildVertexArray(float tileSize) {
-    _vertices.clear();
+    _segments.clear();
 
     const sf::Vector2f pipeSize = computePipeSize(_orientation, _bodyLength, tileSize);
     // Offset so the vertex array is centered at (0,0) — matching Box2D body center.
@@ -112,6 +310,7 @@ void Pipe::buildVertexArray(float tileSize) {
         const int totalRows = 1 + _bodyLength;
 
         for (int row = 0; row < totalRows; ++row) {
+            Segment& segment = _segments.emplace_back();
             for (int col = 0; col < 2; ++col) {
                 const float worldX = -halfW + col * tileSize;
                 const float worldY = -halfH + row * tileSize;
@@ -137,7 +336,11 @@ void Pipe::buildVertexArray(float tileSize) {
                     }
                 }
 
-                appendQuad({worldX, worldY}, {tileSize, tileSize}, texRect);
+                segment.quads.push_back({
+                    {worldX, worldY},
+                    {tileSize, tileSize},
+                    texRect
+                });
             }
         }
     } else {
@@ -147,8 +350,9 @@ void Pipe::buildVertexArray(float tileSize) {
 
         const int totalCols = 1 + _bodyLength;
 
-        for (int row = 0; row < 2; ++row) {
-            for (int col = 0; col < totalCols; ++col) {
+        for (int col = 0; col < totalCols; ++col) {
+            Segment& segment = _segments.emplace_back();
+            for (int row = 0; row < 2; ++row) {
                 const float worldX = -halfW + col * tileSize;
                 const float worldY = -halfH + row * tileSize;
 
@@ -173,8 +377,43 @@ void Pipe::buildVertexArray(float tileSize) {
                     }
                 }
 
-                appendQuad({worldX, worldY}, {tileSize, tileSize}, texRect);
+                segment.quads.push_back({
+                    {worldX, worldY},
+                    {tileSize, tileSize},
+                    texRect
+                });
             }
         }
     }
+
+    rebuildVertexArray();
+}
+
+void Pipe::rebuildVertexArray() {
+    _vertices.clear();
+
+    for (const Segment& segment : _segments) {
+        if (!segment.active) {
+            continue;
+        }
+
+        for (const SegmentQuad& quad : segment.quads) {
+            appendQuad(quad.worldPosition, quad.worldSize, quad.textureRect);
+        }
+    }
+}
+
+void Pipe::refreshPrimaryShape() {
+    if (!_body || !_body->isValid()) {
+        return;
+    }
+
+    for (const Segment& segment : _segments) {
+        if (segment.active && b2Shape_IsValid(segment.shape)) {
+            _body->setHibox(segment.shape);
+            return;
+        }
+    }
+
+    _body->setHibox(b2_nullShapeId);
 }

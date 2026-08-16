@@ -24,6 +24,26 @@ void Block::onContact(GameObject& other, const b2ContactData& contactData, b2Sha
 Block::~Block() {
 }
 
+void Block::spawnBreakEffect(GameWorld& world) const {
+    const sf::Texture* texture = nullptr;
+    sf::IntRect textureRect;
+    if (auto* animatable = getBehaviour<Animatable>();
+        animatable && animatable->hasSprite()) {
+        texture = animatable->getTexture();
+        textureRect = animatable->getTextureRect();
+    } else {
+        texture = _breakTexture;
+        textureRect = _breakTextureRect;
+    }
+
+    world.spawnBlockBreakEffect(
+        getPosition(),
+        _hitboxPixels,
+        texture,
+        textureRect
+    );
+}
+
 void Block::onCreateShapeDef(b2ShapeDef& def) {
     def.density = 10000.0f;
     def.material.friction = 0.0f;
@@ -73,22 +93,7 @@ bool Block::tryBreakOnContact(
 
     GameWorld* world = player->getGameWorld();
     if (world) {
-        const sf::Texture* texture = nullptr;
-        sf::IntRect textureRect;
-        if (auto* animatable = getBehaviour<Animatable>();
-            animatable && animatable->hasSprite()) {
-            texture = animatable->getTexture();
-            textureRect = animatable->getTextureRect();
-        } else {
-            texture = _breakTexture;
-            textureRect = _breakTextureRect;
-        }
-        world->spawnBlockBreakEffect(
-            getPosition(),
-            _hitboxPixels,
-            texture,
-            textureRect
-        );
+        spawnBreakEffect(*world);
 
         if (world->getScoreManager()) {
             world->getScoreManager()->handleEvent(

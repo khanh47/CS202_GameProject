@@ -97,7 +97,7 @@ void GameObject::render(sf::RenderTarget &target) {
 
     if (drawFallbackCollisionRect
         || GameSettings::getInstance().debugDrawHitbox) {
-        drawFallbackRect(target);
+        onRenderDebugHitbox(target);
     }
 }
 
@@ -133,6 +133,10 @@ void GameObject::onRenderVisual(sf::RenderTarget& target, const sf::Vector2f& po
     (void)target;
     (void)position;
     (void)angleDegrees;
+}
+
+void GameObject::onRenderDebugHitbox(sf::RenderTarget& target) const {
+    drawFallbackRect(target);
 }
 
 void GameObject::onHitboxRecreated() {

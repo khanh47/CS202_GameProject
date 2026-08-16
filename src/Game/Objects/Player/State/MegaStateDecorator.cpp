@@ -1,8 +1,13 @@
 #include "Game/Objects/Player/State/MegaStateDecorator.h"
 
-MegaStateDecorator::MegaStateDecorator(std::unique_ptr<PlayerState> wrappedState, float durationSeconds)
+MegaStateDecorator::MegaStateDecorator(
+    std::unique_ptr<PlayerState> wrappedState,
+    float durationSeconds,
+    std::unique_ptr<PlayerState> stateToRestore
+)
     : PlayerStateDecorator(std::move(wrappedState)),
-      _remainingTime(durationSeconds) {
+      _remainingTime(durationSeconds),
+      _stateToRestore(std::move(stateToRestore)) {
 }
 
 std::string MegaStateDecorator::getStateName() const {
@@ -18,11 +23,19 @@ float MegaStateDecorator::getJumpSpeedMultiplier() const {
 }
 
 sf::Vector2f MegaStateDecorator::getScaleMultiplier() const {
-    sf::Vector2f baseScale = PlayerStateDecorator::getScaleMultiplier();
-    return {baseScale.x * 2.0f, baseScale.y * 2.0f};
+    // Four times the normal player hitbox makes the transformation visibly
+    // colossal while keeping the sprite anchored to the player's feet.
+    return {scaleMultiplier, scaleMultiplier};
+}
+
+std::unique_ptr<PlayerState> MegaStateDecorator::takeStateAfterMega() {
+    if (_stateToRestore) {
+        return std::move(_stateToRestore);
+    }
+    return unwrap();
 }
 
 void MegaStateDecorator::update(Player& player, float dt) {
     PlayerStateDecorator::update(player, dt);
-    advanceLifetime(dt);
+    _remainingTime -= dt;
 }

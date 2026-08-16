@@ -8,20 +8,36 @@
  */
 class MegaStateDecorator : public PlayerStateDecorator {
 public:
-    MegaStateDecorator(std::unique_ptr<PlayerState> wrappedState, float durationSeconds = 5.0f);
+    static constexpr float scaleMultiplier = 4.0f;
+
+    MegaStateDecorator(
+        std::unique_ptr<PlayerState> wrappedState,
+        float durationSeconds = 16.0f,
+        std::unique_ptr<PlayerState> stateToRestore = nullptr
+    );
     ~MegaStateDecorator() override = default;
 
     std::string getStateName() const override;
     float getMoveSpeedMultiplier() const override;
     float getJumpSpeedMultiplier() const override;
     sf::Vector2f getScaleMultiplier() const override;
+    bool isInvincible() const override { return true; }
+    bool canShootFireballs() const override { return false; }
+    std::unique_ptr<IAttackStrategy> createAttackStrategy() const override {
+        return std::make_unique<NoAttackStrategy>();
+    }
     bool isExpired() const override { return _remainingTime <= 0.0f; }
-    void advanceLifetime(float deltaTime) noexcept {
-        _remainingTime -= deltaTime;
+    void resetTimer(float durationSeconds = 16.0f) noexcept {
+        _remainingTime = durationSeconds;
     }
 
+    void handleSuperMushroom(Player&) override {}
+    void handleFireFlower(Player&) override {}
+    void handleSuperStar(Player&) override {}
+    std::unique_ptr<PlayerState> takeStateAfterMega();
     void update(Player& player, float dt) override;
 
 private:
     float _remainingTime;
+    std::unique_ptr<PlayerState> _stateToRestore;
 };
