@@ -32,6 +32,14 @@
 #include <iostream>
 #include <iterator>
 
+namespace {
+constexpr float highFallBreakDistancePixels =
+    25.0f * PhysicsUnits::pixelsPerMeter;
+// With the player's current gravity scale, this is approximately the impact
+// speed reached after a 25-cell fall. Capture it before Box2D resolves contact.
+constexpr float highFallBreakVelocityPixelsPerSecond = 2800.0f;
+}
+
 Player::Player() : GameObject() {
     addBehaviour<Animatable>();
     addBehaviour<Damageable>(100);
@@ -98,6 +106,12 @@ void Player::finalizeGroundContacts() {
     moveable->finalizeGroundContacts();
     // Reset the stomp combo whenever the player is on solid ground,
     // so the ladder only grows during genuine airborne chains.
+    if (moveable->hasGroundSupport()) {
+        _fallTrackingActive = false;
+        _fallDistancePixels = 0.0f;
+        _fallStartY = getPosition().y;
+        _maxDownwardVelocityPixelsPerSecond = 0.0f;
+    }
     if (!moveable->isAirbone()) {
         if (_world && _world->getScoreManager()) {
             _world->getScoreManager()->handleEvent(ScoreEventType::MarioLanded);
@@ -233,12 +247,15 @@ void Player::updateSimulation(const float &fixedDt) {
         return;
     }
 
+    updateFallTracking();
+
     if (auto* hold = getBehaviour<ShellHoldBehaviour>()) {
         hold->updateSimulation(fixedDt);
     }
 
     float moveSpeed = _baseMoveSpeed;
     float jumpSpeed = _baseJumpSpeed;
+
     if (_state) {
         moveSpeed *= _state->getMoveSpeedMultiplier();
         jumpSpeed *= _state->getJumpSpeedMultiplier();
@@ -258,12 +275,75 @@ void Player::updateSimulation(const float &fixedDt) {
     }
 
 
-    b2Body_SetGravityScale(_body->getId(), 4.0f);
-    if (moveable->isAirbone() || moveable->isJumping()) {
-        if (velocity.y > 0) b2Body_SetGravityScale(_body->getId(), moveable->isJumping() ? 3.0f : 4.0f);
+    if (_flyMode) {
+        b2Body_SetGravityScale(_body->getId(), 0.0f);
+        if (moveable->isJumping() || _moveUpHeld) {
+            velocity.y = -moveSpeed;
+        } else if (_moveDownHeld) {
+            velocity.y = moveSpeed;
+        } else {
+            velocity.y = 0.0f;
+        }
+    } else {
+        b2Body_SetGravityScale(_body->getId(), 4.0f);
+        if (moveable->isAirbone() || moveable->isJumping()) {
+            if (velocity.y > 0) b2Body_SetGravityScale(_body->getId(), moveable->isJumping() ? 3.0f : 4.0f);
+        }
     }
 
     b2Body_SetLinearVelocity(_body->getId(), velocity);
+}
+
+bool Player::hasFallenFromHighPlace() const noexcept {
+    if (!_fallTrackingActive) {
+        return false;
+    }
+
+    const float currentFallDistance = hasValidBody()
+        ? getPosition().y - _fallStartY
+        : 0.0f;
+    return std::max(_fallDistancePixels, currentFallDistance)
+        >= highFallBreakDistancePixels
+        || _maxDownwardVelocityPixelsPerSecond
+            >= highFallBreakVelocityPixelsPerSecond;
+}
+
+void Player::updateFallTracking() {
+    auto* moveable = getBehaviour<Moveable>();
+    if (!moveable || !hasValidBody()) {
+        return;
+    }
+
+    const float currentY = getPosition().y;
+    if (moveable->hasGroundSupport()) {
+        _fallTrackingActive = false;
+        _fallDistancePixels = 0.0f;
+        _fallStartY = currentY;
+        _maxDownwardVelocityPixelsPerSecond = 0.0f;
+        return;
+    }
+
+    if (!_fallTrackingActive) {
+        _fallTrackingActive = true;
+        _fallStartY = currentY;
+        _fallDistancePixels = 0.0f;
+        _maxDownwardVelocityPixelsPerSecond = 0.0f;
+    }
+
+    _fallDistancePixels = std::max(
+        _fallDistancePixels,
+        currentY - _fallStartY
+    );
+
+    const b2Vec2 velocityMeters = b2Body_GetLinearVelocity(_body->getId());
+    const float downwardVelocityPixels =
+        PhysicsUnits::toPixels(velocityMeters.y);
+    if (downwardVelocityPixels > 0.0f) {
+        _maxDownwardVelocityPixelsPerSecond = std::max(
+            _maxDownwardVelocityPixelsPerSecond,
+            downwardVelocityPixels
+        );
+    }
 }
 
 void Player::finalizeSimulation(const float &fixedDt) {

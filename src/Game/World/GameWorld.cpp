@@ -63,11 +63,13 @@ void GameWorld::updateSimulation(const float& fixedDt) {
 
     if (_levelCleared) {
         _objectStore.cleanupDestroyed();
+        _worldMap.cleanupDestroyedTiles();
         return;
     }
 
     _objectStore.finalizeSimulation(fixedDt);
     _objectStore.cleanupDestroyed();
+    _worldMap.cleanupDestroyedTiles();
 }
 
 void GameWorld::updateVisuals(float deltaTime) {

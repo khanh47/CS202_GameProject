@@ -121,6 +121,9 @@ std::shared_ptr<GameObject> PrefabSpawner::spawnObjectAtPosition(
     switch (*spec.objectKind) {
         case ObjectKind::Block: {
             auto block = _objectFactory.createBlock(spec.typeKey, texture);
+            if (auto typedBlock = std::dynamic_pointer_cast<Block>(block)) {
+                typedBlock->setBreakable(spec.breakable);
+            }
             if (!spec.slopeType.empty() && texture != nullptr) {
                 if (auto slope = std::dynamic_pointer_cast<SlopeBlock>(block)) {
                     slope->configureSlopeVisuals(

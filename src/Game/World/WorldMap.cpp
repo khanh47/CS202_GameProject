@@ -173,7 +173,8 @@ void WorldMap::rebuild(
                     createTileCollision(
                         physicsWorld,
                         column,
-                        screenRow
+                        screenRow,
+                        spec.breakable
                     );
                 }
                 continue;
@@ -267,6 +268,21 @@ void WorldMap::renderTiles(sf::RenderTarget& target) {
     target.draw(_tileMap);
 }
 
+void WorldMap::cleanupDestroyedTiles() {
+    std::vector<TileCollision> liveTiles;
+    liveTiles.reserve(_tileCollisionObjects.size());
+
+    for (TileCollision& tile : _tileCollisionObjects) {
+        if (!tile.object || tile.object->isPendingDestroy()) {
+            _tileMap.setTile(tile.column, tile.screenRow, '.', nullptr);
+            continue;
+        }
+        liveTiles.push_back(std::move(tile));
+    }
+
+    _tileCollisionObjects = std::move(liveTiles);
+}
+
 sf::FloatRect WorldMap::getBounds() const {
     const float width = (_loadedColumns > 0 ? _loadedColumns : _gridWidth)
         * _cellSize;
@@ -287,7 +303,8 @@ int WorldMap::screenYForMapRow(int mapRow) const noexcept {
 void WorldMap::createTileCollision(
     PhysicsWorld& physicsWorld,
     int column,
-    int screenRow
+    int screenRow,
+    bool breakable
 ) {
     // Keep one static body per occupied cell. Besides making tile collision
     // ownership explicit, this lets TerrainSeamFilter remove internal seams
@@ -301,6 +318,7 @@ void WorldMap::createTileCollision(
         },
         {_cellSize, _cellSize}
     );
+    collisionTile->setBreakable(breakable);
     _terrainSeamFilter.addBlock(
         collisionTile,
         column,
@@ -308,7 +326,11 @@ void WorldMap::createTileCollision(
         column * _cellSize,
         (column + 1) * _cellSize
     );
-    _tileCollisionObjects.push_back(std::move(collisionTile));
+    _tileCollisionObjects.push_back({
+        std::move(collisionTile),
+        column,
+        screenRow
+    });
 }
 
 void WorldMap::createBoundaryWalls(PhysicsWorld& physicsWorld) {

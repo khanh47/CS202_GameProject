@@ -5,7 +5,8 @@
         },
         "brick": {
             "texture": "brick",
-            "solid": true
+            "solid": true,
+            "breakable": true
         },
         "player_mario": {
             "kind": "player",

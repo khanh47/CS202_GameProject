@@ -44,6 +44,7 @@ public:
     const std::string& getCharacter() const { return _character; }
     void onContact(GameObject& other, const b2ContactData& contactData, b2ShapeId ownShape) override;
     void finalizeGroundContacts() override;
+    bool hasFallenFromHighPlace() const noexcept;
 
     PlayerState* getState() const { return _state.get(); }
     bool isTransforming() const { return _isTransforming; }
@@ -74,9 +75,11 @@ public:
         if (auto* moveable = getBehaviour<Moveable>()) moveable->stopJump();
     }
     void setInteractHeld(bool held) {
+        _flyMode = held && _flyMode ? false : _flyMode; // if holding interact isn't needed here, just add toggle
         _interactHeld = held;
         if (auto* hold = getBehaviour<ShellHoldBehaviour>()) hold->setInteractHeld(held);
     }
+    void toggleFlyMode() { _flyMode = !_flyMode; }
     void setMoveDownHeld(bool held) { _moveDownHeld = held; }
     void setMoveUpHeld(bool held) { _moveUpHeld = held; }
     bool isMoveDownHeld() const { return _moveDownHeld; }
@@ -119,6 +122,7 @@ private:
         const b2ContactData& contactData,
         b2ShapeId ownShape
     ) const;
+    void updateFallTracking();
     void bounce(float verticalVelocity = -12.0f);
     void awardScore(ScoreEventType event, sf::Vector2f position);
 
@@ -140,5 +144,10 @@ private:
     bool _interactHeld = false;
     bool _moveDownHeld = false;
     bool _moveUpHeld = false;
+    bool _flyMode = false;
     float _warpCooldown = 0.0f;
+    float _fallStartY = 0.0f;
+    float _fallDistancePixels = 0.0f;
+    float _maxDownwardVelocityPixelsPerSecond = 0.0f;
+    bool _fallTrackingActive = false;
 };

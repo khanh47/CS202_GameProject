@@ -52,6 +52,7 @@ public:
     }
 
     void renderTiles(sf::RenderTarget& target);
+    void cleanupDestroyedTiles();
     sf::FloatRect getBounds() const;
     sf::Vector2f mapCellCenter(int column, int mapRow) const;
     static int screenRowFor(
@@ -79,8 +80,15 @@ private:
     void createTileCollision(
         PhysicsWorld& physicsWorld,
         int column,
-        int screenRow
+        int screenRow,
+        bool breakable
     );
+
+    struct TileCollision {
+        std::shared_ptr<GameObject> object;
+        int column;
+        int screenRow;
+    };
 
     float _cellSize;
     int _gridWidth;
@@ -92,6 +100,6 @@ private:
     std::unordered_map<std::string, AutotileTilesetDef> _autotileDefs;
     AutotileResolver _autotileResolver;
     TerrainSeamFilter _terrainSeamFilter;
-    std::vector<std::shared_ptr<GameObject>> _tileCollisionObjects;
+    std::vector<TileCollision> _tileCollisionObjects;
     std::vector<b2BodyId> _boundaryWalls;
 };
