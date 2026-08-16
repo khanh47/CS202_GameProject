@@ -13,6 +13,7 @@
 #include "Game/World/WorldMap.h"
 #include "Game/World/WorldObjectStore.h"
 #include "Game/World/WorldRenderer.h"
+#include "Game/World/BlockBreakEffect.h"
 #include "Game/ScoreManager.h"
 #include "Physics/PhysicsWorld.h"
 
@@ -44,6 +45,12 @@ public:
     bool spawnKoopaShell(sf::Vector2f spawnPos, bool facingRight);
     bool spawnKoopa(sf::Vector2f spawnPos, bool facingRight);
     bool tryWarpPlayer(Player& player);
+    void spawnBlockBreakEffect(
+        sf::Vector2f position,
+        sf::Vector2f blockSize,
+        const sf::Texture* texture,
+        sf::IntRect textureRect
+    );
     std::shared_ptr<GameObject> spawnItem(const std::string& itemTypeKey, sf::Vector2f position, sf::Vector2f size = {54.0f, 54.0f});
     void freeze(float durationSeconds);
     bool isFrozen() const { return _freezeTimer > 0.0f; }
@@ -73,6 +80,7 @@ private:
     PhysicsWorld _physicsWorld;
     GameObjectFactory _objectFactory;
     std::array<FireballPool, 2> _fireballPools;
+    std::vector<BlockBreakEffect> _blockBreakEffects;
     WorldObjectStore _objectStore;
     WorldMap _worldMap;
     WorldInteractionSystem _interactionSystem;

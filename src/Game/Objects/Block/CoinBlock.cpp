@@ -33,6 +33,10 @@ void CoinBlock::onCreateShapeDef(b2ShapeDef& def) {
 }
 
 void CoinBlock::onContact(GameObject& other, const b2ContactData& contactData, b2ShapeId ownShape) {
+    if (tryBreakOnContact(other, contactData, ownShape)) {
+        return;
+    }
+
     if (_hitCooldown > 0.0f || capacity <= 0) {
         return;
     }

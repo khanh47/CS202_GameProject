@@ -45,6 +45,10 @@ public:
         return !_groundTracker.isGrounded();
     }
 
+    bool hasGroundSupport() const noexcept {
+        return _groundTracker.hasGroundSupport();
+    }
+
     void consumeGroundForJump() {
         _groundTracker.consumeForJump();
     }

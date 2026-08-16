@@ -82,6 +82,7 @@ void from_json(const nlohmann::json& json, SpawnSpec& spec) {
         "solid",
         !spec.objectKind.has_value()
     );
+    spec.breakable = json.value("breakable", false);
     spec.autotileId = json.value("autotile", "");
     spec.slopeType = json.value("slopeType", "");
 
