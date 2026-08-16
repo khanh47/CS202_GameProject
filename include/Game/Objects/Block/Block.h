@@ -14,6 +14,13 @@ public:
 
     void setBreakable(bool breakable) noexcept { _breakable = breakable; }
     bool isBreakable() const noexcept { return _breakable; }
+    void setBreakEffectTexture(
+        const sf::Texture* texture,
+        sf::IntRect textureRect = {}
+    ) noexcept {
+        _breakTexture = texture;
+        _breakTextureRect = textureRect;
+    }
 
     void onContact(GameObject& other, const b2ContactData& contactData, b2ShapeId ownShape) override;
     virtual bool isRenderedByTileMap() const noexcept { return true; }
@@ -31,4 +38,6 @@ protected:
 
 private:
     bool _breakable = false;
+    const sf::Texture* _breakTexture = nullptr;
+    sf::IntRect _breakTextureRect{};
 };

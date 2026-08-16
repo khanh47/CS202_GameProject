@@ -31,6 +31,10 @@ public:
     bool isAnimationDone() const;
     bool isLooping() const;
     bool hasSprite() const;
+    const sf::Texture* getTexture() const noexcept { return _spritesheet.get(); }
+    sf::IntRect getTextureRect() const {
+        return _sprite ? _sprite->getTextureRect() : sf::IntRect{};
+    }
 
 private:
     void bindTexture(sf::Texture& texture);

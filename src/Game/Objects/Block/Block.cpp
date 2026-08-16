@@ -71,14 +71,33 @@ bool Block::tryBreakOnContact(
         return false;
     }
 
-    destroy();
-    if (GameWorld* world = player->getGameWorld();
-        world && world->getScoreManager()) {
-        world->getScoreManager()->handleEvent(
-            ScoreEventType::BlockBroken,
-            getPosition()
+    GameWorld* world = player->getGameWorld();
+    if (world) {
+        const sf::Texture* texture = nullptr;
+        sf::IntRect textureRect;
+        if (auto* animatable = getBehaviour<Animatable>();
+            animatable && animatable->hasSprite()) {
+            texture = animatable->getTexture();
+            textureRect = animatable->getTextureRect();
+        } else {
+            texture = _breakTexture;
+            textureRect = _breakTextureRect;
+        }
+        world->spawnBlockBreakEffect(
+            getPosition(),
+            _hitboxPixels,
+            texture,
+            textureRect
         );
+
+        if (world->getScoreManager()) {
+            world->getScoreManager()->handleEvent(
+                ScoreEventType::BlockBroken,
+                getPosition()
+            );
+        }
     }
+    destroy();
     return true;
 }
 

@@ -81,7 +81,16 @@ private:
         PhysicsWorld& physicsWorld,
         int column,
         int screenRow,
-        bool breakable
+        bool breakable,
+        const sf::Texture* texture,
+        sf::IntRect textureRect = {}
+    );
+
+    void setTileCollisionBreakTexture(
+        int column,
+        int screenRow,
+        const sf::Texture* texture,
+        sf::IntRect textureRect
     );
 
     struct TileCollision {

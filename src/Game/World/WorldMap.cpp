@@ -174,7 +174,8 @@ void WorldMap::rebuild(
                         physicsWorld,
                         column,
                         screenRow,
-                        spec.breakable
+                        spec.breakable,
+                        texture
                     );
                 }
                 continue;
@@ -258,6 +259,23 @@ void WorldMap::rebuild(
                         definition
                     ).texRect
                 );
+
+                if (spec.solid && spec.breakable) {
+                    setTileCollisionBreakTexture(
+                        column,
+                        screenRow,
+                        &autotileTexture,
+                        _autotileResolver.resolveDetailed(
+                            screenGrid,
+                            column,
+                            screenRow,
+                            _gridWidth,
+                            _gridHeight,
+                            solidIds,
+                            definition
+                        ).texRect
+                    );
+                }
             }
         }
     }
@@ -304,7 +322,9 @@ void WorldMap::createTileCollision(
     PhysicsWorld& physicsWorld,
     int column,
     int screenRow,
-    bool breakable
+    bool breakable,
+    const sf::Texture* texture,
+    sf::IntRect textureRect
 ) {
     // Keep one static body per occupied cell. Besides making tile collision
     // ownership explicit, this lets TerrainSeamFilter remove internal seams
@@ -319,6 +339,7 @@ void WorldMap::createTileCollision(
         {_cellSize, _cellSize}
     );
     collisionTile->setBreakable(breakable);
+    collisionTile->setBreakEffectTexture(texture, textureRect);
     _terrainSeamFilter.addBlock(
         collisionTile,
         column,
@@ -331,6 +352,24 @@ void WorldMap::createTileCollision(
         column,
         screenRow
     });
+}
+
+void WorldMap::setTileCollisionBreakTexture(
+    int column,
+    int screenRow,
+    const sf::Texture* texture,
+    sf::IntRect textureRect
+) {
+    for (TileCollision& tile : _tileCollisionObjects) {
+        if (tile.column != column || tile.screenRow != screenRow) {
+            continue;
+        }
+
+        if (auto block = std::dynamic_pointer_cast<Block>(tile.object)) {
+            block->setBreakEffectTexture(texture, textureRect);
+        }
+        return;
+    }
 }
 
 void WorldMap::createBoundaryWalls(PhysicsWorld& physicsWorld) {
