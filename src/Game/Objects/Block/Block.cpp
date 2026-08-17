@@ -118,8 +118,10 @@ bool Block::isBumped(GameObject& other, const b2ContactData& contactData, b2Shap
             if (normal.y >= 0.3f || player->getPosition().y > getPosition().y) {
                 auto* playerAnimatable = player->getBehaviour<Animatable>();
                 auto* holdingShell = player->getBehaviour<ShellHoldBehaviour>();
+                // Mega-state players are too large to react with a bump animation.
                 if (playerAnimatable &&
-                    (!holdingShell || !holdingShell->isHoldingShell())) {
+                    (!holdingShell || !holdingShell->isHoldingShell()) &&
+                    !player->isMegaState()) {
                     playerAnimatable->playAnimation("bump", true);
                 }
                 return true;

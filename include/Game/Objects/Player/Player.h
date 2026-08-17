@@ -49,6 +49,8 @@ public:
     void onContact(GameObject& other, const b2ContactData& contactData, b2ShapeId ownShape) override;
     void finalizeGroundContacts() override;
     bool hasFallenFromHighPlace() const noexcept;
+    /// Returns true while the player is under Mega Mushroom effect.
+    bool isMegaState() const noexcept;
 
     PlayerState* getState() const { return _state.get(); }
     bool isTransforming() const { return _isTransforming; }
@@ -135,7 +137,6 @@ private:
     void bounce(float verticalVelocity = -12.0f);
     void awardScore(ScoreEventType event, sf::Vector2f position);
     void beginMegaEndTransformation();
-    bool isMegaState() const noexcept;
     bool isStarManState() const noexcept;
 
     float _baseMoveSpeed = 8.0f;

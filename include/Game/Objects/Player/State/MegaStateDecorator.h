@@ -8,7 +8,7 @@
  */
 class MegaStateDecorator : public PlayerStateDecorator {
 public:
-    static constexpr float scaleMultiplier = 4.0f;
+    static constexpr float scaleMultiplier = 8.0f;
 
     MegaStateDecorator(
         std::unique_ptr<PlayerState> wrappedState,
