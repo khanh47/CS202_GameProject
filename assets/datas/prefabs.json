@@ -134,13 +134,23 @@
             ],
             "centerVertically": true
         },
+        "item_one_up_mushroom": {
+            "kind": "item",
+            "typeKey": "OneUpMushroom",
+            "texture": "mario_and_items",
+            "size": [
+                54,
+                54
+            ],
+            "centerVertically": true
+        },
         "item_mega_mushroom": {
             "kind": "item",
             "typeKey": "MegaMushroom",
             "texture": "mega_mushroom_spritesheet",
             "size": [
-                192,
-                160
+                384,
+                308
             ],
             "centerVertically": true
         },

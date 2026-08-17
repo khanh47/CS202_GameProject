@@ -13,6 +13,7 @@
 #include "Game/Objects/Enemy/Enemy.h"
 #include "Game/Objects/Item/ConcreteItems/FireFlower.h"
 #include "Game/Objects/Item/ConcreteItems/SuperMushroom.h"
+#include "Game/Objects/Item/ConcreteItems/OneUpMushroom.h"
 #include "Game/Objects/Item/ConcreteItems/MegaMushroom.h"
 #include "Game/Objects/Item/ConcreteItems/SuperStar.h"
 #include "Game/Objects/Item/ConcreteItems/Coin.h"
@@ -429,6 +430,9 @@ void Player::handleItemContact(Item& item) {
     if (auto* megaMushroom = dynamic_cast<MegaMushroom*>(&item)) {
         megaMushroom->onPickup(*this);
         awardScore(ScoreEventType::PowerupCollected, getPosition());
+    } else if (auto* oneUpMushroom = dynamic_cast<OneUpMushroom*>(&item)) {
+        oneUpMushroom->onPickup(*this);
+        awardScore(ScoreEventType::OneUpCollected, getPosition());
     } else if (auto* mushroom = dynamic_cast<SuperMushroom*>(&item)) {
         if (_state) _state->handleSuperMushroom(*this);
         awardScore(ScoreEventType::PowerupCollected, getPosition());

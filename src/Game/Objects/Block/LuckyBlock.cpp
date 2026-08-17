@@ -34,6 +34,7 @@ void LuckyBlock::setupDefaultItemPool() {
     // Default optional objects pool with weighted probability:
     addItemOption("Coin", 4.0f);
     addItemOption("SuperMushroom", 2.0f);
+    addItemOption("OneUpMushroom", 1.0f);
     addItemOption("FireFlower", 2.0f);
     addItemOption("SuperStar", 1.0f);
 }

@@ -61,6 +61,11 @@ void ScoreManager::handleEvent(ScoreEventType event, sf::Vector2f position, int 
             displayText = "1000";
             break;
 
+        case ScoreEventType::OneUpCollected:
+            _lives++;
+            displayText = "1UP";
+            break;
+
         case ScoreEventType::FlagpoleReached:
             pointsAwarded = (detail > 0) ? detail : 1000;
             displayText = std::to_string(pointsAwarded);
