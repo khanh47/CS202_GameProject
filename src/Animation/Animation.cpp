@@ -435,7 +435,7 @@ AnimationSet Animation::makeMegaMushroomAnimationSet() {
         "idle",
         Animation::createLinearClip(
             {0, 0},
-            {1960, 1641},
+            {1402, 1122},
             1,
             {0, 0},
             1.0f,

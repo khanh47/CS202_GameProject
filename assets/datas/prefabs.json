@@ -149,8 +149,8 @@
             "typeKey": "MegaMushroom",
             "texture": "mega_mushroom_spritesheet",
             "size": [
-                192,
-                160
+                384,
+                308
             ],
             "centerVertically": true
         },
