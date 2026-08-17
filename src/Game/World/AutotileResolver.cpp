@@ -174,8 +174,8 @@ sf::IntRect AutotileResolver::resolve(
     // block's right-top tile renders as top-right-corner (grass overhangs
     // right) rather than top-middle — exactly the NSMB look.
     // -----------------------------------------------------------------------
-    const bool maskE = N ? (E && NE_solid) : E;  // express right wall edge g(8,1) down column boundary when NE_solid=0
-    const bool maskW = N ? (W && NW_solid) : W;  // express left wall edge g(3,1) down column boundary when NW_solid=0
+    const bool maskE = E;  // connect top surface flatly to adjacent solid
+    const bool maskW = W;  // connect top surface flatly to adjacent solid
 
     // Diagonals are only meaningful when BOTH adjacent orthogonals are solid
     const bool NE = (N && maskE) && NE_solid;
@@ -225,26 +225,30 @@ AutotileResult AutotileResolver::resolveDetailed(
 ) const {
     AutotileResult result;
 
-    // Base tile for the Back Layer (taller column wall/body)
+    // Base tile for the Back Layer
     result.texRect = resolve(
         screenGrid, col, screenRow,
         gridWidth, gridHeight,
         solidIds, def
     );
 
+    // Front Layer grass overlays apply ONLY to grassland_terrain tilesets (at_grassland)
+    if (def.textureAlias != "at_grassland") {
+        return result;
+    }
+
     // -----------------------------------------------------------------------
-    // Outer/Front Layer Overlay: Full Shorter Column 1-Block Expansion
+    // Outer/Front Layer Overlay: Expanded shorter column boundary
     //
-    // When cell (col, screenRow) is on a taller column and an adjacent column
-    // is a shorter ground column, the shorter column extends 1 block toward
-    // the taller one. Its complete image (top corner grass + wall body) is
-    // rendered on the Front Layer (overlay), overlapping the taller column.
+    // 1. Top Surface Rows (!N): Render Top Corner Grass g(8,0) or g(3,0)
+    // 2. Wall Body Rows (N):   Render Wall Tile g(8,1) or g(3,1)
     // -----------------------------------------------------------------------
+    const bool N = isSolid(screenGrid, col, screenRow - 1, gridWidth, gridHeight, solidIds);
     const bool S = isSolid(screenGrid, col, screenRow + 1, gridWidth, gridHeight, solidIds);
     const bool W = isSolid(screenGrid, col - 1, screenRow, gridWidth, gridHeight, solidIds);
     const bool E = isSolid(screenGrid, col + 1, screenRow, gridWidth, gridHeight, solidIds);
 
-    // 1. Check expansion from LEFT shorter column into THIS taller column
+    // 1. Expansion from LEFT shorter column into THIS taller column
     if (W) {
         int topLeftRow = -1;
         for (int r = screenRow; r >= 0; --r) {
@@ -257,20 +261,19 @@ AutotileResult AutotileResolver::resolveDetailed(
         }
 
         if (topLeftRow != -1 && screenRow >= topLeftRow) {
-            // Check if THIS column is taller (solid above topLeftRow)
             if (isSolid(screenGrid, col, topLeftRow - 1, gridWidth, gridHeight, solidIds)) {
                 result.hasOverlay = true;
-                if (screenRow == topLeftRow) {
-                    // Top-Right Corner Grass g(8,0) [137, 1]
+                if (!N || screenRow == topLeftRow) {
+                    // Top Surface Row of Shorter Column Expansion: Top-Right Corner Grass g(8,0) [137, 1]
                     result.overlayRect = def.maskToRect[80];
                 } else {
                     const bool S_left = isSolid(screenGrid, col - 1, screenRow + 1, gridWidth, gridHeight, solidIds);
                     if (!S_left && !S) {
                         // Bottom-Right Corner g(8,5) [137, 86]
-                        result.overlayRect = def.maskToRect[88];
+                        result.overlayRect = def.maskToRect[65];
                     } else {
                         // Right Wall g(8,1) [137, 18]
-                        result.overlayRect = def.maskToRect[81];
+                        result.overlayRect = def.maskToRect[243];
                     }
                 }
                 return result;
@@ -278,7 +281,7 @@ AutotileResult AutotileResolver::resolveDetailed(
         }
     }
 
-    // 2. Check expansion from RIGHT shorter column into THIS taller column
+    // 2. Expansion from RIGHT shorter column into THIS taller column
     if (E) {
         int topRightRow = -1;
         for (int r = screenRow; r >= 0; --r) {
@@ -291,20 +294,19 @@ AutotileResult AutotileResolver::resolveDetailed(
         }
 
         if (topRightRow != -1 && screenRow >= topRightRow) {
-            // Check if THIS column is taller (solid above topRightRow)
             if (isSolid(screenGrid, col, topRightRow - 1, gridWidth, gridHeight, solidIds)) {
                 result.hasOverlay = true;
-                if (screenRow == topRightRow) {
-                    // Top-Left Corner Grass g(3,0) [52, 1]
+                if (!N || screenRow == topRightRow) {
+                    // Top Surface Row of Shorter Column Expansion: Top-Left Corner Grass g(3,0) [52, 1]
                     result.overlayRect = def.maskToRect[20];
                 } else {
                     const bool S_right = isSolid(screenGrid, col + 1, screenRow + 1, gridWidth, gridHeight, solidIds);
                     if (!S_right && !S) {
                         // Bottom-Left Corner g(3,5) [52, 86]
-                        result.overlayRect = def.maskToRect[24];
+                        result.overlayRect = def.maskToRect[5];
                     } else {
                         // Left Wall g(3,1) [52, 18]
-                        result.overlayRect = def.maskToRect[21];
+                        result.overlayRect = def.maskToRect[31];
                     }
                 }
                 return result;
