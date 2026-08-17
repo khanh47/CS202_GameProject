@@ -194,98 +194,82 @@ void WorldMap::rebuild(
     // their own sprites and physics bodies; static terrain remains entirely
     // owned by TileMap plus the one collision body created above.
     if (hasAutotiles) {
-        // Build DSU connected-component map so resolve() can use
-        // component-relative posInRow for correct wave alternation.
-        _autotileResolver.precompute(screenGrid, _gridWidth, _gridHeight, solidIds);
-
-        for (int mapRow = 0; mapRow < _loadedRows; ++mapRow) {
-            const int screenRow = screenYForMapRow(mapRow);
-            const int columns = std::min(
-                static_cast<int>(layer[mapRow].size()),
-                _gridWidth
-            );
-
-            for (int column = 0; column < columns; ++column) {
-                const char symbol = layer[mapRow][column];
-                const auto specIt = specsBySymbol.find(symbol);
-                if (specIt == specsBySymbol.end()) {
-                    continue;
+        for (const auto& [defId, definition] : _autotileDefs) {
+            std::unordered_set<int> autotileSolidIds;
+            for (const auto& [symbol, spec] : specsBySymbol) {
+                if (spec.autotileId == defId) {
+                    autotileSolidIds.insert(tileIdFor(symbol));
                 }
+            }
 
-                const SpawnSpec& spec = specIt->second;
-                if (spec.objectKind || spec.autotileId.empty()) {
-                    continue;
-                }
+            _autotileResolver.precompute(screenGrid, _gridWidth, _gridHeight, autotileSolidIds);
 
-                sf::Texture* fallbackTexture = nullptr;
-                if (!spec.textureKey.empty()) {
-                    fallbackTexture = &resources.getTexture(
-                        spec.textureKey
+            for (int mapRow = 0; mapRow < _loadedRows; ++mapRow) {
+                const int screenRow = screenYForMapRow(mapRow);
+                const int columns = std::min(
+                    static_cast<int>(layer[mapRow].size()),
+                    _gridWidth
+                );
+
+                for (int column = 0; column < columns; ++column) {
+                    const char symbol = layer[mapRow][column];
+                    const auto specIt = specsBySymbol.find(symbol);
+                    if (specIt == specsBySymbol.end()) {
+                        continue;
+                    }
+
+                    const SpawnSpec& spec = specIt->second;
+                    if (spec.objectKind || spec.autotileId != defId) {
+                        continue;
+                    }
+
+                    sf::Texture* fallbackTexture = nullptr;
+                    if (!spec.textureKey.empty()) {
+                        fallbackTexture = &resources.getTexture(
+                            spec.textureKey
+                        );
+                    }
+                    if (fallbackTexture == nullptr) {
+                        continue;
+                    }
+
+                    sf::Texture& autotileTexture = resources.getTexture(
+                        definition.textureAlias
                     );
-                }
-                if (fallbackTexture == nullptr) {
-                    continue;
-                }
-
-                const auto definitionIt = _autotileDefs.find(
-                    spec.autotileId
-                );
-                if (definitionIt == _autotileDefs.end()) {
-                    _tileMap.setTile(
-                        column,
-                        screenRow,
-                        symbol,
-                        fallbackTexture
-                    );
-                    continue;
-                }
-
-                const AutotileTilesetDef& definition = definitionIt->second;
-                sf::Texture& autotileTexture = resources.getTexture(
-                    definition.textureAlias
-                );
-                const AutotileResult autoRes = _autotileResolver.resolveDetailed(
-                    screenGrid,
-                    column,
-                    screenRow,
-                    _gridWidth,
-                    _gridHeight,
-                    solidIds,
-                    definition
-                );
-                _tileMap.setTile(
-                    column,
-                    screenRow,
-                    symbol,
-                    &autotileTexture,
-                    autoRes.texRect
-                );
-                if (autoRes.hasOverlay) {
-                    _tileMap.setOverlayTile(
+                    const AutotileResult autoRes = _autotileResolver.resolveDetailed(
+                        screenGrid,
                         column,
                         screenRow,
                         _gridWidth,
                         _gridHeight,
-                        solidIds,
+                        autotileSolidIds,
                         definition
-                    ).texRect
-                );
-
-                if (spec.solid && spec.breakable) {
-                    setTileCollisionBreakTexture(
+                    );
+                    _tileMap.setTile(
                         column,
                         screenRow,
+                        symbol,
                         &autotileTexture,
-                        _autotileResolver.resolveDetailed(
-                            screenGrid,
+                        autoRes.texRect
+                    );
+                    if (autoRes.hasOverlay) {
+                        _tileMap.setOverlayTile(
                             column,
                             screenRow,
-                            _gridWidth,
-                            _gridHeight,
-                            solidIds,
-                            definition
-                        ).texRect
-                    );
+                            symbol,
+                            &autotileTexture,
+                            autoRes.overlayRect
+                        );
+                    }
+
+                    if (spec.solid && spec.breakable) {
+                        setTileCollisionBreakTexture(
+                            column,
+                            screenRow,
+                            &autotileTexture,
+                            autoRes.texRect
+                        );
+                    }
                 }
             }
         }
