@@ -18,6 +18,7 @@ void ResourceManager::_preLoadTexture(const std::string &filename, const std::st
 	if (!texture.loadFromFile(filename)) {
 		throw std::runtime_error("Failed to load texture: " + filename);
 	}
+	texture.setSmooth(false);
 
 	_textures[filename] = texture;
 }

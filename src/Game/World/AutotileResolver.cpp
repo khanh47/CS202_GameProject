@@ -174,8 +174,8 @@ sf::IntRect AutotileResolver::resolve(
     // block's right-top tile renders as top-right-corner (grass overhangs
     // right) rather than top-middle — exactly the NSMB look.
     // -----------------------------------------------------------------------
-    const bool maskE = N ? E : (E && !NE_solid);  // top-edge: only connect if neighbour is also top
-    const bool maskW = N ? W : (W && !NW_solid);  // top-edge: only connect if neighbour is also top
+    const bool maskE = N ? (E && NE_solid) : E;  // express right wall edge g(8,1) down column boundary when NE_solid=0
+    const bool maskW = N ? (W && NW_solid) : W;  // express left wall edge g(3,1) down column boundary when NW_solid=0
 
     // Diagonals are only meaningful when BOTH adjacent orthogonals are solid
     const bool NE = (N && maskE) && NE_solid;
@@ -194,45 +194,7 @@ sf::IntRect AutotileResolver::resolve(
 
     sf::IntRect rect = def.maskToRect[mask];
 
-    // -----------------------------------------------------------------------
-    // Transition-tile override: NSMB-style grass extension
-    //
-    // When this tile is a WALL tile (N=1) and the left/right neighbour is a
-    // top-surface tile (NW=0 while N+W=1, or NE=0 while N+E=1), apply the
-    // special "grass drapes over the wall" tile from the tileset.
-    //
-    // The transition mask values are:
-    //   grassFromLeft  → mask 81  (N=1 S=1 W=1 NW=0 E=0)
-    //   grassFromRight → mask 21  (N=1 E=1 S=1 NE=0 W=0)
-    //   flanked both   → mask 17  (N=1 S=1, treated as thin pillar mid)
-    //
-    // Because these masks are already defined in the JSON lookup table with
-    // the correct tile rects, we just recompute the mask for the transition
-    // case and re-look it up in def.maskToRect.
-    // -----------------------------------------------------------------------
-    if (N && S) {   // only wall/inner tiles qualify
-        const bool grassFromLeft  = W && !NW_solid && !maskE;
-        const bool grassFromRight = maskE && !NE_solid && !W;
-
-        if (grassFromLeft || grassFromRight) {
-            // Build a top-edge mask (N=0) so the JSON lookup returns a grass
-            // cap tile rather than a wall tile.  This makes the shorter
-            // column's grass cap extend one full tile into the taller column.
-            //
-            //   grassFromLeft  only → mask 80 (S+W)   → top-right corner g(8,0) ✓
-            //   grassFromRight only → mask 20 (E+S)   → top-left  corner g(3,0) ✓
-            //   both               → mask 84 (E+S+W)  → top-middle       g(4,0) ✓
-            const int transitionMask =
-                  (grassFromRight ? 4  : 0)   // E: connect right
-                | 16                           // S: always solid below
-                | (grassFromLeft  ? 64 : 0);  // W: connect left
-            rect = def.maskToRect[transitionMask];
-        }
-    }
-
-    // -----------------------------------------------------------------------
-    // Horizontal wave alternation driven by component-relative posInRow.
-    // -----------------------------------------------------------------------
+    // Horizontal wave alternation (A -> B pattern) for inner / top-mid tiles
     int posInRow = col;
     const auto key = static_cast<std::int64_t>(screenRow) * _precomputedGridWidth + col;
     const auto it  = _cellInfo.find(key);
@@ -240,9 +202,6 @@ sf::IntRect AutotileResolver::resolve(
         posInRow = it->second.posInRow;
     }
 
-    // Alternate inner / top-middle tiles between col-4 and col-5 variants
-    // (A→B wave pattern).  Wall and corner tiles are NOT alternated because
-    // row 2 of the tileset contains inner-corner tiles, not wall alternates.
     if ((posInRow % 2) != 0
         && rect.size.x == 16
         && rect.position.x == 69)   // col 4: inner-A or top-mid-A
@@ -255,7 +214,7 @@ sf::IntRect AutotileResolver::resolve(
 
 
 // ===========================================================================
-// resolveDetailed  –  slope detection + texture rect
+// resolveDetailed  –  slope detection + texture rect + front layer overlays
 // ===========================================================================
 AutotileResult AutotileResolver::resolveDetailed(
     const std::vector<std::vector<int>>& screenGrid,
@@ -266,14 +225,92 @@ AutotileResult AutotileResolver::resolveDetailed(
 ) const {
     AutotileResult result;
 
-    // Slopes in this project are placed as dedicated autotile IDs (e.g.
-    // "grassland_slope_up") rather than being auto-detected from terrain
-    // neighbour patterns.  resolveDetailed therefore delegates directly to
-    // resolve() for all terrain tiles.
+    // Base tile for the Back Layer (taller column wall/body)
     result.texRect = resolve(
         screenGrid, col, screenRow,
         gridWidth, gridHeight,
         solidIds, def
     );
+
+    // -----------------------------------------------------------------------
+    // Outer/Front Layer Overlay: Full Shorter Column 1-Block Expansion
+    //
+    // When cell (col, screenRow) is on a taller column and an adjacent column
+    // is a shorter ground column, the shorter column extends 1 block toward
+    // the taller one. Its complete image (top corner grass + wall body) is
+    // rendered on the Front Layer (overlay), overlapping the taller column.
+    // -----------------------------------------------------------------------
+    const bool S = isSolid(screenGrid, col, screenRow + 1, gridWidth, gridHeight, solidIds);
+    const bool W = isSolid(screenGrid, col - 1, screenRow, gridWidth, gridHeight, solidIds);
+    const bool E = isSolid(screenGrid, col + 1, screenRow, gridWidth, gridHeight, solidIds);
+
+    // 1. Check expansion from LEFT shorter column into THIS taller column
+    if (W) {
+        int topLeftRow = -1;
+        for (int r = screenRow; r >= 0; --r) {
+            if (!isSolid(screenGrid, col - 1, r - 1, gridWidth, gridHeight, solidIds)) {
+                if (isSolid(screenGrid, col - 1, r, gridWidth, gridHeight, solidIds)) {
+                    topLeftRow = r;
+                }
+                break;
+            }
+        }
+
+        if (topLeftRow != -1 && screenRow >= topLeftRow) {
+            // Check if THIS column is taller (solid above topLeftRow)
+            if (isSolid(screenGrid, col, topLeftRow - 1, gridWidth, gridHeight, solidIds)) {
+                result.hasOverlay = true;
+                if (screenRow == topLeftRow) {
+                    // Top-Right Corner Grass g(8,0) [137, 1]
+                    result.overlayRect = def.maskToRect[80];
+                } else {
+                    const bool S_left = isSolid(screenGrid, col - 1, screenRow + 1, gridWidth, gridHeight, solidIds);
+                    if (!S_left && !S) {
+                        // Bottom-Right Corner g(8,5) [137, 86]
+                        result.overlayRect = def.maskToRect[88];
+                    } else {
+                        // Right Wall g(8,1) [137, 18]
+                        result.overlayRect = def.maskToRect[81];
+                    }
+                }
+                return result;
+            }
+        }
+    }
+
+    // 2. Check expansion from RIGHT shorter column into THIS taller column
+    if (E) {
+        int topRightRow = -1;
+        for (int r = screenRow; r >= 0; --r) {
+            if (!isSolid(screenGrid, col + 1, r - 1, gridWidth, gridHeight, solidIds)) {
+                if (isSolid(screenGrid, col + 1, r, gridWidth, gridHeight, solidIds)) {
+                    topRightRow = r;
+                }
+                break;
+            }
+        }
+
+        if (topRightRow != -1 && screenRow >= topRightRow) {
+            // Check if THIS column is taller (solid above topRightRow)
+            if (isSolid(screenGrid, col, topRightRow - 1, gridWidth, gridHeight, solidIds)) {
+                result.hasOverlay = true;
+                if (screenRow == topRightRow) {
+                    // Top-Left Corner Grass g(3,0) [52, 1]
+                    result.overlayRect = def.maskToRect[20];
+                } else {
+                    const bool S_right = isSolid(screenGrid, col + 1, screenRow + 1, gridWidth, gridHeight, solidIds);
+                    if (!S_right && !S) {
+                        // Bottom-Left Corner g(3,5) [52, 86]
+                        result.overlayRect = def.maskToRect[24];
+                    } else {
+                        // Left Wall g(3,1) [52, 18]
+                        result.overlayRect = def.maskToRect[21];
+                    }
+                }
+                return result;
+            }
+        }
+    }
+
     return result;
 }
