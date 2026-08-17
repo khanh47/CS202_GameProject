@@ -12,9 +12,11 @@
 #include "Game/Objects/Player/State/PlayerState.h"
 
 class GameWorld;
+class Block;
 class Enemy;
 class Item;
 class KoopaShell;
+class Pipe;
 enum class ScoreEventType;
 
 class Player: public GameObject {
@@ -29,11 +31,12 @@ public:
     void changeToNormalState();
     void changeToSuperState();
     void changeToFireState();
-    void applyMegaState(float durationSeconds = 5.0f);
+    static constexpr float megaStateDurationSeconds = 16.0f;
+    void applyMegaState(float durationSeconds = megaStateDurationSeconds);
     void applyStarManState(float durationSeconds = 10.0f);
     void revertDecoratedState();
 
-    enum class TransformTarget { Normal, Super, Fire, StarMan, None };
+    enum class TransformTarget { Normal, Super, Fire, Mega, MegaEnd, StarMan, None };
 
     void attack(GameWorld& world);
     void startTransformation(TransformTarget target, GameWorld& world, float duration = 1.0f);
@@ -42,8 +45,12 @@ public:
     void setGameWorld(GameWorld& world) { _world = &world; }
     GameWorld* getGameWorld() { return _world; }
     const std::string& getCharacter() const { return _character; }
+    void refreshStatePresentation();
     void onContact(GameObject& other, const b2ContactData& contactData, b2ShapeId ownShape) override;
     void finalizeGroundContacts() override;
+    bool hasFallenFromHighPlace() const noexcept;
+    /// Returns true while the player is under Mega Mushroom effect.
+    bool isMegaState() const noexcept;
 
     PlayerState* getState() const { return _state.get(); }
     bool isTransforming() const { return _isTransforming; }
@@ -74,9 +81,11 @@ public:
         if (auto* moveable = getBehaviour<Moveable>()) moveable->stopJump();
     }
     void setInteractHeld(bool held) {
+        _flyMode = held && _flyMode ? false : _flyMode; // if holding interact isn't needed here, just add toggle
         _interactHeld = held;
         if (auto* hold = getBehaviour<ShellHoldBehaviour>()) hold->setInteractHeld(held);
     }
+    void toggleFlyMode() { _flyMode = !_flyMode; }
     void setMoveDownHeld(bool held) { _moveDownHeld = held; }
     void setMoveUpHeld(bool held) { _moveUpHeld = held; }
     bool isMoveDownHeld() const { return _moveDownHeld; }
@@ -110,6 +119,11 @@ private:
         const b2ContactData& contactData,
         b2ShapeId ownShape
     );
+    void handleMegaEnvironmentContact(
+        GameObject& other,
+        const b2ContactData& contactData,
+        b2ShapeId ownShape
+    );
     void handlePlayerContact(
         Player& player,
         const b2ContactData& contactData,
@@ -119,8 +133,11 @@ private:
         const b2ContactData& contactData,
         b2ShapeId ownShape
     ) const;
+    void updateFallTracking();
     void bounce(float verticalVelocity = -12.0f);
     void awardScore(ScoreEventType event, sf::Vector2f position);
+    void beginMegaEndTransformation();
+    bool isStarManState() const noexcept;
 
     float _baseMoveSpeed = 8.0f;
     float _baseJumpSpeed = 20.0f;
@@ -133,12 +150,19 @@ private:
     float _transformTimer = 0.0f;
     float _transformDuration = 1.0f;
     float _transformStartScale = 1.0f;
+    float _transformEndScale = 1.5f;
     TransformTarget _transformTarget = TransformTarget::Fire;
+    std::unique_ptr<PlayerState> _stateAfterTransformation;
     SparkleEffect _starSparkle{30.0f, 0.5f};
     float _effectTime = 0.0f;
     GameWorld* _world = nullptr;
     bool _interactHeld = false;
     bool _moveDownHeld = false;
     bool _moveUpHeld = false;
+    bool _flyMode = false;
     float _warpCooldown = 0.0f;
+    float _fallStartY = 0.0f;
+    float _fallDistancePixels = 0.0f;
+    float _maxDownwardVelocityPixelsPerSecond = 0.0f;
+    bool _fallTrackingActive = false;
 };

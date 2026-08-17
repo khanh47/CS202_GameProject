@@ -173,7 +173,9 @@ void WorldMap::rebuild(
                     createTileCollision(
                         physicsWorld,
                         column,
-                        screenRow
+                        screenRow,
+                        spec.breakable,
+                        texture
                     );
                 }
                 continue;
@@ -262,9 +264,27 @@ void WorldMap::rebuild(
                     _tileMap.setOverlayTile(
                         column,
                         screenRow,
-                        symbol,
+                        _gridWidth,
+                        _gridHeight,
+                        solidIds,
+                        definition
+                    ).texRect
+                );
+
+                if (spec.solid && spec.breakable) {
+                    setTileCollisionBreakTexture(
+                        column,
+                        screenRow,
                         &autotileTexture,
-                        autoRes.overlayRect
+                        _autotileResolver.resolveDetailed(
+                            screenGrid,
+                            column,
+                            screenRow,
+                            _gridWidth,
+                            _gridHeight,
+                            solidIds,
+                            definition
+                        ).texRect
                     );
                 }
             }
@@ -275,6 +295,21 @@ void WorldMap::rebuild(
 void WorldMap::renderTiles(sf::RenderTarget& target) {
     _tileMap.updateVisibleVertices(target.getView());
     target.draw(_tileMap);
+}
+
+void WorldMap::cleanupDestroyedTiles() {
+    std::vector<TileCollision> liveTiles;
+    liveTiles.reserve(_tileCollisionObjects.size());
+
+    for (TileCollision& tile : _tileCollisionObjects) {
+        if (!tile.object || tile.object->isPendingDestroy()) {
+            _tileMap.setTile(tile.column, tile.screenRow, '.', nullptr);
+            continue;
+        }
+        liveTiles.push_back(std::move(tile));
+    }
+
+    _tileCollisionObjects = std::move(liveTiles);
 }
 
 sf::FloatRect WorldMap::getBounds() const {
@@ -297,7 +332,10 @@ int WorldMap::screenYForMapRow(int mapRow) const noexcept {
 void WorldMap::createTileCollision(
     PhysicsWorld& physicsWorld,
     int column,
-    int screenRow
+    int screenRow,
+    bool breakable,
+    const sf::Texture* texture,
+    sf::IntRect textureRect
 ) {
     // Keep one static body per occupied cell. Besides making tile collision
     // ownership explicit, this lets TerrainSeamFilter remove internal seams
@@ -311,6 +349,8 @@ void WorldMap::createTileCollision(
         },
         {_cellSize, _cellSize}
     );
+    collisionTile->setBreakable(breakable);
+    collisionTile->setBreakEffectTexture(texture, textureRect);
     _terrainSeamFilter.addBlock(
         collisionTile,
         column,
@@ -318,7 +358,29 @@ void WorldMap::createTileCollision(
         column * _cellSize,
         (column + 1) * _cellSize
     );
-    _tileCollisionObjects.push_back(std::move(collisionTile));
+    _tileCollisionObjects.push_back({
+        std::move(collisionTile),
+        column,
+        screenRow
+    });
+}
+
+void WorldMap::setTileCollisionBreakTexture(
+    int column,
+    int screenRow,
+    const sf::Texture* texture,
+    sf::IntRect textureRect
+) {
+    for (TileCollision& tile : _tileCollisionObjects) {
+        if (tile.column != column || tile.screenRow != screenRow) {
+            continue;
+        }
+
+        if (auto block = std::dynamic_pointer_cast<Block>(tile.object)) {
+            block->setBreakEffectTexture(texture, textureRect);
+        }
+        return;
+    }
 }
 
 void WorldMap::createBoundaryWalls(PhysicsWorld& physicsWorld) {

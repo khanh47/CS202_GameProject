@@ -28,6 +28,7 @@ struct SpawnSpec {
     bool addSeamFilter = false;
     bool addController = false;
     bool solid = false;
+    bool breakable = false;
     std::string autotileId;
     std::string slopeType;
     std::shared_ptr<SpawnSpec> contents;

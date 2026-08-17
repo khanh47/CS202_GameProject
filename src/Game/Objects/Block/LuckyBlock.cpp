@@ -89,6 +89,10 @@ void LuckyBlock::onCreateShapeDef(b2ShapeDef& def) {
 }
 
 void LuckyBlock::onContact(GameObject& other, const b2ContactData& contactData, b2ShapeId ownShape) {
+    if (tryBreakOnContact(other, contactData, ownShape)) {
+        return;
+    }
+
     if (auto* player = dynamic_cast<Player*>(&other)) {
         if (isBumped(other, contactData, ownShape)) {
             if (_hitCooldown > 0.0f || capacity <= 0)  return;

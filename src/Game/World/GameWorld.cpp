@@ -61,13 +61,35 @@ void GameWorld::updateSimulation(const float& fixedDt) {
     handleSensors(_physicsWorld.getSensorEvents());
     handleContacts(_physicsWorld.getContactEvents());
 
+    // Pipe segments are marked inactive during contact callbacks, but their
+    // Box2D shapes must be destroyed after the buffered events are consumed.
+    // Flush now so the broken segment has no physical hitbox before the next
+    // simulation step.
+    for (const std::shared_ptr<GameObject>& object : _objectStore.objects()) {
+        if (auto pipe = std::dynamic_pointer_cast<Pipe>(object)) {
+            pipe->flushBrokenSegments();
+        }
+    }
+
+    // Falling past the loaded world is a lethal void hazard for every state,
+    // including Mega. This deliberately uses Player::destroy() rather than
+    // the state-level enemy immunity path.
+    for (const std::shared_ptr<GameObject>& object : _objectStore.objects()) {
+        if (auto player = std::dynamic_pointer_cast<Player>(object);
+            player && player->getPosition().y > voidThreshold) {
+            player->destroy();
+        }
+    }
+
     if (_levelCleared) {
         _objectStore.cleanupDestroyed();
+        _worldMap.cleanupDestroyedTiles();
         return;
     }
 
     _objectStore.finalizeSimulation(fixedDt);
     _objectStore.cleanupDestroyed();
+    _worldMap.cleanupDestroyedTiles();
 }
 
 void GameWorld::updateVisuals(float deltaTime) {
@@ -75,6 +97,13 @@ void GameWorld::updateVisuals(float deltaTime) {
     for (FireballPool& pool : _fireballPools) {
         pool.updateVisuals(deltaTime);
     }
+    for (BlockBreakEffect& effect : _blockBreakEffects) {
+        effect.update(deltaTime);
+    }
+    std::erase_if(
+        _blockBreakEffects,
+        [](const BlockBreakEffect& effect) { return effect.isFinished(); }
+    );
 }
 
 void GameWorld::render(sf::RenderTarget& target) {
@@ -84,6 +113,9 @@ void GameWorld::render(sf::RenderTarget& target) {
         _objectStore,
         _fireballPools
     );
+    for (const BlockBreakEffect& effect : _blockBreakEffects) {
+        effect.render(target);
+    }
 }
 
 void GameWorld::handleContacts(b2ContactEvents contactEvents) {
@@ -101,6 +133,7 @@ void GameWorld::handleSensors(b2SensorEvents sensorEvents) {
 void GameWorld::loadMap(const LevelData& levelData) {
     _currentLevelData = levelData;
     _levelCleared = false;
+    _blockBreakEffects.clear();
     _worldMap.rebuild(
         levelData,
         _physicsWorld,
@@ -109,6 +142,17 @@ void GameWorld::loadMap(const LevelData& levelData) {
         _objectStore,
         *this
     );
+}
+
+void GameWorld::spawnBlockBreakEffect(
+    sf::Vector2f position,
+    sf::Vector2f blockSize,
+    const sf::Texture* texture,
+    sf::IntRect textureRect
+) {
+    BlockBreakEffect effect;
+    effect.spawn(position, blockSize, texture, textureRect);
+    _blockBreakEffects.push_back(std::move(effect));
 }
 
 void GameWorld::loadLevel(const std::string& levelPath) {
@@ -307,6 +351,8 @@ std::shared_ptr<GameObject> GameWorld::spawnItem(
         texture = &resources.getTexture("goal_flag_spritesheet");
     } else if (itemTypeKey == "CheckpointFlag") {
         texture = &resources.getTexture("checkpoint_flag_spritesheet");
+    } else if (itemTypeKey == "MegaMushroom") {
+        texture = &resources.getTexture("mega_mushroom_spritesheet");
     } else {
         texture = &resources.getTexture("mario_and_items");
     }

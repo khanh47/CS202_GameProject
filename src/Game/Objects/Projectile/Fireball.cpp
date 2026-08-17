@@ -115,6 +115,10 @@ void Fireball::onContact(GameObject& other, const b2ContactData&, b2ShapeId) {
     }
 
     if (auto* player = dynamic_cast<Player*>(&other)) {
+        if (player->getState() && player->getState()->isInvincible()) {
+            deactivate();
+            return;
+        }
         other.destroy();
         deactivate();
     }

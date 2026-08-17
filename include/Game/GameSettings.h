@@ -40,6 +40,7 @@ public:
     sf::Keyboard::Key keyMoveDown = sf::Keyboard::Key::S;
     sf::Keyboard::Key keyAttack = sf::Keyboard::Key::X;
     sf::Keyboard::Key keyInteract = sf::Keyboard::Key::LShift;
+    sf::Keyboard::Key keyToggleFlyMode = sf::Keyboard::Key::F;
 
     // Player 2 controls (keybindings)
     sf::Keyboard::Key key2MoveLeft = sf::Keyboard::Key::Left;
@@ -48,6 +49,7 @@ public:
     sf::Keyboard::Key key2MoveDown = sf::Keyboard::Key::Down;
     sf::Keyboard::Key key2Attack = sf::Keyboard::Key::M;
     sf::Keyboard::Key key2Interact = sf::Keyboard::Key::RShift;
+    sf::Keyboard::Key key2ToggleFlyMode = sf::Keyboard::Key::F;
 
     sf::Keyboard::Key getKeyForAction(ActionType action) const;
     void setKeyForAction(ActionType action, sf::Keyboard::Key key);

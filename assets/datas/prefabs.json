@@ -5,7 +5,8 @@
         },
         "brick": {
             "texture": "brick",
-            "solid": true
+            "solid": true,
+            "breakable": true
         },
         "player_mario": {
             "kind": "player",
@@ -130,6 +131,16 @@
             "size": [
                 54,
                 54
+            ],
+            "centerVertically": true
+        },
+        "item_mega_mushroom": {
+            "kind": "item",
+            "typeKey": "MegaMushroom",
+            "texture": "mega_mushroom_spritesheet",
+            "size": [
+                192,
+                160
             ],
             "centerVertically": true
         },

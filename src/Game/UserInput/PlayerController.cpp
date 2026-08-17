@@ -45,6 +45,7 @@ void PlayerController::refreshBindings() {
         BindKey(settings.keyMoveDown, ActionType::MoveDown);
         BindKey(settings.keyAttack, ActionType::Attack);
         BindKey(settings.keyInteract, ActionType::Interact);
+        BindKey(settings.keyToggleFlyMode, ActionType::ToggleFlyMode);
     } else {
         const auto& settings = GameSettings::getInstance();
         BindKey(settings.key2MoveLeft, ActionType::MoveLeft);
@@ -53,6 +54,7 @@ void PlayerController::refreshBindings() {
         BindKey(settings.key2MoveDown, ActionType::MoveDown);
         BindKey(settings.key2Attack, ActionType::Attack);
         BindKey(settings.key2Interact, ActionType::Interact);
+        BindKey(settings.key2ToggleFlyMode, ActionType::ToggleFlyMode);
     }
 }
 
@@ -75,6 +77,9 @@ void PlayerController::applyPressAction(ActionType action) {
             break;
         case ActionType::Interact:
             _player.setInteractHeld(true);
+            break;
+        case ActionType::ToggleFlyMode:
+            _player.toggleFlyMode();
             break;
         case ActionType::MoveDown:
             _player.setMoveDownHeld(true);
@@ -106,6 +111,7 @@ void PlayerController::applyReleaseAction(ActionType action) {
         case ActionType::Accelerate:
         case ActionType::Decelerate:
         case ActionType::Attack:
+        case ActionType::ToggleFlyMode:
             break;
     }
 }

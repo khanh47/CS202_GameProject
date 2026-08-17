@@ -12,7 +12,8 @@ enum class ActionType {
     Accelerate,
     Decelerate,
     Attack,
-    Interact 
+    Interact,
+    ToggleFlyMode
 };
 
 class Action {

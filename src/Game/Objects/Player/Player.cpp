@@ -13,6 +13,7 @@
 #include "Game/Objects/Enemy/Enemy.h"
 #include "Game/Objects/Item/ConcreteItems/FireFlower.h"
 #include "Game/Objects/Item/ConcreteItems/SuperMushroom.h"
+#include "Game/Objects/Item/ConcreteItems/MegaMushroom.h"
 #include "Game/Objects/Item/ConcreteItems/SuperStar.h"
 #include "Game/Objects/Item/ConcreteItems/Coin.h"
 #include "Game/Objects/Item/ConcreteItems/MegaCoin.h"
@@ -31,6 +32,14 @@
 #include <ctime>
 #include <iostream>
 #include <iterator>
+
+namespace {
+constexpr float highFallBreakDistancePixels =
+    25.0f * PhysicsUnits::pixelsPerMeter;
+// With the player's current gravity scale, this is approximately the impact
+// speed reached after a 25-cell fall. Capture it before Box2D resolves contact.
+constexpr float highFallBreakVelocityPixelsPerSecond = 2800.0f;
+}
 
 Player::Player() : GameObject() {
     addBehaviour<Animatable>();
@@ -98,6 +107,12 @@ void Player::finalizeGroundContacts() {
     moveable->finalizeGroundContacts();
     // Reset the stomp combo whenever the player is on solid ground,
     // so the ladder only grows during genuine airborne chains.
+    if (moveable->hasGroundSupport()) {
+        _fallTrackingActive = false;
+        _fallDistancePixels = 0.0f;
+        _fallStartY = getPosition().y;
+        _maxDownwardVelocityPixelsPerSecond = 0.0f;
+    }
     if (!moveable->isAirbone()) {
         if (_world && _world->getScoreManager()) {
             _world->getScoreManager()->handleEvent(ScoreEventType::MarioLanded);
@@ -114,6 +129,14 @@ void Player::setState(std::unique_ptr<PlayerState> newState) {
 
     _state = std::move(newState);
     _state->onEnter(*this);
+    refreshStatePresentation();
+}
+
+void Player::refreshStatePresentation() {
+    if (!_state) {
+        return;
+    }
+
     _attackStrategy = _state->createAttackStrategy();
 
     // Apply texture and animation set dynamically from the current state
@@ -156,7 +179,26 @@ void Player::applyMegaState(float durationSeconds) {
     if (!_state) {
         _state = std::make_unique<NormalState>(_character);
     }
-    setState(std::make_unique<MegaStateDecorator>(std::move(_state), durationSeconds));
+
+    if (auto* megaState = dynamic_cast<MegaStateDecorator*>(_state.get())) {
+        megaState->resetTimer(durationSeconds);
+        return;
+    }
+
+    std::unique_ptr<PlayerState> wrappedState = std::move(_state);
+    std::unique_ptr<PlayerState> stateToRestore;
+    if (dynamic_cast<FireState*>(wrappedState.get())) {
+        // Mega temporarily presents the normal state and disables fireballs,
+        // but keeps the FireState so it can be restored when Mega expires.
+        stateToRestore = std::move(wrappedState);
+        wrappedState = std::make_unique<NormalState>(_character);
+    }
+
+    setState(std::make_unique<MegaStateDecorator>(
+        std::move(wrappedState),
+        durationSeconds,
+        std::move(stateToRestore)
+    ));
 }
 
 void Player::applyStarManState(float durationSeconds) {
@@ -189,7 +231,7 @@ void Player::updateSimulation(const float &fixedDt) {
     }
 
     _warpCooldown = std::max(0.0f, _warpCooldown - fixedDt);
-    if (_world && _warpCooldown <= 0.0f
+    if (_world && !isMegaState() && _warpCooldown <= 0.0f
         && (_interactHeld || _moveDownHeld || _moveUpHeld)) {
         if (_world->tryWarpPlayer(*this)) {
             _warpCooldown = 0.35f;
@@ -233,12 +275,15 @@ void Player::updateSimulation(const float &fixedDt) {
         return;
     }
 
+    updateFallTracking();
+
     if (auto* hold = getBehaviour<ShellHoldBehaviour>()) {
         hold->updateSimulation(fixedDt);
     }
 
     float moveSpeed = _baseMoveSpeed;
     float jumpSpeed = _baseJumpSpeed;
+
     if (_state) {
         moveSpeed *= _state->getMoveSpeedMultiplier();
         jumpSpeed *= _state->getJumpSpeedMultiplier();
@@ -258,12 +303,75 @@ void Player::updateSimulation(const float &fixedDt) {
     }
 
 
-    b2Body_SetGravityScale(_body->getId(), 4.0f);
-    if (moveable->isAirbone() || moveable->isJumping()) {
-        if (velocity.y > 0) b2Body_SetGravityScale(_body->getId(), moveable->isJumping() ? 3.0f : 4.0f);
+    if (_flyMode) {
+        b2Body_SetGravityScale(_body->getId(), 0.0f);
+        if (moveable->isJumping() || _moveUpHeld) {
+            velocity.y = -moveSpeed;
+        } else if (_moveDownHeld) {
+            velocity.y = moveSpeed;
+        } else {
+            velocity.y = 0.0f;
+        }
+    } else {
+        b2Body_SetGravityScale(_body->getId(), 4.0f);
+        if (moveable->isAirbone() || moveable->isJumping()) {
+            if (velocity.y > 0) b2Body_SetGravityScale(_body->getId(), moveable->isJumping() ? 3.0f : 4.0f);
+        }
     }
 
     b2Body_SetLinearVelocity(_body->getId(), velocity);
+}
+
+bool Player::hasFallenFromHighPlace() const noexcept {
+    if (!_fallTrackingActive) {
+        return false;
+    }
+
+    const float currentFallDistance = hasValidBody()
+        ? getPosition().y - _fallStartY
+        : 0.0f;
+    return std::max(_fallDistancePixels, currentFallDistance)
+        >= highFallBreakDistancePixels
+        || _maxDownwardVelocityPixelsPerSecond
+            >= highFallBreakVelocityPixelsPerSecond;
+}
+
+void Player::updateFallTracking() {
+    auto* moveable = getBehaviour<Moveable>();
+    if (!moveable || !hasValidBody()) {
+        return;
+    }
+
+    const float currentY = getPosition().y;
+    if (moveable->hasGroundSupport()) {
+        _fallTrackingActive = false;
+        _fallDistancePixels = 0.0f;
+        _fallStartY = currentY;
+        _maxDownwardVelocityPixelsPerSecond = 0.0f;
+        return;
+    }
+
+    if (!_fallTrackingActive) {
+        _fallTrackingActive = true;
+        _fallStartY = currentY;
+        _fallDistancePixels = 0.0f;
+        _maxDownwardVelocityPixelsPerSecond = 0.0f;
+    }
+
+    _fallDistancePixels = std::max(
+        _fallDistancePixels,
+        currentY - _fallStartY
+    );
+
+    const b2Vec2 velocityMeters = b2Body_GetLinearVelocity(_body->getId());
+    const float downwardVelocityPixels =
+        PhysicsUnits::toPixels(velocityMeters.y);
+    if (downwardVelocityPixels > 0.0f) {
+        _maxDownwardVelocityPixelsPerSecond = std::max(
+            _maxDownwardVelocityPixelsPerSecond,
+            downwardVelocityPixels
+        );
+    }
 }
 
 void Player::finalizeSimulation(const float &fixedDt) {
@@ -299,6 +407,11 @@ void Player::onContact(GameObject& other, const b2ContactData& contactData, b2Sh
         handleItemContact(*item);
         return;
     }
+    if (isMegaState()
+        && (dynamic_cast<Block*>(&other) || dynamic_cast<Pipe*>(&other))) {
+        handleMegaEnvironmentContact(other, contactData, ownShape);
+        return;
+    }
     if (auto* shell = dynamic_cast<KoopaShell*>(&other)) {
         handleShellContact(*shell, contactData, ownShape);
         return;
@@ -313,7 +426,10 @@ void Player::onContact(GameObject& other, const b2ContactData& contactData, b2Sh
 }
 
 void Player::handleItemContact(Item& item) {
-    if (auto* mushroom = dynamic_cast<SuperMushroom*>(&item)) {
+    if (auto* megaMushroom = dynamic_cast<MegaMushroom*>(&item)) {
+        megaMushroom->onPickup(*this);
+        awardScore(ScoreEventType::PowerupCollected, getPosition());
+    } else if (auto* mushroom = dynamic_cast<SuperMushroom*>(&item)) {
         if (_state) _state->handleSuperMushroom(*this);
         awardScore(ScoreEventType::PowerupCollected, getPosition());
         mushroom->destroy();
@@ -331,6 +447,73 @@ void Player::handleItemContact(Item& item) {
     } else if (auto* megaCoin = dynamic_cast<MegaCoin*>(&item)) {
         awardScore(ScoreEventType::MegaCoinCollected, getPosition());
         megaCoin->destroy();
+    }
+}
+
+void Player::beginMegaEndTransformation() {
+    auto* megaState = dynamic_cast<MegaStateDecorator*>(_state.get());
+    if (!megaState) {
+        revertDecoratedState();
+        return;
+    }
+
+    _stateAfterTransformation = megaState->takeStateAfterMega();
+    if (!_stateAfterTransformation) {
+        _stateAfterTransformation = std::make_unique<NormalState>(_character);
+    }
+    _transformEndScale = _stateAfterTransformation->getScaleMultiplier().x;
+
+    if (_world) {
+        startTransformation(TransformTarget::MegaEnd, *_world);
+    } else {
+        setState(std::move(_stateAfterTransformation));
+    }
+}
+
+void Player::handleMegaEnvironmentContact(
+    GameObject& other,
+    const b2ContactData& contactData,
+    b2ShapeId ownShape
+) {
+    // Mega destroys solid world obstacles on contact. The object's normal
+    // cleanup path removes its body and, for tile terrain, its map tile.
+    if (auto* block = dynamic_cast<Block*>(&other)) {
+        // Keep the map's indestructible ground/support tiles in place. Brick
+        // tiles and live block objects still yield immediately to Mega.
+        if ((block->isBreakable() || !block->isRenderedByTileMap())
+            && !block->isPendingDestroy()) {
+            if (_world) {
+                block->spawnBreakEffect(*_world);
+            }
+            block->destroy();
+        }
+        return;
+    }
+
+    if (auto* pipe = dynamic_cast<Pipe*>(&other)) {
+        if (!b2Shape_IsValid(ownShape)) {
+            return;
+        }
+
+        const b2ShapeId pipeShape =
+            B2_ID_EQUALS(contactData.shapeIdA, ownShape)
+            ? contactData.shapeIdB
+            : contactData.shapeIdA;
+
+        if (_world) {
+            if (const auto breakData = pipe->getSegmentBreakData(pipeShape)) {
+                _world->spawnBlockBreakEffect(
+                    breakData->position,
+                    breakData->size,
+                    pipe->getTexture(),
+                    breakData->textureRect
+                );
+            }
+        }
+        pipe->breakSegment(pipeShape);
+        // Shape destruction invalidates the future Box2D end event, so clear
+        // this player's ground tracker explicitly if this segment supported it.
+        endGroundContact(pipeShape);
     }
 }
 
@@ -428,6 +611,14 @@ void Player::awardScore(ScoreEventType event, sf::Vector2f position) {
     }
 }
 
+bool Player::isMegaState() const noexcept {
+    return dynamic_cast<const MegaStateDecorator*>(_state.get()) != nullptr;
+}
+
+bool Player::isStarManState() const noexcept {
+    return dynamic_cast<const StarManStateDecorator*>(_state.get()) != nullptr;
+}
+
 void Player::onCreateBodyDef(b2BodyDef& def) {
     def.type = b2_dynamicBody;
     def.motionLocks.angularZ = true;
@@ -471,7 +662,8 @@ void Player::startTransformation(TransformTarget target, GameWorld& world, float
     _transformDuration = duration > 0.0f ? duration : 1.0f;
     _transformTarget = target;
 
-    // Snapshot current scale so the animation lerps from it to the target (1.25x)
+    // Snapshot current scale so the animation can lerp to the target state
+    // scale, including the colossal Mega scale.
     _transformStartScale = _state ? _state->getScaleMultiplier().x : 1.0f;
 
     // Stop movement inputs and clear horizontal physics velocity when transformation starts
@@ -530,6 +722,14 @@ void Player::onUpdateVisuals(float deltaTime) {
                 applyStarManState(10.0f);
             } else if (_transformTarget == TransformTarget::Super) {
                 changeToSuperState();
+            } else if (_transformTarget == TransformTarget::Mega) {
+                applyMegaState(megaStateDurationSeconds);
+            } else if (_transformTarget == TransformTarget::MegaEnd) {
+                if (_stateAfterTransformation) {
+                    setState(std::move(_stateAfterTransformation));
+                } else {
+                    changeToNormalState();
+                }
             } else if (_transformTarget == TransformTarget::None) {
                 if (_state) {
                     sf::Texture& tex = ResourceManager::getInstance().getTexture(_state->getTextureAlias());
@@ -542,7 +742,14 @@ void Player::onUpdateVisuals(float deltaTime) {
         }
 
         // Lerp from the pre-transformation scale to target scale
-        float targetScale = (_transformTarget == TransformTarget::StarMan) ? _transformStartScale : 1.5f;
+        float targetScale = 1.5f;
+        if (_transformTarget == TransformTarget::MegaEnd) {
+            targetScale = _transformEndScale;
+        } else if (_transformTarget == TransformTarget::StarMan) {
+            targetScale = _transformStartScale;
+        } else if (_transformTarget == TransformTarget::Mega) {
+            targetScale = MegaStateDecorator::scaleMultiplier;
+        }
         float progress = 1.0f - (_transformTimer / _transformDuration);
         progress = std::max(0.0f, std::min(1.0f, progress));
         float currentScale = _transformStartScale + (targetScale - _transformStartScale) * progress;
@@ -564,6 +771,10 @@ void Player::onUpdateVisuals(float deltaTime) {
         // State replacement is deferred until update() returns, so a decorator
         // never destroys itself while one of its member functions is active.
         if (_state->isExpired()) {
+            if (isMegaState()) {
+                beginMegaEndTransformation();
+                return;
+            }
             revertDecoratedState();
         }
         if (_state) {
@@ -581,8 +792,8 @@ void Player::onUpdateVisuals(float deltaTime) {
         animatable->updateVisualState(deltaTime, scaledHitbox, facingLeft);
     }
 
-    // Drive sparkle particles when in invincible (StarMan) state
-    if (_state && _state->isInvincible() && hasValidBody()) {
+    // Sparkles belong only to StarMan; Mega uses its dedicated glow shader.
+    if (isStarManState() && hasValidBody()) {
         sf::Vector2f pos = getPosition();
         _starSparkle.update(deltaTime, pos, {scaledHitbox.x * 0.5f, scaledHitbox.y * 0.5f});
     }
@@ -598,6 +809,8 @@ void Player::onRenderVisual(sf::RenderTarget& target, const sf::Vector2f& positi
     
     if (_isTransforming) {
         activeShader = PlayerShaders::getInstance().getBlinkShader();
+    } else if (isMegaState()) {
+        activeShader = PlayerShaders::getInstance().getMegaGlowShader();
     } else if (_state && _state->isInvincible()) {
         activeShader = PlayerShaders::getInstance().getRainbowShader();
     }
@@ -609,8 +822,8 @@ void Player::onRenderVisual(sf::RenderTarget& target, const sf::Vector2f& positi
         animatable->renderVisualState(target, position, 0.0f, activeShader);
     }
 
-    // Overlay sparkle particles during StarMan invincibility
-    if (_state && _state->isInvincible()) {
+    // Overlay sparkle particles during StarMan invincibility only.
+    if (isStarManState()) {
         _starSparkle.render(target);
     }
 }

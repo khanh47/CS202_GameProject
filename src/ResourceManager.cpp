@@ -196,6 +196,7 @@ ResourceManager::ResourceManager() {
 	_preLoadTexture("assets/spritesheets/transparent_coin_block_spritesheet.png", "coin_block_spritesheet");
 	_preLoadTexture("assets/spritesheets/transparent_lucky_block_spritesheet.png", "lucky_block_spritesheet");
 	_preLoadTexture("assets/spritesheets/transparent_mega_coin_strip.png", "mega_coin_spritesheet");
+	_preLoadTexture("assets/spritesheets/mega_mushroom_spritesheet.png", "mega_mushroom_spritesheet");
 
 	_preLoadTexture("assets/spritesheets/goal_flag_spritesheet.png", "goal_flag_spritesheet");
 	_preLoadTexture("assets/spritesheets/checkpoint_flag_spritesheet.png", "checkpoint_flag_spritesheet");

@@ -8,6 +8,7 @@
 #include "Game/Objects/Item/Item.h"
 #include "Game/Objects/Item/ConcreteItems/FireFlower.h"
 #include "Game/Objects/Item/ConcreteItems/SuperMushroom.h"
+#include "Game/Objects/Item/ConcreteItems/MegaMushroom.h"
 #include "Game/Objects/Item/ConcreteItems/SuperStar.h"
 #include "Game/Objects/Player/Player.h"
 #include "Game/Objects/Item/ConcreteItems/Coin.h"
@@ -31,6 +32,7 @@ GameObjectFactory::GameObjectFactory() {
     registerItem("Item", createStatic<Item>);
     registerItem("FireFlower", createStatic<FireFlower>);
     registerItem("SuperMushroom", createStatic<SuperMushroom>);
+    registerItem("MegaMushroom", createStatic<MegaMushroom>);
     registerItem("SuperStar", createStatic<SuperStar>);
     registerItem("Coin", createStatic<Coin>);
     registerItem("Flagpole", createStatic<Flagpole>);

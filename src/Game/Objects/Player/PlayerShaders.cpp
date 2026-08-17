@@ -80,6 +80,29 @@ static constexpr std::string_view kRainbowFragmentSrc = R"glsl(
     }
 )glsl";
 
+// ─── Mega glow shader ───────────────────────────────────────────────────────
+// Adds a warm, pulsing highlight without changing the player's silhouette.
+// This is intentionally separate from StarMan's rainbow sparkle effect.
+static constexpr std::string_view kMegaGlowFragmentSrc = R"glsl(
+    uniform sampler2D texture;
+    uniform float u_time;
+
+    void main() {
+        vec4 pixel = texture2D(texture, gl_TexCoord[0].xy);
+        if (pixel.a < 0.01) {
+            gl_FragColor = pixel;
+            return;
+        }
+
+        float pulse = 0.5 + 0.5 * sin(u_time * 6.2831853 * 2.0);
+        vec3 goldenHighlight = vec3(1.0, 0.78, 0.18);
+        float intensity = 0.12 + 0.16 * pulse;
+        vec3 glowingColor = mix(pixel.rgb, vec3(1.0), intensity);
+        glowingColor += goldenHighlight * (0.08 + 0.08 * pulse);
+        gl_FragColor = vec4(min(glowingColor, vec3(1.0)), pixel.a);
+    }
+)glsl";
+
 // ─── Singleton ──────────────────────────────────────────────────────────────
 
 PlayerShaders& PlayerShaders::getInstance() {
@@ -103,12 +126,18 @@ PlayerShaders::PlayerShaders() {
     bool rainbowOk = _rainbowShader.loadFromMemory(
         std::string(kRainbowFragmentSrc), sf::Shader::Type::Fragment
     );
+    _megaGlowAvailable = _megaGlowShader.loadFromMemory(
+        std::string(kMegaGlowFragmentSrc), sf::Shader::Type::Fragment
+    );
 
     if (!blinkOk) {
         std::cerr << "[PlayerShaders] Failed to compile blink shader.\n";
     }
     if (!rainbowOk) {
         std::cerr << "[PlayerShaders] Failed to compile rainbow shader.\n";
+    }
+    if (!_megaGlowAvailable) {
+        std::cerr << "[PlayerShaders] Failed to compile Mega glow shader.\n";
     }
 
     _shadersAvailable = ghostOk && blinkOk && rainbowOk;
@@ -117,6 +146,9 @@ PlayerShaders::PlayerShaders() {
         _ghostShader.setUniform("texture", sf::Shader::CurrentTexture);
         _blinkShader.setUniform("texture", sf::Shader::CurrentTexture);
         _rainbowShader.setUniform("texture", sf::Shader::CurrentTexture);
+    }
+    if (_megaGlowAvailable) {
+        _megaGlowShader.setUniform("texture", sf::Shader::CurrentTexture);
     }
 }
 
@@ -141,4 +173,10 @@ sf::Shader* PlayerShaders::getRainbowShader() {
     if (!_shadersAvailable) return nullptr;
     _rainbowShader.setUniform("u_time", _time);
     return &_rainbowShader;
+}
+
+sf::Shader* PlayerShaders::getMegaGlowShader() {
+    if (!_megaGlowAvailable) return nullptr;
+    _megaGlowShader.setUniform("u_time", _time);
+    return &_megaGlowShader;
 }

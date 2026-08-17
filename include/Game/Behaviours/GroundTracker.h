@@ -89,6 +89,10 @@ public:
         return _jumpAvailable;
     }
 
+    bool hasGroundSupport() const noexcept {
+        return hasSupport();
+    }
+
 private:
     static constexpr int unsupportedStepsBeforeAirborne = 5;
 
