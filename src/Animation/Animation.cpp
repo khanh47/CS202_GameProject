@@ -397,9 +397,28 @@ AnimationSet Animation::makeSuperMushroomAnimationSet() {
         Animation::createLinearClip(
             {0, 90},
             {18, 18},
-            6,
+            2,
             {18, 0},
-            1.0f / 6.0f,
+            1.0f,
+            true
+        )
+    );
+
+    return animationSet;
+}
+
+AnimationSet Animation::makeOneUpMushroomAnimationSet() {
+    AnimationSet animationSet;
+    animationSet.defaultClip = "idle";
+
+    animationSet.clips.emplace(
+        "idle",
+        Animation::createLinearClip(
+            {36, 90},
+            {18, 18},
+            2,
+            {18, 0},
+            1.0f,
             true
         )
     );

@@ -14,6 +14,7 @@ enum class ScoreEventType {
     EnemyStomped,
     BlockBroken,
     PowerupCollected,
+    OneUpCollected,
     FlagpoleReached,
     MarioLanded,
     LostLive,

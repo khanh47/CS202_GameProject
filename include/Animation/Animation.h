@@ -21,6 +21,7 @@ namespace Animation {
     AnimationSet makeFireballAnimationSet();
     AnimationSet makeTransformAnimationSet();
     AnimationSet makeSuperMushroomAnimationSet();
+    AnimationSet makeOneUpMushroomAnimationSet();
     AnimationSet makeMegaMushroomAnimationSet();
     AnimationSet makeSuperStarAnimationSet();
     AnimationSet makeCoinAnimationSet();
