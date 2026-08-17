@@ -14,8 +14,10 @@
 // ---------------------------------------------------------------------------
 struct AutotileResult {
     sf::IntRect texRect;
-    bool        isSlope  = false;
-    int         slopeType = 0;   // 25 = UpRight, 27 = DownRight
+    bool        hasOverlay  = false;
+    sf::IntRect overlayRect{};
+    bool        isSlope     = false;
+    int         slopeType   = 0;   // 25 = UpRight, 27 = DownRight
 };
 
 // ---------------------------------------------------------------------------

@@ -23,6 +23,15 @@ public:
         sf::IntRect textureRect = {}
     );
 
+    // Sets an overlay texture for a specific grid cell (rendered on front/outer layer).
+    void setOverlayTile(
+        int col,
+        int row,
+        char tileCharacter,
+        const sf::Texture* texture,
+        sf::IntRect textureRect = {}
+    );
+
     // Clears all tile data
     void clear();
 
@@ -47,6 +56,7 @@ private:
     };
 
     std::vector<TileInfo> _tiles;
+    std::vector<TileInfo> _overlayTiles;
 
     struct Batch {
         const sf::Texture* texture = nullptr;

@@ -73,8 +73,7 @@ void Camera::update(float deltaTime) {
 
         // 5. Boundary Clamping: Restrict view center to level boundaries
         _currentCenter = clampToBounds(_currentCenter);
-
-        _view.setCenter(_currentCenter);
+        _view.setCenter({std::round(_currentCenter.x), std::round(_currentCenter.y)});
     }
 }
 

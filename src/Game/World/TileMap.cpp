@@ -12,6 +12,7 @@ void TileMap::initialize(int gridWidth, int gridHeight, float cellSize) {
     const std::size_t cellCount = static_cast<std::size_t>(_gridWidth)
         * static_cast<std::size_t>(_gridHeight);
     _tiles.assign(cellCount, TileInfo{});
+    _overlayTiles.assign(cellCount, TileInfo{});
 }
 
 void TileMap::setTile(
@@ -29,12 +30,26 @@ void TileMap::setTile(
     }
 }
 
+void TileMap::setOverlayTile(
+    int col,
+    int row,
+    char tileCharacter,
+    const sf::Texture* texture,
+    sf::IntRect textureRect
+) {
+    if (row >= 0 && row < _gridHeight && col >= 0 && col < _gridWidth) {
+        const std::size_t index = static_cast<std::size_t>(row)
+            * static_cast<std::size_t>(_gridWidth)
+            + static_cast<std::size_t>(col);
+        _overlayTiles[index] = TileInfo{tileCharacter, texture, textureRect};
+    }
+}
+
 void TileMap::clear() {
-    _tiles.assign(
-        static_cast<std::size_t>(_gridWidth)
-            * static_cast<std::size_t>(_gridHeight),
-        TileInfo{}
-    );
+    const std::size_t cellCount = static_cast<std::size_t>(_gridWidth)
+        * static_cast<std::size_t>(_gridHeight);
+    _tiles.assign(cellCount, TileInfo{});
+    _overlayTiles.assign(cellCount, TileInfo{});
     _batches.clear();
 }
 
@@ -59,70 +74,76 @@ void TileMap::updateVisibleVertices(const sf::View& view) {
     const int startRow = std::max(0, static_cast<int>(std::floor((viewBounds.position.y - margin) / _cellSize)));
     const int endRow = std::min(_gridHeight - 1, static_cast<int>(std::ceil((viewBounds.position.y + viewBounds.size.y + margin) / _cellSize)));
 
-    for (int r = startRow; r <= endRow; ++r) {
-        for (int c = startCol; c <= endCol; ++c) {
-            const std::size_t index = static_cast<std::size_t>(r)
-                * static_cast<std::size_t>(_gridWidth)
-                + static_cast<std::size_t>(c);
-            const TileInfo& tile = _tiles[index];
-            if (tile.character == '.' || tile.texture == nullptr) {
-                continue;
-            }
-
-            const sf::Texture* texture = tile.texture;
-            sf::IntRect textureRect = tile.textureRect;
-            if (textureRect.size.x <= 0 || textureRect.size.y <= 0) {
-                textureRect = sf::IntRect(
-                    {0, 0},
-                    {
-                        static_cast<int>(texture->getSize().x),
-                        static_cast<int>(texture->getSize().y)
-                    }
-                );
-            }
-
-            const float tu0 = static_cast<float>(textureRect.position.x);
-            const float tv0 = static_cast<float>(textureRect.position.y);
-            const float tu1 = static_cast<float>(
-                textureRect.position.x + textureRect.size.x
-            );
-            const float tv1 = static_cast<float>(
-                textureRect.position.y + textureRect.size.y
-            );
-
-            sf::VertexArray* batch = nullptr;
-            for (Batch& candidate : _batches) {
-                if (candidate.texture == texture) {
-                    batch = &candidate.vertices;
-                    break;
+    // Helper lambda to append quads for a tile vector
+    const auto appendTiles = [&](const std::vector<TileInfo>& tileVector) {
+        for (int r = startRow; r <= endRow; ++r) {
+            for (int c = startCol; c <= endCol; ++c) {
+                const std::size_t index = static_cast<std::size_t>(r)
+                    * static_cast<std::size_t>(_gridWidth)
+                    + static_cast<std::size_t>(c);
+                const TileInfo& tile = tileVector[index];
+                if (tile.character == '.' || tile.texture == nullptr) {
+                    continue;
                 }
+
+                const sf::Texture* texture = tile.texture;
+                sf::IntRect textureRect = tile.textureRect;
+                if (textureRect.size.x <= 0 || textureRect.size.y <= 0) {
+                    textureRect = sf::IntRect(
+                        {0, 0},
+                        {
+                            static_cast<int>(texture->getSize().x),
+                            static_cast<int>(texture->getSize().y)
+                        }
+                    );
+                }
+
+                const float tu0 = static_cast<float>(textureRect.position.x);
+                const float tv0 = static_cast<float>(textureRect.position.y);
+                const float tu1 = static_cast<float>(
+                    textureRect.position.x + textureRect.size.x
+                );
+                const float tv1 = static_cast<float>(
+                    textureRect.position.y + textureRect.size.y
+                );
+
+                sf::VertexArray* batch = nullptr;
+                for (Batch& candidate : _batches) {
+                    if (candidate.texture == texture) {
+                        batch = &candidate.vertices;
+                        break;
+                    }
+                }
+                if (batch == nullptr) {
+                    _batches.push_back(Batch{
+                        texture,
+                        sf::VertexArray(sf::PrimitiveType::Triangles)
+                    });
+                    batch = &_batches.back().vertices;
+                }
+
+                const float left = c * _cellSize;
+                const float top = r * _cellSize;
+                const float right = left + _cellSize;
+                const float bottom = top + _cellSize;
+
+                // Quad construction using 2 triangles (6 vertices)
+                batch->append(sf::Vertex({left, top}, sf::Color::White, {tu0, tv0}));
+                batch->append(sf::Vertex({right, top}, sf::Color::White, {tu1, tv0}));
+                batch->append(sf::Vertex({right, bottom}, sf::Color::White, {tu1, tv1}));
+
+                batch->append(sf::Vertex({left, top}, sf::Color::White, {tu0, tv0}));
+                batch->append(sf::Vertex({right, bottom}, sf::Color::White, {tu1, tv1}));
+                batch->append(sf::Vertex({left, bottom}, sf::Color::White, {tu0, tv1}));
             }
-            if (batch == nullptr) {
-                _batches.push_back(Batch{
-                    texture,
-                    sf::VertexArray(sf::PrimitiveType::Triangles)
-                });
-                batch = &_batches.back().vertices;
-            }
-
-            const float left = c * _cellSize;
-            const float top = r * _cellSize;
-            const float right = left + _cellSize;
-            const float bottom = top + _cellSize;
-
-            // Quad construction using 2 triangles (6 vertices)
-            // Triangle 1: Top-Left, Top-Right, Bottom-Right
-            batch->append(sf::Vertex({left, top}, sf::Color::White, {tu0, tv0}));
-            batch->append(sf::Vertex({right, top}, sf::Color::White, {tu1, tv0}));
-            batch->append(sf::Vertex({right, bottom}, sf::Color::White, {tu1, tv1}));
-
-            // Triangle 2: Top-Left, Bottom-Right, Bottom-Left
-            batch->append(sf::Vertex({left, top}, sf::Color::White, {tu0, tv0}));
-            batch->append(sf::Vertex({right, bottom}, sf::Color::White, {tu1, tv1}));
-            batch->append(sf::Vertex({left, bottom}, sf::Color::White, {tu0, tv1}));
         }
-    }
+    };
 
+    // Pass 1: Base tiles (Back Layer)
+    appendTiles(_tiles);
+
+    // Pass 2: Overlay tiles (Outer / Front Layer)
+    appendTiles(_overlayTiles);
 }
 
 char TileMap::getTile(int col, int row) const {

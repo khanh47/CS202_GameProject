@@ -244,13 +244,24 @@ void WorldMap::rebuild(
                 sf::Texture& autotileTexture = resources.getTexture(
                     definition.textureAlias
                 );
+                const AutotileResult autoRes = _autotileResolver.resolveDetailed(
+                    screenGrid,
+                    column,
+                    screenRow,
+                    _gridWidth,
+                    _gridHeight,
+                    solidIds,
+                    definition
+                );
                 _tileMap.setTile(
                     column,
                     screenRow,
                     symbol,
                     &autotileTexture,
-                    _autotileResolver.resolveDetailed(
-                        screenGrid,
+                    autoRes.texRect
+                );
+                if (autoRes.hasOverlay) {
+                    _tileMap.setOverlayTile(
                         column,
                         screenRow,
                         _gridWidth,
