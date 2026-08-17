@@ -61,6 +61,26 @@ void GameWorld::updateSimulation(const float& fixedDt) {
     handleSensors(_physicsWorld.getSensorEvents());
     handleContacts(_physicsWorld.getContactEvents());
 
+    // Pipe segments are marked inactive during contact callbacks, but their
+    // Box2D shapes must be destroyed after the buffered events are consumed.
+    // Flush now so the broken segment has no physical hitbox before the next
+    // simulation step.
+    for (const std::shared_ptr<GameObject>& object : _objectStore.objects()) {
+        if (auto pipe = std::dynamic_pointer_cast<Pipe>(object)) {
+            pipe->flushBrokenSegments();
+        }
+    }
+
+    // Falling past the loaded world is a lethal void hazard for every state,
+    // including Mega. This deliberately uses Player::destroy() rather than
+    // the state-level enemy immunity path.
+    for (const std::shared_ptr<GameObject>& object : _objectStore.objects()) {
+        if (auto player = std::dynamic_pointer_cast<Player>(object);
+            player && player->getPosition().y > voidThreshold) {
+            player->destroy();
+        }
+    }
+
     if (_levelCleared) {
         _objectStore.cleanupDestroyed();
         _worldMap.cleanupDestroyedTiles();
@@ -331,6 +351,8 @@ std::shared_ptr<GameObject> GameWorld::spawnItem(
         texture = &resources.getTexture("goal_flag_spritesheet");
     } else if (itemTypeKey == "CheckpointFlag") {
         texture = &resources.getTexture("checkpoint_flag_spritesheet");
+    } else if (itemTypeKey == "MegaMushroom") {
+        texture = &resources.getTexture("mega_mushroom_spritesheet");
     } else {
         texture = &resources.getTexture("mario_and_items");
     }

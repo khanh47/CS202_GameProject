@@ -407,6 +407,26 @@ AnimationSet Animation::makeSuperMushroomAnimationSet() {
     return animationSet;
 }
 
+AnimationSet Animation::makeMegaMushroomAnimationSet() {
+    AnimationSet animationSet;
+    animationSet.defaultClip = "idle";
+
+    // The Mega Mushroom asset is a single, large frame rather than a strip.
+    animationSet.clips.emplace(
+        "idle",
+        Animation::createLinearClip(
+            {0, 0},
+            {1960, 1641},
+            1,
+            {0, 0},
+            1.0f,
+            true
+        )
+    );
+
+    return animationSet;
+}
+
 AnimationSet Animation::makeSuperStarAnimationSet() {
     AnimationSet animationSet;
     animationSet.defaultClip = "idle";

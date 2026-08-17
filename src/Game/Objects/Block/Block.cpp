@@ -24,6 +24,26 @@ void Block::onContact(GameObject& other, const b2ContactData& contactData, b2Sha
 Block::~Block() {
 }
 
+void Block::spawnBreakEffect(GameWorld& world) const {
+    const sf::Texture* texture = nullptr;
+    sf::IntRect textureRect;
+    if (auto* animatable = getBehaviour<Animatable>();
+        animatable && animatable->hasSprite()) {
+        texture = animatable->getTexture();
+        textureRect = animatable->getTextureRect();
+    } else {
+        texture = _breakTexture;
+        textureRect = _breakTextureRect;
+    }
+
+    world.spawnBlockBreakEffect(
+        getPosition(),
+        _hitboxPixels,
+        texture,
+        textureRect
+    );
+}
+
 void Block::onCreateShapeDef(b2ShapeDef& def) {
     def.density = 10000.0f;
     def.material.friction = 0.0f;
@@ -73,22 +93,7 @@ bool Block::tryBreakOnContact(
 
     GameWorld* world = player->getGameWorld();
     if (world) {
-        const sf::Texture* texture = nullptr;
-        sf::IntRect textureRect;
-        if (auto* animatable = getBehaviour<Animatable>();
-            animatable && animatable->hasSprite()) {
-            texture = animatable->getTexture();
-            textureRect = animatable->getTextureRect();
-        } else {
-            texture = _breakTexture;
-            textureRect = _breakTextureRect;
-        }
-        world->spawnBlockBreakEffect(
-            getPosition(),
-            _hitboxPixels,
-            texture,
-            textureRect
-        );
+        spawnBreakEffect(*world);
 
         if (world->getScoreManager()) {
             world->getScoreManager()->handleEvent(
@@ -113,8 +118,10 @@ bool Block::isBumped(GameObject& other, const b2ContactData& contactData, b2Shap
             if (normal.y >= 0.3f || player->getPosition().y > getPosition().y) {
                 auto* playerAnimatable = player->getBehaviour<Animatable>();
                 auto* holdingShell = player->getBehaviour<ShellHoldBehaviour>();
+                // Mega-state players are too large to react with a bump animation.
                 if (playerAnimatable &&
-                    (!holdingShell || !holdingShell->isHoldingShell())) {
+                    (!holdingShell || !holdingShell->isHoldingShell()) &&
+                    !player->isMegaState()) {
                     playerAnimatable->playAnimation("bump", true);
                 }
                 return true;

@@ -78,6 +78,7 @@ protected:
     virtual void onCreateShapeDef(b2ShapeDef& def);
     virtual void onUpdateVisuals(float deltaTime);
     virtual void onRenderVisual(sf::RenderTarget& target, const sf::Vector2f& position, float angleDegrees);
+    virtual void onRenderDebugHitbox(sf::RenderTarget& target) const;
     virtual void onHitboxRecreated();
     virtual b2Polygon makeHitbox(sf::Vector2f hitboxPixels) const;
 

@@ -6,6 +6,8 @@
 #include "Game/Objects/GameObject.h"
 #include "Physics/PhysicsWorld.h"
 
+class GameWorld;
+
 class Block: public GameObject {
 public:
     Block();
@@ -21,6 +23,8 @@ public:
         _breakTexture = texture;
         _breakTextureRect = textureRect;
     }
+
+    void spawnBreakEffect(GameWorld& world) const;
 
     void onContact(GameObject& other, const b2ContactData& contactData, b2ShapeId ownShape) override;
     virtual bool isRenderedByTileMap() const noexcept { return true; }
