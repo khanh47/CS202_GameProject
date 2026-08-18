@@ -1,5 +1,6 @@
 #include "Game/Objects/Block/Block.h"
 #include "Game/Behaviours/ShellHoldBehaviour.h"
+#include "Audio/SoundManager.h"
 #include "Game/Objects/Player/Player.h"
 #include "Game/Behaviours/Animatable.h"
 #include "Game/World/GameWorld.h"
@@ -93,6 +94,7 @@ bool Block::tryBreakOnContact(
 
     GameWorld* world = player->getGameWorld();
     if (world) {
+        Audio::SoundManager::getInstance().playEffect("break");
         spawnBreakEffect(*world);
 
         if (world->getScoreManager()) {

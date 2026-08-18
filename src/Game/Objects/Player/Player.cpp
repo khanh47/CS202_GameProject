@@ -691,6 +691,7 @@ void Player::handleMegaEnvironmentContact(
         // tiles and live block objects still yield immediately to Mega.
         if ((block->isBreakable() || !block->isRenderedByTileMap())
             && !block->isPendingDestroy()) {
+            Audio::SoundManager::getInstance().playEffect("break");
             if (_world) {
                 block->spawnBreakEffect(*_world);
             }
@@ -711,6 +712,7 @@ void Player::handleMegaEnvironmentContact(
 
         if (_world) {
             if (const auto breakData = pipe->getSegmentBreakData(pipeShape)) {
+                Audio::SoundManager::getInstance().playEffect("break");
                 _world->spawnBlockBreakEffect(
                     breakData->position,
                     breakData->size,
@@ -764,6 +766,7 @@ void Player::handleEnemyContact(
     }
 
     if (isTopContact(contactData, ownShape) && enemy.canBeStomped()) {
+        Audio::SoundManager::getInstance().playEffect("kill");
         awardScore(ScoreEventType::EnemyStomped, enemy.getPosition());
         enemy.onStomp();
         bounce();
