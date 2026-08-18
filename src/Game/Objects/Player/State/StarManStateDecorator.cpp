@@ -1,4 +1,5 @@
 #include "Game/Objects/Player/State/StarManStateDecorator.h"
+#include "Audio/SoundManager.h"
 #include "Game/Objects/Player/State/SuperState.h"
 #include "Game/Objects/Player/State/FireState.h"
 #include "Game/Objects/Player/Player.h"
@@ -28,8 +29,12 @@ void StarManStateDecorator::handleSuperMushroom(Player& player) {
         if (_wrappedState->getStateName() == "Normal") {
             _wrappedState = std::make_unique<SuperState>(player.getCharacter());
             player.startTransformation(Player::TransformTarget::None);
+            Audio::SoundManager::getInstance().playEffect("power_up");
+            return;
         }
     }
+
+    Audio::SoundManager::getInstance().playEffect("power_up");
 }
 
 void StarManStateDecorator::handleFireFlower(Player& player) {
@@ -38,8 +43,12 @@ void StarManStateDecorator::handleFireFlower(Player& player) {
         if (_wrappedState->getStateName() != "Fire") {
             _wrappedState = std::make_unique<FireState>(player.getCharacter());
             player.startTransformation(Player::TransformTarget::None);
+            Audio::SoundManager::getInstance().playEffect("power_up");
+            return;
         }
     }
+
+    Audio::SoundManager::getInstance().playEffect("power_up");
 }
 
 void StarManStateDecorator::handleSuperStar(Player& player) {

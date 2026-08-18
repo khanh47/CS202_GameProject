@@ -1,4 +1,5 @@
 #include "Game/Objects/Player/State/SuperState.h"
+#include "Audio/SoundManager.h"
 #include "Game/Objects/Player/Player.h"
 #include "Game/Behaviours/Invincible.h"
 
@@ -9,6 +10,7 @@ SuperState::SuperState(std::string character)
 
 void SuperState::handleSuperMushroom(Player& player) {
     (void)player;
+    Audio::SoundManager::getInstance().playEffect("power_up");
 }
 
 void SuperState::handleFireFlower(Player& player) {
