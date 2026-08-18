@@ -30,6 +30,7 @@ void Fireball::activate(sf::Vector2f spawnPos, bool facingRight) {
     _active = true;
     _facingRight = facingRight;
     _distanceTraveled = 0.0f;
+    _particleTrail.clear();
 
     if (hasValidBody()) {
         const b2BodyId bodyId = _body->getId();
@@ -45,6 +46,7 @@ void Fireball::activate(sf::Vector2f spawnPos, bool facingRight) {
 void Fireball::deactivate() {
     _active = false;
     _distanceTraveled = 0.0f;
+    _particleTrail.clear();
 
     if (hasValidBody()) {
         b2Body_Disable(_body->getId());
@@ -150,6 +152,7 @@ void Fireball::onUpdateVisuals(float deltaTime) {
     if (!_active) {
         return;
     }
+    _particleTrail.update(deltaTime, getPosition(), _facingRight);
     if (auto* animatable = getBehaviour<Animatable>()) {
         animatable->updateVisualState(deltaTime, _hitboxPixels, !_facingRight);
     }
@@ -160,6 +163,7 @@ void Fireball::onRenderVisual(sf::RenderTarget& target, const sf::Vector2f& posi
     if (!_active) {
         return;
     }
+    _particleTrail.render(target);
     if (auto* animatable = getBehaviour<Animatable>()) {
         animatable->renderVisualState(target, position);
     }

@@ -179,6 +179,7 @@ ResourceManager::ResourceManager() {
 	_preLoadSound("assets/soundtrack/power_down.mp3", "power_down");
 	_preLoadSound("assets/soundtrack/mega_up.mp3", "mega_up");
 	_preLoadSound("assets/soundtrack/one_up.mp3", "one_up");
+	_preLoadSound("assets/soundtrack/fireball.mp3", "fireball");
 	
 	_preLoadTexture("assets/sprites/Brick.png", "brick");
 	_preLoadTexture("assets/sprites/Tiles/mario_and_items.png", "mario_and_items");
