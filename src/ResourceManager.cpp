@@ -169,17 +169,18 @@ ResourceManager::ResourceManager() {
 	_preLoadFont("assets/fonts/SuperMario256.ttf", "SuperMario");
 	_preLoadFont("assets/fonts/moon_get-Heavy.ttf", "moon_get");
 
-	_preLoadMusic("assets/soundtrack/title_screen.mp3", "title_screen");
-	_preLoadMusic("assets/soundtrack/ground_theme.mp3", "ground_theme");
-	_preLoadMusic("assets/soundtrack/underground_theme.mp3", "underground_theme");
-	_preLoadMusic("assets/soundtrack/starman_theme.mp3", "starman_theme");
-	_preLoadMusic("assets/soundtrack/course_clear.mp3", "course_clear");
-	_preLoadSound("assets/soundtrack/pipe.mp3", "pipe");
-	_preLoadSound("assets/soundtrack/power_up.mp3", "power_up");
-	_preLoadSound("assets/soundtrack/power_down.mp3", "power_down");
-	_preLoadSound("assets/soundtrack/mega_up.mp3", "mega_up");
-	_preLoadSound("assets/soundtrack/one_up.mp3", "one_up");
-	_preLoadSound("assets/soundtrack/fireball.mp3", "fireball");
+	_preLoadMusic("assets/soundtrack/music/title_screen.mp3", "title_screen");
+	_preLoadMusic("assets/soundtrack/music/ground_theme.mp3", "ground_theme");
+	_preLoadMusic("assets/soundtrack/music/underground_theme.mp3", "underground_theme");
+	_preLoadMusic("assets/soundtrack/music/starman_theme.mp3", "starman_theme");
+	_preLoadMusic("assets/soundtrack/music/course_clear.mp3", "course_clear");
+	
+	_preLoadSound("assets/soundtrack/sfx/pipe.mp3", "pipe");
+	_preLoadSound("assets/soundtrack/sfx/power_up.mp3", "power_up");
+	_preLoadSound("assets/soundtrack/sfx/power_down.mp3", "power_down");
+	_preLoadSound("assets/soundtrack/sfx/mega_up.mp3", "mega_up");
+	_preLoadSound("assets/soundtrack/sfx/one_up.mp3", "one_up");
+	_preLoadSound("assets/soundtrack/sfx/fireball.mp3", "fireball");
 	
 	_preLoadTexture("assets/sprites/Brick.png", "brick");
 	_preLoadTexture("assets/sprites/Tiles/mario_and_items.png", "mario_and_items");
