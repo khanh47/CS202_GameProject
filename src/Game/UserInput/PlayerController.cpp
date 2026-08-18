@@ -120,6 +120,7 @@ void PlayerController::syncStateWithKeyboard() {
     refreshBindings();
     bool moveLeftPressed = false;
     bool moveRightPressed = false;
+    bool moveUpPressed = false;
     bool interactPressed = false;
     bool moveDownPressed = false;
 
@@ -129,7 +130,9 @@ void PlayerController::syncStateWithKeyboard() {
                 moveLeftPressed = true;
             } else if (action == ActionType::MoveRight) {
                 moveRightPressed = true;
-        } else if (action == ActionType::Interact) {
+            } else if (action == ActionType::MoveUp) {
+                moveUpPressed = true;
+            } else if (action == ActionType::Interact) {
                 interactPressed = true;
             } else if (action == ActionType::MoveDown) {
                 moveDownPressed = true;
@@ -138,6 +141,7 @@ void PlayerController::syncStateWithKeyboard() {
     }
 
     _player.setInteractHeld(interactPressed);
+    _player.setMoveUpHeld(moveUpPressed);
     _player.setMoveDownHeld(moveDownPressed);
 
     if (moveLeftPressed && !moveRightPressed) {

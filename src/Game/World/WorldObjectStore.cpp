@@ -40,6 +40,14 @@ void WorldObjectStore::updateSimulation(float fixedDt) {
     for (const std::shared_ptr<GameObject>& object : _objects) {
         if (object) {
             object->updateSimulation(fixedDt);
+
+            // A pipe warp freezes the world as soon as the player starts it.
+            // Stop dispatching this tick so later objects do not advance once
+            // the transition has taken control of the simulation.
+            if (const auto player = std::dynamic_pointer_cast<Player>(object);
+                player && player->isPipeWarping()) {
+                break;
+            }
         }
     }
 }

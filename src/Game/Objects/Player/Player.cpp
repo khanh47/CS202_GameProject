@@ -40,6 +40,18 @@ constexpr float highFallBreakDistancePixels =
 // With the player's current gravity scale, this is approximately the impact
 // speed reached after a 25-cell fall. Capture it before Box2D resolves contact.
 constexpr float highFallBreakVelocityPixelsPerSecond = 2800.0f;
+constexpr float pipeWarpDiveDurationSeconds = 0.65f;
+constexpr float pipeWarpTravelDurationSeconds = 0.35f;
+constexpr float pipeWarpLandingIdleDurationSeconds = 0.18f;
+constexpr float pipeWarpRiseDurationSeconds =
+    Player::pipeWarpDurationSeconds
+    - pipeWarpDiveDurationSeconds
+    - pipeWarpTravelDurationSeconds;
+
+float smoothStep(float progress) {
+    progress = std::clamp(progress, 0.0f, 1.0f);
+    return progress * progress * (3.0f - 2.0f * progress);
+}
 }
 
 Player::Player() : GameObject() {
@@ -164,6 +176,43 @@ void Player::attack(GameWorld& world) {
     }
 }
 
+bool Player::beginPipeWarp(
+    sf::Vector2f sourceOutside,
+    sf::Vector2f sourceInside,
+    sf::Vector2f targetInside,
+    sf::Vector2f targetOutside
+) {
+    if (_isPipeWarping || !hasValidBody()) {
+        return false;
+    }
+
+    _isPipeWarping = true;
+    _pipeWarpTimer = 0.0f;
+    _pipeWarpIdleTimer = 0.0f;
+    _pipeWarpSourceOutside = sourceOutside;
+    _pipeWarpSourceInside = sourceInside;
+    _pipeWarpTargetInside = targetInside;
+    _pipeWarpTargetOutside = targetOutside;
+
+    if (auto* moveable = getBehaviour<Moveable>()) {
+        moveable->stopMoveLeft();
+        moveable->stopMoveRight();
+        moveable->stopJump();
+        moveable->resetGroundContacts();
+    }
+
+    setPosition(_pipeWarpSourceOutside);
+    if (auto body = getPhysicsBody()) {
+        b2Body_SetLinearVelocity(body->getId(), {0.0f, 0.0f});
+    }
+
+    if (auto* animatable = getBehaviour<Animatable>()) {
+        animatable->playAnimation("idle", true);
+    }
+
+    return true;
+}
+
 void Player::changeToNormalState() {
     setState(std::make_unique<NormalState>(_character));
 }
@@ -231,9 +280,12 @@ void Player::updateSimulation(const float &fixedDt) {
         return;
     }
 
+    if (_isPipeWarping) {
+        return;
+    }
+
     _warpCooldown = std::max(0.0f, _warpCooldown - fixedDt);
-    if (_world && !isMegaState() && _warpCooldown <= 0.0f
-        && (_interactHeld || _moveDownHeld || _moveUpHeld)) {
+    if (_world && !isMegaState() && _warpCooldown <= 0.0f) {
         if (_world->tryWarpPlayer(*this)) {
             _warpCooldown = 0.35f;
             return;
@@ -375,12 +427,84 @@ void Player::updateFallTracking() {
     }
 }
 
+void Player::updatePipeWarpVisuals(float deltaTime) {
+    _pipeWarpTimer = std::min(
+        pipeWarpDurationSeconds,
+        _pipeWarpTimer + std::max(deltaTime, 0.0f)
+    );
+
+    sf::Vector2f position = _pipeWarpSourceInside;
+    if (_pipeWarpTimer < pipeWarpDiveDurationSeconds) {
+        const float progress = smoothStep(
+            _pipeWarpTimer / pipeWarpDiveDurationSeconds
+        );
+        position = _pipeWarpSourceOutside
+            + (_pipeWarpSourceInside - _pipeWarpSourceOutside) * progress;
+    } else if (_pipeWarpTimer < pipeWarpDiveDurationSeconds
+               + pipeWarpTravelDurationSeconds) {
+        // The player stays hidden inside the pipe while the destination is
+        // reached. This keeps a distant warp from looking like a teleport.
+        position = _pipeWarpTargetInside;
+    } else {
+        const float riseProgress = smoothStep(
+            (_pipeWarpTimer
+             - pipeWarpDiveDurationSeconds
+             - pipeWarpTravelDurationSeconds)
+            / pipeWarpRiseDurationSeconds
+        );
+        position = _pipeWarpTargetInside
+            + (_pipeWarpTargetOutside - _pipeWarpTargetInside) * riseProgress;
+    }
+
+    setPosition(position);
+    if (auto body = getPhysicsBody()) {
+        b2Body_SetLinearVelocity(body->getId(), {0.0f, 0.0f});
+    }
+
+    auto* animatable = getBehaviour<Animatable>();
+    if (animatable) {
+        animatable->playAnimation("idle");
+        animatable->setVisualScale({2.5f, 1.1f});
+        animatable->updateVisualState(
+            deltaTime,
+            _hitboxPixels,
+            isFacingLeft()
+        );
+    }
+
+    if (_pipeWarpTimer < pipeWarpDurationSeconds) {
+        return;
+    }
+
+    setPosition(_pipeWarpTargetOutside);
+    if (auto body = getPhysicsBody()) {
+        b2Body_SetLinearVelocity(body->getId(), {0.0f, 0.0f});
+    }
+    if (auto* moveable = getBehaviour<Moveable>()) {
+        moveable->resetGroundContacts();
+    }
+
+    _pipeWarpIdleTimer = pipeWarpLandingIdleDurationSeconds;
+    _isPipeWarping = false;
+    if (_world) {
+        _world->releaseFreeze();
+    }
+    if (animatable) {
+        animatable->playAnimation("idle", true);
+    }
+}
+
 void Player::finalizeSimulation(const float &fixedDt) {
     (void)fixedDt;
 
     auto* moveable = getBehaviour<Moveable>();
     auto* animatable = getBehaviour<Animatable>();
     if (!moveable || !animatable) {
+        return;
+    }
+
+    if (_pipeWarpIdleTimer > 0.0f) {
+        animatable->playAnimation("idle");
         return;
     }
 
@@ -694,11 +818,22 @@ void Player::startTransformation(TransformTarget target, GameWorld& world, float
 void Player::onUpdateVisuals(float deltaTime) {
     _effectTime += deltaTime;
     PlayerShaders::getInstance().update(deltaTime);
+    if (!_isPipeWarping && _pipeWarpIdleTimer > 0.0f) {
+        _pipeWarpIdleTimer = std::max(
+            0.0f,
+            _pipeWarpIdleTimer - std::max(deltaTime, 0.0f)
+        );
+    }
     auto* moveable = getBehaviour<Moveable>();
     const bool facingLeft = moveable ? moveable->isFacingLeft() : false;
 
     if (auto* hold = getBehaviour<ShellHoldBehaviour>()) {
         hold->updateVisuals(deltaTime);
+    }
+
+    if (_isPipeWarping) {
+        updatePipeWarpVisuals(deltaTime);
+        return;
     }
 
     if (_isTransforming) {

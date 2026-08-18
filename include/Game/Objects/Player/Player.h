@@ -42,6 +42,15 @@ public:
     void startTransformation(TransformTarget target, GameWorld& world, float duration = 1.0f);
     void startTransformation(TransformTarget target, float duration = 1.0f);
 
+    static constexpr float pipeWarpDurationSeconds = 1.80f;
+    bool beginPipeWarp(
+        sf::Vector2f sourceOutside,
+        sf::Vector2f sourceInside,
+        sf::Vector2f targetInside,
+        sf::Vector2f targetOutside
+    );
+    bool isPipeWarping() const noexcept { return _isPipeWarping; }
+
     void setGameWorld(GameWorld& world) { _world = &world; }
     GameWorld* getGameWorld() { return _world; }
     const std::string& getCharacter() const { return _character; }
@@ -134,6 +143,7 @@ private:
         b2ShapeId ownShape
     ) const;
     void updateFallTracking();
+    void updatePipeWarpVisuals(float deltaTime);
     void bounce(float verticalVelocity = -12.0f);
     void awardScore(ScoreEventType event, sf::Vector2f position);
     void beginMegaEndTransformation();
@@ -161,6 +171,13 @@ private:
     bool _moveUpHeld = false;
     bool _flyMode = false;
     float _warpCooldown = 0.0f;
+    bool _isPipeWarping = false;
+    float _pipeWarpTimer = 0.0f;
+    float _pipeWarpIdleTimer = 0.0f;
+    sf::Vector2f _pipeWarpSourceOutside{0.0f, 0.0f};
+    sf::Vector2f _pipeWarpSourceInside{0.0f, 0.0f};
+    sf::Vector2f _pipeWarpTargetInside{0.0f, 0.0f};
+    sf::Vector2f _pipeWarpTargetOutside{0.0f, 0.0f};
     float _fallStartY = 0.0f;
     float _fallDistancePixels = 0.0f;
     float _maxDownwardVelocityPixelsPerSecond = 0.0f;
