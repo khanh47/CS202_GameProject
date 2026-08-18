@@ -172,7 +172,13 @@ ResourceManager::ResourceManager() {
 	_preLoadMusic("assets/soundtrack/title_screen.mp3", "title_screen");
 	_preLoadMusic("assets/soundtrack/ground_theme.mp3", "ground_theme");
 	_preLoadMusic("assets/soundtrack/underground_theme.mp3", "underground_theme");
+	_preLoadMusic("assets/soundtrack/starman_theme.mp3", "starman_theme");
 	_preLoadMusic("assets/soundtrack/course_clear.mp3", "course_clear");
+	_preLoadSound("assets/soundtrack/pipe.mp3", "pipe");
+	_preLoadSound("assets/soundtrack/power_up.mp3", "power_up");
+	_preLoadSound("assets/soundtrack/power_down.mp3", "power_down");
+	_preLoadSound("assets/soundtrack/mega_up.mp3", "mega_up");
+	_preLoadSound("assets/soundtrack/one_up.mp3", "one_up");
 	
 	_preLoadTexture("assets/sprites/Brick.png", "brick");
 	_preLoadTexture("assets/sprites/Tiles/mario_and_items.png", "mario_and_items");

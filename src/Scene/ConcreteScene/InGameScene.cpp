@@ -9,6 +9,16 @@
 #include "Game/GameSettings.h"
 #include <iostream>
 
+namespace {
+std::string levelThemeFor(const std::string& levelName) {
+    if (levelName.find("map-2") != std::string::npos
+        || levelName.find("map-3") != std::string::npos) {
+        return "underground_theme";
+    }
+    return "ground_theme";
+}
+}
+
 InGameScene::InGameScene(const std::string& name)
     : Scene(name) {}
 
@@ -64,19 +74,15 @@ void InGameScene::init() {
     void InGameScene::onEnter() {
         // Ensure title-screen music is stopped and play level theme
         _isActive = true;
+        _starmanMusicActive = false;
         stopTitleScreenMusic();
         Audio::MusicManager::getInstance().setVolume(GameSettings::getInstance().musicVolume);
-
-        std::string theme = "ground_theme";
-        if (_name.find("map-2") != std::string::npos || _name.find("map-3") != std::string::npos) {
-            theme = "underground_theme";
-        }
-
-        Audio::MusicManager::getInstance().play(theme, true);
+        Audio::MusicManager::getInstance().play(levelThemeFor(_name), true);
     }
 
     void InGameScene::onExit() {
         // Stop any level music when leaving the scene
+        _starmanMusicActive = false;
         Audio::MusicManager::getInstance().stop();
         Scene::onExit();
     }
@@ -133,8 +139,18 @@ void InGameScene::updateSimulation(const float &fixedDt) {
 void InGameScene::updateVisuals(float deltaTime) {
     _gameWorld.updateVisuals(deltaTime);
 
+    const auto player = std::dynamic_pointer_cast<Player>(_gameWorld.getPrimaryPlayer());
+    const bool starmanMusicShouldPlay =
+        player && (player->isMegaState() || player->isStarManState());
+    if (starmanMusicShouldPlay != _starmanMusicActive) {
+        Audio::MusicManager::getInstance().play(
+            starmanMusicShouldPlay ? "starman_theme" : levelThemeFor(_name),
+            true
+        );
+        _starmanMusicActive = starmanMusicShouldPlay;
+    }
+
     if (_winReactionActive) {
-        auto player = std::dynamic_pointer_cast<Player>(_gameWorld.getPrimaryPlayer());
         auto* animatable = player ? player->getBehaviour<Animatable>() : nullptr;
         if (!animatable || animatable->isAnimationDone()) {
             _winReactionActive = false;

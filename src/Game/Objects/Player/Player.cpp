@@ -1,4 +1,5 @@
 #include "Game/Objects/Player/Player.h"
+#include "Audio/SoundManager.h"
 #include "Game/GameSettings.h"
 #include "Game/Objects/GameObject.h"
 #include "Game/World/GameWorld.h"
@@ -158,6 +159,10 @@ void Player::refreshStatePresentation() {
     sf::Texture& tex = ResourceManager::getInstance().getTexture(texAlias);
     if (auto* animatable = getBehaviour<Animatable>()) {
         animatable->configureVisuals(tex, animId);
+        // State changes must discard any non-looping attack clip from the
+        // previous form immediately. Otherwise a Fire Mario shoot frame can
+        // remain visible for one render after returning to Normal.
+        animatable->playAnimation("idle", true);
     }
 }
 
@@ -187,6 +192,7 @@ bool Player::beginPipeWarp(
     }
 
     _isPipeWarping = true;
+    _pipeWarpExitSoundPlayed = false;
     _pipeWarpTimer = 0.0f;
     _pipeWarpIdleTimer = 0.0f;
     _pipeWarpSourceOutside = sourceOutside;
@@ -209,6 +215,8 @@ bool Player::beginPipeWarp(
     if (auto* animatable = getBehaviour<Animatable>()) {
         animatable->playAnimation("idle", true);
     }
+
+    Audio::SoundManager::getInstance().playEffect("pipe");
 
     return true;
 }
@@ -433,6 +441,14 @@ void Player::updatePipeWarpVisuals(float deltaTime) {
         _pipeWarpTimer + std::max(deltaTime, 0.0f)
     );
 
+    const float pipeWarpEmergenceStart =
+        pipeWarpDiveDurationSeconds + pipeWarpTravelDurationSeconds;
+    if (!_pipeWarpExitSoundPlayed
+        && _pipeWarpTimer >= pipeWarpEmergenceStart) {
+        _pipeWarpExitSoundPlayed = true;
+        Audio::SoundManager::getInstance().playEffect("pipe");
+    }
+
     sf::Vector2f position = _pipeWarpSourceInside;
     if (_pipeWarpTimer < pipeWarpDiveDurationSeconds) {
         const float progress = smoothStep(
@@ -595,6 +611,37 @@ void Player::beginMegaEndTransformation() {
         startTransformation(TransformTarget::MegaEnd, *_world);
     } else {
         setState(std::move(_stateAfterTransformation));
+    }
+}
+
+void Player::beginStarManEndTransformation() {
+    auto* starManState = dynamic_cast<StarManStateDecorator*>(_state.get());
+    if (!starManState) {
+        revertDecoratedState();
+        return;
+    }
+
+    if (const auto* wrappedState = starManState->getWrappedState()) {
+        _transformEndScale = wrappedState->getScaleMultiplier().x;
+    } else {
+        _transformEndScale = 1.0f;
+    }
+
+    if (_world) {
+        // Start while the decorator is still intact so the transformation
+        // captures the active StarMan presentation before unwrapping it.
+        startTransformation(TransformTarget::StarManEnd, *_world);
+        _stateAfterTransformation = starManState->unwrap();
+        if (!_stateAfterTransformation) {
+            _stateAfterTransformation = std::make_unique<NormalState>(_character);
+        }
+    } else {
+        std::unique_ptr<PlayerState> stateAfterTransformation = starManState->unwrap();
+        if (stateAfterTransformation) {
+            setState(std::move(stateAfterTransformation));
+        } else {
+            changeToNormalState();
+        }
     }
 }
 
@@ -785,6 +832,22 @@ void Player::startTransformation(TransformTarget target, float duration) {
 void Player::startTransformation(TransformTarget target, GameWorld& world, float duration) {
     if (_isTransforming) return;
 
+    const bool isPowerDownTransformation =
+        target == TransformTarget::MegaEnd
+        || target == TransformTarget::StarManEnd
+        || (target == TransformTarget::Normal
+            && (dynamic_cast<FireState*>(_state.get())
+                || dynamic_cast<SuperState*>(_state.get())));
+    if (isPowerDownTransformation) {
+        Audio::SoundManager::getInstance().playEffect("power_down");
+    } else if (target == TransformTarget::Mega) {
+        Audio::SoundManager::getInstance().playEffect("mega_up");
+    } else if (target == TransformTarget::Super
+               || target == TransformTarget::Fire
+               || target == TransformTarget::StarMan) {
+        Audio::SoundManager::getInstance().playEffect("power_up");
+    }
+
     _isTransforming = true;
     _transformTimer = duration;
     _transformDuration = duration > 0.0f ? duration : 1.0f;
@@ -863,7 +926,8 @@ void Player::onUpdateVisuals(float deltaTime) {
                 changeToSuperState();
             } else if (_transformTarget == TransformTarget::Mega) {
                 applyMegaState(megaStateDurationSeconds);
-            } else if (_transformTarget == TransformTarget::MegaEnd) {
+            } else if (_transformTarget == TransformTarget::MegaEnd
+                       || _transformTarget == TransformTarget::StarManEnd) {
                 if (_stateAfterTransformation) {
                     setState(std::move(_stateAfterTransformation));
                 } else {
@@ -874,6 +938,7 @@ void Player::onUpdateVisuals(float deltaTime) {
                     sf::Texture& tex = ResourceManager::getInstance().getTexture(_state->getTextureAlias());
                     if (auto* animatable = getBehaviour<Animatable>()) {
                         animatable->configureVisuals(tex, _state->getAnimationSetId());
+                        animatable->playAnimation("idle", true);
                     }
                 }
             }
@@ -882,7 +947,8 @@ void Player::onUpdateVisuals(float deltaTime) {
 
         // Lerp from the pre-transformation scale to target scale
         float targetScale = 1.5f;
-        if (_transformTarget == TransformTarget::MegaEnd) {
+        if (_transformTarget == TransformTarget::MegaEnd
+            || _transformTarget == TransformTarget::StarManEnd) {
             targetScale = _transformEndScale;
         } else if (_transformTarget == TransformTarget::StarMan) {
             targetScale = _transformStartScale;
@@ -912,6 +978,9 @@ void Player::onUpdateVisuals(float deltaTime) {
         if (_state->isExpired()) {
             if (isMegaState()) {
                 beginMegaEndTransformation();
+                return;
+            } else if (isStarManState()) {
+                beginStarManEndTransformation();
                 return;
             }
             revertDecoratedState();
