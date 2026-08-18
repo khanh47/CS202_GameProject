@@ -48,6 +48,8 @@ constexpr float pipeWarpRiseDurationSeconds =
     Player::pipeWarpDurationSeconds
     - pipeWarpDiveDurationSeconds
     - pipeWarpTravelDurationSeconds;
+constexpr float footstepIntervalSeconds = 0.28f;
+constexpr float deathSoundTailSeconds = 0.10f;
 
 float smoothStep(float progress) {
     progress = std::clamp(progress, 0.0f, 1.0f);
@@ -103,6 +105,16 @@ void Player::destroy() {
     }
 
     _isDying = true;
+    _deathSoundElapsedSeconds = 0.0f;
+    _deathSoundDurationSeconds = 0.0f;
+    try {
+        _deathSoundDurationSeconds = ResourceManager::getInstance()
+            .getSoundBuffer("dead")
+            .getDuration()
+            .asSeconds();
+    } catch (...) {
+    }
+    Audio::SoundManager::getInstance().playEffect("dead");
 
     removeBehaviour<Moveable>();
     auto* animatable = getBehaviour<Animatable>();
@@ -317,6 +329,7 @@ void Player::updateSimulation(const float &fixedDt) {
     
 
     if (_isDying) {
+        _deathSoundElapsedSeconds += fixedDt;
         if (!animatable) {
             _pendingDestroy = true;
             return;
@@ -326,7 +339,12 @@ void Player::updateSimulation(const float &fixedDt) {
             animatable->playAnimation("knockout");
         }
 
-        if (animatable->isAnimationDone()) {
+        const float deathSoundEndThreshold = std::max(
+            0.0f,
+            _deathSoundDurationSeconds - deathSoundTailSeconds
+        );
+        if (animatable->isAnimationDone()
+            && _deathSoundElapsedSeconds >= deathSoundEndThreshold) {
             _pendingDestroy = true;
         }
         return;
@@ -358,9 +376,23 @@ void Player::updateSimulation(const float &fixedDt) {
         velocity.x = 0.f;
     }
 
-    if (moveable->isJumping() && !moveable->isAirbone()) {
+    const bool isStartingJump = moveable->isJumping() && !moveable->isAirbone();
+    if (isStartingJump) {
+        Audio::SoundManager::getInstance().playEffect("jump");
         velocity.y = -jumpSpeed;
         moveable->consumeGroundForJump();
+    }
+
+    const bool isWalking = !moveable->isAirbone()
+        && (moveable->isMovingLeft() != moveable->isMovingRight());
+    if (isWalking) {
+        _footstepTimer -= fixedDt;
+        if (_footstepTimer <= 0.0f) {
+            Audio::SoundManager::getInstance().playEffect("footstep");
+            _footstepTimer = footstepIntervalSeconds;
+        }
+    } else {
+        _footstepTimer = 0.0f;
     }
 
 

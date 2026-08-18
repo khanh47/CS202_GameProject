@@ -232,6 +232,7 @@ void InGameScene::_checkGameOver() {
     } else {
         // 0 lives left -> Trigger Game Over screen
         _gameOverActive = true;
+        Audio::MusicManager::getInstance().play("game_over_music", false);
         if (_gameOverOverlay.has_value() && _gameOverTexture) {
             _gameOverOverlay->setTexture(*_gameOverTexture);
         }

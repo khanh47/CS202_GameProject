@@ -194,4 +194,7 @@ private:
     float _fallDistancePixels = 0.0f;
     float _maxDownwardVelocityPixelsPerSecond = 0.0f;
     bool _fallTrackingActive = false;
+    float _footstepTimer = 0.0f;
+    float _deathSoundElapsedSeconds = 0.0f;
+    float _deathSoundDurationSeconds = 0.0f;
 };
