@@ -618,9 +618,11 @@ void Player::handleItemContact(Item& item) {
         awardScore(ScoreEventType::PowerupCollected, getPosition());
         star->destroy();
     } else if (auto* coin = dynamic_cast<Coin*>(&item)) {
+        Audio::SoundManager::getInstance().playEffect("coin");
         awardScore(ScoreEventType::CoinCollected, getPosition());
         coin->destroy();
     } else if (auto* megaCoin = dynamic_cast<MegaCoin*>(&item)) {
+        Audio::SoundManager::getInstance().playEffect("coin");
         awardScore(ScoreEventType::MegaCoinCollected, getPosition());
         megaCoin->destroy();
     }

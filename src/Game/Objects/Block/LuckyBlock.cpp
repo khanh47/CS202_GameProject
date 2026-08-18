@@ -2,6 +2,7 @@
 #include <cmath>
 #include <random>
 
+#include "Audio/SoundManager.h"
 #include "Game/Behaviours/Animatable.h"
 #include "Game/Objects/Player/Player.h"
 #include "Game/World/GameWorld.h"
@@ -112,6 +113,7 @@ void LuckyBlock::onContact(GameObject& other, const b2ContactData& contactData, 
                 if (chosenOption->customSpawner && world) {
                     chosenOption->customSpawner(*world, itemSpawnPos);
                 } else if (chosenOption->itemTypeKey == "Coin" || chosenOption->itemTypeKey.empty()) {
+                    Audio::SoundManager::getInstance().playEffect("coin");
                     // Spawn popping coin animation
                     sf::Texture& itemsTexture = ResourceManager::getInstance().getTexture("coin_spritesheet");
                     _bouncingCoin.spawn(getPosition(), itemsTexture);

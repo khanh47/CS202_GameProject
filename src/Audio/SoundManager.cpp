@@ -14,6 +14,7 @@ SoundManager::SoundManager() {
     const GameSettings& settings = GameSettings::getInstance();
     _globalVolume = settings.soundVolume;
     _enabled = settings.soundEnabled;
+    _pool.reserve(_maxPoolSize);
 }
 SoundManager::~SoundManager() = default;
 
@@ -31,21 +32,20 @@ void SoundManager::playEffect(const std::string &alias, float volumeMultiplier) 
         auto &buf = ResourceManager::getInstance().getSoundBuffer(alias);
 
         // Find available sound in pool
-        for (auto &s : _pool) {
-            if (s.getStatus() == sf::SoundSource::Status::Stopped) {
-                s.setBuffer(buf);
-                s.setVolume(std::clamp(_globalVolume * volumeMultiplier, 0.f, 100.f));
-                s.play();
+        for (auto &sound : _pool) {
+            if (sound && sound->getStatus() == sf::SoundSource::Status::Stopped) {
+                sound->setBuffer(buf);
+                sound->setVolume(std::clamp(_globalVolume * volumeMultiplier, 0.f, 100.f));
+                sound->play();
                 return;
             }
         }
 
         if (_pool.size() < _maxPoolSize) {
-            // Construct the sound with the buffer (SFML Sound requires a buffer at construction)
-            _pool.emplace_back(buf);
-            auto &s = _pool.back();
-            s.setVolume(std::clamp(_globalVolume * volumeMultiplier, 0.f, 100.f));
-            s.play();
+            auto sound = std::make_unique<sf::Sound>(buf);
+            sound->setVolume(std::clamp(_globalVolume * volumeMultiplier, 0.f, 100.f));
+            sound->play();
+            _pool.push_back(std::move(sound));
         }
     } catch (...) {
     }
@@ -65,8 +65,10 @@ void SoundManager::setEnabled(bool e) {
 bool SoundManager::isEnabled() const { return _enabled; }
 
 void SoundManager::stopAll() {
-    for (auto &s : _pool) {
-        if (s.getStatus() != sf::SoundSource::Status::Stopped) s.stop();
+    for (auto &sound : _pool) {
+        if (sound && sound->getStatus() != sf::SoundSource::Status::Stopped) {
+            sound->stop();
+        }
     }
 }
 
