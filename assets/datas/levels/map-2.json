@@ -15,7 +15,7 @@
         "X": "pipe_warp_horizontal_right",
         "Y": "pipe_warp_vertical_top",
         "Z": "pipe_warp_vertical_bottom",
-        "U": "brick"
+        "U": "terrain_underground"
     },
     "layer": [
         "..............................................................................................................................................................................................................................................................................................................",
@@ -30,7 +30,7 @@
     "background": "parallax_underground",
     "prefabs": {
         "terrain_underground": {
-            "texture": "brick",
+            "texture": "at_underground",
             "solid": true,
             "autotile": "underground_terrain"
         },

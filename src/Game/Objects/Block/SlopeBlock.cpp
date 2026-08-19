@@ -27,12 +27,16 @@ void SlopeBlock::configureSlopeVisuals(sf::Texture& texture, SlopeType slopeType
         sf::IntRect rect;
         switch (_slopeType) {
             case SlopeType::UpRightBottom:
+                rect = sf::IntRect({1, 1}, {16, 16});     // g(0,0) - Upward slope lower grass cap (2:1 slope)
+                break;
             case SlopeType::UpRightTop:
-                rect = sf::IntRect({0, 208}, {16, 16});
+                rect = sf::IntRect({18, 1}, {16, 16});    // g(1,0) - Upward slope upper grass cap (2:1 slope)
                 break;
             case SlopeType::DownRightTop:
+                rect = sf::IntRect({18, 35}, {16, 16});   // g(1,2) - Downward slope upper grass cap (2:1 slope)
+                break;
             case SlopeType::DownRightBottom:
-                rect = sf::IntRect({32, 208}, {16, 16});
+                rect = sf::IntRect({35, 35}, {16, 16});   // g(2,2) - Downward slope lower grass cap (2:1 slope)
                 break;
         }
         animatable->setTextureRect(rect);
@@ -48,20 +52,46 @@ b2Polygon SlopeBlock::makeHitbox(sf::Vector2f hitboxPixels) const {
     const float hx = PhysicsUnits::toMeters(hitboxPixels.x * 0.5f);
     const float hy = PhysicsUnits::toMeters(hitboxPixels.y * 0.5f);
 
-    b2Vec2 vertices[3];
+    b2Vec2 vertices[4];
+    int count = 3;
 
-    if (_slopeType == SlopeType::DownRightTop || _slopeType == SlopeType::DownRightBottom) {
-        // Downward slope (top-left to bottom-right)
-        vertices[0] = {-hx, -hy};
-        vertices[1] = {-hx, hy};
-        vertices[2] = {hx, hy};
-    } else {
-        // Upward slope (bottom-left to top-right)
-        vertices[0] = {-hx, hy};
-        vertices[1] = {hx, hy};
-        vertices[2] = {hx, -hy};
+    switch (_slopeType) {
+        case SlopeType::UpRightBottom: {
+            // Lower half of upward slope: rises from 0 (y = hy) at left to half-height (y = 0) at right
+            vertices[0] = {-hx, hy};
+            vertices[1] = {hx, hy};
+            vertices[2] = {hx, 0.0f};
+            count = 3;
+            break;
+        }
+        case SlopeType::UpRightTop: {
+            // Upper half of upward slope: rises from half-height (y = 0) at left to full height (y = -hy) at right
+            vertices[0] = {-hx, 0.0f};
+            vertices[1] = {-hx, hy};
+            vertices[2] = {hx, hy};
+            vertices[3] = {hx, -hy};
+            count = 4;
+            break;
+        }
+        case SlopeType::DownRightTop: {
+            // Upper half of downward slope: drops from full height (y = -hy) at left to half-height (y = 0) at right
+            vertices[0] = {-hx, -hy};
+            vertices[1] = {-hx, hy};
+            vertices[2] = {hx, hy};
+            vertices[3] = {hx, 0.0f};
+            count = 4;
+            break;
+        }
+        case SlopeType::DownRightBottom: {
+            // Lower half of downward slope: drops from half-height (y = 0) at left to 0 (y = hy) at right
+            vertices[0] = {-hx, 0.0f};
+            vertices[1] = {-hx, hy};
+            vertices[2] = {hx, hy};
+            count = 3;
+            break;
+        }
     }
 
-    const b2Hull hull = b2ComputeHull(vertices, 3);
+    const b2Hull hull = b2ComputeHull(vertices, count);
     return b2MakePolygon(&hull, 0.0f);
 }

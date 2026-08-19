@@ -23,7 +23,7 @@
     "background": "parallax_underground",
     "prefabs": {
         "terrain_castle": {
-            "texture": "brick",
+            "texture": "at_castle",
             "solid": true,
             "autotile": "castle_terrain"
         }

@@ -248,6 +248,12 @@ AutotileResult AutotileResolver::resolveDetailed(
     const bool W = isSolid(screenGrid, col - 1, screenRow, gridWidth, gridHeight, solidIds);
     const bool E = isSolid(screenGrid, col + 1, screenRow, gridWidth, gridHeight, solidIds);
 
+    auto isSlopeTile = [&](int c, int r) -> bool {
+        if (r < 0 || r >= gridHeight || c < 0 || c >= gridWidth) return false;
+        const int id = screenGrid[r][c];
+        return id == '1' || id == '2' || id == '3' || id == '4';
+    };
+
     // 1. Expansion from LEFT shorter column into THIS taller column
     if (W) {
         int topLeftRow = -1;
@@ -262,6 +268,13 @@ AutotileResult AutotileResolver::resolveDetailed(
 
         if (topLeftRow != -1 && screenRow >= topLeftRow) {
             if (isSolid(screenGrid, col, topLeftRow - 1, gridWidth, gridHeight, solidIds)) {
+                // Slope transitions do not create rectangular column overlays
+                if (isSlopeTile(col, topLeftRow - 1) || isSlopeTile(col - 1, topLeftRow)
+                    || isSlopeTile(col, screenRow) || isSlopeTile(col - 1, screenRow)
+                    || isSlopeTile(col, screenRow - 1)) {
+                    return result;
+                }
+
                 result.hasOverlay = true;
                 if (!N || screenRow == topLeftRow) {
                     // Top Surface Row of Shorter Column Expansion: Top-Right Corner Grass g(8,0) [137, 1]
@@ -295,6 +308,13 @@ AutotileResult AutotileResolver::resolveDetailed(
 
         if (topRightRow != -1 && screenRow >= topRightRow) {
             if (isSolid(screenGrid, col, topRightRow - 1, gridWidth, gridHeight, solidIds)) {
+                // Slope transitions do not create rectangular column overlays
+                if (isSlopeTile(col, topRightRow - 1) || isSlopeTile(col + 1, topRightRow)
+                    || isSlopeTile(col, screenRow) || isSlopeTile(col + 1, screenRow)
+                    || isSlopeTile(col, screenRow - 1)) {
+                    return result;
+                }
+
                 result.hasOverlay = true;
                 if (!N || screenRow == topRightRow) {
                     // Top Surface Row of Shorter Column Expansion: Top-Left Corner Grass g(3,0) [52, 1]
