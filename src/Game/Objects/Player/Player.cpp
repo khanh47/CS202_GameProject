@@ -11,6 +11,7 @@
 #include "Physics/CollisionFilter.h"
 #include "Physics/PhysicsUnits.h"
 #include "Game/Objects/Block/CoinBlock.h"
+#include "Game/Objects/Block/SlopeBlock.h"
 #include "Game/Objects/Enemy/Enemy.h"
 #include "Game/Objects/Item/ConcreteItems/FireFlower.h"
 #include "Game/Objects/Item/ConcreteItems/SuperMushroom.h"
@@ -684,13 +685,14 @@ void Player::handleMegaEnvironmentContact(
     const b2ContactData& contactData,
     b2ShapeId ownShape
 ) {
-    // Mega destroys solid world obstacles on contact. The object's normal
-    // cleanup path removes its body and, for tile terrain, its map tile.
+    // Mega destroys solid world obstacles on contact. Slopes and unbreakable
+    // terrain blocks are permanent level geometry and must not be destroyed.
     if (auto* block = dynamic_cast<Block*>(&other)) {
-        // Keep the map's indestructible ground/support tiles in place. Brick
-        // tiles and live block objects still yield immediately to Mega.
-        if ((block->isBreakable() || !block->isRenderedByTileMap())
-            && !block->isPendingDestroy()) {
+        if (dynamic_cast<SlopeBlock*>(block)) {
+            return;
+        }
+
+        if (block->isBreakable() && !block->isPendingDestroy()) {
             Audio::SoundManager::getInstance().playEffect("break");
             if (_world) {
                 block->spawnBreakEffect(*_world);
