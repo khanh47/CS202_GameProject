@@ -1,6 +1,7 @@
 #pragma once
 
 #include <functional>
+#include <memory>
 #include <random>
 #include <string>
 #include <vector>
@@ -14,6 +15,7 @@
 #include "Game/Objects/Block/CoinBlock.h"
 
 class GameWorld;
+class Item;
 
 /**
  * @brief Represents an outcome option when hitting a LuckyBlock.
@@ -72,5 +74,6 @@ private:
     float _hitCooldown = 0.0f;  // Cooldown time after being hit
     float _bumpTimer = 0.0f;    // Bumping/enlarging visual effect timer
     BouncingCoin _bouncingCoin; // Animated coin popping out
+    std::weak_ptr<Item> _emergingPowerup;
     std::vector<ItemOption> _itemOptions;
 };

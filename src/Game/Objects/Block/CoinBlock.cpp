@@ -1,6 +1,7 @@
 #include "Game/Objects/Block/CoinBlock.h"
 #include <cmath>
 
+#include "Audio/SoundManager.h"
 #include "Game/Behaviours/Animatable.h"
 #include "Game/Objects/Player/Player.h"
 #include "Game/World/GameWorld.h"
@@ -46,6 +47,7 @@ void CoinBlock::onContact(GameObject& other, const b2ContactData& contactData, b
             capacity--;
             _hitCooldown = 0.0f; // Cooldown to prevent multi-hits in 1 jump
             _bumpTimer = 0.15f;  // Trigger bump/enlarge animation (0.15 seconds)
+            Audio::SoundManager::getInstance().playEffect("coin");
 
             // Spawn popping coin animation
             sf::Texture& itemsTexture = ResourceManager::getInstance().getTexture("coin_spritesheet");

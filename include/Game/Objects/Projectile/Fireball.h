@@ -3,6 +3,7 @@
 #include <SFML/Graphics.hpp>
 #include <box2d/box2d.h>
 
+#include "Game/Behaviours/FireballParticleEffect.h"
 #include "Game/Objects/GameObject.h"
 
 class GameWorld; // Forward declaration — full include is in Fireball.cpp
@@ -39,6 +40,7 @@ private:
     bool _active = false;
     bool _facingRight = true;
     float _distanceTraveled = 0.0f;
+    FireballParticleEffect _particleTrail;
     
     // Movement speeds in Box2D MKS matching original Super Mario Bros NES physics
     const float _moveSpeedMeters = 10.f;

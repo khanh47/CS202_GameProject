@@ -1,4 +1,5 @@
 #include "Game/Objects/Player/State/MegaStateDecorator.h"
+#include "Audio/SoundManager.h"
 
 MegaStateDecorator::MegaStateDecorator(
     std::unique_ptr<PlayerState> wrappedState,
@@ -16,6 +17,18 @@ std::string MegaStateDecorator::getStateName() const {
 
 float MegaStateDecorator::getMoveSpeedMultiplier() const {
     return PlayerStateDecorator::getMoveSpeedMultiplier() * 1.5f;
+}
+
+void MegaStateDecorator::handleSuperMushroom(Player&) {
+    Audio::SoundManager::getInstance().playEffect("power_up");
+}
+
+void MegaStateDecorator::handleFireFlower(Player&) {
+    Audio::SoundManager::getInstance().playEffect("power_up");
+}
+
+void MegaStateDecorator::handleSuperStar(Player&) {
+    Audio::SoundManager::getInstance().playEffect("power_up");
 }
 
 float MegaStateDecorator::getJumpSpeedMultiplier() const {

@@ -1,4 +1,5 @@
 #include "Game/Objects/Player/State/FireState.h"
+#include "Audio/SoundManager.h"
 #include "Game/Behaviours/Animatable.h"
 #include "Game/Behaviours/Invincible.h"
 #include "Game/Objects/Player/Player.h"
@@ -10,10 +11,12 @@ FireState::FireState(std::string character)
 
 void FireState::handleSuperMushroom(Player& player) {
     (void)player;
+    Audio::SoundManager::getInstance().playEffect("power_up");
 }
 
 void FireState::handleFireFlower(Player& player) {
     (void)player;
+    Audio::SoundManager::getInstance().playEffect("power_up");
 }
 
 void FireState::handleSuperStar(Player& player) {
@@ -21,8 +24,6 @@ void FireState::handleSuperStar(Player& player) {
 }
 
 void FireState::handleEnemy(Player& player) {
-    auto* animatable = player.getBehaviour<Animatable>();
-    animatable->playAnimation("hit");
-    player.startTransformation(Player::TransformTarget::Normal, 0);
+    player.startTransformation(Player::TransformTarget::Normal);
     player.addBehaviour<Invincible>(2.0f);
 }

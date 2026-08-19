@@ -1,5 +1,6 @@
 #include "Game/Objects/Item/ConcreteItems/OneUpMushroom.h"
 
+#include "Audio/SoundManager.h"
 #include "Game/Behaviours/Animatable.h"
 #include "Game/Objects/Player/Player.h"
 #include "Physics/CollisionFilter.h"
@@ -15,6 +16,7 @@ OneUpMushroom::OneUpMushroom(sf::Texture& texture) : Item() {
 
 void OneUpMushroom::onPickup(Player& player) {
     (void)player;
+    Audio::SoundManager::getInstance().playEffect("one_up");
     destroy();
 }
 

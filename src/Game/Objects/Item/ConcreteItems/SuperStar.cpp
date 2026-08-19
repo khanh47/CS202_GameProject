@@ -33,7 +33,11 @@ void SuperStar::onCreateShapeDef(b2ShapeDef& def) {
 }
 
 void SuperStar::updateSimulation(const float& fixedDt) {
-    (void)fixedDt;
+    Item::updateSimulation(fixedDt);
+    if (isEmerging()) {
+        return;
+    }
+
     if (!hasValidBody()) return;
 
     b2BodyId body = _body->getId();

@@ -1,4 +1,5 @@
 #include "Game/Objects/Player/Player.h"
+#include "Audio/SoundManager.h"
 #include "Game/GameSettings.h"
 #include "Game/Objects/GameObject.h"
 #include "Game/World/GameWorld.h"
@@ -40,6 +41,20 @@ constexpr float highFallBreakDistancePixels =
 // With the player's current gravity scale, this is approximately the impact
 // speed reached after a 25-cell fall. Capture it before Box2D resolves contact.
 constexpr float highFallBreakVelocityPixelsPerSecond = 2800.0f;
+constexpr float pipeWarpDiveDurationSeconds = 0.65f;
+constexpr float pipeWarpTravelDurationSeconds = 0.35f;
+constexpr float pipeWarpLandingIdleDurationSeconds = 0.18f;
+constexpr float pipeWarpRiseDurationSeconds =
+    Player::pipeWarpDurationSeconds
+    - pipeWarpDiveDurationSeconds
+    - pipeWarpTravelDurationSeconds;
+constexpr float footstepIntervalSeconds = 0.28f;
+constexpr float deathSoundTailSeconds = 0.10f;
+
+float smoothStep(float progress) {
+    progress = std::clamp(progress, 0.0f, 1.0f);
+    return progress * progress * (3.0f - 2.0f * progress);
+}
 }
 
 Player::Player() : GameObject() {
@@ -90,6 +105,16 @@ void Player::destroy() {
     }
 
     _isDying = true;
+    _deathSoundElapsedSeconds = 0.0f;
+    _deathSoundDurationSeconds = 0.0f;
+    try {
+        _deathSoundDurationSeconds = ResourceManager::getInstance()
+            .getSoundBuffer("dead")
+            .getDuration()
+            .asSeconds();
+    } catch (...) {
+    }
+    Audio::SoundManager::getInstance().playEffect("dead");
 
     removeBehaviour<Moveable>();
     auto* animatable = getBehaviour<Animatable>();
@@ -146,6 +171,10 @@ void Player::refreshStatePresentation() {
     sf::Texture& tex = ResourceManager::getInstance().getTexture(texAlias);
     if (auto* animatable = getBehaviour<Animatable>()) {
         animatable->configureVisuals(tex, animId);
+        // State changes must discard any non-looping attack clip from the
+        // previous form immediately. Otherwise a Fire Mario shoot frame can
+        // remain visible for one render after returning to Normal.
+        animatable->playAnimation("idle", true);
     }
 }
 
@@ -162,6 +191,46 @@ void Player::attack(GameWorld& world) {
     if (_attackStrategy) {
         _attackStrategy->executeAttack(*this, world);
     }
+}
+
+bool Player::beginPipeWarp(
+    sf::Vector2f sourceOutside,
+    sf::Vector2f sourceInside,
+    sf::Vector2f targetInside,
+    sf::Vector2f targetOutside
+) {
+    if (_isPipeWarping || !hasValidBody()) {
+        return false;
+    }
+
+    _isPipeWarping = true;
+    _pipeWarpExitSoundPlayed = false;
+    _pipeWarpTimer = 0.0f;
+    _pipeWarpIdleTimer = 0.0f;
+    _pipeWarpSourceOutside = sourceOutside;
+    _pipeWarpSourceInside = sourceInside;
+    _pipeWarpTargetInside = targetInside;
+    _pipeWarpTargetOutside = targetOutside;
+
+    if (auto* moveable = getBehaviour<Moveable>()) {
+        moveable->stopMoveLeft();
+        moveable->stopMoveRight();
+        moveable->stopJump();
+        moveable->resetGroundContacts();
+    }
+
+    setPosition(_pipeWarpSourceOutside);
+    if (auto body = getPhysicsBody()) {
+        b2Body_SetLinearVelocity(body->getId(), {0.0f, 0.0f});
+    }
+
+    if (auto* animatable = getBehaviour<Animatable>()) {
+        animatable->playAnimation("idle", true);
+    }
+
+    Audio::SoundManager::getInstance().playEffect("pipe");
+
+    return true;
 }
 
 void Player::changeToNormalState() {
@@ -231,9 +300,12 @@ void Player::updateSimulation(const float &fixedDt) {
         return;
     }
 
+    if (_isPipeWarping) {
+        return;
+    }
+
     _warpCooldown = std::max(0.0f, _warpCooldown - fixedDt);
-    if (_world && !isMegaState() && _warpCooldown <= 0.0f
-        && (_interactHeld || _moveDownHeld || _moveUpHeld)) {
+    if (_world && !isMegaState() && _warpCooldown <= 0.0f) {
         if (_world->tryWarpPlayer(*this)) {
             _warpCooldown = 0.35f;
             return;
@@ -257,6 +329,7 @@ void Player::updateSimulation(const float &fixedDt) {
     
 
     if (_isDying) {
+        _deathSoundElapsedSeconds += fixedDt;
         if (!animatable) {
             _pendingDestroy = true;
             return;
@@ -266,7 +339,12 @@ void Player::updateSimulation(const float &fixedDt) {
             animatable->playAnimation("knockout");
         }
 
-        if (animatable->isAnimationDone()) {
+        const float deathSoundEndThreshold = std::max(
+            0.0f,
+            _deathSoundDurationSeconds - deathSoundTailSeconds
+        );
+        if (animatable->isAnimationDone()
+            && _deathSoundElapsedSeconds >= deathSoundEndThreshold) {
             _pendingDestroy = true;
         }
         return;
@@ -298,9 +376,23 @@ void Player::updateSimulation(const float &fixedDt) {
         velocity.x = 0.f;
     }
 
-    if (moveable->isJumping() && !moveable->isAirbone()) {
+    const bool isStartingJump = moveable->isJumping() && !moveable->isAirbone();
+    if (isStartingJump) {
+        Audio::SoundManager::getInstance().playEffect("jump");
         velocity.y = -jumpSpeed;
         moveable->consumeGroundForJump();
+    }
+
+    const bool isWalking = !moveable->isAirbone()
+        && (moveable->isMovingLeft() != moveable->isMovingRight());
+    if (isWalking) {
+        _footstepTimer -= fixedDt;
+        if (_footstepTimer <= 0.0f) {
+            Audio::SoundManager::getInstance().playEffect("footstep");
+            _footstepTimer = footstepIntervalSeconds;
+        }
+    } else {
+        _footstepTimer = 0.0f;
     }
 
 
@@ -375,12 +467,92 @@ void Player::updateFallTracking() {
     }
 }
 
+void Player::updatePipeWarpVisuals(float deltaTime) {
+    _pipeWarpTimer = std::min(
+        pipeWarpDurationSeconds,
+        _pipeWarpTimer + std::max(deltaTime, 0.0f)
+    );
+
+    const float pipeWarpEmergenceStart =
+        pipeWarpDiveDurationSeconds + pipeWarpTravelDurationSeconds;
+    if (!_pipeWarpExitSoundPlayed
+        && _pipeWarpTimer >= pipeWarpEmergenceStart) {
+        _pipeWarpExitSoundPlayed = true;
+        Audio::SoundManager::getInstance().playEffect("pipe");
+    }
+
+    sf::Vector2f position = _pipeWarpSourceInside;
+    if (_pipeWarpTimer < pipeWarpDiveDurationSeconds) {
+        const float progress = smoothStep(
+            _pipeWarpTimer / pipeWarpDiveDurationSeconds
+        );
+        position = _pipeWarpSourceOutside
+            + (_pipeWarpSourceInside - _pipeWarpSourceOutside) * progress;
+    } else if (_pipeWarpTimer < pipeWarpDiveDurationSeconds
+               + pipeWarpTravelDurationSeconds) {
+        // The player stays hidden inside the pipe while the destination is
+        // reached. This keeps a distant warp from looking like a teleport.
+        position = _pipeWarpTargetInside;
+    } else {
+        const float riseProgress = smoothStep(
+            (_pipeWarpTimer
+             - pipeWarpDiveDurationSeconds
+             - pipeWarpTravelDurationSeconds)
+            / pipeWarpRiseDurationSeconds
+        );
+        position = _pipeWarpTargetInside
+            + (_pipeWarpTargetOutside - _pipeWarpTargetInside) * riseProgress;
+    }
+
+    setPosition(position);
+    if (auto body = getPhysicsBody()) {
+        b2Body_SetLinearVelocity(body->getId(), {0.0f, 0.0f});
+    }
+
+    auto* animatable = getBehaviour<Animatable>();
+    if (animatable) {
+        animatable->playAnimation("idle");
+        animatable->setVisualScale({2.5f, 1.1f});
+        animatable->updateVisualState(
+            deltaTime,
+            _hitboxPixels,
+            isFacingLeft()
+        );
+    }
+
+    if (_pipeWarpTimer < pipeWarpDurationSeconds) {
+        return;
+    }
+
+    setPosition(_pipeWarpTargetOutside);
+    if (auto body = getPhysicsBody()) {
+        b2Body_SetLinearVelocity(body->getId(), {0.0f, 0.0f});
+    }
+    if (auto* moveable = getBehaviour<Moveable>()) {
+        moveable->resetGroundContacts();
+    }
+
+    _pipeWarpIdleTimer = pipeWarpLandingIdleDurationSeconds;
+    _isPipeWarping = false;
+    if (_world) {
+        _world->releaseFreeze();
+    }
+    if (animatable) {
+        animatable->playAnimation("idle", true);
+    }
+}
+
 void Player::finalizeSimulation(const float &fixedDt) {
     (void)fixedDt;
 
     auto* moveable = getBehaviour<Moveable>();
     auto* animatable = getBehaviour<Animatable>();
     if (!moveable || !animatable) {
+        return;
+    }
+
+    if (_pipeWarpIdleTimer > 0.0f) {
+        animatable->playAnimation("idle");
         return;
     }
 
@@ -446,9 +618,11 @@ void Player::handleItemContact(Item& item) {
         awardScore(ScoreEventType::PowerupCollected, getPosition());
         star->destroy();
     } else if (auto* coin = dynamic_cast<Coin*>(&item)) {
+        Audio::SoundManager::getInstance().playEffect("coin");
         awardScore(ScoreEventType::CoinCollected, getPosition());
         coin->destroy();
     } else if (auto* megaCoin = dynamic_cast<MegaCoin*>(&item)) {
+        Audio::SoundManager::getInstance().playEffect("coin");
         awardScore(ScoreEventType::MegaCoinCollected, getPosition());
         megaCoin->destroy();
     }
@@ -474,6 +648,37 @@ void Player::beginMegaEndTransformation() {
     }
 }
 
+void Player::beginStarManEndTransformation() {
+    auto* starManState = dynamic_cast<StarManStateDecorator*>(_state.get());
+    if (!starManState) {
+        revertDecoratedState();
+        return;
+    }
+
+    if (const auto* wrappedState = starManState->getWrappedState()) {
+        _transformEndScale = wrappedState->getScaleMultiplier().x;
+    } else {
+        _transformEndScale = 1.0f;
+    }
+
+    if (_world) {
+        // Start while the decorator is still intact so the transformation
+        // captures the active StarMan presentation before unwrapping it.
+        startTransformation(TransformTarget::StarManEnd, *_world);
+        _stateAfterTransformation = starManState->unwrap();
+        if (!_stateAfterTransformation) {
+            _stateAfterTransformation = std::make_unique<NormalState>(_character);
+        }
+    } else {
+        std::unique_ptr<PlayerState> stateAfterTransformation = starManState->unwrap();
+        if (stateAfterTransformation) {
+            setState(std::move(stateAfterTransformation));
+        } else {
+            changeToNormalState();
+        }
+    }
+}
+
 void Player::handleMegaEnvironmentContact(
     GameObject& other,
     const b2ContactData& contactData,
@@ -486,6 +691,7 @@ void Player::handleMegaEnvironmentContact(
         // tiles and live block objects still yield immediately to Mega.
         if ((block->isBreakable() || !block->isRenderedByTileMap())
             && !block->isPendingDestroy()) {
+            Audio::SoundManager::getInstance().playEffect("break");
             if (_world) {
                 block->spawnBreakEffect(*_world);
             }
@@ -506,6 +712,7 @@ void Player::handleMegaEnvironmentContact(
 
         if (_world) {
             if (const auto breakData = pipe->getSegmentBreakData(pipeShape)) {
+                Audio::SoundManager::getInstance().playEffect("break");
                 _world->spawnBlockBreakEffect(
                     breakData->position,
                     breakData->size,
@@ -559,6 +766,7 @@ void Player::handleEnemyContact(
     }
 
     if (isTopContact(contactData, ownShape) && enemy.canBeStomped()) {
+        Audio::SoundManager::getInstance().playEffect("kill");
         awardScore(ScoreEventType::EnemyStomped, enemy.getPosition());
         enemy.onStomp();
         bounce();
@@ -661,6 +869,22 @@ void Player::startTransformation(TransformTarget target, float duration) {
 void Player::startTransformation(TransformTarget target, GameWorld& world, float duration) {
     if (_isTransforming) return;
 
+    const bool isPowerDownTransformation =
+        target == TransformTarget::MegaEnd
+        || target == TransformTarget::StarManEnd
+        || (target == TransformTarget::Normal
+            && (dynamic_cast<FireState*>(_state.get())
+                || dynamic_cast<SuperState*>(_state.get())));
+    if (isPowerDownTransformation) {
+        Audio::SoundManager::getInstance().playEffect("power_down");
+    } else if (target == TransformTarget::Mega) {
+        Audio::SoundManager::getInstance().playEffect("mega_up");
+    } else if (target == TransformTarget::Super
+               || target == TransformTarget::Fire
+               || target == TransformTarget::StarMan) {
+        Audio::SoundManager::getInstance().playEffect("power_up");
+    }
+
     _isTransforming = true;
     _transformTimer = duration;
     _transformDuration = duration > 0.0f ? duration : 1.0f;
@@ -694,11 +918,22 @@ void Player::startTransformation(TransformTarget target, GameWorld& world, float
 void Player::onUpdateVisuals(float deltaTime) {
     _effectTime += deltaTime;
     PlayerShaders::getInstance().update(deltaTime);
+    if (!_isPipeWarping && _pipeWarpIdleTimer > 0.0f) {
+        _pipeWarpIdleTimer = std::max(
+            0.0f,
+            _pipeWarpIdleTimer - std::max(deltaTime, 0.0f)
+        );
+    }
     auto* moveable = getBehaviour<Moveable>();
     const bool facingLeft = moveable ? moveable->isFacingLeft() : false;
 
     if (auto* hold = getBehaviour<ShellHoldBehaviour>()) {
         hold->updateVisuals(deltaTime);
+    }
+
+    if (_isPipeWarping) {
+        updatePipeWarpVisuals(deltaTime);
+        return;
     }
 
     if (_isTransforming) {
@@ -728,7 +963,8 @@ void Player::onUpdateVisuals(float deltaTime) {
                 changeToSuperState();
             } else if (_transformTarget == TransformTarget::Mega) {
                 applyMegaState(megaStateDurationSeconds);
-            } else if (_transformTarget == TransformTarget::MegaEnd) {
+            } else if (_transformTarget == TransformTarget::MegaEnd
+                       || _transformTarget == TransformTarget::StarManEnd) {
                 if (_stateAfterTransformation) {
                     setState(std::move(_stateAfterTransformation));
                 } else {
@@ -739,6 +975,7 @@ void Player::onUpdateVisuals(float deltaTime) {
                     sf::Texture& tex = ResourceManager::getInstance().getTexture(_state->getTextureAlias());
                     if (auto* animatable = getBehaviour<Animatable>()) {
                         animatable->configureVisuals(tex, _state->getAnimationSetId());
+                        animatable->playAnimation("idle", true);
                     }
                 }
             }
@@ -747,7 +984,8 @@ void Player::onUpdateVisuals(float deltaTime) {
 
         // Lerp from the pre-transformation scale to target scale
         float targetScale = 1.5f;
-        if (_transformTarget == TransformTarget::MegaEnd) {
+        if (_transformTarget == TransformTarget::MegaEnd
+            || _transformTarget == TransformTarget::StarManEnd) {
             targetScale = _transformEndScale;
         } else if (_transformTarget == TransformTarget::StarMan) {
             targetScale = _transformStartScale;
@@ -777,6 +1015,9 @@ void Player::onUpdateVisuals(float deltaTime) {
         if (_state->isExpired()) {
             if (isMegaState()) {
                 beginMegaEndTransformation();
+                return;
+            } else if (isStarManState()) {
+                beginStarManEndTransformation();
                 return;
             }
             revertDecoratedState();

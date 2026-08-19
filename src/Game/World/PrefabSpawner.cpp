@@ -238,8 +238,10 @@ std::shared_ptr<GameObject> PrefabSpawner::spawnPipe(
         _cellSize
     );
 
-    // A pipe entry identifies the cap cell. Its body is then positioned from
-    // the cap direction, so its physics footprint and visual footprint agree.
+    // A pipe entry identifies the anchor cell. Its body is then positioned
+    // from the cap direction, so its physics footprint and visual footprint
+    // agree. Horizontal pipes are two cells tall and use the anchor cell as
+    // their bottom row, which keeps a row of ground directly beneath them.
     sf::Vector2f pipePosition = spawnPosition;
     const float halfCell = _cellSize * 0.5f;
     if (spec.pipeOrientation == "vertical") {
@@ -250,7 +252,10 @@ std::shared_ptr<GameObject> PrefabSpawner::spawnPipe(
             pipePosition.y = cellCenter.y + halfCell - pipeSize.y * 0.5f;
         }
     } else {
-        pipePosition.y += halfCell;
+        // The horizontal footprint is two cells tall. Center it on the
+        // boundary below the anchor cell so its bottom edge meets, but does
+        // not enter, the ground row beneath it.
+        pipePosition.y = spawnPosition.y - halfCell;
         if (spec.pipeEndSide == "right") {
             pipePosition.x = cellCenter.x - halfCell + pipeSize.x * 0.5f;
         } else {
@@ -313,18 +318,19 @@ std::shared_ptr<GameObject> PrefabSpawner::spawnPipe(
             const int firstColumn = spec.pipeEndSide == "right"
                 ? column
                 : column - pipeTiles + 1;
+            const int firstRow = screenRow - 1;
             for (int pipeColumn = firstColumn;
                  pipeColumn < firstColumn + pipeTiles;
                  ++pipeColumn) {
                 _terrainSeamFilter.addOccupiedCell(
                     pipe,
                     pipeColumn,
-                    screenRow
+                    firstRow
                 );
                 _terrainSeamFilter.addOccupiedCell(
                     pipe,
                     pipeColumn,
-                    screenRow + 1
+                    firstRow + 1
                 );
             }
         }

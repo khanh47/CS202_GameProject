@@ -1,4 +1,5 @@
 #include "Game/Objects/Enemy/Enemy.h"
+#include "Audio/SoundManager.h"
 #include "Game/Objects/GameObject.h"
 #include "Game/World/TerrainSeamFilter.h"
 #include "Physics/CollisionFilter.h"
@@ -146,6 +147,7 @@ void Enemy::destroy() {
 
     _isDying = true;
     _deathTimer = 0.0f;
+    Audio::SoundManager::getInstance().playEffect("kill");
 
     b2Body_SetGravityScale(_body->getId(), 2.0f);
     

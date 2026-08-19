@@ -1,6 +1,7 @@
 #include "Game/World/GameWorld.h"
 
 #include <algorithm>
+#include <cmath>
 #include <memory>
 
 #include "Game/Behaviours/Animatable.h"
@@ -12,6 +13,54 @@
 #include "Game/Objects/Enemy/ConcreteEnemy/Koopa.h"
 #include "Game/World/LevelDataLoader.h"
 #include "Game/World/PrefabSpawner.h"
+
+namespace {
+struct PipeWarpPoints {
+    sf::Vector2f outside;
+    sf::Vector2f inside;
+};
+
+PipeWarpPoints makePipeWarpPoints(
+    const Pipe& pipe,
+    const sf::Vector2f& playerSize
+) {
+    const sf::Vector2f pipePosition = pipe.getPosition();
+    const sf::Vector2f pipeSize = pipe.getHitboxPixels();
+    sf::Vector2f opening = pipePosition;
+    sf::Vector2f inward{0.0f, 0.0f};
+
+    switch (pipe.getEndSide()) {
+        case Pipe::EndSide::Top:
+            opening.y -= pipeSize.y * 0.5f;
+            inward.y = 1.0f;
+            break;
+        case Pipe::EndSide::Bottom:
+            opening.y += pipeSize.y * 0.5f;
+            inward.y = -1.0f;
+            break;
+        case Pipe::EndSide::Left:
+            opening.x -= pipeSize.x * 0.5f;
+            inward.x = 1.0f;
+            break;
+        case Pipe::EndSide::Right:
+            opening.x += pipeSize.x * 0.5f;
+            inward.x = -1.0f;
+            break;
+    }
+
+    const bool vertical = pipe.getOrientation() == Pipe::Orientation::Vertical;
+    const float playerHalfAxis = vertical
+        ? playerSize.y * 0.5f
+        : playerSize.x * 0.5f;
+    constexpr float outsideGapPixels = 4.0f;
+    constexpr float insideGapPixels = 16.0f;
+
+    return {
+        opening - inward * (playerHalfAxis + outsideGapPixels),
+        opening + inward * (playerHalfAxis + insideGapPixels)
+    };
+}
+}
 
 GameWorld::GameWorld(int gridWidth, int gridHeight, float cellSize)
     : _worldMap(gridWidth, gridHeight, cellSize) {}
@@ -43,6 +92,14 @@ void GameWorld::updateSimulation(const float& fixedDt) {
         return;
     }
 
+    _objectStore.updateSimulation(fixedDt);
+
+    // A player can start a pipe warp from inside updateSimulation. Do not
+    // advance Box2D or the remaining world objects on that same tick.
+    if (isFrozen()) {
+        return;
+    }
+
     constexpr float maximumFireballDistance = 1280.0f;
     const float voidThreshold =
         _worldMap.getGridHeight() * _worldMap.getCellSize();
@@ -54,7 +111,6 @@ void GameWorld::updateSimulation(const float& fixedDt) {
         );
     }
 
-    _objectStore.updateSimulation(fixedDt);
     _physicsWorld.updateSimulation(fixedDt);
 
     // Events must be consumed while every fixture owner is still alive.
@@ -93,6 +149,27 @@ void GameWorld::updateSimulation(const float& fixedDt) {
 }
 
 void GameWorld::updateVisuals(float deltaTime) {
+    bool pipeWarpActive = false;
+    for (const std::shared_ptr<GameObject>& object : _objectStore.objects()) {
+        if (const auto player = std::dynamic_pointer_cast<Player>(object);
+            player && player->isPipeWarping()) {
+            pipeWarpActive = true;
+            break;
+        }
+    }
+
+    if (pipeWarpActive) {
+        // Keep the world visually still while allowing the warping player's
+        // dive, hidden transfer, and emergence to continue.
+        for (const std::shared_ptr<GameObject>& object : _objectStore.objects()) {
+            if (const auto player = std::dynamic_pointer_cast<Player>(object);
+                player && player->isPipeWarping()) {
+                player->updateVisuals(deltaTime);
+            }
+        }
+        return;
+    }
+
     _objectStore.updateVisuals(deltaTime);
     for (FireballPool& pool : _fireballPools) {
         pool.updateVisuals(deltaTime);
@@ -297,10 +374,10 @@ bool GameWorld::tryWarpPlayer(Player& player) {
                 entering = verticalOverlap && std::abs(playerPosition.y - halfHeight - bottom) < 20.0f && player.isMoveUpHeld();
                 break;
             case Pipe::EndSide::Left:
-                entering = horizontalOverlap && std::abs(playerPosition.x + halfWidth - left) < 20.0f && velocity.x < -20.0f;
+                entering = horizontalOverlap && std::abs(playerPosition.x + halfWidth - left) < 20.0f && velocity.x > 20.0f;
                 break;
             case Pipe::EndSide::Right:
-                entering = horizontalOverlap && std::abs(playerPosition.x - halfWidth - right) < 20.0f && velocity.x > 20.0f;
+                entering = horizontalOverlap && std::abs(playerPosition.x - halfWidth - right) < 20.0f && velocity.x < -20.0f;
                 break;
         }
         if (entering) {
@@ -322,19 +399,25 @@ bool GameWorld::tryWarpPlayer(Player& player) {
     }
     if (!destination) return false;
 
-    const sf::Vector2f destinationPosition = destination->getPosition();
-    const sf::Vector2f destinationSize = destination->getHitboxPixels();
-    sf::Vector2f arrival = destinationPosition;
-    switch (destination->getEndSide()) {
-        case Pipe::EndSide::Top: arrival.y -= destinationSize.y * 0.5f + halfHeight + 4.0f; break;
-        case Pipe::EndSide::Bottom: arrival.y += destinationSize.y * 0.5f + halfHeight + 4.0f; break;
-        case Pipe::EndSide::Left: arrival.x -= destinationSize.x * 0.5f + halfWidth + 4.0f; break;
-        case Pipe::EndSide::Right: arrival.x += destinationSize.x * 0.5f + halfWidth + 4.0f; break;
+    const PipeWarpPoints sourcePoints = makePipeWarpPoints(
+        *source,
+        playerSize
+    );
+    const PipeWarpPoints destinationPoints = makePipeWarpPoints(
+        *destination,
+        playerSize
+    );
+
+    if (!player.beginPipeWarp(
+            sourcePoints.outside,
+            sourcePoints.inside,
+            destinationPoints.inside,
+            destinationPoints.outside
+        )) {
+        return false;
     }
-    player.setPosition(arrival);
-    if (auto body = player.getPhysicsBody()) {
-        b2Body_SetLinearVelocity(body->getId(), {0.0f, 0.0f});
-    }
+
+    freeze(Player::pipeWarpDurationSeconds);
     return true;
 }
 
@@ -371,6 +454,11 @@ std::shared_ptr<GameObject> GameWorld::spawnItem(
 
 void GameWorld::freeze(float durationSeconds) {
     _freezeTimer = std::max(_freezeTimer, durationSeconds);
+}
+
+void GameWorld::releaseFreeze() {
+    _freezeTimer = 0.0f;
+    syncPlayerControllers();
 }
 
 void GameWorld::reachFlagpole(sf::Vector2f position) {

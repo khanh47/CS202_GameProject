@@ -35,6 +35,7 @@ private:
     bool _winReactionActive = false;
     bool _gameOverActive = false;
     bool _winActive = false;
+    bool _starmanMusicActive = false;
     std::optional<sf::Sprite> _gameOverOverlay;
     std::optional<sf::Text> _gameOverPrompt;
     const sf::Texture* _gameOverTexture = nullptr;

@@ -85,8 +85,20 @@ void WorldRenderer::render(
             || std::dynamic_pointer_cast<Item>(object);
     };
 
+    // Items are spawned after their source block has been added to the
+    // object store. Render them first so power-ups emerge from behind blocks
+    // instead of appearing on top of the block face.
     for (const std::shared_ptr<GameObject>& object : objectStore.objects()) {
-        if (isVisibleDynamicObject(object) && isEarlyRenderObject(object)) {
+        if (isVisibleDynamicObject(object)
+            && std::dynamic_pointer_cast<Item>(object)) {
+            object->render(target);
+        }
+    }
+
+    for (const std::shared_ptr<GameObject>& object : objectStore.objects()) {
+        if (isVisibleDynamicObject(object)
+            && isEarlyRenderObject(object)
+            && !std::dynamic_pointer_cast<Item>(object)) {
             object->render(target);
         }
     }

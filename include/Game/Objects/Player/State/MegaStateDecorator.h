@@ -31,9 +31,9 @@ public:
         _remainingTime = durationSeconds;
     }
 
-    void handleSuperMushroom(Player&) override {}
-    void handleFireFlower(Player&) override {}
-    void handleSuperStar(Player&) override {}
+    void handleSuperMushroom(Player&) override;
+    void handleFireFlower(Player&) override;
+    void handleSuperStar(Player&) override;
     std::unique_ptr<PlayerState> takeStateAfterMega();
     void update(Player& player, float dt) override;
 

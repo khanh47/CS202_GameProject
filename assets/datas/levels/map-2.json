@@ -11,16 +11,20 @@
         "H": "pipe_horizontal_right",
         "P": "pipe_warp_1",
         "Q": "pipe_warp_2",
-        "U": "terrain_underground"
+        "W": "pipe_warp_horizontal_left",
+        "X": "pipe_warp_horizontal_right",
+        "Y": "pipe_warp_vertical_top",
+        "Z": "pipe_warp_vertical_bottom",
+        "U": "brick"
     },
     "layer": [
         "..............................................................................................................................................................................................................................................................................................................",
-        "........................UUUU.....................................UUUU.....................................UUUU.....................................UUUU.......................................................UUUU.......................................................UUUU.................................",
+        "........................UUUU.....................................UUUU.....................................UUUU.....................Y................UUUU.............................Z.........................UUUU.......................................................UUUU................................",
         ".....e...........f............................................................................................................................................................................................................................................................................................",
         "....UUU..ccc....UUU...............UUUU.......UUU.........UUU...............UUUU.......UUU.........UUU...............UUUU.......UUU.........UUU...............UUUU.......UUU...............UUU.........UUU...............UUUU.......UUU...............UUU.........UUU...............UUUU.......UUU.............",
         ".........UUU...................UU..........UU.....P.....................UU..........UU..............Q............UU..........UU...........................UU..........UU........UUUU...........UUU...................UU..........UU........UUUU...........UUU...................UU..........UU........UUUU....",
         ".............................UUUU........UUUU.........................UUUU........UUUU.........................UUUU........UUUU.........................UUUU........UUUU...........................................UUUU........UUUU...........................................UUUU........UUUU................",
-        "..ML.........ccccc..H....T..UUUUU.......UUUUU........................UUUUU.......UUUUU........................UUUUU.......UUUUU........................UUUUU.......UUUUU..........................................UUUUU.......UUUUU..........................................UUUUU.......UUUUU................",
+        "..ML.........ccccc..H....T..UUUUU....W..UUUUU..........X.............UUUUU.......UUUUU........................UUUUU.......UUUUU........................UUUUU.......UUUUU..........................................UUUUU.......UUUUU..........................................UUUUU.......UUUUU................",
         "UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU."
     ],
     "background": "parallax_underground",
@@ -76,6 +80,70 @@
             "pipeIsWarp": true,
             "warpID": 2,
             "warpTarget": 1,
+            "addSeamFilter": true
+        },
+        "pipe_warp_horizontal_left": {
+            "kind": "pipe",
+            "typeKey": "Pipe",
+            "texture": "pipes_spritesheet",
+            "size": [
+                256,
+                128
+            ],
+            "pipeOrientation": "horizontal",
+            "pipeEndSide": "left",
+            "pipeBodyLength": 3,
+            "pipeIsWarp": true,
+            "warpID": 3,
+            "warpTarget": 4,
+            "addSeamFilter": true
+        },
+        "pipe_warp_horizontal_right": {
+            "kind": "pipe",
+            "typeKey": "Pipe",
+            "texture": "pipes_spritesheet",
+            "size": [
+                256,
+                128
+            ],
+            "pipeOrientation": "horizontal",
+            "pipeEndSide": "right",
+            "pipeBodyLength": 3,
+            "pipeIsWarp": true,
+            "warpID": 4,
+            "warpTarget": 3,
+            "addSeamFilter": true
+        },
+        "pipe_warp_vertical_top": {
+            "kind": "pipe",
+            "typeKey": "Pipe",
+            "texture": "pipes_spritesheet",
+            "size": [
+                128,
+                384
+            ],
+            "pipeOrientation": "vertical",
+            "pipeEndSide": "top",
+            "pipeBodyLength": 3,
+            "pipeIsWarp": true,
+            "warpID": 5,
+            "warpTarget": 6,
+            "addSeamFilter": true
+        },
+        "pipe_warp_vertical_bottom": {
+            "kind": "pipe",
+            "typeKey": "Pipe",
+            "texture": "pipes_spritesheet",
+            "size": [
+                128,
+                384
+            ],
+            "pipeOrientation": "vertical",
+            "pipeEndSide": "bottom",
+            "pipeBodyLength": 3,
+            "pipeIsWarp": true,
+            "warpID": 6,
+            "warpTarget": 5,
             "addSeamFilter": true
         }
     }
