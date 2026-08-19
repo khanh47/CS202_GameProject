@@ -181,6 +181,7 @@ ResourceManager::ResourceManager() {
 	_preLoadSound("assets/soundtrack/sfx/power_down.mp3", "power_down");
 	_preLoadSound("assets/soundtrack/sfx/mega_up.mp3", "mega_up");
 	_preLoadSound("assets/soundtrack/sfx/one_up.mp3", "one_up");
+	_preLoadSound("assets/soundtrack/sfx/sprout.mp3", "sprout");
 	_preLoadSound("assets/soundtrack/sfx/fireball.mp3", "fireball");
 	_preLoadSound("assets/soundtrack/sfx/footstep.mp3", "footstep");
 	_preLoadSound("assets/soundtrack/sfx/jump.mp3", "jump");

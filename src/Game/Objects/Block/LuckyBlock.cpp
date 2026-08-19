@@ -4,6 +4,7 @@
 
 #include "Audio/SoundManager.h"
 #include "Game/Behaviours/Animatable.h"
+#include "Game/Objects/Item/Item.h"
 #include "Game/Objects/Player/Player.h"
 #include "Game/World/GameWorld.h"
 #include "Game/ScoreManager.h"
@@ -126,8 +127,17 @@ void LuckyBlock::onContact(GameObject& other, const b2ContactData& contactData, 
                         );
                     }
                 } else if (world) {
-                    // Spawn physical pickup item into the GameWorld
-                    world->spawnItem(chosenOption->itemTypeKey, itemSpawnPos);
+                    // Spawn the power-up inside the block and let it emerge
+                    // to the normal above-block position.
+                    const std::shared_ptr<GameObject> item = world->spawnItem(
+                        chosenOption->itemTypeKey,
+                        getPosition()
+                    );
+                    if (auto* powerup = dynamic_cast<Item*>(item.get())) {
+                        powerup->startEmerging(itemSpawnPos);
+                        _emergingPowerup = std::dynamic_pointer_cast<Item>(item);
+                        Audio::SoundManager::getInstance().playEffect("sprout");
+                    }
                 }
             }
 
@@ -154,6 +164,19 @@ void LuckyBlock::onUpdateVisuals(float deltaTime) {
     }
 
     _bouncingCoin.update(deltaTime);
+
+    if (const std::shared_ptr<Item> powerup = _emergingPowerup.lock()) {
+        sf::Vector2f renderOffset{};
+        if (_bumpTimer > 0.0f) {
+            const float progress = 1.0f - (_bumpTimer / 0.15f);
+            renderOffset.y = -std::sin(progress * 3.14159f) * 14.0f;
+        }
+        powerup->setEmergenceRenderOffset(renderOffset);
+
+        if (!powerup->isEmerging()) {
+            _emergingPowerup.reset();
+        }
+    }
 
     if (auto* animatable = getBehaviour<Animatable>()) {
         animatable->updateVisualState(deltaTime, _hitboxPixels);

@@ -39,7 +39,11 @@ void MegaMushroom::onCreateShapeDef(b2ShapeDef& def) {
 }
 
 void MegaMushroom::updateSimulation(const float& fixedDt) {
-    (void)fixedDt;
+    Item::updateSimulation(fixedDt);
+    if (isEmerging()) {
+        return;
+    }
+
     if (!hasValidBody()) {
         return;
     }
