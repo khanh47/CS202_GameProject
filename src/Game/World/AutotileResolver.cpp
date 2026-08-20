@@ -194,7 +194,7 @@ sf::IntRect AutotileResolver::resolve(
 
     sf::IntRect rect = def.maskToRect[mask];
 
-    // Horizontal wave alternation (A -> B pattern) for inner / top-mid tiles
+    // Horizontal wave alternation for inner / top-mid / floor tiles
     int posInRow = col;
     const auto key = static_cast<std::int64_t>(screenRow) * _precomputedGridWidth + col;
     const auto it  = _cellInfo.find(key);
@@ -202,11 +202,24 @@ sf::IntRect AutotileResolver::resolve(
         posInRow = it->second.posInRow;
     }
 
-    if ((posInRow % 2) != 0
-        && rect.size.x == 16
-        && rect.position.x == 69)   // col 4: inner-A or top-mid-A
-    {
-        rect.position.x = 86;       // col 5: inner-B or top-mid-B
+    if (def.textureAlias == "at_grassland") {
+        if ((posInRow % 2) != 0
+            && rect.size.x == 16
+            && rect.position.x == 69)   // col 4: inner-A or top-mid-A
+        {
+            rect.position.x = 86;       // col 5: inner-B or top-mid-B
+        }
+    } else if (def.textureAlias == "at_underground") {
+        // 4-phase continuous undulating wave for top floor surface (y = 18)
+        if (rect.position.y == 18 && rect.position.x >= 18 && rect.position.x <= 69) {
+            const int waveIndex = posInRow % 4;
+            rect.position.x = 18 + waveIndex * 17; // 18 -> 35 -> 52 -> 69
+        }
+        // 4-phase continuous wave for ceiling surface (y = 103)
+        else if (rect.position.y == 103 && rect.position.x >= 18 && rect.position.x <= 69) {
+            const int waveIndex = posInRow % 4;
+            rect.position.x = 18 + waveIndex * 17; // 18 -> 35 -> 52 -> 69
+        }
     }
 
     return rect;
@@ -232,7 +245,7 @@ AutotileResult AutotileResolver::resolveDetailed(
         solidIds, def
     );
 
-    // Front Layer grass overlays apply ONLY to grassland_terrain tilesets (at_grassland)
+    // Front Layer overlays apply ONLY to grassland_terrain (at_grassland)
     if (def.textureAlias != "at_grassland") {
         return result;
     }
