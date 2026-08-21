@@ -74,7 +74,9 @@ void ButtonMenu::addToggleButtonAuto(const std::string& text, bool initialState,
 }
 
 void ButtonMenu::processEvent(const sf::Event& event) {
-    for (const std::shared_ptr<Button>& button : _buttonMenu) {
+    // A button command may rebuild the menu while handling a click.
+    const std::vector<std::shared_ptr<Button>> buttons = _buttonMenu;
+    for (const std::shared_ptr<Button>& button : buttons) {
         button->processEvent(event);
     }
 

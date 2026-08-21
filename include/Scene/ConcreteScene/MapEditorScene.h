@@ -2,12 +2,19 @@
 
 #include <SFML/Graphics.hpp>
 #include <cstddef>
+#include <memory>
 #include <optional>
 #include <string>
 #include <vector>
 
 #include "Scene/Scene.h"
 #include "Button/ButtonMenu.h"
+
+namespace UI {
+class CheckBox;
+class Dropdown;
+class TextInput;
+}
 
 class MapEditorScene : public Scene {
 public:
@@ -50,6 +57,49 @@ private:
         std::string music;
     };
 
+    struct LuckyOptionData {
+        std::string itemTypeKey;
+        float weight = 1.0f;
+
+        bool operator==(const LuckyOptionData&) const = default;
+    };
+
+    struct CellPlacement {
+        std::string prefabId;
+        std::vector<LuckyOptionData> luckyOptions;
+        int luckyCapacity = 1;
+        std::string pipeOrientation = "vertical";
+        std::string pipeEndSide = "top";
+        int pipeBodyLength = 2;
+        bool pipeIsWarp = false;
+        int warpID = 1;
+        int warpTarget = 2;
+        bool pipeContainsPiranha = false;
+        bool pipeContentsStatic = false;
+
+        bool operator==(const CellPlacement&) const = default;
+    };
+
+    struct MapSnapshot {
+        std::vector<char> cells;
+        std::vector<std::optional<CellPlacement>> placements;
+    };
+
+    struct PreviewSpec {
+        std::string textureKey;
+        std::string animationId;
+        sf::IntRect textureRect{};
+        sf::Vector2f size{64.0f, 64.0f};
+        sf::Vector2f offset{};
+        bool centerVertically = false;
+    };
+
+    enum class ConfigMode {
+        None,
+        LuckyBlock,
+        Pipe
+    };
+
     static constexpr int MapWidth = 80;
     static constexpr int MapHeight = 40;
     static constexpr float CellSize = 64.0f;
@@ -61,6 +111,16 @@ private:
     static constexpr float MaximumZoom = 3.0f;
     static constexpr float CameraPanMargin = CellSize * 8.0f;
     static constexpr float PaletteLeft = 1605.0f;
+    static constexpr float PaletteViewportTop = 210.0f;
+    static constexpr float PaletteViewportHeight = 420.0f;
+    static constexpr float PaletteButtonHeight = 50.0f;
+    static constexpr float PaletteButtonSpacing = 53.0f;
+    static constexpr float PaletteScrollX = 1872.0f;
+    static constexpr float ConfigViewportTop = 245.0f;
+    static constexpr float ConfigViewportHeight = 520.0f;
+    static constexpr float ConfigButtonHeight = 42.0f;
+    static constexpr float ConfigButtonSpacing = 47.0f;
+    static constexpr float ConfigScrollX = 1308.0f;
 
     void setupMenus();
     void setupCategoryMenu();
@@ -68,9 +128,29 @@ private:
     void setupThemeMenu();
     void setupActionMenu();
     void setupInstructionsMenu();
+    void setupConfigMenu();
     void selectCategory(Category category);
     void selectSymbol(char symbol);
+    void openLuckyBlockConfig();
+    void openPipeConfig();
+    void cycleLuckyOption(std::size_t optionIndex);
+    void cycleLuckyCapacity();
+    void cyclePipeOrientation();
+    void cyclePipeEndSide();
+    void cyclePipeLength();
+    void togglePipeWarp();
+    void cyclePipeWarpID();
+    void cyclePipeWarpTarget();
+    void togglePipePiranha();
+    void togglePipeContentsStatic();
+    void confirmConfig();
+    void cancelConfig();
+    void refreshConfigMenu();
+    void updateScrollVisuals();
+    void scrollPalette(float wheelDelta);
+    void scrollConfig(float wheelDelta);
     void cycleTheme();
+    void setThemeIndex(std::size_t index, bool markDirty);
     void refreshThemeButton();
     void applyLoadedTheme(
         const std::string& theme,
@@ -93,10 +173,53 @@ private:
     bool isShiftHeld() const;
     void drawMap(sf::RenderTarget& target);
     void drawMapGrid(sf::RenderTarget& target);
+    void drawEntrySprite(
+        sf::RenderTarget& target,
+        const PaletteEntry& entry,
+        sf::Vector2f cellCenter
+    ) const;
+    void drawPlacement(
+        sf::RenderTarget& target,
+        const CellPlacement& placement,
+        char symbol,
+        int column,
+        int row
+    ) const;
+    void drawPipePreview(
+        sf::RenderTarget& target,
+        const CellPlacement& placement,
+        int column,
+        int row
+    ) const;
+    PreviewSpec previewSpecFor(const PaletteEntry& entry) const;
+    sf::IntRect firstAnimationFrame(const std::string& animationId) const;
+    std::vector<sf::Vector2i> placementFootprint(
+        const CellPlacement& placement,
+        int column,
+        int row
+    ) const;
+    bool placementFits(
+        const CellPlacement& placement,
+        int column,
+        int row
+    ) const;
+    void clearOverlappingPlacements(int column, int row);
     void eraseCell(int column, int row);
     void placeCell(int column, int row);
-    void applyPaintCell(int column, int row, char symbol);
-    void applyPaintRectangle(int startColumn, int startRow, int endColumn, int endRow, char symbol);
+    void applyPaintCell(
+        int column,
+        int row,
+        char symbol,
+        const std::optional<CellPlacement>& placement = std::nullopt
+    );
+    void applyPaintRectangle(
+        int startColumn,
+        int startRow,
+        int endColumn,
+        int endRow,
+        char symbol,
+        const std::optional<CellPlacement>& placement = std::nullopt
+    );
     void clearMap();
     void undoLastEdit();
     void redoLastEdit();
@@ -110,12 +233,18 @@ private:
 
     std::vector<PaletteEntry> _paletteEntries;
     std::vector<char> _cells;
-    std::vector<std::vector<char>> _undoHistory;
-    std::vector<std::vector<char>> _redoHistory;
+    std::vector<std::optional<CellPlacement>> _cellPlacements;
+    std::vector<MapSnapshot> _undoHistory;
+    std::vector<MapSnapshot> _redoHistory;
     sf::View _mapView;
     std::vector<ThemeChoice> _themeOptions;
     std::size_t _themeIndex = 0;
     std::string _themeKey = "sky";
+    float _paletteScrollOffset = 0.0f;
+    float _configScrollOffset = 0.0f;
+    std::optional<CellPlacement> _selectedPlacement;
+    char _selectionBeforeConfig = '#';
+    std::optional<CellPlacement> _placementBeforeConfig;
     Category _activeCategory = Category::Blocks;
     char _selectedSymbol = '#';
     float _zoom = 1.0f;
@@ -133,12 +262,26 @@ private:
     bool _strokeUndoCaptured = false;
     bool _dirty = false;
     bool _showInstructions = false;
+    ConfigMode _configMode = ConfigMode::None;
+    CellPlacement _draftPlacement;
 
     UI::ButtonMenu _categoryMenu;
     UI::ButtonMenu _paletteMenu;
     UI::ButtonMenu _themeMenu;
     UI::ButtonMenu _actionMenu;
     UI::ButtonMenu _instructionsMenu;
+    UI::ButtonMenu _configMenu;
+    std::shared_ptr<UI::Dropdown> _themeDropdown;
+    std::shared_ptr<UI::Dropdown> _luckyCapacityDropdown;
+    std::vector<std::shared_ptr<UI::CheckBox>> _luckyOptionChecks;
+    std::shared_ptr<UI::Dropdown> _pipeOrientationDropdown;
+    std::shared_ptr<UI::Dropdown> _pipeEndSideDropdown;
+    std::shared_ptr<UI::TextInput> _pipeLengthInput;
+    std::shared_ptr<UI::CheckBox> _pipeWarpCheck;
+    std::shared_ptr<UI::TextInput> _pipeWarpIDInput;
+    std::shared_ptr<UI::TextInput> _pipeWarpTargetInput;
+    std::shared_ptr<UI::CheckBox> _pipePiranhaCheck;
+    std::shared_ptr<UI::CheckBox> _pipeContentsStaticCheck;
 
     sf::RectangleShape _screenBackdrop;
     sf::RectangleShape _gridBackdrop;
@@ -151,4 +294,12 @@ private:
     sf::RectangleShape _instructionsPanel;
     sf::Text _instructionsTitle;
     sf::Text _instructionsBody;
+    sf::RectangleShape _configBackdrop;
+    sf::RectangleShape _configPanel;
+    sf::Text _configTitle;
+    sf::Text _configBody;
+    sf::RectangleShape _paletteScrollTrack;
+    sf::RectangleShape _paletteScrollThumb;
+    sf::RectangleShape _configScrollTrack;
+    sf::RectangleShape _configScrollThumb;
 };

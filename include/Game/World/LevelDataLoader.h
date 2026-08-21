@@ -14,6 +14,12 @@ struct LevelData {
     std::unordered_map<char, std::string> tileMapping;
     std::vector<std::string> layer;
     PrefabRegistry prefabs;
+    struct Placement {
+        int column = 0;
+        int row = 0;
+        SpawnSpec spec;
+    };
+    std::vector<Placement> placements;
     std::string theme;
     std::string background;
     std::string music;

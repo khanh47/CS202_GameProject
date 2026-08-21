@@ -2,6 +2,7 @@
 #include "Game/Behaviours/Animatable.h"
 #include "Physics/CollisionFilter.h"
 #include <algorithm>
+#include <cmath>
 #include "box2d/box2d.h"
 
 namespace {
@@ -16,11 +17,22 @@ PiranhaPlant::PiranhaPlant(sf::Texture& texture, const std::string& animationSet
 }
 
 void PiranhaPlant::setPipeTravel(float hiddenYPixels, float emergedYPixels) {
+    const sf::Vector2f currentPosition = getPosition();
+    setPipeTravel(
+        {currentPosition.x, hiddenYPixels},
+        {currentPosition.x, emergedYPixels}
+    );
+}
+
+void PiranhaPlant::setPipeTravel(
+    sf::Vector2f hiddenPosition,
+    sf::Vector2f emergedPosition
+) {
     _hasPipeTravel = true;
-    _hiddenYPixels = hiddenYPixels;
-    _emergedYPixels = emergedYPixels;
+    _hiddenPosition = hiddenPosition;
+    _emergedPosition = emergedPosition;
     beginPhase(PipePhase::Hidden);
-    setPosition({getPosition().x, _hiddenYPixels});
+    setPosition(_hiddenPosition);
 }
 
 void PiranhaPlant::onCreateBodyDef(b2BodyDef& def) {
@@ -67,22 +79,47 @@ void PiranhaPlant::updateSimulation(const float &fixedDt) {
         }
     }
 
-    float targetY = getPosition().y;
+    const sf::Vector2f currentPosition = getPosition();
+    sf::Vector2f targetPosition = currentPosition;
+    const auto moveTowards = [](float current, float target, float distance) {
+        if (std::abs(target - current) <= distance) {
+            return target;
+        }
+        return current + (target > current ? distance : -distance);
+    };
     if (_pipePhase == PipePhase::Rising) {
-        targetY = std::max(_emergedYPixels,
-            getPosition().y - kTravelSpeedPixelsPerSecond * fixedDt);
-        if (targetY <= _emergedYPixels) {
+        const float distance = kTravelSpeedPixelsPerSecond * fixedDt;
+        targetPosition.x = moveTowards(
+            currentPosition.x,
+            _emergedPosition.x,
+            distance
+        );
+        targetPosition.y = moveTowards(
+            currentPosition.y,
+            _emergedPosition.y,
+            distance
+        );
+        if (targetPosition == _emergedPosition) {
             beginPhase(PipePhase::Exposed);
         }
     } else if (_pipePhase == PipePhase::Retracting) {
-        targetY = std::min(_hiddenYPixels,
-            getPosition().y + kTravelSpeedPixelsPerSecond * fixedDt);
-        if (targetY >= _hiddenYPixels) {
+        const float distance = kTravelSpeedPixelsPerSecond * fixedDt;
+        targetPosition.x = moveTowards(
+            currentPosition.x,
+            _hiddenPosition.x,
+            distance
+        );
+        targetPosition.y = moveTowards(
+            currentPosition.y,
+            _hiddenPosition.y,
+            distance
+        );
+        if (targetPosition == _hiddenPosition) {
             beginPhase(PipePhase::Hidden);
         }
     }
 
-    setPosition({getPosition().x, targetY});
+    setPosition(targetPosition);
     b2Body_SetLinearVelocity(_body->getId(), velocity);
 }
 

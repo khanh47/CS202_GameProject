@@ -11,7 +11,12 @@
 
 #include <nlohmann/json.hpp>
 
+#include "Animation/AnimationLibrary.h"
+#include "Button/CheckBox.h"
+#include "Button/Dropdown.h"
+#include "Button/TextInput.h"
 #include "Commands/FunctionalCommand.h"
+#include "Game/Objects/Pipe/Pipe.h"
 #include "Game/World/LevelDataLoader.h"
 #include "ResourceManager.h"
 #include "Scene/ConcreteScene/InGameScene.h"
@@ -41,6 +46,10 @@ MapEditorScene::MapEditorScene()
       _cells(
           static_cast<std::size_t>(MapWidth * MapHeight),
           '.'
+      ),
+      _cellPlacements(
+          static_cast<std::size_t>(MapWidth * MapHeight),
+          std::nullopt
       ),
       _mapView(
           {MapViewportWidth * 0.5f, MapViewportHeight * 0.5f},
@@ -92,7 +101,23 @@ MapEditorScene::MapEditorScene()
           "1-4: choose a category\n"
           "Esc: close this screen / go back",
           22
-      ) {
+      ),
+      _configBackdrop({LogicalScreenWidth, LogicalScreenHeight}),
+      _configPanel({1100.0f, 850.0f}),
+      _configTitle(
+          ResourceManager::getInstance().getFont("SuperMario"),
+          "PLACEMENT OPTIONS",
+          36
+      ),
+      _configBody(
+          ResourceManager::getInstance().getFont("moon_get"),
+          "Configure this object before placing it on the map.",
+          20
+      ),
+      _paletteScrollTrack({10.0f, PaletteViewportHeight}),
+      _paletteScrollThumb({10.0f, 70.0f}),
+      _configScrollTrack({10.0f, ConfigViewportHeight}),
+      _configScrollThumb({10.0f, 70.0f}) {
     _paletteEntries = {
         {Category::Blocks, "Brick", "brick", '#', sf::Color(183, 111, 46)},
         {Category::Blocks, "Ground", "terrain_grassland", 'A', sf::Color(70, 160, 86)},
@@ -107,6 +132,7 @@ MapEditorScene::MapEditorScene()
         {Category::Items, "Super Star", "item_super_star", 's', sf::Color(250, 220, 75)},
         {Category::Items, "Mega Coin", "item_mega_coin", 'o', sf::Color(255, 185, 35)},
         {Category::Items, "Goal Flag", "item_flagpole", 'D', sf::Color(90, 190, 110)},
+        {Category::Items, "Checkpoint Flag", "item_checkpoint_flag", 'q', sf::Color(90, 180, 145)},
         {Category::Enemies, "Goomba", "enemy_goomba", 'e', sf::Color(160, 90, 55)},
         {Category::Enemies, "Koopa", "enemy_koopa", 'k', sf::Color(75, 165, 75)},
         {Category::Enemies, "Piranha Plant", "enemy_piranha_plant", 'p', sf::Color(200, 70, 70)},
@@ -171,6 +197,30 @@ MapEditorScene::MapEditorScene()
 
     _instructionsBody.setPosition({390.0f, 225.0f});
     _instructionsBody.setFillColor(sf::Color(235, 245, 255));
+
+    _configBackdrop.setPosition({0.0f, 0.0f});
+    _configBackdrop.setFillColor(sf::Color(0, 0, 0, 210));
+
+    _configPanel.setPosition({410.0f, 90.0f});
+    _configPanel.setFillColor(sf::Color(24, 45, 72, 252));
+    _configPanel.setOutlineThickness(4.0f);
+    _configPanel.setOutlineColor(sf::Color(120, 180, 235));
+
+    _configTitle.setPosition({720.0f, 125.0f});
+    _configTitle.setFillColor(sf::Color(255, 226, 120));
+    _configTitle.setOutlineColor(sf::Color::Black);
+    _configTitle.setOutlineThickness(3.0f);
+
+    _configBody.setPosition({480.0f, 180.0f});
+    _configBody.setFillColor(sf::Color(235, 245, 255));
+
+    _paletteScrollTrack.setPosition({PaletteScrollX, PaletteViewportTop});
+    _paletteScrollTrack.setFillColor(sf::Color(9, 22, 38, 230));
+    _paletteScrollThumb.setFillColor(sf::Color(115, 175, 225, 235));
+
+    _configScrollTrack.setPosition({ConfigScrollX, ConfigViewportTop});
+    _configScrollTrack.setFillColor(sf::Color(9, 22, 38, 230));
+    _configScrollThumb.setFillColor(sf::Color(115, 175, 225, 235));
 }
 
 void MapEditorScene::init() {
@@ -200,6 +250,7 @@ void MapEditorScene::updateVisuals(float deltaTime) {
     _themeMenu.updateVisuals(deltaTime);
     _actionMenu.updateVisuals(deltaTime);
     _instructionsMenu.updateVisuals(deltaTime);
+    _configMenu.updateVisuals(deltaTime);
 }
 
 void MapEditorScene::handleInput(const sf::Event& event) {
@@ -211,6 +262,26 @@ void MapEditorScene::handleInput(const sf::Event& event) {
             }
         }
         _instructionsMenu.processEvent(event);
+        return;
+    }
+
+    if (_configMode != ConfigMode::None) {
+        if (const auto* mouseWheel = event.getIf<sf::Event::MouseWheelScrolled>()) {
+            if (mouseWheel->position.x >= 410
+                && mouseWheel->position.x < 1510
+                && mouseWheel->position.y >= ConfigViewportTop
+                && mouseWheel->position.y < ConfigViewportTop + ConfigViewportHeight) {
+                scrollConfig(mouseWheel->delta);
+                return;
+            }
+        }
+        if (const auto* keyEvent = event.getIf<sf::Event::KeyPressed>()) {
+            if (keyEvent->code == sf::Keyboard::Key::Escape) {
+                cancelConfig();
+                return;
+            }
+        }
+        _configMenu.processEvent(event);
         return;
     }
 
@@ -263,6 +334,13 @@ void MapEditorScene::handleInput(const sf::Event& event) {
     }
 
     if (const auto* mouseWheel = event.getIf<sf::Event::MouseWheelScrolled>()) {
+        if (mouseWheel->position.x >= 1584
+            && mouseWheel->position.x < 1920
+            && mouseWheel->position.y >= PaletteViewportTop
+            && mouseWheel->position.y < PaletteViewportTop + PaletteViewportHeight) {
+            scrollPalette(mouseWheel->delta);
+            return;
+        }
         zoomMap(
             mouseWheel->delta,
             mouseWheel->position
@@ -276,6 +354,7 @@ void MapEditorScene::handleInput(const sf::Event& event) {
         _paletteMenu.processEvent(event);
         _themeMenu.processEvent(event);
         _actionMenu.processEvent(event);
+        _configMenu.processEvent(event);
         return;
     }
 
@@ -284,6 +363,7 @@ void MapEditorScene::handleInput(const sf::Event& event) {
         _paletteMenu.processEvent(event);
         _themeMenu.processEvent(event);
         _actionMenu.processEvent(event);
+        _configMenu.processEvent(event);
         handleMousePressed(*mousePress);
         return;
     }
@@ -319,9 +399,31 @@ void MapEditorScene::render(sf::RenderTarget& target) {
     target.draw(_statusText);
 
     _categoryMenu.render(target);
+    sf::View paletteClipView(
+        {PaletteLeft + 142.5f, PaletteViewportTop + PaletteViewportHeight * 0.5f},
+        {285.0f, PaletteViewportHeight}
+    );
+    paletteClipView.setViewport({
+        {PaletteLeft / LogicalScreenWidth, PaletteViewportTop / LogicalScreenHeight},
+        {285.0f / LogicalScreenWidth, PaletteViewportHeight / LogicalScreenHeight}
+    });
+    target.setView(paletteClipView);
     _paletteMenu.render(target);
+    target.setView(target.getDefaultView());
+    updateScrollVisuals();
+    const float paletteContentHeight = _paletteMenu.size() == 0
+        ? 0.0f
+        : static_cast<float>(_paletteMenu.size() - 1) * PaletteButtonSpacing
+            + PaletteButtonHeight;
+    if (paletteContentHeight > PaletteViewportHeight) {
+        target.draw(_paletteScrollTrack);
+        target.draw(_paletteScrollThumb);
+    }
     _themeMenu.render(target);
     _actionMenu.render(target);
+    if (_themeDropdown) {
+        _themeDropdown->renderPopup(target);
+    }
 
     if (_showInstructions) {
         target.draw(_instructionsBackdrop);
@@ -329,6 +431,41 @@ void MapEditorScene::render(sf::RenderTarget& target) {
         target.draw(_instructionsTitle);
         target.draw(_instructionsBody);
         _instructionsMenu.render(target);
+    }
+
+    if (_configMode != ConfigMode::None) {
+        target.draw(_configBackdrop);
+        target.draw(_configPanel);
+        target.draw(_configTitle);
+        target.draw(_configBody);
+        sf::View configClipView(
+            {960.0f, ConfigViewportTop + ConfigViewportHeight * 0.5f},
+            {680.0f, ConfigViewportHeight}
+        );
+        configClipView.setViewport({
+            {620.0f / LogicalScreenWidth, ConfigViewportTop / LogicalScreenHeight},
+            {680.0f / LogicalScreenWidth, ConfigViewportHeight / LogicalScreenHeight}
+        });
+        target.setView(configClipView);
+        _configMenu.render(target);
+        if (_luckyCapacityDropdown) {
+            _luckyCapacityDropdown->renderPopup(target);
+        }
+        if (_pipeOrientationDropdown) {
+            _pipeOrientationDropdown->renderPopup(target);
+        }
+        if (_pipeEndSideDropdown) {
+            _pipeEndSideDropdown->renderPopup(target);
+        }
+        target.setView(target.getDefaultView());
+        const float configContentHeight = _configMenu.size() == 0
+            ? 0.0f
+            : static_cast<float>(_configMenu.size() - 1) * ConfigButtonSpacing
+                + ConfigButtonHeight;
+        if (configContentHeight > ConfigViewportHeight) {
+            target.draw(_configScrollTrack);
+            target.draw(_configScrollThumb);
+        }
     }
 }
 
@@ -338,12 +475,14 @@ void MapEditorScene::setupMenus() {
     setupThemeMenu();
     setupActionMenu();
     setupInstructionsMenu();
+    setupConfigMenu();
 
     _categoryMenu.setMouseOnly(true);
     _paletteMenu.setMouseOnly(true);
     _themeMenu.setMouseOnly(true);
     _actionMenu.setMouseOnly(true);
     _instructionsMenu.setMouseOnly(true);
+    _configMenu.setMouseOnly(true);
 }
 
 void MapEditorScene::setupCategoryMenu() {
@@ -379,9 +518,9 @@ void MapEditorScene::setupCategoryMenu() {
 void MapEditorScene::setupPaletteMenu() {
     _paletteMenu.clear();
     _paletteMenu.setLayoutProperties(
-        {1605.0f, 210.0f},
-        {285.0f, 50.0f},
-        53.0f,
+        {PaletteLeft, PaletteViewportTop - _paletteScrollOffset},
+        {285.0f, PaletteButtonHeight},
+        PaletteButtonSpacing,
         false,
         categoryColor(_activeCategory),
         18
@@ -392,16 +531,43 @@ void MapEditorScene::setupPaletteMenu() {
             continue;
         }
 
+        std::string label = entry.label;
+        if (entry.prefabId == "terrain_grassland"
+            && !_themeOptions.empty()) {
+            label += ": " + _themeOptions[_themeIndex].label;
+        }
         _paletteMenu.addButtonAuto(
-            entry.label,
+            label,
             18,
             std::make_unique<FunctionalCommand>(
-                entry.label,
+                label,
                 [this, symbol = entry.symbol]() { selectSymbol(symbol); }
             ),
             entry.previewColor
         );
     }
+    const float contentHeight = _paletteMenu.size() == 0
+        ? 0.0f
+        : static_cast<float>(_paletteMenu.size() - 1) * PaletteButtonSpacing
+            + PaletteButtonHeight;
+    const float maximumScroll = std::max(
+        0.0f,
+        contentHeight - PaletteViewportHeight
+    );
+    _paletteScrollOffset = std::clamp(
+        _paletteScrollOffset,
+        0.0f,
+        maximumScroll
+    );
+    _paletteMenu.setLayoutProperties(
+        {PaletteLeft, PaletteViewportTop - _paletteScrollOffset},
+        {285.0f, PaletteButtonHeight},
+        PaletteButtonSpacing,
+        false,
+        categoryColor(_activeCategory),
+        18
+    );
+    updateScrollVisuals();
 }
 
 void MapEditorScene::setupThemeMenu() {
@@ -415,13 +581,24 @@ void MapEditorScene::setupThemeMenu() {
         16
     );
 
-    _themeMenu.addButtonAuto(
+    std::vector<std::string> themeLabels;
+    themeLabels.reserve(_themeOptions.size());
+    for (const ThemeChoice& theme : _themeOptions) {
+        themeLabels.push_back(theme.label);
+    }
+    _themeDropdown = std::make_shared<UI::Dropdown>(
+        sf::Vector2f{1605.0f, 650.0f},
+        sf::Vector2f{285.0f, 40.0f},
+        sf::Color(70, 110, 150),
         "Theme",
         16,
-        std::make_unique<FunctionalCommand>(
-            "Theme", [this]() { cycleTheme(); }
-        )
+        std::move(themeLabels),
+        _themeIndex
     );
+    _themeDropdown->setSelectionCallback(
+        [this](std::size_t index) { setThemeIndex(index, true); }
+    );
+    _themeMenu.addButton(_themeDropdown);
 }
 
 void MapEditorScene::setupInstructionsMenu() {
@@ -443,12 +620,512 @@ void MapEditorScene::setupInstructionsMenu() {
     );
 }
 
-void MapEditorScene::refreshThemeButton() {
-    if (const auto themeButton = _themeMenu.getButton(0);
-        themeButton && !_themeOptions.empty()) {
-        themeButton->setText(
-            "Theme: " + _themeOptions[_themeIndex].label
+void MapEditorScene::setupConfigMenu() {
+    _configMenu.clear();
+    _configMenu.setLayoutProperties(
+        {620.0f, ConfigViewportTop - _configScrollOffset},
+        {680.0f, ConfigButtonHeight},
+        ConfigButtonSpacing,
+        false,
+        sf::Color(53, 91, 130),
+        18
+    );
+    updateScrollVisuals();
+}
+
+void MapEditorScene::refreshConfigMenu() {
+    _configMenu.clear();
+    _configMenu.setLayoutProperties(
+        {620.0f, ConfigViewportTop - _configScrollOffset},
+        {680.0f, ConfigButtonHeight},
+        ConfigButtonSpacing,
+        false,
+        sf::Color(53, 91, 130),
+        18
+    );
+
+    const sf::Color buttonColor(53, 91, 130);
+    _luckyCapacityDropdown.reset();
+    _luckyOptionChecks.clear();
+    _pipeOrientationDropdown.reset();
+    _pipeEndSideDropdown.reset();
+    _pipeLengthInput.reset();
+    _pipeWarpCheck.reset();
+    _pipeWarpIDInput.reset();
+    _pipeWarpTargetInput.reset();
+    _pipePiranhaCheck.reset();
+    _pipeContentsStaticCheck.reset();
+
+    const auto controlPosition = [this]() {
+        return sf::Vector2f(
+            620.0f,
+            ConfigViewportTop - _configScrollOffset
+                + static_cast<float>(_configMenu.size()) * ConfigButtonSpacing
         );
+    };
+    const auto addControl = [this](const std::shared_ptr<UI::Button>& control) {
+        _configMenu.addButton(control);
+    };
+    const auto addButton = [this, &buttonColor](
+        const std::string& label,
+        std::unique_ptr<ICommand> command
+    ) {
+        _configMenu.addButtonAuto(
+            label,
+            18,
+            std::move(command),
+            buttonColor
+        );
+    };
+
+    if (_configMode == ConfigMode::LuckyBlock) {
+        const std::vector<std::string> itemKeys = {
+            "Coin",
+            "SuperMushroom",
+            "OneUpMushroom",
+            "FireFlower",
+            "SuperStar",
+            "MegaMushroom",
+            "MegaCoin"
+        };
+        const std::vector<std::string> labels = {
+            "Coin",
+            "Super Mushroom",
+            "1-Up Mushroom",
+            "Fire Flower",
+            "Super Star",
+            "Mega Mushroom",
+            "Mega Coin"
+        };
+        for (std::size_t index = 0; index < itemKeys.size(); ++index) {
+            const bool enabled = std::any_of(
+                _draftPlacement.luckyOptions.begin(),
+                _draftPlacement.luckyOptions.end(),
+                [&itemKey = itemKeys[index]](const LuckyOptionData& option) {
+                    return option.itemTypeKey == itemKey;
+                }
+            );
+            auto checkbox = std::make_shared<UI::CheckBox>(
+                controlPosition(),
+                sf::Vector2f{680.0f, ConfigButtonHeight},
+                buttonColor,
+                labels[index],
+                18,
+                enabled
+            );
+            checkbox->setCheckedCallback(
+                [this, index](bool) { cycleLuckyOption(index); }
+            );
+            _luckyOptionChecks.push_back(checkbox);
+            addControl(checkbox);
+        }
+        _luckyCapacityDropdown = std::make_shared<UI::Dropdown>(
+            controlPosition(),
+            sf::Vector2f{680.0f, ConfigButtonHeight},
+            buttonColor,
+            "Capacity",
+            18,
+            std::vector<std::string>{"1 use", "2 uses", "3 uses", "4 uses", "5 uses"},
+            static_cast<std::size_t>(std::clamp(
+                _draftPlacement.luckyCapacity - 1,
+                0,
+                4
+            ))
+        );
+        _luckyCapacityDropdown->setSelectionCallback(
+            [this](std::size_t index) {
+                _draftPlacement.luckyCapacity = static_cast<int>(index) + 1;
+            }
+        );
+        addControl(_luckyCapacityDropdown);
+        addButton(
+            "Confirm placement",
+            std::make_unique<FunctionalCommand>(
+                "Confirm placement", [this]() { confirmConfig(); }
+            )
+        );
+        addButton(
+            "Cancel",
+            std::make_unique<FunctionalCommand>(
+                "Cancel", [this]() { cancelConfig(); }
+            )
+        );
+        _configBody.setString(
+            "Choose which outcomes this lucky block can contain.\n"
+            "Checkboxes choose outcomes; the dropdown sets the number of uses."
+        );
+    } else if (_configMode == ConfigMode::Pipe) {
+        _pipeOrientationDropdown = std::make_shared<UI::Dropdown>(
+            controlPosition(),
+            sf::Vector2f{680.0f, ConfigButtonHeight},
+            buttonColor,
+            "Orientation",
+            18,
+            std::vector<std::string>{"Vertical", "Horizontal"},
+            _draftPlacement.pipeOrientation == "horizontal" ? 1 : 0
+        );
+        _pipeOrientationDropdown->setSelectionCallback(
+            [this](std::size_t index) {
+                _draftPlacement.pipeOrientation = index == 1
+                    ? "horizontal"
+                    : "vertical";
+                if (_draftPlacement.pipeOrientation == "vertical") {
+                    if (_draftPlacement.pipeEndSide != "top"
+                        && _draftPlacement.pipeEndSide != "bottom") {
+                        _draftPlacement.pipeEndSide = "top";
+                    }
+                } else if (_draftPlacement.pipeEndSide != "left"
+                           && _draftPlacement.pipeEndSide != "right") {
+                    _draftPlacement.pipeEndSide = "right";
+                }
+                if (_pipeEndSideDropdown) {
+                    _pipeEndSideDropdown->setOptions(
+                        _draftPlacement.pipeOrientation == "vertical"
+                            ? std::vector<std::string>{"Top", "Bottom"}
+                            : std::vector<std::string>{"Left", "Right"}
+                    );
+                    _pipeEndSideDropdown->setSelectedIndex(
+                        _draftPlacement.pipeEndSide == "bottom"
+                            || _draftPlacement.pipeEndSide == "right"
+                            ? 1
+                            : 0
+                    );
+                }
+            }
+        );
+        addControl(_pipeOrientationDropdown);
+
+        _pipeEndSideDropdown = std::make_shared<UI::Dropdown>(
+            controlPosition(),
+            sf::Vector2f{680.0f, ConfigButtonHeight},
+            buttonColor,
+            "End side",
+            18,
+            _draftPlacement.pipeOrientation == "vertical"
+                ? std::vector<std::string>{"Top", "Bottom"}
+                : std::vector<std::string>{"Left", "Right"},
+            _draftPlacement.pipeEndSide == "bottom"
+                || _draftPlacement.pipeEndSide == "right"
+                ? 1
+                : 0
+        );
+        _pipeEndSideDropdown->setSelectionCallback(
+            [this](std::size_t index) {
+                _draftPlacement.pipeEndSide =
+                    _draftPlacement.pipeOrientation == "vertical"
+                    ? (index == 1 ? "bottom" : "top")
+                    : (index == 1 ? "right" : "left");
+            }
+        );
+        addControl(_pipeEndSideDropdown);
+
+        _pipeLengthInput = std::make_shared<UI::TextInput>(
+            controlPosition(),
+            sf::Vector2f{680.0f, ConfigButtonHeight},
+            buttonColor,
+            "Body length (1-6)",
+            18,
+            std::to_string(_draftPlacement.pipeBodyLength)
+        );
+        _pipeLengthInput->setNumericOnly(true);
+        _pipeLengthInput->setMaxLength(1);
+        _pipeLengthInput->setValueCallback([this](const std::string& value) {
+            if (!value.empty()) {
+                _draftPlacement.pipeBodyLength = std::clamp(
+                    std::stoi(value),
+                    1,
+                    6
+                );
+            }
+        });
+        addControl(_pipeLengthInput);
+
+        _pipeWarpCheck = std::make_shared<UI::CheckBox>(
+            controlPosition(),
+            sf::Vector2f{680.0f, ConfigButtonHeight},
+            buttonColor,
+            "Warp enabled",
+            18,
+            _draftPlacement.pipeIsWarp
+        );
+        _pipeWarpCheck->setCheckedCallback(
+            [this](bool checked) { _draftPlacement.pipeIsWarp = checked; }
+        );
+        addControl(_pipeWarpCheck);
+
+        _pipeWarpIDInput = std::make_shared<UI::TextInput>(
+            controlPosition(),
+            sf::Vector2f{680.0f, ConfigButtonHeight},
+            buttonColor,
+            "Warp ID (1-9)",
+            18,
+            std::to_string(_draftPlacement.warpID)
+        );
+        _pipeWarpIDInput->setNumericOnly(true);
+        _pipeWarpIDInput->setMaxLength(1);
+        _pipeWarpIDInput->setValueCallback([this](const std::string& value) {
+            if (!value.empty()) {
+                _draftPlacement.warpID = std::clamp(std::stoi(value), 1, 9);
+            }
+        });
+        addControl(_pipeWarpIDInput);
+
+        _pipeWarpTargetInput = std::make_shared<UI::TextInput>(
+            controlPosition(),
+            sf::Vector2f{680.0f, ConfigButtonHeight},
+            buttonColor,
+            "Warp target (1-9)",
+            18,
+            std::to_string(_draftPlacement.warpTarget)
+        );
+        _pipeWarpTargetInput->setNumericOnly(true);
+        _pipeWarpTargetInput->setMaxLength(1);
+        _pipeWarpTargetInput->setValueCallback([this](const std::string& value) {
+            if (!value.empty()) {
+                _draftPlacement.warpTarget = std::clamp(std::stoi(value), 1, 9);
+            }
+        });
+        addControl(_pipeWarpTargetInput);
+
+        _pipePiranhaCheck = std::make_shared<UI::CheckBox>(
+            controlPosition(),
+            sf::Vector2f{680.0f, ConfigButtonHeight},
+            buttonColor,
+            "Contains piranha plant",
+            18,
+            _draftPlacement.pipeContainsPiranha
+        );
+        _pipePiranhaCheck->setCheckedCallback(
+            [this](bool checked) { _draftPlacement.pipeContainsPiranha = checked; }
+        );
+        addControl(_pipePiranhaCheck);
+
+        _pipeContentsStaticCheck = std::make_shared<UI::CheckBox>(
+            controlPosition(),
+            sf::Vector2f{680.0f, ConfigButtonHeight},
+            buttonColor,
+            "Piranha plant stays extended",
+            18,
+            _draftPlacement.pipeContentsStatic
+        );
+        _pipeContentsStaticCheck->setCheckedCallback(
+            [this](bool checked) { _draftPlacement.pipeContentsStatic = checked; }
+        );
+        addControl(_pipeContentsStaticCheck);
+
+        addButton(
+            "Confirm placement",
+            std::make_unique<FunctionalCommand>(
+                "Confirm placement", [this]() { confirmConfig(); }
+            )
+        );
+        addButton(
+            "Cancel",
+            std::make_unique<FunctionalCommand>(
+                "Cancel", [this]() { cancelConfig(); }
+            )
+        );
+        _configBody.setString(
+            "Configure the pipe before placing it.\n"
+            "Use dropdowns, input bars, and checkboxes for every pipe parameter."
+        );
+    }
+
+    const float contentHeight = _configMenu.size() == 0
+        ? 0.0f
+        : static_cast<float>(_configMenu.size() - 1) * ConfigButtonSpacing
+            + ConfigButtonHeight;
+    const float maximumScroll = std::max(
+        0.0f,
+        contentHeight - ConfigViewportHeight
+    );
+    _configScrollOffset = std::clamp(
+        _configScrollOffset,
+        0.0f,
+        maximumScroll
+    );
+    _configMenu.setLayoutProperties(
+        {620.0f, ConfigViewportTop - _configScrollOffset},
+        {680.0f, ConfigButtonHeight},
+        ConfigButtonSpacing,
+        false,
+        buttonColor,
+        18
+    );
+    updateScrollVisuals();
+}
+
+void MapEditorScene::openLuckyBlockConfig() {
+    _configMode = ConfigMode::LuckyBlock;
+    _configScrollOffset = 0.0f;
+    _draftPlacement = CellPlacement{};
+    _draftPlacement.prefabId = "block_lucky";
+    _draftPlacement.luckyOptions = {
+        {"Coin", 1.0f},
+        {"SuperMushroom", 1.0f},
+        {"OneUpMushroom", 1.0f},
+        {"FireFlower", 1.0f},
+        {"SuperStar", 1.0f}
+    };
+    _draftPlacement.luckyCapacity = 1;
+    _showInstructions = false;
+    refreshConfigMenu();
+    setStatus("Configure the lucky block, then confirm placement");
+}
+
+void MapEditorScene::openPipeConfig() {
+    _configMode = ConfigMode::Pipe;
+    _configScrollOffset = 0.0f;
+    _draftPlacement = CellPlacement{};
+    _draftPlacement.prefabId = "pipe_basic";
+    _draftPlacement.pipeOrientation = "vertical";
+    _draftPlacement.pipeEndSide = "top";
+    _draftPlacement.pipeBodyLength = 2;
+    _draftPlacement.pipeIsWarp = false;
+    _draftPlacement.warpID = 1;
+    _draftPlacement.warpTarget = 2;
+    _draftPlacement.pipeContainsPiranha = false;
+    _draftPlacement.pipeContentsStatic = false;
+    _showInstructions = false;
+    refreshConfigMenu();
+    setStatus("Configure the pipe, then confirm placement");
+}
+
+void MapEditorScene::cycleLuckyOption(std::size_t optionIndex) {
+    static const std::vector<std::string> itemKeys = {
+        "Coin",
+        "SuperMushroom",
+        "OneUpMushroom",
+        "FireFlower",
+        "SuperStar",
+        "MegaMushroom",
+        "MegaCoin"
+    };
+    if (optionIndex >= itemKeys.size()) {
+        return;
+    }
+
+    const auto optionIt = std::find_if(
+        _draftPlacement.luckyOptions.begin(),
+        _draftPlacement.luckyOptions.end(),
+        [&itemKey = itemKeys[optionIndex]](const LuckyOptionData& option) {
+            return option.itemTypeKey == itemKey;
+        }
+    );
+    if (optionIt == _draftPlacement.luckyOptions.end()) {
+        _draftPlacement.luckyOptions.push_back({itemKeys[optionIndex], 1.0f});
+    } else {
+        _draftPlacement.luckyOptions.erase(optionIt);
+    }
+}
+
+void MapEditorScene::cycleLuckyCapacity() {
+    _draftPlacement.luckyCapacity = _draftPlacement.luckyCapacity % 5 + 1;
+    refreshConfigMenu();
+}
+
+void MapEditorScene::cyclePipeOrientation() {
+    _draftPlacement.pipeOrientation =
+        _draftPlacement.pipeOrientation == "vertical"
+        ? "horizontal"
+        : "vertical";
+    if (_draftPlacement.pipeOrientation == "vertical") {
+        if (_draftPlacement.pipeEndSide != "top"
+            && _draftPlacement.pipeEndSide != "bottom") {
+            _draftPlacement.pipeEndSide = "top";
+        }
+    } else if (_draftPlacement.pipeEndSide != "left"
+               && _draftPlacement.pipeEndSide != "right") {
+        _draftPlacement.pipeEndSide = "right";
+    }
+    refreshConfigMenu();
+}
+
+void MapEditorScene::cyclePipeEndSide() {
+    if (_draftPlacement.pipeOrientation == "horizontal") {
+        _draftPlacement.pipeEndSide =
+            _draftPlacement.pipeEndSide == "left" ? "right" : "left";
+    } else {
+        _draftPlacement.pipeEndSide =
+            _draftPlacement.pipeEndSide == "top" ? "bottom" : "top";
+    }
+    refreshConfigMenu();
+}
+
+void MapEditorScene::cyclePipeLength() {
+    _draftPlacement.pipeBodyLength =
+        _draftPlacement.pipeBodyLength % 6 + 1;
+    refreshConfigMenu();
+}
+
+void MapEditorScene::togglePipeWarp() {
+    _draftPlacement.pipeIsWarp = !_draftPlacement.pipeIsWarp;
+    refreshConfigMenu();
+}
+
+void MapEditorScene::cyclePipeWarpID() {
+    _draftPlacement.warpID = _draftPlacement.warpID % 9 + 1;
+    refreshConfigMenu();
+}
+
+void MapEditorScene::cyclePipeWarpTarget() {
+    _draftPlacement.warpTarget = _draftPlacement.warpTarget % 9 + 1;
+    refreshConfigMenu();
+}
+
+void MapEditorScene::togglePipePiranha() {
+    _draftPlacement.pipeContainsPiranha =
+        !_draftPlacement.pipeContainsPiranha;
+    refreshConfigMenu();
+}
+
+void MapEditorScene::togglePipeContentsStatic() {
+    _draftPlacement.pipeContentsStatic =
+        !_draftPlacement.pipeContentsStatic;
+    refreshConfigMenu();
+}
+
+void MapEditorScene::confirmConfig() {
+    if (_configMode == ConfigMode::LuckyBlock
+        && _draftPlacement.luckyOptions.empty()) {
+        setStatus(
+            "Select at least one lucky block outcome",
+            sf::Color(255, 190, 120)
+        );
+        return;
+    }
+
+    _selectedPlacement = _draftPlacement;
+    _selectedSymbol = _configMode == ConfigMode::LuckyBlock ? '?' : 'V';
+    const PaletteEntry* entry = findEntry(_selectedSymbol);
+    if (entry != nullptr) {
+        _selectedText.setString(
+            "Selected: " + entry->label + " (configured)"
+        );
+    }
+    _configMode = ConfigMode::None;
+    _configMenu.clear();
+    _placementBeforeConfig.reset();
+    setStatus("Placement configured; click a map cell to place it");
+}
+
+void MapEditorScene::cancelConfig() {
+    _configMode = ConfigMode::None;
+    _configMenu.clear();
+    _selectedSymbol = _selectionBeforeConfig;
+    _selectedPlacement = _placementBeforeConfig;
+    if (const PaletteEntry* entry = findEntry(_selectedSymbol)) {
+        _selectedText.setString(
+            "Selected: " + entry->label
+            + " (" + std::string(1, entry->symbol) + ")"
+        );
+    }
+    setStatus("Placement configuration cancelled");
+}
+
+void MapEditorScene::refreshThemeButton() {
+    if (_themeDropdown && !_themeOptions.empty()) {
+        _themeDropdown->setSelectedIndex(_themeIndex);
     }
 }
 
@@ -457,11 +1134,21 @@ void MapEditorScene::cycleTheme() {
         return;
     }
 
-    _themeIndex = (_themeIndex + 1) % _themeOptions.size();
+    setThemeIndex((_themeIndex + 1) % _themeOptions.size(), true);
+}
+
+void MapEditorScene::setThemeIndex(std::size_t index, bool markDirty) {
+    if (_themeOptions.empty()) {
+        return;
+    }
+    _themeIndex = std::min(index, _themeOptions.size() - 1);
     _themeKey = _themeOptions[_themeIndex].key;
-    _dirty = true;
+    if (markDirty) {
+        _dirty = true;
+        setStatus("Theme: " + _themeOptions[_themeIndex].label);
+    }
     refreshThemeButton();
-    setStatus("Theme: " + _themeOptions[_themeIndex].label);
+    setupPaletteMenu();
 }
 
 void MapEditorScene::applyLoadedTheme(
@@ -492,6 +1179,118 @@ void MapEditorScene::applyLoadedTheme(
         );
     _themeKey = _themeOptions[_themeIndex].key;
     refreshThemeButton();
+    setupPaletteMenu();
+}
+
+void MapEditorScene::updateScrollVisuals() {
+    const auto contentHeight = [](std::size_t count, float spacing, float height) {
+        return count == 0
+            ? 0.0f
+            : static_cast<float>(count - 1) * spacing + height;
+    };
+    const float paletteContentHeight = contentHeight(
+        _paletteMenu.size(),
+        PaletteButtonSpacing,
+        PaletteButtonHeight
+    );
+    const float paletteMaximumScroll = std::max(
+        0.0f,
+        paletteContentHeight - PaletteViewportHeight
+    );
+    const float paletteThumbHeight = paletteMaximumScroll <= 0.0f
+        ? PaletteViewportHeight
+        : std::max(
+            38.0f,
+            PaletteViewportHeight * PaletteViewportHeight
+                / std::max(paletteContentHeight, PaletteViewportHeight)
+        );
+    _paletteScrollTrack.setSize({10.0f, PaletteViewportHeight});
+    _paletteScrollThumb.setSize({10.0f, paletteThumbHeight});
+    const float paletteTravel = PaletteViewportHeight - paletteThumbHeight;
+    _paletteScrollThumb.setPosition({
+        PaletteScrollX,
+        PaletteViewportTop
+            + (paletteMaximumScroll <= 0.0f
+                ? 0.0f
+                : _paletteScrollOffset / paletteMaximumScroll * paletteTravel)
+    });
+
+    const float configContentHeight = contentHeight(
+        _configMenu.size(),
+        ConfigButtonSpacing,
+        ConfigButtonHeight
+    );
+    const float configMaximumScroll = std::max(
+        0.0f,
+        configContentHeight - ConfigViewportHeight
+    );
+    const float configThumbHeight = configMaximumScroll <= 0.0f
+        ? ConfigViewportHeight
+        : std::max(
+            38.0f,
+            ConfigViewportHeight * ConfigViewportHeight
+                / std::max(configContentHeight, ConfigViewportHeight)
+        );
+    _configScrollTrack.setSize({10.0f, ConfigViewportHeight});
+    _configScrollThumb.setSize({10.0f, configThumbHeight});
+    const float configTravel = ConfigViewportHeight - configThumbHeight;
+    _configScrollThumb.setPosition({
+        ConfigScrollX,
+        ConfigViewportTop
+            + (configMaximumScroll <= 0.0f
+                ? 0.0f
+                : _configScrollOffset / configMaximumScroll * configTravel)
+    });
+}
+
+void MapEditorScene::scrollPalette(float wheelDelta) {
+    const float contentHeight = _paletteMenu.size() == 0
+        ? 0.0f
+        : static_cast<float>(_paletteMenu.size() - 1) * PaletteButtonSpacing
+            + PaletteButtonHeight;
+    const float maximumScroll = std::max(
+        0.0f,
+        contentHeight - PaletteViewportHeight
+    );
+    _paletteScrollOffset = std::clamp(
+        _paletteScrollOffset - wheelDelta * PaletteButtonSpacing,
+        0.0f,
+        maximumScroll
+    );
+    _paletteMenu.setLayoutProperties(
+        {PaletteLeft, PaletteViewportTop - _paletteScrollOffset},
+        {285.0f, PaletteButtonHeight},
+        PaletteButtonSpacing,
+        false,
+        categoryColor(_activeCategory),
+        18
+    );
+    updateScrollVisuals();
+}
+
+void MapEditorScene::scrollConfig(float wheelDelta) {
+    const float contentHeight = _configMenu.size() == 0
+        ? 0.0f
+        : static_cast<float>(_configMenu.size() - 1) * ConfigButtonSpacing
+            + ConfigButtonHeight;
+    const float maximumScroll = std::max(
+        0.0f,
+        contentHeight - ConfigViewportHeight
+    );
+    _configScrollOffset = std::clamp(
+        _configScrollOffset - wheelDelta * ConfigButtonSpacing,
+        0.0f,
+        maximumScroll
+    );
+    _configMenu.setLayoutProperties(
+        {620.0f, ConfigViewportTop - _configScrollOffset},
+        {680.0f, ConfigButtonHeight},
+        ConfigButtonSpacing,
+        false,
+        sf::Color(53, 91, 130),
+        18
+    );
+    updateScrollVisuals();
 }
 
 void MapEditorScene::setupActionMenu() {
@@ -507,15 +1306,19 @@ void MapEditorScene::setupActionMenu() {
 
     _actionMenu.addButtonAuto(
         "Save Map",
+        16,
         std::make_unique<FunctionalCommand>(
             "Save Map", [this]() { saveMap(); }
-        )
+        ),
+        sf::Color(53, 91, 130)
     );
     _actionMenu.addButtonAuto(
         "Save & Play",
+        16,
         std::make_unique<FunctionalCommand>(
             "Save & Play", [this]() { saveAndPlay(); }
-        )
+        ),
+        sf::Color(53, 91, 130)
     );
     _actionMenu.addButtonAuto(
         "Undo",
@@ -665,16 +1468,21 @@ void MapEditorScene::continuePaint(sf::Vector2i screenPosition) {
     const char symbol = _paintButton == sf::Mouse::Button::Left
         ? _selectedSymbol
         : '.';
+    const std::optional<CellPlacement> placement =
+        _paintButton == sf::Mouse::Button::Left
+        ? _selectedPlacement
+        : std::nullopt;
     if (_rectangleDrag) {
         applyPaintRectangle(
             _dragStartColumn,
             _dragStartRow,
             cell->x,
             cell->y,
-            symbol
+            symbol,
+            placement
         );
     } else {
-        applyPaintCell(cell->x, cell->y, symbol);
+        applyPaintCell(cell->x, cell->y, symbol, placement);
     }
 }
 
@@ -834,46 +1642,68 @@ void MapEditorScene::drawMap(sf::RenderTarget& target) {
         )) + 1
     );
 
-    const sf::Font& font = ResourceManager::getInstance().getFont("SuperMario");
     for (int row = startRow; row <= endRow; ++row) {
         for (int column = startColumn; column <= endColumn; ++column) {
-            const char symbol = _cells[
-                static_cast<std::size_t>(row * MapWidth + column)
-            ];
-            if (symbol == '.') {
+            const std::size_t index = static_cast<std::size_t>(
+                row * MapWidth + column
+            );
+            if (_cells[index] == '.' || _cellPlacements[index].has_value()) {
                 continue;
             }
 
-            const PaletteEntry* entry = findEntry(symbol);
-            const sf::Color fill = entry != nullptr
-                ? sf::Color(entry->previewColor.r, entry->previewColor.g, entry->previewColor.b, 170)
-                : sf::Color(100, 100, 100, 170);
-
-            sf::RectangleShape cell({CellSize - 4.0f, CellSize - 4.0f});
-            cell.setPosition({
-                column * CellSize + 2.0f,
-                row * CellSize + 2.0f
-            });
-            cell.setFillColor(fill);
-            cell.setOutlineThickness(1.0f);
-            cell.setOutlineColor(sf::Color(235, 245, 255, 190));
-            target.draw(cell);
-
-            sf::Text symbolText(font, std::string(1, symbol), 30);
-            const sf::FloatRect bounds = symbolText.getLocalBounds();
-            symbolText.setOrigin({
-                bounds.position.x + bounds.size.x * 0.5f,
-                bounds.position.y + bounds.size.y * 0.5f
-            });
-            symbolText.setPosition({
-                column * CellSize + CellSize * 0.5f,
-                row * CellSize + CellSize * 0.5f
-            });
-            symbolText.setFillColor(sf::Color::White);
-            symbolText.setOutlineColor(sf::Color::Black);
-            symbolText.setOutlineThickness(2.0f);
-            target.draw(symbolText);
+            const PaletteEntry* entry = findEntry(_cells[index]);
+            if (entry != nullptr) {
+                drawEntrySprite(
+                    target,
+                    *entry,
+                    {
+                        column * CellSize + CellSize * 0.5f,
+                        row * CellSize + CellSize * 0.5f
+                    }
+                );
+            }
         }
+    }
+
+    for (std::size_t index = 0; index < _cellPlacements.size(); ++index) {
+        if (!_cellPlacements[index].has_value()) {
+            continue;
+        }
+        const int column = static_cast<int>(
+            index % static_cast<std::size_t>(MapWidth)
+        );
+        const int row = static_cast<int>(
+            index / static_cast<std::size_t>(MapWidth)
+        );
+        const auto footprint = placementFootprint(
+            *_cellPlacements[index],
+            column,
+            row
+        );
+        const bool visible = std::any_of(
+            footprint.begin(),
+            footprint.end(),
+            [&viewBounds](const sf::Vector2i& cell) {
+                const sf::FloatRect cellBounds(
+                    {
+                        cell.x * CellSize,
+                        cell.y * CellSize
+                    },
+                    {CellSize, CellSize}
+                );
+                return cellBounds.findIntersection(viewBounds).has_value();
+            }
+        );
+        if (!visible) {
+            continue;
+        }
+        drawPlacement(
+            target,
+            *_cellPlacements[index],
+            _cells[index],
+            column,
+            row
+        );
     }
 
     if (_rectangleDrag && _paintActive
@@ -914,6 +1744,414 @@ void MapEditorScene::drawMap(sf::RenderTarget& target) {
     }
 }
 
+MapEditorScene::PreviewSpec MapEditorScene::previewSpecFor(
+    const PaletteEntry& entry
+) const {
+    PreviewSpec spec;
+    spec.textureKey = "mario_and_items";
+    spec.size = {CellSize, CellSize};
+
+    if (entry.prefabId == "brick") {
+        spec.textureKey = "brick";
+    } else if (entry.prefabId == "terrain_grassland") {
+        if (_themeKey == "underground") {
+            spec.textureKey = "at_underground";
+            spec.textureRect = {{1, 18}, {16, 16}};
+        } else {
+            spec.textureKey = "at_grassland";
+            spec.textureRect = {{52, 86}, {16, 16}};
+        }
+    } else if (entry.prefabId == "block_coin") {
+        spec.textureKey = "coin_block_spritesheet";
+        spec.animationId = "coin_block";
+    } else if (entry.prefabId == "block_lucky") {
+        spec.textureKey = "lucky_block_spritesheet";
+        spec.animationId = "lucky_block";
+    } else if (entry.prefabId == "item_coin") {
+        spec.textureKey = "coin_spritesheet";
+        spec.animationId = "coin";
+        spec.centerVertically = true;
+    } else if (entry.prefabId == "item_fire_flower") {
+        spec.animationId = "fire_flower";
+        spec.size = {54.0f, 54.0f};
+        spec.centerVertically = true;
+    } else if (entry.prefabId == "item_super_mushroom") {
+        spec.animationId = "super_mushroom";
+        spec.size = {54.0f, 54.0f};
+        spec.centerVertically = true;
+    } else if (entry.prefabId == "item_one_up_mushroom") {
+        spec.animationId = "one_up_mushroom";
+        spec.size = {54.0f, 54.0f};
+        spec.centerVertically = true;
+    } else if (entry.prefabId == "item_mega_mushroom") {
+        spec.textureKey = "mega_mushroom_spritesheet";
+        spec.animationId = "mega_mushroom";
+        spec.size = {384.0f, 308.0f};
+        spec.centerVertically = true;
+    } else if (entry.prefabId == "item_super_star") {
+        spec.animationId = "super_star";
+        spec.size = {54.0f, 54.0f};
+        spec.centerVertically = true;
+    } else if (entry.prefabId == "item_mega_coin") {
+        spec.textureKey = "mega_coin_spritesheet";
+        spec.animationId = "mega_coin";
+        spec.size = {96.0f, 96.0f};
+        spec.centerVertically = true;
+    } else if (entry.prefabId == "item_flagpole") {
+        spec.textureKey = "goal_flag_spritesheet";
+        spec.animationId = "flagpole";
+        spec.size = {128.0f, 896.0f};
+        spec.centerVertically = true;
+    } else if (entry.prefabId == "item_checkpoint_flag") {
+        spec.textureKey = "checkpoint_flag_spritesheet";
+        spec.animationId = "checkpoint_flag";
+        spec.size = {48.0f, 96.0f};
+        spec.offset = {0.0f, -16.0f};
+    } else if (entry.prefabId == "enemy_goomba") {
+        spec.textureKey = "goomba_spritesheet";
+        spec.animationId = "goomba";
+        spec.size = {50.0f, 65.0f};
+        spec.offset = {0.0f, 5.0f};
+    } else if (entry.prefabId == "enemy_koopa") {
+        spec.textureKey = "koopa_spritesheet";
+        spec.animationId = "koopa";
+        spec.size = {64.0f, 100.0f};
+    } else if (entry.prefabId == "enemy_piranha_plant") {
+        spec.textureKey = "piranha_plant_spritesheet";
+        spec.animationId = "piranha_plant";
+        spec.size = {78.0f, 105.0f};
+        spec.offset = {0.0f, 5.0f};
+    } else if (entry.prefabId == "player_mario") {
+        spec.textureKey = "mario_spritesheet";
+        spec.animationId = "mario";
+        spec.size = {36.0f, 80.0f};
+        spec.offset = {10.0f, 0.0f};
+    } else if (entry.prefabId == "player_luigi") {
+        spec.textureKey = "luigi_spritesheet";
+        spec.animationId = "luigi";
+        spec.size = {36.0f, 80.0f};
+        spec.offset = {10.0f, 0.0f};
+    }
+    return spec;
+}
+
+sf::IntRect MapEditorScene::firstAnimationFrame(
+    const std::string& animationId
+) const {
+    if (animationId.empty()) {
+        return {};
+    }
+    try {
+        const AnimationSet& set = AnimationLibrary::getInstance().getAnimationSet(
+            animationId
+        );
+        const auto clipIt = set.clips.find(set.defaultClip);
+        if (clipIt != set.clips.end() && !clipIt->second.isEmpty()) {
+            return clipIt->second.getFrame(0).rect;
+        }
+    } catch (const std::exception&) {
+        return {};
+    }
+    return {};
+}
+
+void MapEditorScene::drawEntrySprite(
+    sf::RenderTarget& target,
+    const PaletteEntry& entry,
+    sf::Vector2f cellCenter
+) const {
+    const PreviewSpec spec = previewSpecFor(entry);
+    try {
+        sf::Texture& texture = ResourceManager::getInstance().getTexture(
+            spec.textureKey
+        );
+        sf::IntRect frame = spec.animationId.empty()
+            ? spec.textureRect
+            : firstAnimationFrame(spec.animationId);
+        if (frame.size.x <= 0 || frame.size.y <= 0) {
+            frame = {
+                {0, 0},
+                {
+                    static_cast<int>(texture.getSize().x),
+                    static_cast<int>(texture.getSize().y)
+                }
+            };
+        }
+        if (frame.size.x <= 0 || frame.size.y <= 0) {
+            return;
+        }
+
+        sf::Sprite sprite(texture, frame);
+        sprite.setOrigin({
+            frame.size.x * 0.5f,
+            static_cast<float>(frame.size.y)
+        });
+        sf::Vector2f bodyCenter = cellCenter + spec.offset;
+        if (spec.centerVertically) {
+            bodyCenter.y += (CellSize - spec.size.y) * 0.5f;
+        }
+        sprite.setPosition({bodyCenter.x, bodyCenter.y + spec.size.y * 0.5f});
+        sprite.setScale({
+            spec.size.x / static_cast<float>(frame.size.x),
+            spec.size.y / static_cast<float>(frame.size.y)
+        });
+        target.draw(sprite);
+    } catch (const std::exception&) {
+        // A missing optional preview asset should not make the editor unusable.
+    }
+}
+
+void MapEditorScene::drawPlacement(
+    sf::RenderTarget& target,
+    const CellPlacement& placement,
+    char symbol,
+    int column,
+    int row
+) const {
+    if (placement.prefabId == "pipe_basic") {
+        drawPipePreview(target, placement, column, row);
+        return;
+    }
+    const PaletteEntry* entry = findEntry(symbol);
+    if (entry != nullptr) {
+        drawEntrySprite(
+            target,
+            *entry,
+            {
+                column * CellSize + CellSize * 0.5f,
+                row * CellSize + CellSize * 0.5f
+            }
+        );
+    }
+}
+
+void MapEditorScene::drawPipePreview(
+    sf::RenderTarget& target,
+    const CellPlacement& placement,
+    int column,
+    int row
+) const {
+    try {
+        sf::Texture& texture = ResourceManager::getInstance().getTexture(
+            "pipes_spritesheet"
+        );
+        const bool vertical = placement.pipeOrientation != "horizontal";
+        const int bodyLength = std::max(placement.pipeBodyLength, 0);
+        const int totalTiles = 1 + bodyLength;
+        const Pipe::Orientation orientation = vertical
+            ? Pipe::Orientation::Vertical
+            : Pipe::Orientation::Horizontal;
+        const sf::Vector2f pipeSize = Pipe::computePipeSize(
+            orientation,
+            bodyLength,
+            CellSize
+        );
+        const sf::Vector2f cellCenter = {
+            column * CellSize + CellSize * 0.5f,
+            row * CellSize + CellSize * 0.5f
+        };
+        sf::Vector2f pipePosition = cellCenter;
+        const float halfCell = CellSize * 0.5f;
+        if (vertical) {
+            pipePosition.x += halfCell;
+            if (placement.pipeEndSide == "bottom") {
+                pipePosition.y = cellCenter.y - halfCell
+                    + pipeSize.y * 0.5f;
+            } else {
+                pipePosition.y = cellCenter.y + halfCell
+                    - pipeSize.y * 0.5f;
+            }
+        } else {
+            pipePosition.y = cellCenter.y - halfCell;
+            if (placement.pipeEndSide == "right") {
+                pipePosition.x = cellCenter.x - halfCell
+                    + pipeSize.x * 0.5f;
+            } else {
+                pipePosition.x = cellCenter.x + halfCell
+                    - pipeSize.x * 0.5f;
+            }
+        }
+
+        const auto blockRect = [](int gridColumn, int gridRow) {
+            return sf::IntRect(
+                {(gridColumn - 1) * 17 + 1, (gridRow - 1) * 17 + 1},
+                {16, 16}
+            );
+        };
+        const auto drawTile = [&target, &texture](
+            const sf::IntRect& textureRect,
+            sf::Vector2f position
+        ) {
+            sf::Sprite sprite(texture, textureRect);
+            sprite.setScale({4.0f, 4.0f});
+            sprite.setPosition(position);
+            target.draw(sprite);
+        };
+
+        if (vertical) {
+            for (int tileRow = 0; tileRow < totalTiles; ++tileRow) {
+                for (int tileColumn = 0; tileColumn < 2; ++tileColumn) {
+                    const bool cap = placement.pipeEndSide == "bottom"
+                        ? tileRow == totalTiles - 1
+                        : tileRow == 0;
+                    const int textureRow = cap
+                        ? (placement.pipeEndSide == "bottom" ? 3 : 1)
+                        : 2;
+                    drawTile(
+                        blockRect(tileColumn + 1, textureRow),
+                        pipePosition + sf::Vector2f{
+                            -pipeSize.x * 0.5f + tileColumn * CellSize,
+                            -pipeSize.y * 0.5f + tileRow * CellSize
+                        }
+                    );
+                }
+            }
+        } else {
+            for (int tileColumn = 0; tileColumn < totalTiles; ++tileColumn) {
+                for (int tileRow = 0; tileRow < 2; ++tileRow) {
+                    const bool cap = placement.pipeEndSide == "right"
+                        ? tileColumn == totalTiles - 1
+                        : tileColumn == 0;
+                    const int textureColumn = cap
+                        ? (placement.pipeEndSide == "right" ? 5 : 3)
+                        : 4;
+                    drawTile(
+                        blockRect(textureColumn, tileRow + 1),
+                        pipePosition + sf::Vector2f{
+                            -pipeSize.x * 0.5f + tileColumn * CellSize,
+                            -pipeSize.y * 0.5f + tileRow * CellSize
+                        }
+                    );
+                }
+            }
+        }
+
+        if (placement.pipeContainsPiranha) {
+            const PaletteEntry* plantEntry = findEntry('p');
+            if (plantEntry == nullptr) {
+                return;
+            }
+            const PreviewSpec plantSpec = previewSpecFor(*plantEntry);
+            const sf::IntRect frame = firstAnimationFrame(
+                plantSpec.animationId
+            );
+            if (frame.size.x > 0 && frame.size.y > 0) {
+                sf::Texture& plantTexture =
+                    ResourceManager::getInstance().getTexture(
+                        plantSpec.textureKey
+                    );
+                sf::Sprite plant(plantTexture, frame);
+                plant.setOrigin({
+                    frame.size.x * 0.5f,
+                    static_cast<float>(frame.size.y)
+                });
+                sf::Vector2f plantCenter = pipePosition;
+                if (vertical && placement.pipeEndSide == "top") {
+                    plantCenter = {
+                        pipePosition.x,
+                        pipePosition.y - pipeSize.y * 0.5f
+                            - plantSpec.size.y * 0.5f
+                    };
+                } else if (vertical && placement.pipeEndSide == "bottom") {
+                    plantCenter = {
+                        pipePosition.x,
+                        pipePosition.y + pipeSize.y * 0.5f
+                            + plantSpec.size.y * 0.5f
+                    };
+                }
+                plant.setPosition({
+                    plantCenter.x,
+                    plantCenter.y + plantSpec.size.y * 0.5f
+                });
+                plant.setScale({
+                    plantSpec.size.x / static_cast<float>(frame.size.x),
+                    plantSpec.size.y / static_cast<float>(frame.size.y)
+                });
+                target.draw(plant);
+            }
+        }
+    } catch (const std::exception&) {
+        // See drawEntrySprite: previews are best-effort and never block editing.
+    }
+}
+
+std::vector<sf::Vector2i> MapEditorScene::placementFootprint(
+    const CellPlacement& placement,
+    int column,
+    int row
+) const {
+    if (placement.prefabId != "pipe_basic") {
+        return {{column, row}};
+    }
+
+    const int totalTiles = 1 + std::max(placement.pipeBodyLength, 0);
+    std::vector<sf::Vector2i> footprint;
+    if (placement.pipeOrientation == "horizontal") {
+        const int firstColumn = placement.pipeEndSide == "right"
+            ? column
+            : column - totalTiles + 1;
+        for (int pipeColumn = firstColumn;
+             pipeColumn < firstColumn + totalTiles;
+             ++pipeColumn) {
+            footprint.push_back({pipeColumn, row - 1});
+            footprint.push_back({pipeColumn, row});
+        }
+    } else {
+        const int firstRow = placement.pipeEndSide == "bottom"
+            ? row
+            : row - totalTiles + 1;
+        for (int pipeRow = firstRow;
+             pipeRow < firstRow + totalTiles;
+             ++pipeRow) {
+            footprint.push_back({column, pipeRow});
+            footprint.push_back({column + 1, pipeRow});
+        }
+    }
+    return footprint;
+}
+
+bool MapEditorScene::placementFits(
+    const CellPlacement& placement,
+    int column,
+    int row
+) const {
+    const auto footprint = placementFootprint(placement, column, row);
+    return std::all_of(
+        footprint.begin(),
+        footprint.end(),
+        [](const sf::Vector2i& cell) {
+            return cell.x >= 0 && cell.x < MapWidth
+                && cell.y >= 0 && cell.y < MapHeight;
+        }
+    );
+}
+
+void MapEditorScene::clearOverlappingPlacements(int column, int row) {
+    const sf::Vector2i target{column, row};
+    for (std::size_t index = 0; index < _cellPlacements.size(); ++index) {
+        if (!_cellPlacements[index].has_value()) {
+            continue;
+        }
+        const int anchorColumn = static_cast<int>(
+            index % static_cast<std::size_t>(MapWidth)
+        );
+        const int anchorRow = static_cast<int>(
+            index / static_cast<std::size_t>(MapWidth)
+        );
+        const auto footprint = placementFootprint(
+            *_cellPlacements[index],
+            anchorColumn,
+            anchorRow
+        );
+        if (std::find(footprint.begin(), footprint.end(), target)
+            == footprint.end()) {
+            continue;
+        }
+        _cellPlacements[index].reset();
+        _cells[index] = '.';
+    }
+}
+
 void MapEditorScene::drawMapGrid(sf::RenderTarget& target) {
     sf::VertexArray gridLines(sf::PrimitiveType::Lines);
     for (int column = 0; column <= MapWidth; ++column) {
@@ -941,12 +2179,30 @@ void MapEditorScene::selectCategory(Category category) {
 }
 
 void MapEditorScene::selectSymbol(char symbol) {
+    const char previousSymbol = _selectedSymbol;
+    const std::optional<CellPlacement> previousPlacement = _selectedPlacement;
     _selectedSymbol = symbol;
     const PaletteEntry* entry = findEntry(symbol);
     if (entry == nullptr) {
+        _selectedPlacement.reset();
         _selectedText.setString("Selected: Eraser (.)");
         return;
     }
+
+    if (entry->prefabId == "block_lucky") {
+        _selectionBeforeConfig = previousSymbol;
+        _placementBeforeConfig = previousPlacement;
+        openLuckyBlockConfig();
+        return;
+    }
+    if (entry->prefabId == "pipe_basic") {
+        _selectionBeforeConfig = previousSymbol;
+        _placementBeforeConfig = previousPlacement;
+        openPipeConfig();
+        return;
+    }
+
+    _selectedPlacement.reset();
 
     _selectedText.setString(
         "Selected: " + entry->label + " (" + std::string(1, entry->symbol) + ")"
@@ -955,20 +2211,64 @@ void MapEditorScene::selectSymbol(char symbol) {
 }
 
 void MapEditorScene::eraseCell(int column, int row) {
-    applyPaintCell(column, row, '.');
+    applyPaintCell(column, row, '.', std::nullopt);
 }
 
 void MapEditorScene::placeCell(int column, int row) {
-    applyPaintCell(column, row, _selectedSymbol);
+    applyPaintCell(column, row, _selectedSymbol, _selectedPlacement);
 }
 
-void MapEditorScene::applyPaintCell(int column, int row, char symbol) {
+void MapEditorScene::applyPaintCell(
+    int column,
+    int row,
+    char symbol,
+    const std::optional<CellPlacement>& placement
+) {
     if (column < 0 || column >= MapWidth || row < 0 || row >= MapHeight) {
         return;
     }
 
+    if (placement.has_value()
+        && !placementFits(*placement, column, row)) {
+        setStatus(
+            "Pipe does not fit inside the map",
+            sf::Color(255, 190, 120)
+        );
+        return;
+    }
+
     const std::size_t index = static_cast<std::size_t>(row * MapWidth + column);
-    if (_cells[index] == symbol) {
+    bool changed = _cells[index] != symbol
+        || _cellPlacements[index] != placement;
+    if (!changed && symbol == '.') {
+        for (std::size_t placementIndex = 0;
+             placementIndex < _cellPlacements.size();
+             ++placementIndex) {
+            if (!_cellPlacements[placementIndex].has_value()) {
+                continue;
+            }
+            const int anchorColumn = static_cast<int>(
+                placementIndex % static_cast<std::size_t>(MapWidth)
+            );
+            const int anchorRow = static_cast<int>(
+                placementIndex / static_cast<std::size_t>(MapWidth)
+            );
+            const auto footprint = placementFootprint(
+                *_cellPlacements[placementIndex],
+                anchorColumn,
+                anchorRow
+            );
+            if (std::find(
+                    footprint.begin(),
+                    footprint.end(),
+                    sf::Vector2i{column, row}
+                ) != footprint.end()) {
+                changed = true;
+                break;
+            }
+        }
+    }
+    if (!changed) {
         return;
     }
 
@@ -976,7 +2276,9 @@ void MapEditorScene::applyPaintCell(int column, int row, char symbol) {
         rememberBeforeEdit();
         _strokeUndoCaptured = true;
     }
+    clearOverlappingPlacements(column, row);
     _cells[index] = symbol;
+    _cellPlacements[index] = placement;
     _dirty = true;
 }
 
@@ -985,7 +2287,8 @@ void MapEditorScene::applyPaintRectangle(
     int startRow,
     int endColumn,
     int endRow,
-    char symbol
+    char symbol,
+    const std::optional<CellPlacement>& placement
 ) {
     const int left = std::min(startColumn, endColumn);
     const int top = std::min(startRow, endRow);
@@ -994,21 +2297,31 @@ void MapEditorScene::applyPaintRectangle(
 
     for (int row = top; row <= bottom; ++row) {
         for (int column = left; column <= right; ++column) {
-            applyPaintCell(column, row, symbol);
+            applyPaintCell(column, row, symbol, placement);
         }
     }
 }
 
 void MapEditorScene::clearMap() {
-    if (std::all_of(_cells.begin(), _cells.end(), [](char symbol) {
-            return symbol == '.';
-        })) {
+    const bool empty = std::all_of(
+        _cells.begin(),
+        _cells.end(),
+        [](char symbol) { return symbol == '.'; }
+    ) && std::all_of(
+        _cellPlacements.begin(),
+        _cellPlacements.end(),
+        [](const std::optional<CellPlacement>& placement) {
+            return !placement.has_value();
+        }
+    );
+    if (empty) {
         setStatus("Map is already empty");
         return;
     }
 
     rememberBeforeEdit();
     std::fill(_cells.begin(), _cells.end(), '.');
+    std::fill(_cellPlacements.begin(), _cellPlacements.end(), std::nullopt);
     _dirty = true;
     setStatus("Map cleared");
 }
@@ -1019,8 +2332,9 @@ void MapEditorScene::undoLastEdit() {
         return;
     }
 
-    _redoHistory.push_back(_cells);
-    _cells = std::move(_undoHistory.back());
+    _redoHistory.push_back({_cells, _cellPlacements});
+    _cells = std::move(_undoHistory.back().cells);
+    _cellPlacements = std::move(_undoHistory.back().placements);
     _undoHistory.pop_back();
     _strokeUndoCaptured = false;
     _dirty = true;
@@ -1033,8 +2347,9 @@ void MapEditorScene::redoLastEdit() {
         return;
     }
 
-    _undoHistory.push_back(_cells);
-    _cells = std::move(_redoHistory.back());
+    _undoHistory.push_back({_cells, _cellPlacements});
+    _cells = std::move(_redoHistory.back().cells);
+    _cellPlacements = std::move(_redoHistory.back().placements);
     _redoHistory.pop_back();
     _strokeUndoCaptured = false;
     _dirty = true;
@@ -1042,7 +2357,7 @@ void MapEditorScene::redoLastEdit() {
 }
 
 void MapEditorScene::rememberBeforeEdit() {
-    _undoHistory.push_back(_cells);
+    _undoHistory.push_back({_cells, _cellPlacements});
     _redoHistory.clear();
 }
 
@@ -1059,6 +2374,7 @@ bool MapEditorScene::loadSavedMap() {
             MapHeight
         );
         std::fill(_cells.begin(), _cells.end(), '.');
+        std::fill(_cellPlacements.begin(), _cellPlacements.end(), std::nullopt);
         const std::size_t rowCount = std::min(
             static_cast<std::size_t>(MapHeight),
             levelData.layer.size()
@@ -1073,6 +2389,48 @@ bool MapEditorScene::loadSavedMap() {
                 copyWidth,
                 _cells.begin() + row * MapWidth
             );
+        }
+        for (const LevelData::Placement& savedPlacement : levelData.placements) {
+            if (savedPlacement.column < 0
+                || savedPlacement.column >= MapWidth
+                || savedPlacement.row < 0
+                || savedPlacement.row >= MapHeight) {
+                continue;
+            }
+
+            CellPlacement placement;
+            if (savedPlacement.spec.typeKey == "LuckyBlock") {
+                placement.prefabId = "block_lucky";
+                placement.luckyCapacity = savedPlacement.spec.luckyCapacity;
+                for (const LuckyOptionSpec& option : savedPlacement.spec.luckyOptions) {
+                    placement.luckyOptions.push_back({
+                        option.itemTypeKey,
+                        option.weight
+                    });
+                }
+                _cells[static_cast<std::size_t>(
+                    savedPlacement.row * MapWidth + savedPlacement.column
+                )] = '?';
+            } else if (savedPlacement.spec.typeKey == "Pipe") {
+                placement.prefabId = "pipe_basic";
+                placement.pipeOrientation = savedPlacement.spec.pipeOrientation;
+                placement.pipeEndSide = savedPlacement.spec.pipeEndSide;
+                placement.pipeBodyLength = savedPlacement.spec.pipeBodyLength;
+                placement.pipeIsWarp = savedPlacement.spec.pipeIsWarp;
+                placement.warpID = savedPlacement.spec.warpID;
+                placement.warpTarget = savedPlacement.spec.warpTarget;
+                placement.pipeContainsPiranha =
+                    savedPlacement.spec.contents != nullptr;
+                placement.pipeContentsStatic = savedPlacement.spec.contentsStatic;
+                _cells[static_cast<std::size_t>(
+                    savedPlacement.row * MapWidth + savedPlacement.column
+                )] = 'V';
+            } else {
+                continue;
+            }
+            _cellPlacements[static_cast<std::size_t>(
+                savedPlacement.row * MapWidth + savedPlacement.column
+            )] = std::move(placement);
         }
         _undoHistory.clear();
         _redoHistory.clear();
@@ -1099,7 +2457,11 @@ bool MapEditorScene::saveMap() {
         {".", "empty"}
     };
     for (const PaletteEntry& entry : _paletteEntries) {
-        tileMapping[std::string(1, entry.symbol)] = entry.prefabId;
+        const std::string prefabId = entry.prefabId == "terrain_grassland"
+            && _themeKey == "underground"
+            ? "terrain_underground"
+            : entry.prefabId;
+        tileMapping[std::string(1, entry.symbol)] = prefabId;
     }
 
     std::vector<std::string> layer;
@@ -1114,6 +2476,71 @@ bool MapEditorScene::saveMap() {
     document["tileMapping"] = std::move(tileMapping);
     document["layer"] = std::move(layer);
     document["theme"] = _themeKey;
+    json placements = json::array();
+    for (std::size_t index = 0; index < _cellPlacements.size(); ++index) {
+        if (!_cellPlacements[index].has_value()) {
+            continue;
+        }
+
+        const CellPlacement& placement = *_cellPlacements[index];
+        const int column = static_cast<int>(
+            index % static_cast<std::size_t>(MapWidth)
+        );
+        const int row = static_cast<int>(
+            index / static_cast<std::size_t>(MapWidth)
+        );
+        json spec;
+        if (placement.prefabId == "block_lucky") {
+            spec = {
+                {"kind", "block"},
+                {"typeKey", "LuckyBlock"},
+                {"texture", "lucky_block_spritesheet"},
+                {"size", {64, 64}},
+                {"addSeamFilter", true},
+                {"luckyCapacity", placement.luckyCapacity},
+                {"luckyOptions", json::array()}
+            };
+            for (const LuckyOptionData& option : placement.luckyOptions) {
+                spec["luckyOptions"].push_back({
+                    {"item", option.itemTypeKey},
+                    {"weight", option.weight}
+                });
+            }
+        } else if (placement.prefabId == "pipe_basic") {
+            spec = {
+                {"kind", "pipe"},
+                {"typeKey", "Pipe"},
+                {"texture", "pipes_spritesheet"},
+                {"size", {128, 192}},
+                {"pipeOrientation", placement.pipeOrientation},
+                {"pipeEndSide", placement.pipeEndSide},
+                {"pipeBodyLength", placement.pipeBodyLength},
+                {"pipeIsWarp", placement.pipeIsWarp},
+                {"warpID", placement.warpID},
+                {"warpTarget", placement.warpTarget},
+                {"contentsStatic", placement.pipeContentsStatic},
+                {"addSeamFilter", true}
+            };
+            if (placement.pipeContainsPiranha) {
+                spec["contents"] = {
+                    {"kind", "enemy"},
+                    {"typeKey", "PiranhaPlant"},
+                    {"texture", "piranha_plant_spritesheet"},
+                    {"animationId", "piranha_plant"},
+                    {"size", {78, 105}},
+                    {"offset", {0, 5}}
+                };
+            }
+        } else {
+            continue;
+        }
+        placements.push_back({
+            {"column", column},
+            {"row", row},
+            {"spec", std::move(spec)}
+        });
+    }
+    document["placements"] = std::move(placements);
     document["editor"] = {
         {"width", MapWidth},
         {"height", MapHeight},
@@ -1126,6 +2553,15 @@ bool MapEditorScene::saveMap() {
                 {"texture", "at_grassland"},
                 {"solid", true},
                 {"autotile", "grassland_terrain"},
+                {"addSeamFilter", true}
+            }
+        },
+        {
+            "terrain_underground",
+            {
+                {"texture", "at_underground"},
+                {"solid", true},
+                {"autotile", "underground_terrain"},
                 {"addSeamFilter", true}
             }
         },
