@@ -189,7 +189,35 @@ LevelData LevelDataLoader::load(
             "Invalid level data: " + std::string(error.what())
         );
     }
+    levelData.theme = document.value("theme", "");
     levelData.background = document.value("background", "");
+    levelData.music = document.value("music", "");
+
+    if (levelData.theme.empty()) {
+        if (levelData.background == "parallax_underground"
+            || levelData.music == "underground_theme") {
+            levelData.theme = "underground";
+        } else if (levelData.background == "parallax_sky"
+                   || levelData.music == "ground_theme") {
+            levelData.theme = "sky";
+        }
+    }
+
+    if (levelData.theme == "sky") {
+        if (levelData.background.empty()) {
+            levelData.background = "parallax_sky";
+        }
+        if (levelData.music.empty()) {
+            levelData.music = "ground_theme";
+        }
+    } else if (levelData.theme == "underground") {
+        if (levelData.background.empty()) {
+            levelData.background = "parallax_underground";
+        }
+        if (levelData.music.empty()) {
+            levelData.music = "underground_theme";
+        }
+    }
 
     return levelData;
 }

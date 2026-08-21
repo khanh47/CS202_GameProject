@@ -3,8 +3,61 @@
 #include "Scene/SceneFactory.h"
 #include "ResourceManager.h"
 #include <SFML/Graphics/RenderTarget.hpp>
+#include <cmath>
 #include <iostream>
+#include <optional>
 #include <vector>
+
+namespace {
+sf::Vector2i logicalMousePosition(
+    const sf::RenderWindow& window,
+    sf::Vector2i pixelPosition
+) {
+    const sf::Vector2f logicalPosition = window.mapPixelToCoords(
+        pixelPosition,
+        window.getDefaultView()
+    );
+    return {
+        static_cast<int>(std::lround(logicalPosition.x)),
+        static_cast<int>(std::lround(logicalPosition.y))
+    };
+}
+
+std::optional<sf::Event> normalizeMouseEvent(
+    const sf::RenderWindow& window,
+    const sf::Event& event
+) {
+    if (const auto* mouseMoved = event.getIf<sf::Event::MouseMoved>()) {
+        return sf::Event(sf::Event::MouseMoved{
+            logicalMousePosition(window, mouseMoved->position)
+        });
+    }
+
+    if (const auto* mousePressed = event.getIf<sf::Event::MouseButtonPressed>()) {
+        return sf::Event(sf::Event::MouseButtonPressed{
+            mousePressed->button,
+            logicalMousePosition(window, mousePressed->position)
+        });
+    }
+
+    if (const auto* mouseReleased = event.getIf<sf::Event::MouseButtonReleased>()) {
+        return sf::Event(sf::Event::MouseButtonReleased{
+            mouseReleased->button,
+            logicalMousePosition(window, mouseReleased->position)
+        });
+    }
+
+    if (const auto* mouseWheel = event.getIf<sf::Event::MouseWheelScrolled>()) {
+        return sf::Event(sf::Event::MouseWheelScrolled{
+            mouseWheel->wheel,
+            mouseWheel->delta,
+            logicalMousePosition(window, mouseWheel->position)
+        });
+    }
+
+    return std::nullopt;
+}
+}
 
 SceneManager::SceneManager(SceneFactory *factory)
     : _factory(factory) {
@@ -87,7 +140,13 @@ void SceneManager::processEvents(const sf::Event& event) {
     if (!_sceneStack.empty()) {
         auto &currentScene = _sceneStack.top();
         if (currentScene->isActive()) {
-            currentScene->handleInput(event);
+            std::optional<sf::Event> normalizedEvent;
+            if (_window != nullptr) {
+                normalizedEvent = normalizeMouseEvent(*_window, event);
+            }
+            currentScene->handleInput(
+                normalizedEvent.has_value() ? *normalizedEvent : event
+            );
         }
     }
     processDeferredActions();

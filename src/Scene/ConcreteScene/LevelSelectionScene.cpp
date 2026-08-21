@@ -1,4 +1,6 @@
 #include "Scene/ConcreteScene/LevelSelectionScene.h"
+#include <filesystem>
+
 #include "Commands/FunctionalCommand.h"
 #include "ResourceManager.h"
 #include "Scene/ConcreteScene/InGameScene.h"
@@ -77,4 +79,15 @@ void LevelSelectionScene::_setupButtons() {
             }
         }
     ));
+
+    const std::string customMap = "assets/datas/levels/custom-map.json";
+    if (std::filesystem::exists(customMap)) {
+        _buttonMenu.addButtonAuto("Custom Map", std::make_unique<FunctionalCommand>(
+            "Custom Map", [this, customMap]() {
+                if (auto mgr = getSceneManager()) {
+                    mgr->pushScene(std::make_unique<InGameScene>(customMap));
+                }
+            }
+        ));
+    }
 }

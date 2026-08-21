@@ -10,7 +10,14 @@
 #include <iostream>
 
 namespace {
-std::string levelThemeFor(const std::string& levelName) {
+std::string levelThemeFor(
+    const std::string& levelName,
+    const std::string& selectedMusic
+) {
+    if (!selectedMusic.empty()) {
+        return selectedMusic;
+    }
+
     if (levelName.find("map-2") != std::string::npos
         || levelName.find("map-3") != std::string::npos) {
         return "underground_theme";
@@ -77,7 +84,10 @@ void InGameScene::init() {
         _starmanMusicActive = false;
         stopTitleScreenMusic();
         Audio::MusicManager::getInstance().setVolume(GameSettings::getInstance().musicVolume);
-        Audio::MusicManager::getInstance().play(levelThemeFor(_name), true);
+        Audio::MusicManager::getInstance().play(
+            levelThemeFor(_name, _gameWorld.getLevelMusic()),
+            true
+        );
     }
 
     void InGameScene::onExit() {
@@ -144,7 +154,9 @@ void InGameScene::updateVisuals(float deltaTime) {
         player && (player->isMegaState() || player->isStarManState());
     if (starmanMusicShouldPlay != _starmanMusicActive) {
         Audio::MusicManager::getInstance().play(
-            starmanMusicShouldPlay ? "starman_theme" : levelThemeFor(_name),
+            starmanMusicShouldPlay
+                ? "starman_theme"
+                : levelThemeFor(_name, _gameWorld.getLevelMusic()),
             true
         );
         _starmanMusicActive = starmanMusicShouldPlay;

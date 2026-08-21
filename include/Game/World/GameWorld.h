@@ -65,6 +65,7 @@ public:
     bool hasLivingPlayers() const;
     bool hasWon() const { return _levelCleared; }
     sf::FloatRect getBounds() const;
+    const std::string& getLevelMusic() const { return _currentLevelData.music; }
     const std::vector<std::shared_ptr<GameObject>>& objects() const { return _objectStore.objects(); }
 
     // Add getter & setter for ScoreManager

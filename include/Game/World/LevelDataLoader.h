@@ -14,7 +14,9 @@ struct LevelData {
     std::unordered_map<char, std::string> tileMapping;
     std::vector<std::string> layer;
     PrefabRegistry prefabs;
+    std::string theme;
     std::string background;
+    std::string music;
 };
 
 class LevelDataLoader {
