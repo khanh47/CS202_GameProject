@@ -122,6 +122,13 @@ void WorldMap::rebuild(
         hasAutotiles = hasAutotiles || !spec.autotileId.empty();
         specsBySymbol.insert_or_assign(symbol, std::move(spec));
     }
+    std::unordered_map<int, const SpawnSpec*> placementByCell;
+    for (const LevelData::Placement& placement : levelData.placements) {
+        placementByCell.insert_or_assign(
+            placement.row * _gridWidth + placement.column,
+            &placement.spec
+        );
+    }
     if (hasAutotiles) {
         loadAutotileDefs("assets/datas/autotile_defs.json");
     }
@@ -151,30 +158,36 @@ void WorldMap::rebuild(
                 continue;
             }
 
-            const SpawnSpec& spec = specIt->second;
+            const SpawnSpec* spec = &specIt->second;
+            const auto placementIt = placementByCell.find(
+                mapRow * _gridWidth + column
+            );
+            if (placementIt != placementByCell.end()) {
+                spec = placementIt->second;
+            }
             const sf::Vector2f cellCenter = mapCellCenter(column, mapRow);
 
             const int tileId = tileIdFor(symbol);
             screenGrid[screenRow][column] = tileId;
-            if (spec.solid
-                || (spec.objectKind
-                    && *spec.objectKind == ObjectKind::Block)) {
+            if (spec->solid
+                || (spec->objectKind
+                    && *spec->objectKind == ObjectKind::Block)) {
                 solidIds.insert(tileId);
             }
 
-            if (!spec.objectKind) {
+            if (!spec->objectKind) {
                 sf::Texture* texture = nullptr;
-                if (!spec.textureKey.empty()) {
-                    texture = &resources.getTexture(spec.textureKey);
+                if (!spec->textureKey.empty()) {
+                    texture = &resources.getTexture(spec->textureKey);
                 }
                 _tileMap.setTile(column, screenRow, symbol, texture);
 
-                if (spec.solid) {
+                if (spec->solid) {
                     createTileCollision(
                         physicsWorld,
                         column,
                         screenRow,
-                        spec.breakable,
+                        spec->breakable,
                         texture
                     );
                 }
@@ -182,7 +195,7 @@ void WorldMap::rebuild(
             }
 
             spawner.spawnAtGrid(
-                spec,
+                *spec,
                 column,
                 screenRow,
                 cellCenter

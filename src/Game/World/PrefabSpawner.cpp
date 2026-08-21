@@ -7,6 +7,7 @@
 
 #include "Game/GameSettings.h"
 #include "Game/Objects/Block/Block.h"
+#include "Game/Objects/Block/LuckyBlock.h"
 #include "Game/Objects/Block/SlopeBlock.h"
 #include "Game/Objects/Enemy/ConcreteEnemy/Koopa.h"
 #include "Game/Objects/Enemy/ConcreteEnemy/PiranhaPlant.h"
@@ -123,6 +124,18 @@ std::shared_ptr<GameObject> PrefabSpawner::spawnObjectAtPosition(
             auto block = _objectFactory.createBlock(spec.typeKey, texture);
             if (auto typedBlock = std::dynamic_pointer_cast<Block>(block)) {
                 typedBlock->setBreakable(spec.breakable);
+            }
+            if (auto luckyBlock = std::dynamic_pointer_cast<LuckyBlock>(block)) {
+                if (!spec.luckyOptions.empty()) {
+                    luckyBlock->clearOptions();
+                    for (const LuckyOptionSpec& option : spec.luckyOptions) {
+                        luckyBlock->addItemOption(
+                            option.itemTypeKey,
+                            option.weight
+                        );
+                    }
+                }
+                luckyBlock->setCapacity(spec.luckyCapacity);
             }
             if (!spec.slopeType.empty() && texture != nullptr) {
                 if (auto slope = std::dynamic_pointer_cast<SlopeBlock>(block)) {
@@ -267,20 +280,42 @@ std::shared_ptr<GameObject> PrefabSpawner::spawnPipe(
 
     if (spec.contents) {
         const SpawnSpec& content = *spec.contents;
-        sf::Vector2f contentPosition = pipePosition + content.offset;
-        float hiddenY = contentPosition.y;
-        float emergedY = contentPosition.y;
-        if (spec.pipeOrientation == "vertical"
-            && spec.pipeEndSide == "top") {
-            const float pipeTopY = pipePosition.y - pipeSize.y * 0.5f;
-            constexpr float hiddenDepthPixels = 8.0f;
-            hiddenY = pipeTopY + content.size.y * 0.5f
-                + hiddenDepthPixels;
-            emergedY = pipeTopY - content.size.y * 0.5f;
-            contentPosition.y = spec.contentsStatic
-                ? emergedY
-                : hiddenY + content.offset.y;
+        constexpr float hiddenDepthPixels = 8.0f;
+        const sf::Vector2f baseContentPosition = pipePosition + content.offset;
+        sf::Vector2f hiddenPosition = baseContentPosition;
+        sf::Vector2f emergedPosition = baseContentPosition;
+
+        if (spec.pipeOrientation == "vertical") {
+            const bool opensAtBottom = spec.pipeEndSide == "bottom";
+            const float openingY = pipePosition.y
+                + (opensAtBottom ? pipeSize.y * 0.5f : -pipeSize.y * 0.5f);
+            if (opensAtBottom) {
+                hiddenPosition.y = openingY - content.size.y * 0.5f
+                    - hiddenDepthPixels;
+                emergedPosition.y = openingY + content.size.y * 0.5f;
+            } else {
+                hiddenPosition.y = openingY + content.size.y * 0.5f
+                    + hiddenDepthPixels;
+                emergedPosition.y = openingY - content.size.y * 0.5f;
+            }
+        } else {
+            const bool opensAtRight = spec.pipeEndSide == "right";
+            const float openingX = pipePosition.x
+                + (opensAtRight ? pipeSize.x * 0.5f : -pipeSize.x * 0.5f);
+            if (opensAtRight) {
+                hiddenPosition.x = openingX - content.size.x * 0.5f
+                    - hiddenDepthPixels;
+                emergedPosition.x = openingX + content.size.x * 0.5f;
+            } else {
+                hiddenPosition.x = openingX + content.size.x * 0.5f
+                    + hiddenDepthPixels;
+                emergedPosition.x = openingX - content.size.x * 0.5f;
+            }
         }
+
+        const sf::Vector2f contentPosition = spec.contentsStatic
+            ? emergedPosition
+            : hiddenPosition;
 
         const std::shared_ptr<GameObject> contentObject =
             spawnObjectAtPosition(content, contentPosition, -1, -1);
@@ -288,10 +323,7 @@ std::shared_ptr<GameObject> PrefabSpawner::spawnPipe(
             if (auto plant = std::dynamic_pointer_cast<PiranhaPlant>(
                     contentObject
                 )) {
-                plant->setPipeTravel(
-                    hiddenY + content.offset.y,
-                    emergedY
-                );
+                plant->setPipeTravel(hiddenPosition, emergedPosition);
             }
         }
     }

@@ -4,6 +4,7 @@
 #include <cctype>
 #include <stdexcept>
 #include <string>
+#include <utility>
 
 namespace {
 ObjectKind parseKind(const nlohmann::json& json) {
@@ -85,6 +86,33 @@ void from_json(const nlohmann::json& json, SpawnSpec& spec) {
     spec.breakable = json.value("breakable", false);
     spec.autotileId = json.value("autotile", "");
     spec.slopeType = json.value("slopeType", "");
+    spec.luckyCapacity = json.value("luckyCapacity", 1);
+    if (json.contains("luckyOptions")) {
+        if (!json["luckyOptions"].is_array()) {
+            throw std::runtime_error("luckyOptions must be an array");
+        }
+        for (const auto& optionJson : json["luckyOptions"]) {
+            if (!optionJson.is_object()
+                || !optionJson.contains("item")
+                || !optionJson["item"].is_string()) {
+                throw std::runtime_error(
+                    "Every luckyOptions entry must contain an item string"
+                );
+            }
+            LuckyOptionSpec option;
+            option.itemTypeKey = optionJson["item"].get<std::string>();
+            option.weight = optionJson.value("weight", 1.0f);
+            if (option.itemTypeKey.empty() || option.weight <= 0.0f) {
+                throw std::runtime_error(
+                    "Lucky block options need a non-empty item and positive weight"
+                );
+            }
+            spec.luckyOptions.push_back(std::move(option));
+        }
+    }
+    if (spec.luckyCapacity <= 0) {
+        throw std::runtime_error("luckyCapacity must be positive");
+    }
 
     // Pipe-specific fields
     spec.pipeOrientation = json.value("pipeOrientation", "");

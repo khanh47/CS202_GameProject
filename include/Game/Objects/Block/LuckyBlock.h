@@ -61,6 +61,10 @@ public:
      */
     void clearOptions();
 
+    void setCapacity(int value) noexcept {
+        capacity = value > 0 ? value : 1;
+    }
+
 protected:
     void onCreateShapeDef(b2ShapeDef& def) override;
     void onUpdateVisuals(float deltaTime) override;

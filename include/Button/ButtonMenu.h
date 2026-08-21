@@ -21,8 +21,10 @@ private:
     std::vector<std::shared_ptr<Button>> _buttonMenu;
     LayoutProperties _layout;
     int _focusedIndex = 0;
+    bool _mouseOnly = false;
 
     void syncFocus();
+    void clearFocus();
 
 public:
     ButtonMenu() = default;
@@ -44,6 +46,7 @@ public:
     void updateVisuals(float deltaTime);
     void render(sf::RenderTarget& target);
 
+    void setMouseOnly(bool mouseOnly);
     void setFocusedIndex(int index);
     int getFocusedIndex() const { return _focusedIndex; }
     std::shared_ptr<Button> getButton(std::size_t index) const {

@@ -3,6 +3,7 @@
 #include <memory>
 #include <optional>
 #include <string>
+#include <vector>
 
 #include <SFML/System/Vector2.hpp>
 #include <nlohmann/json.hpp>
@@ -13,6 +14,11 @@ enum class ObjectKind {
     Enemy,
     Item,
     Pipe
+};
+
+struct LuckyOptionSpec {
+    std::string itemTypeKey;
+    float weight = 1.0f;
 };
 
 struct SpawnSpec {
@@ -32,6 +38,8 @@ struct SpawnSpec {
     std::string autotileId;
     std::string slopeType;
     std::shared_ptr<SpawnSpec> contents;
+    std::vector<LuckyOptionSpec> luckyOptions;
+    int luckyCapacity = 1;
 
     // Pipe-specific fields
     std::string pipeOrientation;

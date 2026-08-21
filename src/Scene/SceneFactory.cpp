@@ -3,6 +3,7 @@
 #include "Scene/ConcreteScene/InGameScene.h"
 #include "Scene/ConcreteScene/LevelSelectionScene.h"
 #include "Scene/ConcreteScene/MainMenuScene.h"
+#include "Scene/ConcreteScene/MapEditorScene.h"
 #include "Scene/ConcreteScene/ModeSelectScene.h"
 #include "Scene/ConcreteScene/SettingsScene.h"
 #include <iostream>
@@ -14,6 +15,7 @@ SceneFactory::SceneFactory() {
     registerScene("MODE_SELECT", []() { return std::make_unique<ModeSelectScene>(); });
     registerScene("CHARACTER_SELECT", []() { return std::make_unique<CharacterSelectScene>(); });
     registerScene("LEVEL_SELECT", []() { return std::make_unique<LevelSelectionScene>(); });
+    registerScene("MAP_EDITOR", []() { return std::make_unique<MapEditorScene>(); });
     registerScene("IN_GAME", []() { return std::make_unique<InGameScene>("assets/datas/levels/map-1.json"); });
 }
 

@@ -78,10 +78,18 @@ void MainMenuScene::_setupButtons() {
         }
     ));
 
+    _buttonMenu.addButtonAuto("Create map", std::make_unique<FunctionalCommand>(
+        "Create map", [this]() {
+            if (auto mgr = getSceneManager()) {
+                mgr->pushSceneByName("MAP_EDITOR");
+            }
+        }
+    ));
+
     _buttonMenu.addButtonAuto("Load Game", std::make_unique<FunctionalCommand>(
         "Load Game", [this]() {
             if (auto mgr = getSceneManager()) {
-                mgr->pushSceneByName("GAME_DATA");
+                mgr->pushSceneByName("LEVEL_SELECT");
             }
         }
     ));

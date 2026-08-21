@@ -3,6 +3,8 @@
 #include <fstream>
 #include <stdexcept>
 #include <string>
+#include <unordered_set>
+#include <utility>
 
 #include <nlohmann/json.hpp>
 
@@ -144,6 +146,53 @@ void validatePrefabReferences(const LevelData& levelData) {
         (void)levelData.prefabs.resolve(prefabId);
     }
 }
+
+void parsePlacements(
+    const nlohmann::json& json,
+    int maximumWidth,
+    int maximumHeight,
+    LevelData& levelData
+) {
+    if (!json.is_array()) {
+        throw std::runtime_error("placements must be an array");
+    }
+
+    std::unordered_set<int> occupiedCells;
+    for (const auto& placementJson : json) {
+        if (!placementJson.is_object()
+            || !placementJson.contains("column")
+            || !placementJson.contains("row")
+            || !placementJson.contains("spec")
+            || !placementJson["column"].is_number_integer()
+            || !placementJson["row"].is_number_integer()
+            || !placementJson["spec"].is_object()) {
+            throw std::runtime_error(
+                "Every placement must contain integer column/row and an object spec"
+            );
+        }
+
+        const int column = placementJson["column"].get<int>();
+        const int row = placementJson["row"].get<int>();
+        if (column < 0 || column >= maximumWidth
+            || row < 0 || row >= maximumHeight) {
+            throw std::runtime_error("Placement coordinate is outside the level limits");
+        }
+
+        const int cellKey = row * maximumWidth + column;
+        if (!occupiedCells.insert(cellKey).second) {
+            throw std::runtime_error("Multiple placements cannot share a cell");
+        }
+
+        LevelData::Placement placement;
+        placement.column = column;
+        placement.row = row;
+        placement.spec = placementJson["spec"].get<SpawnSpec>();
+        if (!placement.spec.objectKind) {
+            throw std::runtime_error("Placement spec must describe a live object");
+        }
+        levelData.placements.push_back(std::move(placement));
+    }
+}
 }
 
 LevelData LevelDataLoader::load(
@@ -184,12 +233,48 @@ LevelData LevelDataLoader::load(
             levelData
         );
         validatePrefabReferences(levelData);
+        if (document.contains("placements")) {
+            parsePlacements(
+                document["placements"],
+                maximumWidth,
+                maximumHeight,
+                levelData
+            );
+        }
     } catch (const std::exception& error) {
         throw std::runtime_error(
             "Invalid level data: " + std::string(error.what())
         );
     }
+    levelData.theme = document.value("theme", "");
     levelData.background = document.value("background", "");
+    levelData.music = document.value("music", "");
+
+    if (levelData.theme.empty()) {
+        if (levelData.background == "parallax_underground"
+            || levelData.music == "underground_theme") {
+            levelData.theme = "underground";
+        } else if (levelData.background == "parallax_sky"
+                   || levelData.music == "ground_theme") {
+            levelData.theme = "sky";
+        }
+    }
+
+    if (levelData.theme == "sky") {
+        if (levelData.background.empty()) {
+            levelData.background = "parallax_sky";
+        }
+        if (levelData.music.empty()) {
+            levelData.music = "ground_theme";
+        }
+    } else if (levelData.theme == "underground") {
+        if (levelData.background.empty()) {
+            levelData.background = "parallax_underground";
+        }
+        if (levelData.music.empty()) {
+            levelData.music = "underground_theme";
+        }
+    }
 
     return levelData;
 }
