@@ -28,6 +28,7 @@ public:
     void setSelectedIndex(std::size_t index, bool notify = false);
     std::size_t getSelectedIndex() const noexcept { return _selectedIndex; }
     const std::string& getSelectedValue() const noexcept;
+    bool isOpen() const noexcept { return _open; }
     void setSelectionCallback(SelectionCallback callback);
 
     void execute() override;

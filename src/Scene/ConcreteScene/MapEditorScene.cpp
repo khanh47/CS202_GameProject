@@ -6,6 +6,7 @@
 #include <filesystem>
 #include <fstream>
 #include <memory>
+#include <stdexcept>
 #include <string>
 #include <utility>
 
@@ -43,6 +44,8 @@ const sf::Color categoryColor(MapEditorScene::Category category) {
 
 MapEditorScene::MapEditorScene()
     : Scene("MapEditorScene"),
+      MapWidth(DefaultMapWidth),
+      MapHeight(DefaultMapHeight),
       _cells(
           static_cast<std::size_t>(MapWidth * MapHeight),
           '.'
@@ -97,7 +100,8 @@ MapEditorScene::MapEditorScene()
           "Keyboard controls\n\n"
           "Ctrl + Z: undo       Ctrl + Y: redo\n"
           "S: save map          P: save and play\n"
-          "T: change theme       C: clear map\n"
+           "T: change theme       C: clear map\n"
+           "Map Size: resize from the general map menu\n"
           "1-4: choose a category\n"
           "Esc: close this screen / go back",
           22
@@ -116,6 +120,7 @@ MapEditorScene::MapEditorScene()
       ),
       _paletteScrollTrack({10.0f, PaletteViewportHeight}),
       _paletteScrollThumb({10.0f, 70.0f}),
+      _mapSizeDropdownBackdrop({285.0f, MapSizeDropdownHeight}),
       _configScrollTrack({10.0f, ConfigViewportHeight}),
       _configScrollThumb({10.0f, 70.0f}) {
     _paletteEntries = {
@@ -218,6 +223,11 @@ MapEditorScene::MapEditorScene()
     _paletteScrollTrack.setFillColor(sf::Color(9, 22, 38, 230));
     _paletteScrollThumb.setFillColor(sf::Color(115, 175, 225, 235));
 
+    _mapSizeDropdownBackdrop.setPosition({1605.0f, MapSizeDropdownTop});
+    _mapSizeDropdownBackdrop.setFillColor(sf::Color(24, 45, 72, 252));
+    _mapSizeDropdownBackdrop.setOutlineThickness(2.0f);
+    _mapSizeDropdownBackdrop.setOutlineColor(sf::Color(120, 180, 235));
+
     _configScrollTrack.setPosition({ConfigScrollX, ConfigViewportTop});
     _configScrollTrack.setFillColor(sf::Color(9, 22, 38, 230));
     _configScrollThumb.setFillColor(sf::Color(115, 175, 225, 235));
@@ -227,7 +237,10 @@ void MapEditorScene::init() {
     setupMenus();
     selectSymbol('#');
     if (!loadSavedMap()) {
-        setStatus("New map: 80 x 40 cells");
+        setStatus(
+            "New map: " + std::to_string(MapWidth)
+            + " x " + std::to_string(MapHeight) + " cells"
+        );
     }
     refreshThemeButton();
 }
@@ -247,8 +260,9 @@ void MapEditorScene::updateSimulation(const float& fixedDt) {
 void MapEditorScene::updateVisuals(float deltaTime) {
     _categoryMenu.updateVisuals(deltaTime);
     _paletteMenu.updateVisuals(deltaTime);
-    _themeMenu.updateVisuals(deltaTime);
+    _generalMapMenu.updateVisuals(deltaTime);
     _actionMenu.updateVisuals(deltaTime);
+    _mapSizeMenu.updateVisuals(deltaTime);
     _instructionsMenu.updateVisuals(deltaTime);
     _configMenu.updateVisuals(deltaTime);
 }
@@ -282,6 +296,62 @@ void MapEditorScene::handleInput(const sf::Event& event) {
             }
         }
         _configMenu.processEvent(event);
+        return;
+    }
+
+    if (_mapSizeExpanded) {
+        if (const auto* keyEvent = event.getIf<sf::Event::KeyPressed>()) {
+            if (keyEvent->code == sf::Keyboard::Key::Escape) {
+                closeMapSizeDropdown();
+                return;
+            }
+            _mapSizeMenu.processEvent(event);
+            tryAutoApplyMapSize();
+            return;
+        }
+
+        if (const auto* mouseMove = event.getIf<sf::Event::MouseMoved>()) {
+            (void)mouseMove;
+            _mapSizeMenu.processEvent(event);
+            return;
+        }
+
+        if (const auto* mousePress = event.getIf<sf::Event::MouseButtonPressed>()) {
+            const sf::Vector2f mousePosition = {
+                static_cast<float>(mousePress->position.x),
+                static_cast<float>(mousePress->position.y)
+            };
+            const sf::FloatRect mapSizeButtonBounds{
+                {1605.0f, MapSizeButtonTop},
+                {285.0f, 40.0f}
+            };
+            const sf::FloatRect dropdownBounds{
+                {1605.0f, MapSizeDropdownTop},
+                {285.0f, MapSizeDropdownHeight}
+            };
+
+            _mapSizeMenu.processEvent(event);
+            if (mapSizeButtonBounds.contains(mousePosition)) {
+                tryAutoApplyMapSize();
+                if (_mapSizeExpanded) {
+                    closeMapSizeDropdown();
+                }
+                return;
+            }
+            if (!dropdownBounds.contains(mousePosition)) {
+                tryAutoApplyMapSize();
+                if (_mapSizeExpanded) {
+                    closeMapSizeDropdown();
+                }
+            }
+            return;
+        }
+
+        if (const auto* mouseRelease = event.getIf<sf::Event::MouseButtonReleased>()) {
+            handleMouseReleased(*mouseRelease);
+            return;
+        }
+
         return;
     }
 
@@ -350,18 +420,26 @@ void MapEditorScene::handleInput(const sf::Event& event) {
 
     if (const auto* mouseMove = event.getIf<sf::Event::MouseMoved>()) {
         handleMouseMoved(*mouseMove);
+        if (_themeDropdown && _themeDropdown->isOpen()) {
+            _themeDropdown->processEvent(event);
+            return;
+        }
         _categoryMenu.processEvent(event);
         _paletteMenu.processEvent(event);
-        _themeMenu.processEvent(event);
+        _generalMapMenu.processEvent(event);
         _actionMenu.processEvent(event);
         _configMenu.processEvent(event);
         return;
     }
 
     if (const auto* mousePress = event.getIf<sf::Event::MouseButtonPressed>()) {
+        if (_themeDropdown && _themeDropdown->isOpen()) {
+            _themeDropdown->processEvent(event);
+            return;
+        }
         _categoryMenu.processEvent(event);
         _paletteMenu.processEvent(event);
-        _themeMenu.processEvent(event);
+        _generalMapMenu.processEvent(event);
         _actionMenu.processEvent(event);
         _configMenu.processEvent(event);
         handleMousePressed(*mousePress);
@@ -419,8 +497,28 @@ void MapEditorScene::render(sf::RenderTarget& target) {
         target.draw(_paletteScrollTrack);
         target.draw(_paletteScrollThumb);
     }
-    _themeMenu.render(target);
+    _generalMapMenu.render(target);
     _actionMenu.render(target);
+    sf::ConvexShape mapSizeArrow;
+    mapSizeArrow.setPointCount(3);
+    mapSizeArrow.setPoint(
+        0,
+        {1865.0f, MapSizeButtonTop + (_mapSizeExpanded ? 18.0f : 17.0f)}
+    );
+    mapSizeArrow.setPoint(
+        1,
+        {1881.0f, MapSizeButtonTop + (_mapSizeExpanded ? 18.0f : 17.0f)}
+    );
+    mapSizeArrow.setPoint(
+        2,
+        {1873.0f, MapSizeButtonTop + (_mapSizeExpanded ? 8.0f : 27.0f)}
+    );
+    mapSizeArrow.setFillColor(sf::Color::White);
+    target.draw(mapSizeArrow);
+    if (_mapSizeExpanded) {
+        target.draw(_mapSizeDropdownBackdrop);
+        _mapSizeMenu.render(target);
+    }
     if (_themeDropdown) {
         _themeDropdown->renderPopup(target);
     }
@@ -472,15 +570,16 @@ void MapEditorScene::render(sf::RenderTarget& target) {
 void MapEditorScene::setupMenus() {
     setupCategoryMenu();
     setupPaletteMenu();
-    setupThemeMenu();
+    setupGeneralMapMenu();
     setupActionMenu();
     setupInstructionsMenu();
     setupConfigMenu();
 
     _categoryMenu.setMouseOnly(true);
     _paletteMenu.setMouseOnly(true);
-    _themeMenu.setMouseOnly(true);
+    _generalMapMenu.setMouseOnly(true);
     _actionMenu.setMouseOnly(true);
+    _mapSizeMenu.setMouseOnly(true);
     _instructionsMenu.setMouseOnly(true);
     _configMenu.setMouseOnly(true);
 }
@@ -488,7 +587,7 @@ void MapEditorScene::setupMenus() {
 void MapEditorScene::setupCategoryMenu() {
     _categoryMenu.clear();
     _categoryMenu.setLayoutProperties(
-        {1610.0f, 132.0f},
+        {1600.0f, 132.0f},
         {72.0f, 42.0f},
         76.0f,
         true,
@@ -570,12 +669,12 @@ void MapEditorScene::setupPaletteMenu() {
     updateScrollVisuals();
 }
 
-void MapEditorScene::setupThemeMenu() {
-    _themeMenu.clear();
-    _themeMenu.setLayoutProperties(
-        {1605.0f, 650.0f},
+void MapEditorScene::setupGeneralMapMenu() {
+    _generalMapMenu.clear();
+    _generalMapMenu.setLayoutProperties(
+        {1605.0f, GeneralMapTop},
         {285.0f, 40.0f},
-        46.0f,
+        GeneralMapSpacing,
         false,
         sf::Color(70, 110, 150),
         16
@@ -587,18 +686,27 @@ void MapEditorScene::setupThemeMenu() {
         themeLabels.push_back(theme.label);
     }
     _themeDropdown = std::make_shared<UI::Dropdown>(
-        sf::Vector2f{1605.0f, 650.0f},
+        sf::Vector2f{1605.0f, GeneralMapTop},
         sf::Vector2f{285.0f, 40.0f},
         sf::Color(70, 110, 150),
         "Theme",
         16,
         std::move(themeLabels),
-        _themeIndex
+        _themeIndex,
+        20.0f
     );
     _themeDropdown->setSelectionCallback(
         [this](std::size_t index) { setThemeIndex(index, true); }
     );
-    _themeMenu.addButton(_themeDropdown);
+    _generalMapMenu.addButton(_themeDropdown);
+    _generalMapMenu.addButtonAuto(
+        "Map Size",
+        16,
+        std::make_unique<FunctionalCommand>(
+            "Map Size", [this]() { openMapSizeConfig(); }
+        ),
+        sf::Color(70, 110, 150)
+    );
 }
 
 void MapEditorScene::setupInstructionsMenu() {
@@ -655,6 +763,8 @@ void MapEditorScene::refreshConfigMenu() {
     _pipeWarpTargetInput.reset();
     _pipePiranhaCheck.reset();
     _pipeContentsStaticCheck.reset();
+    _mapWidthInput.reset();
+    _mapHeightInput.reset();
 
     const auto controlPosition = [this]() {
         return sf::Vector2f(
@@ -678,7 +788,66 @@ void MapEditorScene::refreshConfigMenu() {
         );
     };
 
-    if (_configMode == ConfigMode::LuckyBlock) {
+    if (_configMode == ConfigMode::MapSize) {
+        _mapWidthInput = std::make_shared<UI::TextInput>(
+            controlPosition(),
+            sf::Vector2f{680.0f, ConfigButtonHeight},
+            buttonColor,
+            "Map width (10-500)",
+            18,
+            std::to_string(_draftMapWidth)
+        );
+        _mapWidthInput->setNumericOnly(true);
+        _mapWidthInput->setMaxLength(3);
+        _mapWidthInput->setValueCallback([this](const std::string& value) {
+            if (!value.empty()) {
+                _draftMapWidth = std::clamp(
+                    std::stoi(value),
+                    MinimumMapWidth,
+                    MaximumMapWidth
+                );
+            }
+        });
+        addControl(_mapWidthInput);
+
+        _mapHeightInput = std::make_shared<UI::TextInput>(
+            controlPosition(),
+            sf::Vector2f{680.0f, ConfigButtonHeight},
+            buttonColor,
+            "Map height (8-60)",
+            18,
+            std::to_string(_draftMapHeight)
+        );
+        _mapHeightInput->setNumericOnly(true);
+        _mapHeightInput->setMaxLength(2);
+        _mapHeightInput->setValueCallback([this](const std::string& value) {
+            if (!value.empty()) {
+                _draftMapHeight = std::clamp(
+                    std::stoi(value),
+                    MinimumMapHeight,
+                    MaximumMapHeight
+                );
+            }
+        });
+        addControl(_mapHeightInput);
+
+        addButton(
+            "Apply map size",
+            std::make_unique<FunctionalCommand>(
+                "Apply map size", [this]() { applyMapSize(); }
+            )
+        );
+        addButton(
+            "Cancel",
+            std::make_unique<FunctionalCommand>(
+                "Cancel", [this]() { cancelConfig(); }
+            )
+        );
+        _configBody.setString(
+            "Set the map dimensions in cells. Existing content is preserved\n"
+            "where it still fits; shrinking removes content outside the map."
+        );
+    } else if (_configMode == ConfigMode::LuckyBlock) {
         const std::vector<std::string> itemKeys = {
             "Coin",
             "SuperMushroom",
@@ -991,6 +1160,112 @@ void MapEditorScene::openPipeConfig() {
     setStatus("Configure the pipe, then confirm placement");
 }
 
+void MapEditorScene::openMapSizeConfig() {
+    if (_mapSizeExpanded) {
+        closeMapSizeDropdown();
+        setStatus("Map size controls closed");
+        return;
+    }
+
+    _draftMapWidth = MapWidth;
+    _draftMapHeight = MapHeight;
+    _showInstructions = false;
+    _mapSizeExpanded = true;
+    refreshMapSizeDropdown();
+    setStatus("Enter width and height, then press Enter or click outside");
+}
+
+void MapEditorScene::refreshMapSizeDropdown() {
+    _mapSizeMenu.clear();
+    _mapWidthInput.reset();
+    _mapHeightInput.reset();
+    _mapSizeMenu.setLayoutProperties(
+        {1605.0f, MapSizeDropdownTop + 4.0f},
+        {285.0f, MapSizeInputHeight},
+        MapSizeInputSpacing,
+        false,
+        sf::Color(53, 91, 130),
+        15
+    );
+
+    const sf::Color inputColor(53, 91, 130);
+    _mapWidthInput = std::make_shared<UI::TextInput>(
+        sf::Vector2f{1605.0f, MapSizeDropdownTop + 4.0f},
+        sf::Vector2f{285.0f, MapSizeInputHeight},
+        inputColor,
+        "Width (10-500)",
+        15,
+        std::to_string(_draftMapWidth)
+    );
+    _mapWidthInput->setNumericOnly(true);
+    _mapWidthInput->setMaxLength(3);
+    _mapWidthInput->setValueCallback([this](const std::string& value) {
+        if (!value.empty()) {
+            _draftMapWidth = std::clamp(
+                std::stoi(value),
+                MinimumMapWidth,
+                MaximumMapWidth
+            );
+        }
+    });
+    _mapSizeMenu.addButton(_mapWidthInput);
+
+    _mapHeightInput = std::make_shared<UI::TextInput>(
+        sf::Vector2f{
+            1605.0f,
+            MapSizeDropdownTop + 4.0f + MapSizeInputSpacing
+        },
+        sf::Vector2f{285.0f, MapSizeInputHeight},
+        inputColor,
+        "Height (8-60)",
+        15,
+        std::to_string(_draftMapHeight)
+    );
+    _mapHeightInput->setNumericOnly(true);
+    _mapHeightInput->setMaxLength(2);
+    _mapHeightInput->setValueCallback([this](const std::string& value) {
+        if (!value.empty()) {
+            _draftMapHeight = std::clamp(
+                std::stoi(value),
+                MinimumMapHeight,
+                MaximumMapHeight
+            );
+        }
+    });
+    _mapSizeMenu.addButton(_mapHeightInput);
+}
+
+void MapEditorScene::tryAutoApplyMapSize() {
+    if (!_mapSizeExpanded || !_mapWidthInput || !_mapHeightInput
+        || _mapWidthInput->isEditing() || _mapHeightInput->isEditing()) {
+        return;
+    }
+
+    const std::string widthValue = _mapWidthInput->getValue();
+    const std::string heightValue = _mapHeightInput->getValue();
+    if (widthValue.empty() || heightValue.empty()) {
+        return;
+    }
+
+    const int width = std::stoi(widthValue);
+    const int height = std::stoi(heightValue);
+    if (width < MinimumMapWidth || width > MaximumMapWidth
+        || height < MinimumMapHeight || height > MaximumMapHeight) {
+        return;
+    }
+
+    _draftMapWidth = width;
+    _draftMapHeight = height;
+    applyMapSize();
+}
+
+void MapEditorScene::closeMapSizeDropdown() {
+    _mapSizeExpanded = false;
+    _mapSizeMenu.clear();
+    _mapWidthInput.reset();
+    _mapHeightInput.reset();
+}
+
 void MapEditorScene::cycleLuckyOption(std::size_t optionIndex) {
     static const std::vector<std::string> itemKeys = {
         "Coin",
@@ -1085,6 +1360,106 @@ void MapEditorScene::togglePipeContentsStatic() {
     refreshConfigMenu();
 }
 
+void MapEditorScene::resizeMap(int width, int height, bool preserveCells) {
+    width = std::clamp(width, MinimumMapWidth, MaximumMapWidth);
+    height = std::clamp(height, MinimumMapHeight, MaximumMapHeight);
+
+    const int oldWidth = MapWidth;
+    const int oldHeight = MapHeight;
+    std::vector<char> oldCells = std::move(_cells);
+    std::vector<std::optional<CellPlacement>> oldPlacements =
+        std::move(_cellPlacements);
+
+    MapWidth = width;
+    MapHeight = height;
+    _cells.assign(
+        static_cast<std::size_t>(MapWidth * MapHeight),
+        '.'
+    );
+    _cellPlacements.assign(
+        static_cast<std::size_t>(MapWidth * MapHeight),
+        std::nullopt
+    );
+
+    if (preserveCells) {
+        const int copiedWidth = std::min(oldWidth, MapWidth);
+        const int copiedHeight = std::min(oldHeight, MapHeight);
+        for (int row = 0; row < copiedHeight; ++row) {
+            for (int column = 0; column < copiedWidth; ++column) {
+                const std::size_t oldIndex = static_cast<std::size_t>(
+                    row * oldWidth + column
+                );
+                const std::size_t newIndex = static_cast<std::size_t>(
+                    row * MapWidth + column
+                );
+                if (oldPlacements[oldIndex].has_value()) {
+                    const auto footprint = placementFootprint(
+                        *oldPlacements[oldIndex],
+                        column,
+                        row
+                    );
+                    const bool fits = std::all_of(
+                        footprint.begin(),
+                        footprint.end(),
+                        [this](const sf::Vector2i& cell) {
+                            return cell.x >= 0 && cell.x < MapWidth
+                                && cell.y >= 0 && cell.y < MapHeight;
+                        }
+                    );
+                    if (!fits) {
+                        continue;
+                    }
+                    _cellPlacements[newIndex] = oldPlacements[oldIndex];
+                }
+                _cells[newIndex] = oldCells[oldIndex];
+            }
+        }
+    }
+
+    _gridBackdrop.setSize({MapWidth * CellSize, MapHeight * CellSize});
+    _gridBackdrop.setPosition({0.0f, 0.0f});
+    if (_hoverColumn >= MapWidth || _hoverRow >= MapHeight) {
+        _hoverColumn = -1;
+        _hoverRow = -1;
+    }
+    if (_dragStartColumn >= MapWidth || _dragStartRow >= MapHeight) {
+        _dragStartColumn = -1;
+        _dragStartRow = -1;
+    }
+    clampMapView();
+}
+
+void MapEditorScene::applyMapSize() {
+    const int width = std::clamp(
+        _draftMapWidth,
+        MinimumMapWidth,
+        MaximumMapWidth
+    );
+    const int height = std::clamp(
+        _draftMapHeight,
+        MinimumMapHeight,
+        MaximumMapHeight
+    );
+    if (width == MapWidth && height == MapHeight) {
+        closeMapSizeDropdown();
+        _configMode = ConfigMode::None;
+        _configMenu.clear();
+        setStatus("Map size unchanged");
+        return;
+    }
+
+    rememberBeforeEdit();
+    resizeMap(width, height, true);
+    _dirty = true;
+    closeMapSizeDropdown();
+    _configMode = ConfigMode::None;
+    _configMenu.clear();
+    setStatus(
+        "Map resized to " + std::to_string(MapWidth)
+        + " x " + std::to_string(MapHeight) + " cells"
+    );
+}
+
 void MapEditorScene::confirmConfig() {
     if (_configMode == ConfigMode::LuckyBlock
         && _draftPlacement.luckyOptions.empty()) {
@@ -1092,6 +1467,11 @@ void MapEditorScene::confirmConfig() {
             "Select at least one lucky block outcome",
             sf::Color(255, 190, 120)
         );
+        return;
+    }
+
+    if (_configMode == ConfigMode::MapSize) {
+        applyMapSize();
         return;
     }
 
@@ -1110,6 +1490,12 @@ void MapEditorScene::confirmConfig() {
 }
 
 void MapEditorScene::cancelConfig() {
+    if (_configMode == ConfigMode::MapSize) {
+        _configMode = ConfigMode::None;
+        _configMenu.clear();
+        setStatus("Map size change cancelled");
+        return;
+    }
     _configMode = ConfigMode::None;
     _configMenu.clear();
     _selectedSymbol = _selectionBeforeConfig;
@@ -1296,7 +1682,7 @@ void MapEditorScene::scrollConfig(float wheelDelta) {
 void MapEditorScene::setupActionMenu() {
     _actionMenu.clear();
     _actionMenu.setLayoutProperties(
-        {1605.0f, 730.0f},
+        {1605.0f, 752.0f},
         {285.0f, 40.0f},
         42.0f,
         false,
@@ -1309,16 +1695,14 @@ void MapEditorScene::setupActionMenu() {
         16,
         std::make_unique<FunctionalCommand>(
             "Save Map", [this]() { saveMap(); }
-        ),
-        sf::Color(53, 91, 130)
+        )
     );
     _actionMenu.addButtonAuto(
         "Save & Play",
         16,
         std::make_unique<FunctionalCommand>(
             "Save & Play", [this]() { saveAndPlay(); }
-        ),
-        sf::Color(53, 91, 130)
+        )
     );
     _actionMenu.addButtonAuto(
         "Undo",
@@ -1342,6 +1726,13 @@ void MapEditorScene::setupActionMenu() {
         )
     );
     _actionMenu.addButtonAuto(
+        "Instructions",
+        16,
+        std::make_unique<FunctionalCommand>(
+            "Instructions", [this]() { _showInstructions = true; }
+        )
+    );
+    _actionMenu.addButtonAuto(
         "Back",
         16,
         std::make_unique<FunctionalCommand>(
@@ -1350,13 +1741,6 @@ void MapEditorScene::setupActionMenu() {
                     manager->requestPopScene();
                 }
             }
-        )
-    );
-    _actionMenu.addButtonAuto(
-        "Instructions",
-        16,
-        std::make_unique<FunctionalCommand>(
-            "Instructions", [this]() { _showInstructions = true; }
         )
     );
 }
@@ -2119,7 +2503,7 @@ bool MapEditorScene::placementFits(
     return std::all_of(
         footprint.begin(),
         footprint.end(),
-        [](const sf::Vector2i& cell) {
+        [this](const sf::Vector2i& cell) {
             return cell.x >= 0 && cell.x < MapWidth
                 && cell.y >= 0 && cell.y < MapHeight;
         }
@@ -2332,10 +2716,14 @@ void MapEditorScene::undoLastEdit() {
         return;
     }
 
-    _redoHistory.push_back({_cells, _cellPlacements});
+    _redoHistory.push_back({_cells, _cellPlacements, MapWidth, MapHeight});
+    MapWidth = _undoHistory.back().width;
+    MapHeight = _undoHistory.back().height;
     _cells = std::move(_undoHistory.back().cells);
     _cellPlacements = std::move(_undoHistory.back().placements);
     _undoHistory.pop_back();
+    _gridBackdrop.setSize({MapWidth * CellSize, MapHeight * CellSize});
+    clampMapView();
     _strokeUndoCaptured = false;
     _dirty = true;
     setStatus("Last edit undone");
@@ -2347,17 +2735,21 @@ void MapEditorScene::redoLastEdit() {
         return;
     }
 
-    _undoHistory.push_back({_cells, _cellPlacements});
+    _undoHistory.push_back({_cells, _cellPlacements, MapWidth, MapHeight});
+    MapWidth = _redoHistory.back().width;
+    MapHeight = _redoHistory.back().height;
     _cells = std::move(_redoHistory.back().cells);
     _cellPlacements = std::move(_redoHistory.back().placements);
     _redoHistory.pop_back();
+    _gridBackdrop.setSize({MapWidth * CellSize, MapHeight * CellSize});
+    clampMapView();
     _strokeUndoCaptured = false;
     _dirty = true;
     setStatus("Last edit redone");
 }
 
 void MapEditorScene::rememberBeforeEdit() {
-    _undoHistory.push_back({_cells, _cellPlacements});
+    _undoHistory.push_back({_cells, _cellPlacements, MapWidth, MapHeight});
     _redoHistory.clear();
 }
 
@@ -2370,8 +2762,16 @@ bool MapEditorScene::loadSavedMap() {
     try {
         const LevelData levelData = LevelDataLoader::load(
             path,
-            MapWidth,
-            MapHeight
+            MaximumMapWidth,
+            MaximumMapHeight
+        );
+        if (levelData.layer.empty() || levelData.layer.front().empty()) {
+            throw std::runtime_error("Saved map has no cells");
+        }
+        resizeMap(
+            static_cast<int>(levelData.layer.front().size()),
+            static_cast<int>(levelData.layer.size()),
+            false
         );
         std::fill(_cells.begin(), _cells.end(), '.');
         std::fill(_cellPlacements.begin(), _cellPlacements.end(), std::nullopt);

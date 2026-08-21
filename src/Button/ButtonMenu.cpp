@@ -74,10 +74,12 @@ void ButtonMenu::addToggleButtonAuto(const std::string& text, bool initialState,
 }
 
 void ButtonMenu::processEvent(const sf::Event& event) {
-    // A button command may rebuild the menu while handling a click.
-    const std::vector<std::shared_ptr<Button>> buttons = _buttonMenu;
-    for (const std::shared_ptr<Button>& button : buttons) {
-        button->processEvent(event);
+    if (_mouseOnly) {
+        // A button command may rebuild the menu while handling a click.
+        const std::vector<std::shared_ptr<Button>> buttons = _buttonMenu;
+        for (const std::shared_ptr<Button>& button : buttons) {
+            button->processEvent(event);
+        }
     }
 
     if (!_mouseOnly) {
@@ -123,6 +125,7 @@ void ButtonMenu::processEvent(const sf::Event& event) {
                 _buttonMenu[_focusedIndex]->execute();
             }
         }
+        return;
     }
 
     if (event.is<sf::Event::MouseMoved>()) {
@@ -160,6 +163,9 @@ void ButtonMenu::setMouseOnly(bool mouseOnly) {
     if (_mouseOnly) {
         clearFocus();
     } else {
+        for (const std::shared_ptr<Button>& button : _buttonMenu) {
+            button->clearHover();
+        }
         syncFocus();
     }
 }

@@ -19,6 +19,7 @@ public:
     void setPosition(const sf::Vector2f& position);
     void setSize(const sf::Vector2f& size);
     void setFocused(bool focused);
+    void clearHover() noexcept { _isHovered = false; }
     bool isHovered() const { return _isHovered; }
     virtual void processEvent(const sf::Event& event);
     virtual void updateVisuals(float deltaTime) { (void)deltaTime; }

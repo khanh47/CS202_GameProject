@@ -83,6 +83,8 @@ private:
     struct MapSnapshot {
         std::vector<char> cells;
         std::vector<std::optional<CellPlacement>> placements;
+        int width = 0;
+        int height = 0;
     };
 
     struct PreviewSpec {
@@ -97,11 +99,16 @@ private:
     enum class ConfigMode {
         None,
         LuckyBlock,
-        Pipe
+        Pipe,
+        MapSize
     };
 
-    static constexpr int MapWidth = 80;
-    static constexpr int MapHeight = 40;
+    static constexpr int DefaultMapWidth = 80;
+    static constexpr int DefaultMapHeight = 40;
+    static constexpr int MinimumMapWidth = 10;
+    static constexpr int MaximumMapWidth = 500;
+    static constexpr int MinimumMapHeight = 8;
+    static constexpr int MaximumMapHeight = 60;
     static constexpr float CellSize = 64.0f;
     static constexpr float LogicalScreenWidth = 1920.0f;
     static constexpr float LogicalScreenHeight = 1080.0f;
@@ -110,12 +117,19 @@ private:
     static constexpr float MinimumZoom = 0.20f;
     static constexpr float MaximumZoom = 3.0f;
     static constexpr float CameraPanMargin = CellSize * 8.0f;
-    static constexpr float PaletteLeft = 1605.0f;
+    static constexpr float PaletteLeft = 1595.0f;
     static constexpr float PaletteViewportTop = 210.0f;
     static constexpr float PaletteViewportHeight = 420.0f;
     static constexpr float PaletteButtonHeight = 50.0f;
     static constexpr float PaletteButtonSpacing = 53.0f;
     static constexpr float PaletteScrollX = 1872.0f;
+    static constexpr float GeneralMapTop = 650.0f;
+    static constexpr float GeneralMapSpacing = 42.0f;
+    static constexpr float MapSizeButtonTop = GeneralMapTop + GeneralMapSpacing;
+    static constexpr float MapSizeDropdownTop = MapSizeButtonTop + 42.0f;
+    static constexpr float MapSizeDropdownHeight = 84.0f;
+    static constexpr float MapSizeInputHeight = 36.0f;
+    static constexpr float MapSizeInputSpacing = 40.0f;
     static constexpr float ConfigViewportTop = 245.0f;
     static constexpr float ConfigViewportHeight = 520.0f;
     static constexpr float ConfigButtonHeight = 42.0f;
@@ -125,7 +139,7 @@ private:
     void setupMenus();
     void setupCategoryMenu();
     void setupPaletteMenu();
-    void setupThemeMenu();
+    void setupGeneralMapMenu();
     void setupActionMenu();
     void setupInstructionsMenu();
     void setupConfigMenu();
@@ -133,6 +147,10 @@ private:
     void selectSymbol(char symbol);
     void openLuckyBlockConfig();
     void openPipeConfig();
+    void openMapSizeConfig();
+    void refreshMapSizeDropdown();
+    void tryAutoApplyMapSize();
+    void closeMapSizeDropdown();
     void cycleLuckyOption(std::size_t optionIndex);
     void cycleLuckyCapacity();
     void cyclePipeOrientation();
@@ -145,6 +163,8 @@ private:
     void togglePipeContentsStatic();
     void confirmConfig();
     void cancelConfig();
+    void applyMapSize();
+    void resizeMap(int width, int height, bool preserveCells);
     void refreshConfigMenu();
     void updateScrollVisuals();
     void scrollPalette(float wheelDelta);
@@ -232,6 +252,8 @@ private:
     static const char* categoryName(Category category);
 
     std::vector<PaletteEntry> _paletteEntries;
+    int MapWidth = DefaultMapWidth;
+    int MapHeight = DefaultMapHeight;
     std::vector<char> _cells;
     std::vector<std::optional<CellPlacement>> _cellPlacements;
     std::vector<MapSnapshot> _undoHistory;
@@ -262,13 +284,17 @@ private:
     bool _strokeUndoCaptured = false;
     bool _dirty = false;
     bool _showInstructions = false;
+    bool _mapSizeExpanded = false;
     ConfigMode _configMode = ConfigMode::None;
     CellPlacement _draftPlacement;
+    int _draftMapWidth = DefaultMapWidth;
+    int _draftMapHeight = DefaultMapHeight;
 
     UI::ButtonMenu _categoryMenu;
     UI::ButtonMenu _paletteMenu;
-    UI::ButtonMenu _themeMenu;
+    UI::ButtonMenu _generalMapMenu;
     UI::ButtonMenu _actionMenu;
+    UI::ButtonMenu _mapSizeMenu;
     UI::ButtonMenu _instructionsMenu;
     UI::ButtonMenu _configMenu;
     std::shared_ptr<UI::Dropdown> _themeDropdown;
@@ -282,6 +308,8 @@ private:
     std::shared_ptr<UI::TextInput> _pipeWarpTargetInput;
     std::shared_ptr<UI::CheckBox> _pipePiranhaCheck;
     std::shared_ptr<UI::CheckBox> _pipeContentsStaticCheck;
+    std::shared_ptr<UI::TextInput> _mapWidthInput;
+    std::shared_ptr<UI::TextInput> _mapHeightInput;
 
     sf::RectangleShape _screenBackdrop;
     sf::RectangleShape _gridBackdrop;
@@ -300,6 +328,7 @@ private:
     sf::Text _configBody;
     sf::RectangleShape _paletteScrollTrack;
     sf::RectangleShape _paletteScrollThumb;
+    sf::RectangleShape _mapSizeDropdownBackdrop;
     sf::RectangleShape _configScrollTrack;
     sf::RectangleShape _configScrollThumb;
 };
