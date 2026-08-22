@@ -106,6 +106,8 @@ public:
         if (auto* hold = getBehaviour<ShellHoldBehaviour>()) hold->setInteractHeld(held);
     }
     void toggleFlyMode() { _flyMode = !_flyMode; }
+    void setFlySpeedMultiplier(float multiplier) { _flySpeedMultiplier = multiplier; }
+    float getFlySpeedMultiplier() const { return _flySpeedMultiplier; }
     void setMoveDownHeld(bool held) { _moveDownHeld = held; }
     void setMoveUpHeld(bool held) { _moveUpHeld = held; }
     bool isMoveDownHeld() const { return _moveDownHeld; }
@@ -162,6 +164,8 @@ private:
 
     float _baseMoveSpeed = 8.0f;
     float _baseJumpSpeed = 20.0f;
+    // Multiplier for flight velocity relative to normal movement speed (increased for agile debug/cheat traversal)
+    float _flySpeedMultiplier = 2.5f;
     std::unique_ptr<PlayerState> _state;
     std::unique_ptr<IAttackStrategy> _attackStrategy;
     std::string _character = "mario";

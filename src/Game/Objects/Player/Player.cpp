@@ -369,44 +369,54 @@ void Player::updateSimulation(const float &fixedDt) {
         jumpSpeed *= _state->getJumpSpeedMultiplier();
     }
 
-    if (moveable->isMovingLeft() && !moveable->isMovingRight()) {
-        velocity.x = -moveSpeed;
-    } else if (moveable->isMovingRight() && !moveable->isMovingLeft()) {
-        velocity.x = moveSpeed;
-    } else if (!moveable->isMovingLeft() && !moveable->isMovingRight()) {
-        velocity.x = 0.f;
-    }
-
-    const bool isStartingJump = moveable->isJumping() && !moveable->isAirbone();
-    if (isStartingJump) {
-        Audio::SoundManager::getInstance().playEffect("jump");
-        velocity.y = -jumpSpeed;
-        moveable->consumeGroundForJump();
-    }
-
-    const bool isWalking = !moveable->isAirbone()
-        && (moveable->isMovingLeft() != moveable->isMovingRight());
-    if (isWalking) {
-        _footstepTimer -= fixedDt;
-        if (_footstepTimer <= 0.0f) {
-            Audio::SoundManager::getInstance().playEffect("footstep");
-            _footstepTimer = footstepIntervalSeconds;
-        }
-    } else {
-        _footstepTimer = 0.0f;
-    }
-
-
     if (_flyMode) {
+        // Zero gravity for free flight mode and apply accelerated flight velocity across both axes
         b2Body_SetGravityScale(_body->getId(), 0.0f);
+        const float flySpeed = moveSpeed * _flySpeedMultiplier;
+
+        if (moveable->isMovingLeft() && !moveable->isMovingRight()) {
+            velocity.x = -flySpeed;
+        } else if (moveable->isMovingRight() && !moveable->isMovingLeft()) {
+            velocity.x = flySpeed;
+        } else {
+            velocity.x = 0.0f;
+        }
+
         if (moveable->isJumping() || _moveUpHeld) {
-            velocity.y = -moveSpeed;
+            velocity.y = -flySpeed;
         } else if (_moveDownHeld) {
-            velocity.y = moveSpeed;
+            velocity.y = flySpeed;
         } else {
             velocity.y = 0.0f;
         }
     } else {
+        if (moveable->isMovingLeft() && !moveable->isMovingRight()) {
+            velocity.x = -moveSpeed;
+        } else if (moveable->isMovingRight() && !moveable->isMovingLeft()) {
+            velocity.x = moveSpeed;
+        } else if (!moveable->isMovingLeft() && !moveable->isMovingRight()) {
+            velocity.x = 0.f;
+        }
+
+        const bool isStartingJump = moveable->isJumping() && !moveable->isAirbone();
+        if (isStartingJump) {
+            Audio::SoundManager::getInstance().playEffect("jump");
+            velocity.y = -jumpSpeed;
+            moveable->consumeGroundForJump();
+        }
+
+        const bool isWalking = !moveable->isAirbone()
+            && (moveable->isMovingLeft() != moveable->isMovingRight());
+        if (isWalking) {
+            _footstepTimer -= fixedDt;
+            if (_footstepTimer <= 0.0f) {
+                Audio::SoundManager::getInstance().playEffect("footstep");
+                _footstepTimer = footstepIntervalSeconds;
+            }
+        } else {
+            _footstepTimer = 0.0f;
+        }
+
         b2Body_SetGravityScale(_body->getId(), 4.0f);
         if (moveable->isAirbone() || moveable->isJumping()) {
             if (velocity.y > 0) b2Body_SetGravityScale(_body->getId(), moveable->isJumping() ? 3.0f : 4.0f);
