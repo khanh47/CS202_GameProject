@@ -5,6 +5,8 @@
 #include <vector>
 
 class GameObject;
+class HeuristicAiController;
+class Player;
 class PlayerController;
 
 class WorldObjectStore {
@@ -15,6 +17,7 @@ public:
     void clear();
     void addObject(std::shared_ptr<GameObject> object);
     void addController(std::unique_ptr<PlayerController> controller);
+    void addAiController(std::unique_ptr<HeuristicAiController> controller);
 
     bool handleInput(const sf::Event& event);
     void updateSimulation(float fixedDt);
@@ -27,6 +30,8 @@ public:
 
     std::shared_ptr<GameObject> getPrimaryPlayer() const;
     bool hasLivingPlayers() const;
+    std::vector<std::shared_ptr<Player>> getPlayers() const;
+    std::vector<std::shared_ptr<Player>> getLivingPlayers() const;
     const std::vector<std::shared_ptr<GameObject>>& objects() const noexcept {
         return _objects;
     }
@@ -37,4 +42,5 @@ public:
 private:
     std::vector<std::shared_ptr<GameObject>> _objects;
     std::vector<std::unique_ptr<PlayerController>> _controllers;
+    std::vector<std::unique_ptr<HeuristicAiController>> _aiControllers;
 };

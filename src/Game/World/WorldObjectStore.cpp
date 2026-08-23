@@ -1,4 +1,5 @@
 #include "Game/World/WorldObjectStore.h"
+#include "Game/AI/HeuristicAiController.h"
 #include "Game/Objects/GameObject.h"
 #include "Game/Objects/Player/Player.h"
 #include "Game/UserInput/PlayerController.h"
@@ -8,8 +9,17 @@ WorldObjectStore::WorldObjectStore() = default;
 WorldObjectStore::~WorldObjectStore() = default;
 
 void WorldObjectStore::clear() {
+    _aiControllers.clear();
     _controllers.clear();
     _objects.clear();
+}
+
+void WorldObjectStore::addAiController(
+    std::unique_ptr<HeuristicAiController> controller
+) {
+    if (controller) {
+        _aiControllers.push_back(std::move(controller));
+    }
 }
 
 void WorldObjectStore::addObject(std::shared_ptr<GameObject> object) {
@@ -37,6 +47,13 @@ bool WorldObjectStore::handleInput(const sf::Event& event) {
 }
 
 void WorldObjectStore::updateSimulation(float fixedDt) {
+    for (const std::unique_ptr<HeuristicAiController>& controller
+         : _aiControllers) {
+        if (controller) {
+            controller->fixedUpdate(fixedDt);
+        }
+    }
+
     for (const std::shared_ptr<GameObject>& object : _objects) {
         if (object) {
             object->updateSimulation(fixedDt);
@@ -70,6 +87,12 @@ void WorldObjectStore::updateVisuals(float deltaTime) {
 }
 
 void WorldObjectStore::cleanupDestroyed() {
+    std::erase_if(
+        _aiControllers,
+        [](const std::unique_ptr<HeuristicAiController>& controller) {
+            return !controller || controller->isPlayerEliminated();
+        }
+    );
     std::erase_if(_controllers, [](const std::unique_ptr<PlayerController>& controller) {
         return !controller || controller->isPlayerPendingDestroy();
     });
@@ -121,4 +144,25 @@ bool WorldObjectStore::hasLivingPlayers() const {
         }
     }
     return false;
+}
+
+std::vector<std::shared_ptr<Player>> WorldObjectStore::getPlayers() const {
+    std::vector<std::shared_ptr<Player>> players;
+    for (const std::shared_ptr<GameObject>& object : _objects) {
+        if (auto player = std::dynamic_pointer_cast<Player>(object)) {
+            players.push_back(std::move(player));
+        }
+    }
+    return players;
+}
+
+std::vector<std::shared_ptr<Player>> WorldObjectStore::getLivingPlayers() const {
+    std::vector<std::shared_ptr<Player>> players;
+    for (const std::shared_ptr<GameObject>& object : _objects) {
+        if (auto player = std::dynamic_pointer_cast<Player>(object);
+            player && !player->isEliminated()) {
+            players.push_back(std::move(player));
+        }
+    }
+    return players;
 }

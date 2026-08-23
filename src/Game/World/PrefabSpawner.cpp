@@ -169,8 +169,12 @@ std::shared_ptr<GameObject> PrefabSpawner::spawnObjectAtPosition(
             if (auto mario = std::dynamic_pointer_cast<Player>(player)) {
                 mario->changeToNormalState();
                 mario->setGameWorld(_gameWorld);
-                if (spec.addController) {
-                    const GameSettings& settings = GameSettings::getInstance();
+                const GameSettings& settings = GameSettings::getInstance();
+                const bool isAiPlayer =
+                    settings.gameMode == GameMode::Minigame
+                    && settings.minigameMode == MinigameMode::VsAi
+                    && mario->getCharacter() == "luigi";
+                if (spec.addController && !isAiPlayer) {
                     const bool useWasd = settings.gameMode == GameMode::Solo
                         || spec.animationId == "mario";
                     _objectStore.addController(

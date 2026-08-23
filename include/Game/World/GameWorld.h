@@ -63,6 +63,8 @@ public:
     float getCellSize() const { return _worldMap.getCellSize(); }
     std::shared_ptr<GameObject> getPrimaryPlayer() const;
     bool hasLivingPlayers() const;
+    std::vector<std::shared_ptr<Player>> getPlayers() const;
+    std::vector<std::shared_ptr<Player>> getLivingPlayers() const;
     bool hasWon() const { return _levelCleared; }
     sf::FloatRect getBounds() const;
     const std::string& getLevelMusic() const { return _currentLevelData.music; }

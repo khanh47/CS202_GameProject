@@ -8,8 +8,7 @@
 MinigameModeScene::MinigameModeScene(const std::string& mapPath)
     : Scene("MinigameModeScene"),
       _mapPath(mapPath),
-      _titleText(ResourceManager::getInstance().getFont("SuperMario"), "SELECT MINIGAME MODE", 64),
-      _comingSoonText(ResourceManager::getInstance().getFont("SuperMario"), "VS AI - Coming Soon", 40) {
+      _titleText(ResourceManager::getInstance().getFont("SuperMario"), "SELECT MINIGAME MODE", 64) {
 
     _titleText.setOutlineThickness(5.0f);
     _titleText.setOutlineColor(sf::Color::Black);
@@ -22,11 +21,6 @@ MinigameModeScene::MinigameModeScene(const std::string& mapPath)
     _titleText.setFillColor(sf::Color::White
     );
 
-    sf::FloatRect soonBounds = _comingSoonText.getLocalBounds();
-    _comingSoonText.setOrigin({soonBounds.position.x + soonBounds.size.x / 2.0f,
-                               soonBounds.position.y + soonBounds.size.y / 2.0f});
-    _comingSoonText.setPosition({960.0f, 540.0f});
-    _comingSoonText.setFillColor(sf::Color::Red);
 }
 
 void MinigameModeScene::onEnter() {
@@ -35,11 +29,6 @@ void MinigameModeScene::onEnter() {
 }
 
 void MinigameModeScene::handleInput(const sf::Event& event) {
-    if (_showComingSoon) {
-        _showComingSoon = false;
-        return;
-    }
-
     if (auto* keyEvent = event.getIf<sf::Event::KeyPressed>()) {
         if (keyEvent->code == sf::Keyboard::Key::Escape) {
             if (auto mgr = getSceneManager()) {
@@ -56,9 +45,6 @@ void MinigameModeScene::render(sf::RenderTarget& target) {
     Scene::render(target);
     target.draw(_titleText);
     _buttonMenu.render(target);
-    if (_showComingSoon) {
-        target.draw(_comingSoonText);
-    }
 }
 
 void MinigameModeScene::_setupButtons() {
@@ -75,13 +61,9 @@ void MinigameModeScene::_setupButtons() {
     _buttonMenu.addButtonAuto("2 Player", std::make_unique<FunctionalCommand>(
         "2 Player", [this]() {
             GameSettings::getInstance().minigameMode = MinigameMode::TwoPlayer;
-            std::string modeDir = "2p";
-            if (GameSettings::getInstance().minigameMode == MinigameMode::VsAi) {
-                modeDir = "vsai";
-            }
             if (auto mgr = getSceneManager()) {
                 mgr->pushScene(std::make_unique<InGameScene>(
-                    "assets/datas/minigames/" + modeDir + "/" + _mapPath + ".json"));
+                    "assets/datas/minigames/2p/" + _mapPath + ".json"));
             }
         }
     ));
@@ -89,7 +71,10 @@ void MinigameModeScene::_setupButtons() {
     _buttonMenu.addButtonAuto("VS AI", std::make_unique<FunctionalCommand>(
         "VS AI", [this]() {
             GameSettings::getInstance().minigameMode = MinigameMode::VsAi;
-            _showComingSoon = true;
+            if (auto mgr = getSceneManager()) {
+                mgr->pushScene(std::make_unique<InGameScene>(
+                    "assets/datas/minigames/vsai/" + _mapPath + ".json"));
+            }
         }
     ));
 

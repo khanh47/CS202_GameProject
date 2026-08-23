@@ -1,7 +1,7 @@
 {
     "tileMapping": {
         ".": "empty",
-        "#": "brick",
+        "#": "arena_brick",
         "s": "item_super_star",
         "k": "enemy_koopa",
         "f": "item_fire_flower",

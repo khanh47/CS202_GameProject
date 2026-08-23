@@ -33,6 +33,8 @@ void InGameScene::init() {
     _winReactionActive = false;
     _gameOverActive = false;
     _winActive = false;
+    _minigameWinner.reset();
+    _minigameParticipantCount = 0;
     _gameOverTexture = &ResourceManager::getInstance().getTexture("game_over");
     _gameOverOverlay.emplace(*_gameOverTexture);
     _gameOverPrompt.emplace(
@@ -54,6 +56,9 @@ void InGameScene::init() {
     );
     _winPrompt->setFillColor(sf::Color::White);
     _gameWorld.loadLevel(_name);
+    if (GameSettings::getInstance().gameMode == GameMode::Minigame) {
+        _minigameParticipantCount = _gameWorld.getPlayers().size();
+    }
     _gameWorld.setScoreManager(&_scoreManager); // Set score manager for the game world
 
     // Configure 2D Platformer Camera System parameters
@@ -142,8 +147,12 @@ void InGameScene::updateSimulation(const float &fixedDt) {
     }
 
     _gameWorld.updateSimulation(fixedDt);
-    _checkWin();
-    _checkGameOver();
+    if (GameSettings::getInstance().gameMode == GameMode::Minigame) {
+        _checkMinigameResult();
+    } else {
+        _checkWin();
+        _checkGameOver();
+    }
 }
 
 void InGameScene::updateVisuals(float deltaTime) {
@@ -163,7 +172,12 @@ void InGameScene::updateVisuals(float deltaTime) {
     }
 
     if (_winReactionActive) {
-        auto* animatable = player ? player->getBehaviour<Animatable>() : nullptr;
+        const std::shared_ptr<Player> reactionPlayer = _minigameWinner
+            ? _minigameWinner
+            : player;
+        auto* animatable = reactionPlayer
+            ? reactionPlayer->getBehaviour<Animatable>()
+            : nullptr;
         if (!animatable || animatable->isAnimationDone()) {
             _winReactionActive = false;
             _winActive = true;
@@ -223,6 +237,51 @@ void InGameScene::_checkWin() {
         if (auto* animatable = player->getBehaviour<Animatable>()) {
             animatable->playAnimation("victory");
         }
+    }
+}
+
+void InGameScene::_checkMinigameResult() {
+    if (_winReactionActive || _winActive || _gameOverActive
+        || _minigameParticipantCount < 2) {
+        return;
+    }
+
+    const std::vector<std::shared_ptr<Player>> survivors =
+        _gameWorld.getLivingPlayers();
+    if (survivors.size() > 1) {
+        return;
+    }
+
+    if (survivors.empty()) {
+        _minigameWinner.reset();
+        if (_winTitle) {
+            _winTitle->setString("DRAW!");
+        }
+        _winActive = true;
+        return;
+    }
+
+    _minigameWinner = survivors.front();
+    if (_winTitle) {
+        _winTitle->setString(
+            _minigameWinner->getCharacter() == "luigi"
+                ? "LUIGI WINS!"
+                : "MARIO WINS!"
+        );
+    }
+    _camera.setTarget(_minigameWinner);
+
+    auto* animatable = _minigameWinner->getBehaviour<Animatable>();
+    if (!animatable) {
+        _winActive = true;
+        return;
+    }
+
+    animatable->playAnimation("victory", true);
+    if (animatable->getActiveAnimationName() == "victory") {
+        _winReactionActive = true;
+    } else {
+        _winActive = true;
     }
 }
 
