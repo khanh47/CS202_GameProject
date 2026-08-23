@@ -1,7 +1,7 @@
 {
     "tileMapping": {
         ".": "empty",
-        "#": "brick",
+        "#": "arena_brick",
         "s": "item_super_star",
         "M": "player_mario",
         "L": "player_luigi",

@@ -74,6 +74,9 @@ public:
 
     PlayerState* getState() const { return _state.get(); }
     bool isTransforming() const { return _isTransforming; }
+    bool isEliminated() const noexcept {
+        return _pendingDestroy || _isDying;
+    }
 
     // Moveable forwarding (called externally)
     bool isFacingLeft() const {

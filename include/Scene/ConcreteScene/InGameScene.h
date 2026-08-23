@@ -28,6 +28,7 @@ public:
 private:
     void _checkGameOver();
     void _checkWin();
+    void _checkMinigameResult();
     void _respawnPlayer();
     void _drawGameOverOverlay(sf::RenderTarget& target);
     void _drawWinOverlay(sf::RenderTarget& target);
@@ -36,6 +37,8 @@ private:
     bool _gameOverActive = false;
     bool _winActive = false;
     bool _starmanMusicActive = false;
+    std::size_t _minigameParticipantCount = 0;
+    std::shared_ptr<Player> _minigameWinner;
     std::optional<sf::Sprite> _gameOverOverlay;
     std::optional<sf::Text> _gameOverPrompt;
     const sf::Texture* _gameOverTexture = nullptr;

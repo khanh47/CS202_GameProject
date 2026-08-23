@@ -3,8 +3,10 @@
 #include <algorithm>
 #include <cmath>
 #include <memory>
+#include <stdexcept>
 
 #include "Game/Behaviours/Animatable.h"
+#include "Game/AI/HeuristicAiController.h"
 #include "Game/Behaviours/Invincible.h"
 #include "Game/GameSettings.h"
 #include "Game/Objects/Player/Player.h"
@@ -245,6 +247,30 @@ void GameWorld::loadLevel(const std::string& levelPath) {
     }
     for (FireballPool& pool : _fireballPools) {
         pool.setGameWorld(this);
+    }
+
+    const GameSettings& settings = GameSettings::getInstance();
+    if (settings.gameMode == GameMode::Minigame
+        && settings.minigameMode == MinigameMode::VsAi) {
+        std::shared_ptr<Player> mario;
+        std::shared_ptr<Player> luigi;
+        const std::vector<std::shared_ptr<Player>> players =
+            _objectStore.getPlayers();
+        for (const std::shared_ptr<Player>& player : players) {
+            if (player->getCharacter() == "mario") {
+                mario = player;
+            } else if (player->getCharacter() == "luigi") {
+                luigi = player;
+            }
+        }
+        if (!mario || !luigi || players.size() != 2) {
+            throw std::runtime_error(
+                "VS AI levels must contain exactly one Mario and one Luigi"
+            );
+        }
+        _objectStore.addAiController(
+            std::make_unique<HeuristicAiController>(*luigi, *mario, *this)
+        );
     }
 }
 
@@ -496,6 +522,14 @@ std::shared_ptr<GameObject> GameWorld::getPrimaryPlayer() const {
 
 bool GameWorld::hasLivingPlayers() const {
     return _objectStore.hasLivingPlayers();
+}
+
+std::vector<std::shared_ptr<Player>> GameWorld::getPlayers() const {
+    return _objectStore.getPlayers();
+}
+
+std::vector<std::shared_ptr<Player>> GameWorld::getLivingPlayers() const {
+    return _objectStore.getLivingPlayers();
 }
 
 sf::FloatRect GameWorld::getBounds() const {

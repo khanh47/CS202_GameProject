@@ -18,6 +18,4 @@ private:
     std::string _mapPath;
     UI::ButtonMenu _buttonMenu;
     sf::Text _titleText;
-    sf::Text _comingSoonText;
-    bool _showComingSoon = false;
 };

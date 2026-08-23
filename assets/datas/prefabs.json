@@ -8,6 +8,11 @@
             "solid": true,
             "breakable": true
         },
+        "arena_brick": {
+            "texture": "brick",
+            "solid": true,
+            "breakable": false
+        },
         "player_mario": {
             "kind": "player",
             "typeKey": "Player",
