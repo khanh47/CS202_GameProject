@@ -68,6 +68,7 @@ public:
     bool hasWon() const { return _levelCleared; }
     sf::FloatRect getBounds() const;
     const std::string& getLevelMusic() const { return _currentLevelData.music; }
+    const std::string& getLevelTheme() const { return _currentLevelData.theme; }
     const std::vector<std::shared_ptr<GameObject>>& objects() const { return _objectStore.objects(); }
 
     // Add getter & setter for ScoreManager

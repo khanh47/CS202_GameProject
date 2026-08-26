@@ -86,6 +86,7 @@ void from_json(const nlohmann::json& json, SpawnSpec& spec) {
     spec.breakable = json.value("breakable", false);
     spec.autotileId = json.value("autotile", "");
     spec.slopeType = json.value("slopeType", "");
+    spec.coinCapacity = json.value("coinCapacity", 10);
     spec.luckyCapacity = json.value("luckyCapacity", 1);
     if (json.contains("luckyOptions")) {
         if (!json["luckyOptions"].is_array()) {
@@ -109,6 +110,9 @@ void from_json(const nlohmann::json& json, SpawnSpec& spec) {
             }
             spec.luckyOptions.push_back(std::move(option));
         }
+    }
+    if (spec.coinCapacity <= 0) {
+        throw std::runtime_error("coinCapacity must be positive");
     }
     if (spec.luckyCapacity <= 0) {
         throw std::runtime_error("luckyCapacity must be positive");

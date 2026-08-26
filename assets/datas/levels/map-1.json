@@ -40,7 +40,7 @@
     "background": "parallax_sky",
     "prefabs": {
         "terrain_grassland": {
-            "texture": "brick",
+            "texture": "at_grassland",
             "solid": true,
             "autotile": "grassland_terrain",
             "addSeamFilter": true

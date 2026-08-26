@@ -52,6 +52,7 @@ public:
     }
 
     void renderTiles(sf::RenderTarget& target);
+    void updateVisuals(float deltaTime);
     void cleanupDestroyedTiles();
     sf::FloatRect getBounds() const;
     sf::Vector2f mapCellCenter(int column, int mapRow) const;

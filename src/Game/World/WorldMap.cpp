@@ -16,6 +16,7 @@
 #include "Game/Objects/Projectile/FireballPool.h"
 #include "Game/World/GameWorld.h"
 #include "Game/World/PrefabSpawner.h"
+#include "Game/World/ThemeAssets.h"
 #include "Physics/CollisionFilter.h"
 #include "Physics/PhysicsUnits.h"
 #include "Physics/PhysicsWorld.h"
@@ -119,6 +120,10 @@ void WorldMap::rebuild(
     bool hasAutotiles = false;
     for (const auto& [symbol, prefabId] : levelData.tileMapping) {
         SpawnSpec spec = levelData.prefabs.resolve(prefabId);
+        spec.textureKey = ThemeAssets::textureAliasFor(
+            spec,
+            levelData.theme
+        );
         hasAutotiles = hasAutotiles || !spec.autotileId.empty();
         specsBySymbol.insert_or_assign(symbol, std::move(spec));
     }
@@ -158,44 +163,65 @@ void WorldMap::rebuild(
                 continue;
             }
 
-            const SpawnSpec* spec = &specIt->second;
+            SpawnSpec resolvedSpec = specIt->second;
             const auto placementIt = placementByCell.find(
                 mapRow * _gridWidth + column
             );
             if (placementIt != placementByCell.end()) {
-                spec = placementIt->second;
+                resolvedSpec = *placementIt->second;
             }
+            resolvedSpec.textureKey = ThemeAssets::textureAliasFor(
+                resolvedSpec,
+                levelData.theme
+            );
+            const SpawnSpec& spec = resolvedSpec;
             const sf::Vector2f cellCenter = mapCellCenter(column, mapRow);
 
             const int tileId = tileIdFor(symbol);
             screenGrid[screenRow][column] = tileId;
-            if (spec->solid
-                || (spec->objectKind
-                    && *spec->objectKind == ObjectKind::Block)) {
+            if (spec.solid
+                || (spec.objectKind
+                    && *spec.objectKind == ObjectKind::Block)) {
                 solidIds.insert(tileId);
             }
 
-            if (!spec->objectKind) {
+            if (!spec.objectKind) {
                 sf::Texture* texture = nullptr;
-                if (!spec->textureKey.empty()) {
-                    texture = &resources.getTexture(spec->textureKey);
+                if (!spec.textureKey.empty()) {
+                    texture = &resources.getTexture(spec.textureKey);
                 }
-                _tileMap.setTile(column, screenRow, symbol, texture);
+                const bool isAnimatedBrick =
+                    ThemeAssets::isBrickTextureAlias(spec.textureKey);
+                _tileMap.setTile(
+                    column,
+                    screenRow,
+                    symbol,
+                    texture,
+                    isAnimatedBrick
+                        ? sf::IntRect({0, 0}, {64, 64})
+                        : sf::IntRect{},
+                    isAnimatedBrick
+                        ? TileMap::TileAnimation::Brick
+                        : TileMap::TileAnimation::None
+                );
 
-                if (spec->solid) {
+                if (spec.solid) {
                     createTileCollision(
                         physicsWorld,
                         column,
                         screenRow,
-                        spec->breakable,
-                        texture
+                        spec.breakable,
+                        texture,
+                        isAnimatedBrick
+                            ? sf::IntRect({0, 0}, {64, 64})
+                            : sf::IntRect{}
                     );
                 }
                 continue;
             }
 
             spawner.spawnAtGrid(
-                *spec,
+                spec,
                 column,
                 screenRow,
                 cellCenter
@@ -292,6 +318,10 @@ void WorldMap::rebuild(
 void WorldMap::renderTiles(sf::RenderTarget& target) {
     _tileMap.updateVisibleVertices(target.getView());
     target.draw(_tileMap);
+}
+
+void WorldMap::updateVisuals(float deltaTime) {
+    _tileMap.update(deltaTime);
 }
 
 void WorldMap::cleanupDestroyedTiles() {

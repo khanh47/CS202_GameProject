@@ -11,7 +11,7 @@ Block::Block() : GameObject() {
 
 Block::Block(sf::Texture &texture) : Block() {
     if (auto* animatable = getBehaviour<Animatable>()) {
-        animatable->configureVisuals(texture);
+        animatable->configureVisuals(texture, "brick");
     }
 }
 

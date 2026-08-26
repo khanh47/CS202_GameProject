@@ -67,6 +67,7 @@ private:
     struct CellPlacement {
         std::string prefabId;
         std::vector<LuckyOptionData> luckyOptions;
+        int coinCapacity = 10;
         int luckyCapacity = 1;
         std::string pipeOrientation = "vertical";
         std::string pipeEndSide = "top";
@@ -98,6 +99,7 @@ private:
 
     enum class ConfigMode {
         None,
+        CoinBlock,
         LuckyBlock,
         Pipe,
         MapSize
@@ -145,6 +147,7 @@ private:
     void setupConfigMenu();
     void selectCategory(Category category);
     void selectSymbol(char symbol);
+    void openCoinBlockConfig();
     void openLuckyBlockConfig();
     void openPipeConfig();
     void openMapSizeConfig();
@@ -298,6 +301,7 @@ private:
     UI::ButtonMenu _instructionsMenu;
     UI::ButtonMenu _configMenu;
     std::shared_ptr<UI::Dropdown> _themeDropdown;
+    std::shared_ptr<UI::Dropdown> _coinCapacityDropdown;
     std::shared_ptr<UI::Dropdown> _luckyCapacityDropdown;
     std::vector<std::shared_ptr<UI::CheckBox>> _luckyOptionChecks;
     std::shared_ptr<UI::Dropdown> _pipeOrientationDropdown;

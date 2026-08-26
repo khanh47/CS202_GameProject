@@ -190,7 +190,6 @@ ResourceManager::ResourceManager() {
 	_preLoadSound("assets/soundtrack/sfx/break.mp3", "break");
 	_preLoadSound("assets/soundtrack/sfx/kill.mp3", "kill");
 	
-	_preLoadTexture("assets/sprites/Brick.png", "brick");
 	_preLoadTexture("assets/sprites/Tiles/mario_and_items.png", "mario_and_items");
 	_preLoadTexture("assets/sprites/Tilesets/mutiple_tilesets.png", "mutiple_tilesets");
 	_preLoadTexture("assets/sprites/Tilesets/general_tiles.png", "general_tiles");
@@ -209,8 +208,10 @@ ResourceManager::ResourceManager() {
 	_preLoadTexture("assets/spritesheets/koopa_spritesheet.png", "koopa_spritesheet");
 	_preLoadTexture("assets/spritesheets/piranha_plant_spritesheet.png", "piranha_plant_spritesheet");
 	_preLoadTexture("assets/spritesheets/transparent_coin_strip.png", "coin_spritesheet");
-	_preLoadTexture("assets/spritesheets/transparent_coin_block_spritesheet.png", "coin_block_spritesheet");
+	_preLoadTexture("assets/spritesheets/transparent_brick_spritesheet.png", "brick_spritesheet");
+	_preLoadTexture("assets/spritesheets/transparent_underground_brick_spritesheet.png", "underground_brick_spritesheet");
 	_preLoadTexture("assets/spritesheets/transparent_lucky_block_spritesheet.png", "lucky_block_spritesheet");
+	_preLoadTexture("assets/spritesheets/transparent_underground_lucky_block_spritesheet.png", "underground_lucky_block_spritesheet");
 	_preLoadTexture("assets/spritesheets/transparent_mega_coin_strip.png", "mega_coin_spritesheet");
 	_preLoadTexture("assets/spritesheets/mega_mushroom_spritesheet.png", "mega_mushroom_spritesheet");
 

@@ -12,7 +12,7 @@ CoinBlock::CoinBlock() : Block() {
     // addBehaviour<Animatable>();
     if (auto* animatable = getBehaviour<Animatable>()) {
         animatable->configureVisuals(
-            ResourceManager::getInstance().getTexture("coin_block_spritesheet"),
+            ResourceManager::getInstance().getTexture("brick_spritesheet"),
             "coin_block"
         );
     }

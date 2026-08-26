@@ -64,6 +64,9 @@ void AnimationLibrary::preloadItemAnimationSets() {
     const AnimationSet coinSet = Animation::makeCoinAnimationSet();
     registerAnimationSet("coin", coinSet);
 
+    const AnimationSet brickSet = Animation::makeBrickAnimationSet();
+    registerAnimationSet("brick", brickSet);
+
     const AnimationSet coinBlockSet = Animation::makeCoinBlockAnimationSet();
     registerAnimationSet("coin_block", coinBlockSet);
 

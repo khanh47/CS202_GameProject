@@ -25,6 +25,7 @@ namespace Animation {
     AnimationSet makeMegaMushroomAnimationSet();
     AnimationSet makeSuperStarAnimationSet();
     AnimationSet makeCoinAnimationSet();
+    AnimationSet makeBrickAnimationSet();
     AnimationSet makeCoinBlockAnimationSet();
     AnimationSet makeLuckyBlockAnimationSet();
     AnimationSet makeFlagpoleAnimationSet();

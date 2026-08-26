@@ -1,6 +1,7 @@
 #pragma once
 
 #include <SFML/Graphics.hpp>
+#include <cstddef>
 #include <vector>
 
 // TileMap is the rendering half of the tile layer. It owns a dense character
@@ -8,6 +9,11 @@
 // bodies. WorldMap owns the separate collision representation.
 class TileMap : public sf::Drawable {
 public:
+    enum class TileAnimation {
+        None,
+        Brick
+    };
+
     TileMap();
     ~TileMap() override = default;
 
@@ -20,7 +26,8 @@ public:
         int row,
         char tileCharacter,
         const sf::Texture* texture,
-        sf::IntRect textureRect = {}
+        sf::IntRect textureRect = {},
+        TileAnimation animation = TileAnimation::None
     );
 
     // Sets an overlay texture for a specific grid cell (rendered on front/outer layer).
@@ -34,6 +41,9 @@ public:
 
     // Clears all tile data
     void clear();
+
+    // Advances animations used by the dense tile layer.
+    void update(float deltaTime);
 
     // Rebuilds the internal vertex arrays containing only visible tiles within view bounds
     void updateVisibleVertices(const sf::View& view);
@@ -53,6 +63,7 @@ private:
         char character = '.';
         const sf::Texture* texture = nullptr;
         sf::IntRect textureRect{};
+        TileAnimation animation = TileAnimation::None;
     };
 
     std::vector<TileInfo> _tiles;
@@ -63,4 +74,8 @@ private:
         sf::VertexArray vertices{sf::PrimitiveType::Triangles};
     };
     std::vector<Batch> _batches;
+
+    std::size_t _brickFrame = 0;
+    float _brickFrameElapsed = 0.0f;
+    bool _hasAnimatedTiles = false;
 };
