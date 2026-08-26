@@ -7,6 +7,7 @@
 
 #include "Game/GameSettings.h"
 #include "Game/Objects/Block/Block.h"
+#include "Game/Objects/Block/CoinBlock.h"
 #include "Game/Objects/Block/LuckyBlock.h"
 #include "Game/Objects/Block/SlopeBlock.h"
 #include "Game/Objects/Enemy/ConcreteEnemy/Koopa.h"
@@ -18,6 +19,7 @@
 #include "Game/Objects/Player/Player.h"
 #include "Game/UserInput/PlayerController.h"
 #include "Game/World/GameWorld.h"
+#include "Game/World/ThemeAssets.h"
 #include "Game/World/TerrainSeamFilter.h"
 #include "Game/World/WorldObjectStore.h"
 #include "Physics/PhysicsWorld.h"
@@ -112,9 +114,13 @@ std::shared_ptr<GameObject> PrefabSpawner::spawnObjectAtPosition(
     }
 
     sf::Texture* texture = nullptr;
-    if (!spec.textureKey.empty()) {
+    const std::string textureKey = ThemeAssets::textureAliasFor(
+        spec,
+        _gameWorld.getLevelTheme()
+    );
+    if (!textureKey.empty()) {
         texture = &ResourceManager::getInstance().getTexture(
-            spec.textureKey
+            textureKey
         );
     }
 
@@ -125,7 +131,27 @@ std::shared_ptr<GameObject> PrefabSpawner::spawnObjectAtPosition(
             if (auto typedBlock = std::dynamic_pointer_cast<Block>(block)) {
                 typedBlock->setBreakable(spec.breakable);
             }
+            if (auto coinBlock = std::dynamic_pointer_cast<CoinBlock>(block)) {
+                coinBlock->setCapacity(spec.coinCapacity);
+            }
             if (auto luckyBlock = std::dynamic_pointer_cast<LuckyBlock>(block)) {
+                if (spec.luckyTexture == "invisible") {
+                    // Keep the revealed used frame tied to the current map theme
+                    // while hiding the block until its configured capacity is spent.
+                    luckyBlock->configureTexture(
+                        ResourceManager::getInstance().getTexture(
+                            ThemeAssets::luckyBlockTextureAlias(
+                                _gameWorld.getLevelTheme()
+                            )
+                        ),
+                        false
+                    );
+                    luckyBlock->setVisualVisible(false);
+                } else if (spec.luckyTexture == "brick" && texture != nullptr) {
+                    luckyBlock->configureTexture(*texture, true);
+                } else {
+                    luckyBlock->setVisualVisible(true);
+                }
                 if (!spec.luckyOptions.empty()) {
                     luckyBlock->clearOptions();
                     for (const LuckyOptionSpec& option : spec.luckyOptions) {

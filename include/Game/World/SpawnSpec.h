@@ -39,6 +39,8 @@ struct SpawnSpec {
     std::string slopeType;
     std::shared_ptr<SpawnSpec> contents;
     std::vector<LuckyOptionSpec> luckyOptions;
+    int coinCapacity = 10;
+    std::string luckyTexture = "default";
     int luckyCapacity = 1;
 
     // Pipe-specific fields

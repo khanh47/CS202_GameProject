@@ -1,5 +1,42 @@
 #include "Animation/Animation.h"
 
+#include <cstddef>
+
+namespace {
+// Two frames per second keeps the brick shimmer readable while preserving
+// the shared phase used by static bricks and live coin blocks.
+constexpr float BrickAnimationFrameDuration = 1.0f / 3.0f;
+constexpr std::size_t BrickAnimationFrameCount = 4;
+constexpr int BrickAnimationFrameStride = 72;
+constexpr int BrickAnimationFrameSize = 64;
+
+std::size_t brickAnimationFrame = 0;
+float brickAnimationFrameElapsed = 0.0f;
+}
+
+void Animation::advanceBrickAnimationClock(float deltaTime) {
+    if (deltaTime <= 0.0f) {
+        return;
+    }
+
+    brickAnimationFrameElapsed += deltaTime;
+    while (brickAnimationFrameElapsed >= BrickAnimationFrameDuration) {
+        brickAnimationFrameElapsed -= BrickAnimationFrameDuration;
+        brickAnimationFrame =
+            (brickAnimationFrame + 1) % BrickAnimationFrameCount;
+    }
+}
+
+sf::IntRect Animation::getBrickAnimationFrameRect() {
+    return sf::IntRect(
+        {
+            static_cast<int>(brickAnimationFrame * BrickAnimationFrameStride),
+            0
+        },
+        {BrickAnimationFrameSize, BrickAnimationFrameSize}
+    );
+}
+
 AnimationClip Animation::createLinearClip(
     sf::Vector2i startPosition,
     sf::Vector2i frameSize,
@@ -484,18 +521,18 @@ AnimationSet Animation::makeCoinAnimationSet() {
     return set;
 }
 
-AnimationSet Animation::makeCoinBlockAnimationSet() {
+AnimationSet Animation::makeBrickAnimationSet() {
     AnimationSet set;
     set.defaultClip = "shining";
-    
+
     set.clips.emplace(
-        "shining", 
-        Animation::createLinearClip (
+        "shining",
+        Animation::createLinearClip(
             {0, 0},
             {64, 64},
-            4, 
+            4,
             {72, 0},
-            1.0f / 4.0f,
+            BrickAnimationFrameDuration,
             true
         )
     );
@@ -513,6 +550,10 @@ AnimationSet Animation::makeCoinBlockAnimationSet() {
     );
 
     return set;
+}
+
+AnimationSet Animation::makeCoinBlockAnimationSet() {
+    return makeBrickAnimationSet();
 }
 
 AnimationSet Animation::makeLuckyBlockAnimationSet() {

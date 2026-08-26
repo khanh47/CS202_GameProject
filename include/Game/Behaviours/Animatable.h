@@ -42,6 +42,7 @@ private:
 
     std::shared_ptr<sf::Texture> _spritesheet;
     Animator _animator;
+    std::string _animationSetId;
     std::optional<sf::Sprite> _sprite;
     sf::Vector2f _visualScale{1.0f, 1.0f};
     float _spriteOffsetY{0.0f};

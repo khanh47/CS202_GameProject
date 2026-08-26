@@ -4,12 +4,14 @@
             "solid": false
         },
         "brick": {
-            "texture": "brick",
+            "texture": "brick_spritesheet",
+            "animationId": "brick",
             "solid": true,
             "breakable": true
         },
         "arena_brick": {
-            "texture": "brick",
+            "texture": "brick_spritesheet",
+            "animationId": "brick",
             "solid": true,
             "breakable": false
         },
@@ -205,17 +207,20 @@
         "block_coin": {
             "kind": "block",
             "typeKey": "CoinBlock",
-            "texture": "coin_block_spritesheet",
+            "texture": "brick_spritesheet",
+            "animationId": "coin_block",
             "size": [
                 64,
                 64
             ],
-            "addSeamFilter": true
+            "addSeamFilter": true,
+            "coinCapacity": 10
         },
         "block_lucky": {
             "kind": "block",
             "typeKey": "LuckyBlock",
             "texture": "lucky_block_spritesheet",
+            "luckyTexture": "default",
             "size": [
                 64,
                 64

@@ -2,6 +2,8 @@
 #include <cmath>
 #include <algorithm>
 
+#include "Animation/Animation.h"
+
 TileMap::TileMap() = default;
 
 void TileMap::initialize(int gridWidth, int gridHeight, float cellSize) {
@@ -13,6 +15,7 @@ void TileMap::initialize(int gridWidth, int gridHeight, float cellSize) {
         * static_cast<std::size_t>(_gridHeight);
     _tiles.assign(cellCount, TileInfo{});
     _overlayTiles.assign(cellCount, TileInfo{});
+    _batches.clear();
 }
 
 void TileMap::setTile(
@@ -20,13 +23,19 @@ void TileMap::setTile(
     int row,
     char tileCharacter,
     const sf::Texture* texture,
-    sf::IntRect textureRect
+    sf::IntRect textureRect,
+    TileAnimation animation
 ) {
     if (row >= 0 && row < _gridHeight && col >= 0 && col < _gridWidth) {
         const std::size_t index = static_cast<std::size_t>(row)
             * static_cast<std::size_t>(_gridWidth)
             + static_cast<std::size_t>(col);
-        _tiles[index] = TileInfo{tileCharacter, texture, textureRect};
+        _tiles[index] = TileInfo{
+            tileCharacter,
+            texture,
+            textureRect,
+            animation
+        };
     }
 }
 
@@ -51,6 +60,10 @@ void TileMap::clear() {
     _tiles.assign(cellCount, TileInfo{});
     _overlayTiles.assign(cellCount, TileInfo{});
     _batches.clear();
+}
+
+void TileMap::update(float deltaTime) {
+    Animation::advanceBrickAnimationClock(deltaTime);
 }
 
 void TileMap::updateVisibleVertices(const sf::View& view) {
@@ -88,7 +101,9 @@ void TileMap::updateVisibleVertices(const sf::View& view) {
 
                 const sf::Texture* texture = tile.texture;
                 sf::IntRect textureRect = tile.textureRect;
-                if (textureRect.size.x <= 0 || textureRect.size.y <= 0) {
+                if (tile.animation == TileAnimation::Brick) {
+                    textureRect = Animation::getBrickAnimationFrameRect();
+                } else if (textureRect.size.x <= 0 || textureRect.size.y <= 0) {
                     textureRect = sf::IntRect(
                         {0, 0},
                         {

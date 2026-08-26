@@ -12,6 +12,7 @@
 
 #include <nlohmann/json.hpp>
 
+#include "Animation/Animation.h"
 #include "Animation/AnimationLibrary.h"
 #include "Button/CheckBox.h"
 #include "Button/Dropdown.h"
@@ -19,6 +20,7 @@
 #include "Commands/FunctionalCommand.h"
 #include "Game/Objects/Pipe/Pipe.h"
 #include "Game/World/LevelDataLoader.h"
+#include "Game/World/ThemeAssets.h"
 #include "ResourceManager.h"
 #include "Scene/ConcreteScene/InGameScene.h"
 #include "Scene/SceneManager.h"
@@ -546,6 +548,12 @@ void MapEditorScene::render(sf::RenderTarget& target) {
         });
         target.setView(configClipView);
         _configMenu.render(target);
+        if (_coinCapacityDropdown) {
+            _coinCapacityDropdown->renderPopup(target);
+        }
+        if (_luckyTextureDropdown) {
+            _luckyTextureDropdown->renderPopup(target);
+        }
         if (_luckyCapacityDropdown) {
             _luckyCapacityDropdown->renderPopup(target);
         }
@@ -753,6 +761,8 @@ void MapEditorScene::refreshConfigMenu() {
     );
 
     const sf::Color buttonColor(53, 91, 130);
+    _coinCapacityDropdown.reset();
+    _luckyTextureDropdown.reset();
     _luckyCapacityDropdown.reset();
     _luckyOptionChecks.clear();
     _pipeOrientationDropdown.reset();
@@ -847,6 +857,53 @@ void MapEditorScene::refreshConfigMenu() {
             "Set the map dimensions in cells. Existing content is preserved\n"
             "where it still fits; shrinking removes content outside the map."
         );
+    } else if (_configMode == ConfigMode::CoinBlock) {
+        _coinCapacityDropdown = std::make_shared<UI::Dropdown>(
+            controlPosition(),
+            sf::Vector2f{680.0f, ConfigButtonHeight},
+            buttonColor,
+            "Maximum coins",
+            18,
+            std::vector<std::string>{
+                "1 coin",
+                "2 coins",
+                "3 coins",
+                "4 coins",
+                "5 coins",
+                "6 coins",
+                "7 coins",
+                "8 coins",
+                "9 coins",
+                "10 coins"
+            },
+            static_cast<std::size_t>(std::clamp(
+                _draftPlacement.coinCapacity - 1,
+                0,
+                9
+            ))
+        );
+        _coinCapacityDropdown->setSelectionCallback(
+            [this](std::size_t index) {
+                _draftPlacement.coinCapacity = static_cast<int>(index) + 1;
+            }
+        );
+        addControl(_coinCapacityDropdown);
+        addButton(
+            "Confirm placement",
+            std::make_unique<FunctionalCommand>(
+                "Confirm placement", [this]() { confirmConfig(); }
+            )
+        );
+        addButton(
+            "Cancel",
+            std::make_unique<FunctionalCommand>(
+                "Cancel", [this]() { cancelConfig(); }
+            )
+        );
+        _configBody.setString(
+            "Choose how many coins this coin block can release.\n"
+            "The block becomes empty after the maximum is reached."
+        );
     } else if (_configMode == ConfigMode::LuckyBlock) {
         const std::vector<std::string> itemKeys = {
             "Coin",
@@ -888,6 +945,31 @@ void MapEditorScene::refreshConfigMenu() {
             _luckyOptionChecks.push_back(checkbox);
             addControl(checkbox);
         }
+        const std::size_t luckyTextureIndex =
+            _draftPlacement.luckyTexture == "invisible"
+            ? 1
+            : (_draftPlacement.luckyTexture == "brick" ? 2 : 0);
+        _luckyTextureDropdown = std::make_shared<UI::Dropdown>(
+            controlPosition(),
+            sf::Vector2f{680.0f, ConfigButtonHeight},
+            buttonColor,
+            "Texture",
+            18,
+            std::vector<std::string>{
+                "Normal lucky block",
+                "Invisible lucky block",
+                "Brick texture lucky block"
+            },
+            luckyTextureIndex
+        );
+        _luckyTextureDropdown->setSelectionCallback(
+            [this](std::size_t index) {
+                _draftPlacement.luckyTexture = index == 1
+                    ? "invisible"
+                    : (index == 2 ? "brick" : "default");
+            }
+        );
+        addControl(_luckyTextureDropdown);
         _luckyCapacityDropdown = std::make_shared<UI::Dropdown>(
             controlPosition(),
             sf::Vector2f{680.0f, ConfigButtonHeight},
@@ -1136,10 +1218,22 @@ void MapEditorScene::openLuckyBlockConfig() {
         {"FireFlower", 1.0f},
         {"SuperStar", 1.0f}
     };
+    _draftPlacement.luckyTexture = "default";
     _draftPlacement.luckyCapacity = 1;
     _showInstructions = false;
     refreshConfigMenu();
     setStatus("Configure the lucky block, then confirm placement");
+}
+
+void MapEditorScene::openCoinBlockConfig() {
+    _configMode = ConfigMode::CoinBlock;
+    _configScrollOffset = 0.0f;
+    _draftPlacement = CellPlacement{};
+    _draftPlacement.prefabId = "block_coin";
+    _draftPlacement.coinCapacity = 10;
+    _showInstructions = false;
+    refreshConfigMenu();
+    setStatus("Configure the coin block, then confirm placement");
 }
 
 void MapEditorScene::openPipeConfig() {
@@ -1476,7 +1570,13 @@ void MapEditorScene::confirmConfig() {
     }
 
     _selectedPlacement = _draftPlacement;
-    _selectedSymbol = _configMode == ConfigMode::LuckyBlock ? '?' : 'V';
+    if (_configMode == ConfigMode::LuckyBlock) {
+        _selectedSymbol = '?';
+    } else if (_configMode == ConfigMode::CoinBlock) {
+        _selectedSymbol = 'B';
+    } else {
+        _selectedSymbol = 'V';
+    }
     const PaletteEntry* entry = findEntry(_selectedSymbol);
     if (entry != nullptr) {
         _selectedText.setString(
@@ -2136,7 +2236,8 @@ MapEditorScene::PreviewSpec MapEditorScene::previewSpecFor(
     spec.size = {CellSize, CellSize};
 
     if (entry.prefabId == "brick") {
-        spec.textureKey = "brick";
+        spec.textureKey = ThemeAssets::brickTextureAlias(_themeKey);
+        spec.animationId = "brick";
     } else if (entry.prefabId == "terrain_grassland") {
         if (_themeKey == "underground") {
             spec.textureKey = "at_underground";
@@ -2146,10 +2247,10 @@ MapEditorScene::PreviewSpec MapEditorScene::previewSpecFor(
             spec.textureRect = {{52, 86}, {16, 16}};
         }
     } else if (entry.prefabId == "block_coin") {
-        spec.textureKey = "coin_block_spritesheet";
+        spec.textureKey = ThemeAssets::brickTextureAlias(_themeKey);
         spec.animationId = "coin_block";
     } else if (entry.prefabId == "block_lucky") {
-        spec.textureKey = "lucky_block_spritesheet";
+        spec.textureKey = ThemeAssets::luckyBlockTextureAlias(_themeKey);
         spec.animationId = "lucky_block";
     } else if (entry.prefabId == "item_coin") {
         spec.textureKey = "coin_spritesheet";
@@ -2239,19 +2340,25 @@ sf::IntRect MapEditorScene::firstAnimationFrame(
     return {};
 }
 
-void MapEditorScene::drawEntrySprite(
+void MapEditorScene::drawPreviewSprite(
     sf::RenderTarget& target,
-    const PaletteEntry& entry,
+    const PreviewSpec& spec,
     sf::Vector2f cellCenter
 ) const {
-    const PreviewSpec spec = previewSpecFor(entry);
     try {
         sf::Texture& texture = ResourceManager::getInstance().getTexture(
             spec.textureKey
         );
-        sf::IntRect frame = spec.animationId.empty()
-            ? spec.textureRect
-            : firstAnimationFrame(spec.animationId);
+        const bool isSynchronizedBrickAnimation =
+            spec.animationId == "brick" || spec.animationId == "coin_block";
+        sf::IntRect frame;
+        if (isSynchronizedBrickAnimation) {
+            frame = Animation::getBrickAnimationFrameRect();
+        } else if (spec.animationId.empty()) {
+            frame = spec.textureRect;
+        } else {
+            frame = firstAnimationFrame(spec.animationId);
+        }
         if (frame.size.x <= 0 || frame.size.y <= 0) {
             frame = {
                 {0, 0},
@@ -2285,6 +2392,51 @@ void MapEditorScene::drawEntrySprite(
     }
 }
 
+void MapEditorScene::drawEntrySprite(
+    sf::RenderTarget& target,
+    const PaletteEntry& entry,
+    sf::Vector2f cellCenter
+) const {
+    drawPreviewSprite(target, previewSpecFor(entry), cellCenter);
+}
+
+void MapEditorScene::drawInvisibleLuckyBlockMarker(
+    sf::RenderTarget& target,
+    int column,
+    int row
+) const {
+    const sf::Vector2f cellTopLeft{
+        column * CellSize,
+        row * CellSize
+    };
+
+    sf::RectangleShape marker({CellSize - 8.0f, CellSize - 8.0f});
+    marker.setPosition(cellTopLeft + sf::Vector2f{4.0f, 4.0f});
+    marker.setFillColor(sf::Color(80, 180, 255, 35));
+    marker.setOutlineThickness(2.0f);
+    marker.setOutlineColor(sf::Color(150, 220, 255, 220));
+    target.draw(marker);
+
+    sf::Text markerLabel(
+        ResourceManager::getInstance().getFont("moon_get"),
+        "INV",
+        14
+    );
+    const sf::FloatRect labelBounds = markerLabel.getLocalBounds();
+    markerLabel.setOrigin({
+        labelBounds.position.x + labelBounds.size.x * 0.5f,
+        labelBounds.position.y + labelBounds.size.y * 0.5f
+    });
+    markerLabel.setPosition({
+        cellTopLeft.x + CellSize * 0.5f,
+        cellTopLeft.y + CellSize * 0.5f
+    });
+    markerLabel.setFillColor(sf::Color(225, 245, 255));
+    markerLabel.setOutlineColor(sf::Color(10, 35, 60));
+    markerLabel.setOutlineThickness(1.0f);
+    target.draw(markerLabel);
+}
+
 void MapEditorScene::drawPlacement(
     sf::RenderTarget& target,
     const CellPlacement& placement,
@@ -2297,16 +2449,29 @@ void MapEditorScene::drawPlacement(
         return;
     }
     const PaletteEntry* entry = findEntry(symbol);
-    if (entry != nullptr) {
-        drawEntrySprite(
+    if (entry == nullptr) {
+        return;
+    }
+
+    PreviewSpec spec = previewSpecFor(*entry);
+    if (placement.prefabId == "block_lucky") {
+        if (placement.luckyTexture == "invisible") {
+            drawInvisibleLuckyBlockMarker(target, column, row);
+            return;
+        }
+        if (placement.luckyTexture == "brick") {
+            spec.textureKey = ThemeAssets::brickTextureAlias(_themeKey);
+            spec.animationId = "brick";
+        }
+    }
+    drawPreviewSprite(
             target,
-            *entry,
+            spec,
             {
                 column * CellSize + CellSize * 0.5f,
                 row * CellSize + CellSize * 0.5f
             }
-        );
-    }
+    );
 }
 
 void MapEditorScene::drawPipePreview(
@@ -2573,6 +2738,12 @@ void MapEditorScene::selectSymbol(char symbol) {
         return;
     }
 
+    if (entry->prefabId == "block_coin") {
+        _selectionBeforeConfig = previousSymbol;
+        _placementBeforeConfig = previousPlacement;
+        openCoinBlockConfig();
+        return;
+    }
     if (entry->prefabId == "block_lucky") {
         _selectionBeforeConfig = previousSymbol;
         _placementBeforeConfig = previousPlacement;
@@ -2799,8 +2970,15 @@ bool MapEditorScene::loadSavedMap() {
             }
 
             CellPlacement placement;
-            if (savedPlacement.spec.typeKey == "LuckyBlock") {
+            if (savedPlacement.spec.typeKey == "CoinBlock") {
+                placement.prefabId = "block_coin";
+                placement.coinCapacity = savedPlacement.spec.coinCapacity;
+                _cells[static_cast<std::size_t>(
+                    savedPlacement.row * MapWidth + savedPlacement.column
+                )] = 'B';
+            } else if (savedPlacement.spec.typeKey == "LuckyBlock") {
                 placement.prefabId = "block_lucky";
+                placement.luckyTexture = savedPlacement.spec.luckyTexture;
                 placement.luckyCapacity = savedPlacement.spec.luckyCapacity;
                 for (const LuckyOptionSpec& option : savedPlacement.spec.luckyOptions) {
                     placement.luckyOptions.push_back({
@@ -2890,11 +3068,25 @@ bool MapEditorScene::saveMap() {
             index / static_cast<std::size_t>(MapWidth)
         );
         json spec;
-        if (placement.prefabId == "block_lucky") {
+        if (placement.prefabId == "block_coin") {
+            spec = {
+                {"kind", "block"},
+                {"typeKey", "CoinBlock"},
+                {"texture", ThemeAssets::brickTextureAlias(_themeKey)},
+                {"animationId", "coin_block"},
+                {"size", {64, 64}},
+                {"addSeamFilter", true},
+                {"coinCapacity", placement.coinCapacity}
+            };
+        } else if (placement.prefabId == "block_lucky") {
             spec = {
                 {"kind", "block"},
                 {"typeKey", "LuckyBlock"},
-                {"texture", "lucky_block_spritesheet"},
+                {"texture", ThemeAssets::luckyBlockTextureFor(
+                    placement.luckyTexture,
+                    _themeKey
+                )},
+                {"luckyTexture", placement.luckyTexture},
                 {"size", {64, 64}},
                 {"addSeamFilter", true},
                 {"luckyCapacity", placement.luckyCapacity},

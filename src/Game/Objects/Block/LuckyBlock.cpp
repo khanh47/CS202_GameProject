@@ -31,6 +31,19 @@ LuckyBlock::LuckyBlock(sf::Texture &texture) : Block() {
 
 LuckyBlock::~LuckyBlock() = default;
 
+void LuckyBlock::configureTexture(
+    sf::Texture& texture,
+    bool useBrickAnimation
+) {
+    _visualVisible = true;
+    if (auto* animatable = getBehaviour<Animatable>()) {
+        animatable->configureVisuals(
+            texture,
+            useBrickAnimation ? "brick" : "lucky_block"
+        );
+    }
+}
+
 void LuckyBlock::setupDefaultItemPool() {
     clearOptions();
     // Default optional objects pool with weighted probability:
@@ -144,8 +157,12 @@ void LuckyBlock::onContact(GameObject& other, const b2ContactData& contactData, 
             // If empty, switch animation to empty block
             auto* animatable = getBehaviour<Animatable>();
             if (capacity <= 0) {
-                if(animatable)
+                // Invisible lucky blocks reveal their used texture once their
+                // configured capacity has been exhausted.
+                _visualVisible = true;
+                if (animatable) {
                     animatable->playAnimation("empty");
+                }
             }
         }
     }
@@ -187,19 +204,21 @@ void LuckyBlock::onRenderVisual(sf::RenderTarget& target, const sf::Vector2f& po
     sf::Vector2f renderPos = position;
 
     // Apply bump displacement and scale impulse when hit
-    if (auto* animatable = getBehaviour<Animatable>()) {
-        if (_bumpTimer > 0.0f) {
-            float progress = 1.0f - (_bumpTimer / 0.15f); // 0.0 to 1.0
-            float bumpOffset = -std::sin(progress * 3.14159f) * 14.0f; // Bumps upward by 14px
-            float scale = 1.0f + std::sin(progress * 3.14159f) * 0.25f; // Scales up to 1.25x
+    if (_visualVisible) {
+        if (auto* animatable = getBehaviour<Animatable>()) {
+            if (_bumpTimer > 0.0f) {
+                float progress = 1.0f - (_bumpTimer / 0.15f); // 0.0 to 1.0
+                float bumpOffset = -std::sin(progress * 3.14159f) * 14.0f; // Bumps upward by 14px
+                float scale = 1.0f + std::sin(progress * 3.14159f) * 0.25f; // Scales up to 1.25x
 
-            renderPos.y += bumpOffset;
-            animatable->setVisualScale({scale, scale});
-        } else {
-            animatable->setVisualScale({1.0f, 1.0f});
+                renderPos.y += bumpOffset;
+                animatable->setVisualScale({scale, scale});
+            } else {
+                animatable->setVisualScale({1.0f, 1.0f});
+            }
+
+            animatable->renderVisualState(target, renderPos, angleDegrees);
         }
-
-        animatable->renderVisualState(target, renderPos, angleDegrees);
     }
 
     // Render the coin popping out of the block

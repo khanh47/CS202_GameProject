@@ -65,6 +65,9 @@ public:
         capacity = value > 0 ? value : 1;
     }
 
+    void configureTexture(sf::Texture& texture, bool useBrickAnimation);
+    void setVisualVisible(bool visible) noexcept { _visualVisible = visible; }
+
 protected:
     void onCreateShapeDef(b2ShapeDef& def) override;
     void onUpdateVisuals(float deltaTime) override;
@@ -77,6 +80,7 @@ private:
     int capacity = 1;          // Number of items the block can give
     float _hitCooldown = 0.0f;  // Cooldown time after being hit
     float _bumpTimer = 0.0f;    // Bumping/enlarging visual effect timer
+    bool _visualVisible = true;
     BouncingCoin _bouncingCoin; // Animated coin popping out
     std::weak_ptr<Item> _emergingPowerup;
     std::vector<ItemOption> _itemOptions;

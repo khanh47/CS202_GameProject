@@ -1,6 +1,7 @@
 #include "Game/Behaviours/Animatable.h"
 #include  "iostream"
 
+#include "Animation/Animation.h"
 #include "Animation/AnimationLibrary.h"
 
 #include <SFML/System/Angle.hpp>
@@ -15,6 +16,7 @@ Animatable::Animatable(sf::Texture &texture, const std::string& animationSetId) 
 }
 
 void Animatable::configureVisuals(sf::Texture& texture) {
+    _animationSetId.clear();
     bindTexture(texture);
     _animator = Animator();
 }
@@ -26,6 +28,7 @@ void Animatable::setTextureRect(const sf::IntRect& rect) {
 }
 
 void Animatable::configureVisuals(sf::Texture& texture, const std::string& animationSetId) {
+    _animationSetId = animationSetId;
     bindTexture(texture);
     try {
         std::shared_ptr<AnimationSet> animationSet = std::make_shared<AnimationSet>(
@@ -41,15 +44,21 @@ void Animatable::configureVisuals(sf::Texture& texture, const std::string& anima
         }
     } catch (const std::exception& e) {
         std::cout << "Animation EXCEPTION: " << e.what() << std::endl;
+        _animationSetId.clear();
         _animator = Animator();
     }
 }
 
 void Animatable::updateVisualState(float deltaTime, const sf::Vector2f& hitboxPixels, bool facingLeft) {
+    const bool usesSynchronizedBrickAnimation =
+        (_animationSetId == "brick" || _animationSetId == "coin_block")
+        && _animator.getActiveAnimationName() == "shining";
     const bool frameChanged = _animator.update(deltaTime);
 
     if (_sprite && _animator.hasActiveAnimation()) {
-        const sf::IntRect currentRect = _animator.getCurrentTextureRect();
+        const sf::IntRect currentRect = usesSynchronizedBrickAnimation
+            ? Animation::getBrickAnimationFrameRect()
+            : _animator.getCurrentTextureRect();
         if (frameChanged || _sprite->getTextureRect() != currentRect) {
             _sprite->setTextureRect(currentRect);
         }

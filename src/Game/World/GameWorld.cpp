@@ -151,6 +151,8 @@ void GameWorld::updateSimulation(const float& fixedDt) {
 }
 
 void GameWorld::updateVisuals(float deltaTime) {
+    _worldMap.updateVisuals(deltaTime);
+
     bool pipeWarpActive = false;
     for (const std::shared_ptr<GameObject>& object : _objectStore.objects()) {
         if (const auto player = std::dynamic_pointer_cast<Player>(object);
