@@ -75,7 +75,4 @@ private:
     };
     std::vector<Batch> _batches;
 
-    std::size_t _brickFrame = 0;
-    float _brickFrameElapsed = 0.0f;
-    bool _hasAnimatedTiles = false;
 };

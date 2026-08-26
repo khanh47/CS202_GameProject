@@ -4,6 +4,9 @@
 #include "Animation/AnimationSet.h"
 
 namespace Animation {
+    void advanceBrickAnimationClock(float deltaTime);
+    sf::IntRect getBrickAnimationFrameRect();
+
     AnimationClip createLinearClip(
         sf::Vector2i startPosition,
         sf::Vector2i frameSize,

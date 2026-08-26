@@ -12,6 +12,7 @@
 
 #include <nlohmann/json.hpp>
 
+#include "Animation/Animation.h"
 #include "Animation/AnimationLibrary.h"
 #include "Button/CheckBox.h"
 #include "Button/Dropdown.h"
@@ -2319,9 +2320,16 @@ void MapEditorScene::drawEntrySprite(
         sf::Texture& texture = ResourceManager::getInstance().getTexture(
             spec.textureKey
         );
-        sf::IntRect frame = spec.animationId.empty()
-            ? spec.textureRect
-            : firstAnimationFrame(spec.animationId);
+        const bool isSynchronizedBrickAnimation =
+            spec.animationId == "brick" || spec.animationId == "coin_block";
+        sf::IntRect frame;
+        if (isSynchronizedBrickAnimation) {
+            frame = Animation::getBrickAnimationFrameRect();
+        } else if (spec.animationId.empty()) {
+            frame = spec.textureRect;
+        } else {
+            frame = firstAnimationFrame(spec.animationId);
+        }
         if (frame.size.x <= 0 || frame.size.y <= 0) {
             frame = {
                 {0, 0},
