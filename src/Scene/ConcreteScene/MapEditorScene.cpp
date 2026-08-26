@@ -1108,15 +1108,15 @@ void MapEditorScene::refreshConfigMenu() {
             controlPosition(),
             sf::Vector2f{680.0f, ConfigButtonHeight},
             buttonColor,
-            "Warp ID (1-9)",
+            "Warp ID (1-20)",
             18,
             std::to_string(_draftPlacement.warpID)
         );
         _pipeWarpIDInput->setNumericOnly(true);
-        _pipeWarpIDInput->setMaxLength(1);
+        _pipeWarpIDInput->setMaxLength(2);
         _pipeWarpIDInput->setValueCallback([this](const std::string& value) {
             if (!value.empty()) {
-                _draftPlacement.warpID = std::clamp(std::stoi(value), 1, 9);
+                _draftPlacement.warpID = std::clamp(std::stoi(value), 1, 20);
             }
         });
         addControl(_pipeWarpIDInput);
@@ -1125,15 +1125,15 @@ void MapEditorScene::refreshConfigMenu() {
             controlPosition(),
             sf::Vector2f{680.0f, ConfigButtonHeight},
             buttonColor,
-            "Warp target (1-9)",
+            "Warp target (1-20)",
             18,
             std::to_string(_draftPlacement.warpTarget)
         );
         _pipeWarpTargetInput->setNumericOnly(true);
-        _pipeWarpTargetInput->setMaxLength(1);
+        _pipeWarpTargetInput->setMaxLength(2);
         _pipeWarpTargetInput->setValueCallback([this](const std::string& value) {
             if (!value.empty()) {
-                _draftPlacement.warpTarget = std::clamp(std::stoi(value), 1, 9);
+                _draftPlacement.warpTarget = std::clamp(std::stoi(value), 1, 20);
             }
         });
         addControl(_pipeWarpTargetInput);
@@ -1433,12 +1433,12 @@ void MapEditorScene::togglePipeWarp() {
 }
 
 void MapEditorScene::cyclePipeWarpID() {
-    _draftPlacement.warpID = _draftPlacement.warpID % 9 + 1;
+    _draftPlacement.warpID = _draftPlacement.warpID % 20 + 1;
     refreshConfigMenu();
 }
 
 void MapEditorScene::cyclePipeWarpTarget() {
-    _draftPlacement.warpTarget = _draftPlacement.warpTarget % 9 + 1;
+    _draftPlacement.warpTarget = _draftPlacement.warpTarget % 20 + 1;
     refreshConfigMenu();
 }
 
