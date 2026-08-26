@@ -5,6 +5,7 @@
 #endif
 
 #include "Game/GameSettings.h"
+#include "Game/Snapshot/SaveLoadGame.h"
 
 App::App() : window(sf::VideoMode({1920, 1080}), "SUPER MARIO") {
 #ifdef _WIN32
@@ -34,7 +35,13 @@ void App::run() {
 void App::processEvents() {
     while (const std::optional<sf::Event> event = window.pollEvent()) {
         if (event->is<sf::Event::Closed>()) {
+            if (SaveLoadGame::getInstance().hasUnsavedSession()
+                && manager->getSceneName() != "ExitConfirmScene") {
+                manager->pushSceneByName("EXIT_CONFIRM");
+                continue;
+            }
             window.close();
+            continue;
         }
         manager->processEvents(*event);
     }

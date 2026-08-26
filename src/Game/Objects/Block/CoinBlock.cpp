@@ -27,6 +27,15 @@ CoinBlock::CoinBlock(sf::Texture &texture) : Block() {
 
 CoinBlock::~CoinBlock() = default;
 
+void CoinBlock::restoreCapacity(int value) noexcept {
+    capacity = std::max(value, 0);
+    if (capacity <= 0) {
+        if (auto* animatable = getBehaviour<Animatable>()) {
+            animatable->playAnimation("empty");
+        }
+    }
+}
+
 void CoinBlock::onCreateShapeDef(b2ShapeDef& def) {
     def.density = 10000.0f;
     def.material.friction = 0.0f;

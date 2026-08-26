@@ -213,7 +213,9 @@ void GameWorld::handleSensors(b2SensorEvents sensorEvents) {
 
 void GameWorld::loadMap(const LevelData& levelData) {
     _currentLevelData = levelData;
+    _nextRuntimeObjectId = 0;
     _levelCleared = false;
+    _checkpointPos = nullptr;
     _blockBreakEffects.clear();
     _worldMap.rebuild(
         levelData,
@@ -328,6 +330,16 @@ void GameWorld::respawnPlayer() {
                     cellPosition
                 );
             if (object) {
+                object->setSaveId(
+                    "cell:" + std::to_string(column) + ":"
+                    + std::to_string(
+                        WorldMap::screenRowFor(
+                            mapRow,
+                            _worldMap.getLoadedRows(),
+                            _worldMap.getGridHeight()
+                        )
+                    )
+                );
                 object->addBehaviour<Invincible>(2.0f);
             }
         }
@@ -353,6 +365,7 @@ bool GameWorld::spawnKoopaShell(sf::Vector2f spawnPosition, bool facingRight) {
     sf::Texture& itemsTexture = ResourceManager::getInstance().getTexture("koopa_spritesheet");
     auto shell = std::make_shared<KoopaShell>(itemsTexture);
     shell->setFacingRight(facingRight);
+    shell->setSaveId(nextRuntimeSaveId());
     shell->setGameWorld(this);
     shell->spawn(_physicsWorld, spawnPosition, {60.0f, 48.0f});
     _objectStore.addObject(std::move(shell));
@@ -366,6 +379,7 @@ bool GameWorld::spawnKoopa(sf::Vector2f spawnPosition, bool facingRight) {
     auto koopa = std::make_shared<Koopa>(itemsTexture, "koopa", true);
     koopa->setGameWorld(this);
     koopa->setFacingRight(facingRight);
+    koopa->setSaveId(nextRuntimeSaveId());
     koopa->setSupportGrid(&_worldMap.getTerrainSeamFilter(), _worldMap.getCellSize());
     koopa->spawn(_physicsWorld, spawnPosition, {64.0f, 100.0f});
     _objectStore.addObject(std::move(koopa));
@@ -471,6 +485,7 @@ std::shared_ptr<GameObject> GameWorld::spawnItem(
     try {
         auto item = _objectFactory.createItem(itemTypeKey, texture);
         if (item) {
+            item->setSaveId(nextRuntimeSaveId());
             item->spawn(_physicsWorld, position, size);
             _objectStore.addObject(item);
         }
@@ -520,6 +535,14 @@ void GameWorld::playVictoryAnimation() {
 
 std::shared_ptr<GameObject> GameWorld::getPrimaryPlayer() const {
     return _objectStore.getPrimaryPlayer();
+}
+
+std::string GameWorld::nextRuntimeSaveId() {
+    return "runtime:" + std::to_string(_nextRuntimeObjectId++);
+}
+
+void GameWorld::removeObject(const std::shared_ptr<GameObject>& object) {
+    _objectStore.removeObject(object);
 }
 
 bool GameWorld::hasLivingPlayers() const {

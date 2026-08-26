@@ -31,6 +31,16 @@ LuckyBlock::LuckyBlock(sf::Texture &texture) : Block() {
 
 LuckyBlock::~LuckyBlock() = default;
 
+void LuckyBlock::restoreCapacity(int value) noexcept {
+    capacity = std::max(value, 0);
+    if (capacity <= 0) {
+        _visualVisible = true;
+        if (auto* animatable = getBehaviour<Animatable>()) {
+            animatable->playAnimation("empty");
+        }
+    }
+}
+
 void LuckyBlock::configureTexture(
     sf::Texture& texture,
     bool useBrickAnimation

@@ -22,6 +22,7 @@ private:
     LayoutProperties _layout;
     int _focusedIndex = 0;
     bool _mouseOnly = false;
+    bool _arrowKeysOnly = false;
 
     void syncFocus();
     void clearFocus();
@@ -47,6 +48,9 @@ public:
     void render(sf::RenderTarget& target);
 
     void setMouseOnly(bool mouseOnly);
+    void setArrowKeysOnly(bool arrowKeysOnly) noexcept {
+        _arrowKeysOnly = arrowKeysOnly;
+    }
     void setFocusedIndex(int index);
     int getFocusedIndex() const { return _focusedIndex; }
     std::shared_ptr<Button> getButton(std::size_t index) const {

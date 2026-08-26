@@ -54,6 +54,12 @@ public:
     void renderTiles(sf::RenderTarget& target);
     void updateVisuals(float deltaTime);
     void cleanupDestroyedTiles();
+    const std::vector<sf::Vector2i>& getDestroyedTileCells() const noexcept {
+        return _destroyedTileCells;
+    }
+    void restoreDestroyedTileCells(
+        const std::vector<sf::Vector2i>& cells
+    );
     sf::FloatRect getBounds() const;
     sf::Vector2f mapCellCenter(int column, int mapRow) const;
     static int screenRowFor(
@@ -111,5 +117,6 @@ private:
     AutotileResolver _autotileResolver;
     TerrainSeamFilter _terrainSeamFilter;
     std::vector<TileCollision> _tileCollisionObjects;
+    std::vector<sf::Vector2i> _destroyedTileCells;
     std::vector<b2BodyId> _boundaryWalls;
 };

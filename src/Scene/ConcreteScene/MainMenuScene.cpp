@@ -1,6 +1,8 @@
 #include "Scene/ConcreteScene/MainMenuScene.h"
 #include "Commands/FunctionalCommand.h"
+#include "Game/Snapshot/SaveLoadGame.h"
 #include "ResourceManager.h"
+#include "Scene/ConcreteScene/ExitConfirmScene.h"
 #include "Scene/SceneManager.h"
 
 MainMenuScene::MainMenuScene()
@@ -62,26 +64,26 @@ void MainMenuScene::render(sf::RenderTarget& target) {
 void MainMenuScene::_setupButtons() {
     _buttonMenu.clear();
     _buttonMenu.setLayoutProperties(
-        {820.0f, 398.0f},
+        {820.0f, 300.0f},
         {280.0f, 60.0f},
-        75.0f,
+        65.0f,
         false,
         sf::Color(100, 149, 237),
         28
     );
 
-    _buttonMenu.addButtonAuto("New Game", std::make_unique<FunctionalCommand>(
-        "New Game", [this]() {
+    _buttonMenu.addButtonAuto("Play", std::make_unique<FunctionalCommand>(
+        "Play", [this]() {
             if (auto mgr = getSceneManager()) {
                 mgr->pushSceneByName("MODE_SELECT");
             }
         }
     ));
 
-    _buttonMenu.addButtonAuto("Create map", std::make_unique<FunctionalCommand>(
-        "Create map", [this]() {
+    _buttonMenu.addButtonAuto("Save Game", std::make_unique<FunctionalCommand>(
+        "Save Game", [this]() {
             if (auto mgr = getSceneManager()) {
-                mgr->pushSceneByName("MAP_EDITOR");
+                mgr->pushSceneByName("SAVE_GAME");
             }
         }
     ));
@@ -89,7 +91,15 @@ void MainMenuScene::_setupButtons() {
     _buttonMenu.addButtonAuto("Load Game", std::make_unique<FunctionalCommand>(
         "Load Game", [this]() {
             if (auto mgr = getSceneManager()) {
-                mgr->pushSceneByName("LEVEL_SELECT");
+                mgr->pushSceneByName("LOAD_GAME");
+            }
+        }
+    ));
+
+    _buttonMenu.addButtonAuto("Create Map", std::make_unique<FunctionalCommand>(
+        "Create Map", [this]() {
+            if (auto mgr = getSceneManager()) {
+                mgr->pushSceneByName("MAP_EDITOR");
             }
         }
     ));
@@ -105,7 +115,9 @@ void MainMenuScene::_setupButtons() {
     _buttonMenu.addButtonAuto("Exit Game", std::make_unique<FunctionalCommand>(
         "Exit Game", [this]() {
             if (auto mgr = getSceneManager()) {
-                if (auto wnd = mgr->getRenderWindow()) {
+                if (SaveLoadGame::getInstance().hasUnsavedSession()) {
+                    mgr->pushSceneByName("EXIT_CONFIRM");
+                } else if (auto wnd = mgr->getRenderWindow()) {
                     wnd->close();
                 }
             }

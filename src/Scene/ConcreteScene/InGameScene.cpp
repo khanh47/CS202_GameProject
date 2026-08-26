@@ -1,8 +1,34 @@
 #include <memory>
+#include <algorithm>
+#include <unordered_map>
+#include <unordered_set>
+#include <utility>
 
 #include "Scene/ConcreteScene/InGameScene.h"
 #include "Game/Behaviours/Animatable.h"
+#include "Game/Behaviours/Damageable.h"
+#include "Game/Objects/Block/Block.h"
+#include "Game/Objects/Block/CoinBlock.h"
+#include "Game/Objects/Block/LuckyBlock.h"
+#include "Game/Objects/Enemy/ConcreteEnemy/Goomba.h"
+#include "Game/Objects/Enemy/ConcreteEnemy/Koopa.h"
+#include "Game/Objects/Enemy/ConcreteEnemy/PiranhaPlant.h"
+#include "Game/Objects/Enemy/Enemy.h"
+#include "Game/Objects/Item/ConcreteItems/CheckpointFlag.h"
+#include "Game/Objects/Item/ConcreteItems/Coin.h"
+#include "Game/Objects/Item/ConcreteItems/FireFlower.h"
+#include "Game/Objects/Item/ConcreteItems/Flagpole.h"
+#include "Game/Objects/Item/ConcreteItems/MegaCoin.h"
+#include "Game/Objects/Item/ConcreteItems/MegaMushroom.h"
+#include "Game/Objects/Item/ConcreteItems/OneUpMushroom.h"
+#include "Game/Objects/Item/ConcreteItems/SuperMushroom.h"
+#include "Game/Objects/Item/ConcreteItems/SuperStar.h"
+#include "Game/Objects/Item/Item.h"
+#include "Game/Objects/Pipe/Pipe.h"
 #include "Game/Objects/Player/Player.h"
+#include "Game/Objects/Projectile/Fireball.h"
+#include "Game/Objects/Projectile/KoopaShell.h"
+#include "Game/Snapshot/SaveLoadGame.h"
 #include "ResourceManager.h"
 #include "Audio/MusicManager.h"
 #include "Scene/SceneManager.h"
@@ -10,6 +36,93 @@
 #include <iostream>
 
 namespace {
+using json = nlohmann::json;
+
+json vectorToJson(const sf::Vector2f& value) {
+    return {value.x, value.y};
+}
+
+sf::Vector2f vectorFromJson(
+    const json& value,
+    sf::Vector2f fallback = {}
+) {
+    if (!value.is_array() || value.size() < 2) {
+        return fallback;
+    }
+    return {
+        value[0].get<float>(),
+        value[1].get<float>()
+    };
+}
+
+std::string gameModeToString(GameMode mode) {
+    return mode == GameMode::Solo ? "solo" : "coop";
+}
+
+GameMode gameModeFromString(const std::string& value) {
+    return value == "solo" ? GameMode::Solo : GameMode::Coop;
+}
+
+std::string saveObjectType(const GameObject& object) {
+    if (dynamic_cast<const Player*>(&object)) return "player";
+    if (dynamic_cast<const CoinBlock*>(&object)) return "coinBlock";
+    if (dynamic_cast<const LuckyBlock*>(&object)) return "luckyBlock";
+    if (dynamic_cast<const Block*>(&object)) return "block";
+    if (dynamic_cast<const Goomba*>(&object)) return "goomba";
+    if (dynamic_cast<const Koopa*>(&object)) return "koopa";
+    if (dynamic_cast<const PiranhaPlant*>(&object)) return "piranhaPlant";
+    if (dynamic_cast<const Enemy*>(&object)) return "enemy";
+    if (dynamic_cast<const Coin*>(&object)) return "Coin";
+    if (dynamic_cast<const SuperMushroom*>(&object)) return "SuperMushroom";
+    if (dynamic_cast<const FireFlower*>(&object)) return "FireFlower";
+    if (dynamic_cast<const OneUpMushroom*>(&object)) return "OneUpMushroom";
+    if (dynamic_cast<const SuperStar*>(&object)) return "SuperStar";
+    if (dynamic_cast<const MegaMushroom*>(&object)) return "MegaMushroom";
+    if (dynamic_cast<const MegaCoin*>(&object)) return "MegaCoin";
+    if (dynamic_cast<const CheckpointFlag*>(&object)) return "CheckpointFlag";
+    if (dynamic_cast<const Flagpole*>(&object)) return "Flagpole";
+    if (dynamic_cast<const Item*>(&object)) return "item";
+    if (dynamic_cast<const Pipe*>(&object)) return "pipe";
+    if (dynamic_cast<const KoopaShell*>(&object)) return "koopaShell";
+    if (dynamic_cast<const Fireball*>(&object)) return "fireball";
+    return "object";
+}
+
+bool isPersistedObjectType(const std::string& type) {
+    return type == "player"
+        || type == "coinBlock"
+        || type == "luckyBlock"
+        || type == "block"
+        || type == "goomba"
+        || type == "koopa"
+        || type == "piranhaPlant"
+        || type == "enemy"
+        || type == "Coin"
+        || type == "SuperMushroom"
+        || type == "FireFlower"
+        || type == "OneUpMushroom"
+        || type == "SuperStar"
+        || type == "MegaMushroom"
+        || type == "MegaCoin"
+        || type == "CheckpointFlag"
+        || type == "Flagpole"
+        || type == "item"
+        || type == "pipe";
+}
+
+bool isItemType(const std::string& type) {
+    return type == "Coin"
+        || type == "SuperMushroom"
+        || type == "FireFlower"
+        || type == "OneUpMushroom"
+        || type == "SuperStar"
+        || type == "MegaMushroom"
+        || type == "MegaCoin"
+        || type == "CheckpointFlag"
+        || type == "Flagpole"
+        || type == "item";
+}
+
 std::string levelThemeFor(
     const std::string& levelName,
     const std::string& selectedMusic
@@ -26,8 +139,12 @@ std::string levelThemeFor(
 }
 }
 
-InGameScene::InGameScene(const std::string& name)
-    : Scene(name) {}
+InGameScene::InGameScene(
+    const std::string& name,
+    std::optional<nlohmann::json> initialSaveState
+)
+    : Scene(name),
+      _initialSaveState(std::move(initialSaveState)) {}
 
 void InGameScene::init() {
     _winReactionActive = false;
@@ -55,11 +172,35 @@ void InGameScene::init() {
         67
     );
     _winPrompt->setFillColor(sf::Color::White);
+
+    if (_initialSaveState) {
+        const std::string savedMode = _initialSaveState->value(
+            "gameMode",
+            "coop"
+        );
+        GameSettings::getInstance().gameMode = gameModeFromString(savedMode);
+        GameSettings::getInstance().player1Character =
+            _initialSaveState->value(
+                "player1Character",
+                GameSettings::getInstance().player1Character
+            );
+    }
+
     _gameWorld.loadLevel(_name);
     if (GameSettings::getInstance().gameMode == GameMode::Minigame) {
         _minigameParticipantCount = _gameWorld.getPlayers().size();
     }
     _gameWorld.setScoreManager(&_scoreManager); // Set score manager for the game world
+    if (_initialSaveState) {
+        restoreSaveState(*_initialSaveState);
+    }
+    if (GameSettings::getInstance().gameMode != GameMode::Minigame) {
+        SaveLoadGame::getInstance().setCurrentSession(
+            captureSaveState(),
+            !_initialSaveState.has_value()
+        );
+    }
+    _saveStateInitialized = true;
 
     // Configure 2D Platformer Camera System parameters
     CameraConfig config;
@@ -96,6 +237,13 @@ void InGameScene::init() {
     }
 
     void InGameScene::onExit() {
+        if (_saveStateInitialized
+            && GameSettings::getInstance().gameMode != GameMode::Minigame) {
+            SaveLoadGame::getInstance().setCurrentSession(
+                captureSaveState(),
+                true
+            );
+        }
         // Stop any level music when leaving the scene
         _starmanMusicActive = false;
         Audio::MusicManager::getInstance().stop();
@@ -112,7 +260,7 @@ void InGameScene::handleInput(const sf::Event& event) {
             || event.is<sf::Event::MouseButtonPressed>()
             || event.is<sf::Event::JoystickButtonPressed>()) {
             if (auto mgr = getSceneManager()) {
-                mgr->requestPopScene();
+                mgr->requestReturnToModeMenu();
             }
         }
         return;
@@ -123,7 +271,7 @@ void InGameScene::handleInput(const sf::Event& event) {
             || event.is<sf::Event::MouseButtonPressed>()
             || event.is<sf::Event::JoystickButtonPressed>()) {
             if (auto mgr = getSceneManager()) {
-                mgr->requestPopScene();
+                mgr->requestReturnToModeMenu();
             }
         }
         return;
@@ -132,7 +280,7 @@ void InGameScene::handleInput(const sf::Event& event) {
     if (auto* keyEvent = event.getIf<sf::Event::KeyPressed>()) {
         if (keyEvent->code == sf::Keyboard::Key::Escape) {
             if (auto mgr = getSceneManager()) {
-                mgr->requestPopScene();
+                mgr->requestReturnToModeMenu();
                 return;
             }
         }
@@ -219,6 +367,272 @@ void InGameScene::render(sf::RenderTarget& target) {
     } else if (_winActive) {
         _drawWinOverlay(target);
     }
+}
+
+nlohmann::json InGameScene::captureSaveState() const {
+    nlohmann::json state;
+    state["saveVersion"] = 1;
+    state["levelPath"] = _name;
+    state["theme"] = _gameWorld.getLevelTheme();
+    state["music"] = _gameWorld.getLevelMusic();
+    state["gameMode"] = gameModeToString(GameSettings::getInstance().gameMode);
+    state["player1Character"] = GameSettings::getInstance().player1Character;
+    state["levelCleared"] = _gameWorld.hasWon();
+
+    state["score"] = {
+        {"points", _scoreManager.getScore()},
+        {"coins", _scoreManager.getCoins()},
+        {"lives", _scoreManager.getLives()},
+        {"highScore", _scoreManager.getHighScore()}
+    };
+
+    if (const std::optional<sf::Vector2f> checkpoint =
+            _gameWorld.getCheckpointPosition()) {
+        state["checkpoint"] = vectorToJson(*checkpoint);
+    } else {
+        state["checkpoint"] = nullptr;
+    }
+
+    state["destroyedTiles"] = nlohmann::json::array();
+    for (const sf::Vector2i& cell : _gameWorld.getDestroyedTileCells()) {
+        state["destroyedTiles"].push_back({cell.x, cell.y});
+    }
+
+    state["objects"] = nlohmann::json::array();
+    for (const std::shared_ptr<GameObject>& object : _gameWorld.objects()) {
+        if (!object || object->isPendingDestroy()) {
+            continue;
+        }
+
+        const std::string type = saveObjectType(*object);
+        if (!isPersistedObjectType(type)) {
+            continue;
+        }
+
+        nlohmann::json snapshot;
+        snapshot["id"] = object->getSaveId();
+        snapshot["type"] = type;
+        snapshot["position"] = vectorToJson(object->getPosition());
+        snapshot["velocity"] = vectorToJson(object->getVelocity());
+        snapshot["size"] = vectorToJson(object->getHitboxPixels());
+
+        if (const auto player = std::dynamic_pointer_cast<Player>(object)) {
+            snapshot["character"] = player->getCharacter();
+            snapshot["facingLeft"] = player->isFacingLeft();
+            snapshot["flyMode"] = player->isFlyMode();
+            snapshot["state"] = player->getBaseStateNameForSave();
+            snapshot["megaTimeRemaining"] =
+                player->getMegaStateTimeRemaining();
+            snapshot["starManTimeRemaining"] =
+                player->getStarManStateTimeRemaining();
+            if (const auto* damageable =
+                    player->getBehaviour<Damageable>()) {
+                snapshot["health"] = damageable->getCurrentHealth();
+            }
+        } else if (const auto enemy = std::dynamic_pointer_cast<Enemy>(object)) {
+            snapshot["facingRight"] = enemy->getMoveDirection() > 0;
+            if (const auto* damageable =
+                    enemy->getBehaviour<Damageable>()) {
+                snapshot["health"] = damageable->getCurrentHealth();
+            }
+        }
+
+        if (const auto coinBlock =
+                std::dynamic_pointer_cast<CoinBlock>(object)) {
+            snapshot["capacity"] = coinBlock->getCapacity();
+        }
+        if (const auto luckyBlock =
+                std::dynamic_pointer_cast<LuckyBlock>(object)) {
+            snapshot["capacity"] = luckyBlock->getCapacity();
+            snapshot["visualVisible"] = luckyBlock->isVisualVisible();
+        }
+        if (const auto checkpoint =
+                std::dynamic_pointer_cast<CheckpointFlag>(object)) {
+            snapshot["triggered"] = checkpoint->isTriggered();
+        }
+        if (const auto flagpole =
+                std::dynamic_pointer_cast<Flagpole>(object)) {
+            snapshot["triggered"] = flagpole->isTriggered();
+        }
+        if (const auto item = std::dynamic_pointer_cast<Item>(object)) {
+            snapshot["emerging"] = item->isEmerging();
+        }
+        if (const auto pipe = std::dynamic_pointer_cast<Pipe>(object)) {
+            snapshot["warpID"] = pipe->getWarpID();
+            snapshot["warpTarget"] = pipe->getWarpTarget();
+        }
+
+        state["objects"].push_back(std::move(snapshot));
+    }
+
+    return state;
+}
+
+void InGameScene::restoreSaveState(const nlohmann::json& state) {
+    const nlohmann::json score = state.value(
+        "score",
+        nlohmann::json::object()
+    );
+    _scoreManager.restoreState(
+        score.value("points", 0),
+        score.value("coins", 0),
+        score.value("lives", 3),
+        score.value("highScore", 0)
+    );
+
+    if (state.contains("checkpoint") && !state["checkpoint"].is_null()) {
+        _gameWorld.restoreCheckpoint(vectorFromJson(state["checkpoint"]));
+    } else {
+        _gameWorld.restoreCheckpoint(std::nullopt);
+    }
+
+    std::vector<sf::Vector2i> destroyedTiles;
+    const nlohmann::json savedTiles = state.value(
+        "destroyedTiles",
+        nlohmann::json::array()
+    );
+    if (savedTiles.is_array()) {
+        for (const nlohmann::json& cell : savedTiles) {
+            if (cell.is_array() && cell.size() >= 2) {
+                destroyedTiles.emplace_back(
+                    cell[0].get<int>(),
+                    cell[1].get<int>()
+                );
+            }
+        }
+    }
+    _gameWorld.restoreDestroyedTileCells(destroyedTiles);
+
+    std::unordered_map<std::string, nlohmann::json> savedObjects;
+    const nlohmann::json objectArray = state.value(
+        "objects",
+        nlohmann::json::array()
+    );
+    if (objectArray.is_array()) {
+        for (const nlohmann::json& snapshot : objectArray) {
+            const std::string id = snapshot.value("id", "");
+            if (!id.empty() && snapshot.is_object()) {
+                savedObjects.insert_or_assign(id, snapshot);
+            }
+        }
+    }
+
+    std::unordered_set<std::string> restoredIds;
+    std::vector<std::shared_ptr<GameObject>> objectsToRemove;
+    for (const std::shared_ptr<GameObject>& object : _gameWorld.objects()) {
+        if (!object || object->getSaveId().empty()) {
+            continue;
+        }
+
+        const std::string id = object->getSaveId();
+        const std::string currentType = saveObjectType(*object);
+        const auto savedIt = savedObjects.find(id);
+        if (savedIt == savedObjects.end()) {
+            if (currentType != "player" && currentType != "pipe"
+                && isPersistedObjectType(currentType)) {
+                objectsToRemove.push_back(object);
+            }
+            continue;
+        }
+
+        const nlohmann::json& snapshot = savedIt->second;
+        if (snapshot.value("type", "") != currentType) {
+            continue;
+        }
+        restoredIds.insert(id);
+
+        object->setPosition(
+            vectorFromJson(snapshot.value("position", nlohmann::json{}))
+        );
+        object->setVelocity(
+            vectorFromJson(snapshot.value("velocity", nlohmann::json{}))
+        );
+
+        if (const auto player = std::dynamic_pointer_cast<Player>(object)) {
+            player->restoreSavedState(
+                snapshot.value("state", "Normal"),
+                snapshot.value("megaTimeRemaining", 0.0f),
+                snapshot.value("starManTimeRemaining", 0.0f)
+            );
+            player->setFacingLeft(snapshot.value("facingLeft", false));
+            player->setFlyMode(snapshot.value("flyMode", false));
+            if (auto* damageable = player->getBehaviour<Damageable>()) {
+                damageable->setCurrentHealth(
+                    snapshot.value("health", damageable->getMaxHealth())
+                );
+            }
+        }
+
+        if (const auto enemy = std::dynamic_pointer_cast<Enemy>(object)) {
+            enemy->setFacingRight(snapshot.value("facingRight", true));
+            if (auto* damageable = enemy->getBehaviour<Damageable>()) {
+                damageable->setCurrentHealth(
+                    snapshot.value("health", damageable->getMaxHealth())
+                );
+            }
+        }
+
+        if (const auto coinBlock =
+                std::dynamic_pointer_cast<CoinBlock>(object)) {
+            coinBlock->restoreCapacity(snapshot.value("capacity", 1));
+        }
+        if (const auto luckyBlock =
+                std::dynamic_pointer_cast<LuckyBlock>(object)) {
+            luckyBlock->restoreCapacity(snapshot.value("capacity", 1));
+            if (luckyBlock->getCapacity() > 0) {
+                luckyBlock->setVisualVisible(
+                    snapshot.value("visualVisible", true)
+                );
+            }
+        }
+        if (const auto checkpoint =
+                std::dynamic_pointer_cast<CheckpointFlag>(object)) {
+            const bool triggered = snapshot.value("triggered", false);
+            checkpoint->restoreTriggered(triggered);
+            if (triggered) {
+                if (auto* animatable = checkpoint->getBehaviour<Animatable>()) {
+                    animatable->playAnimation("captured");
+                }
+            }
+        }
+        if (const auto flagpole =
+                std::dynamic_pointer_cast<Flagpole>(object)) {
+            flagpole->restoreTriggered(snapshot.value("triggered", false));
+        }
+    }
+
+    for (const std::shared_ptr<GameObject>& object : objectsToRemove) {
+        _gameWorld.removeObject(object);
+    }
+
+    // Items created by a used lucky block are not part of the default map's
+    // initial object list. Recreate those runtime items from their snapshot.
+    for (const auto& [id, snapshot] : savedObjects) {
+        const std::string type = snapshot.value("type", "");
+        if (restoredIds.contains(id)
+            || id.rfind("runtime:", 0) != 0
+            || !isItemType(type)) {
+            continue;
+        }
+
+        const sf::Vector2f position = vectorFromJson(
+            snapshot.value("position", nlohmann::json{})
+        );
+        const sf::Vector2f size = vectorFromJson(
+            snapshot.value("size", nlohmann::json{}),
+            {54.0f, 54.0f}
+        );
+        const std::shared_ptr<GameObject> item =
+            _gameWorld.spawnItem(type, position, size);
+        if (item) {
+            item->setSaveId(id);
+            item->setVelocity(
+                vectorFromJson(snapshot.value("velocity", nlohmann::json{}))
+            );
+        }
+    }
+
+    _gameWorld.restoreLevelCleared(state.value("levelCleared", false));
 }
 
 void InGameScene::_checkWin() {

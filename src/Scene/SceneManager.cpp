@@ -136,6 +136,23 @@ void SceneManager::requestPopScene() {
     });
 }
 
+void SceneManager::requestReturnToModeMenu() {
+    requestDeferredAction([this]() {
+        while (!_sceneStack.empty()
+               && _sceneStack.top()->getName() != "ModeSelectScene") {
+            if (_sceneStack.size() == 1) {
+                break;
+            }
+            popScene();
+        }
+
+        if (_sceneStack.empty()
+            || _sceneStack.top()->getName() != "ModeSelectScene") {
+            pushSceneByName("MODE_SELECT");
+        }
+    });
+}
+
 void SceneManager::processEvents(const sf::Event& event) {
     if (!_sceneStack.empty()) {
         auto &currentScene = _sceneStack.top();

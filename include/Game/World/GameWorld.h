@@ -5,7 +5,9 @@
 #include <array>
 #include <cstddef>
 #include <memory>
+#include <optional>
 #include <string>
+#include <vector>
 
 #include "Game/Objects/GameObjectFactory.h"
 #include "Game/Objects/Projectile/FireballPool.h"
@@ -57,6 +59,24 @@ public:
     bool isFrozen() const { return _freezeTimer > 0.0f; }
     void syncPlayerControllers();
     void playVictoryAnimation();
+    std::string nextRuntimeSaveId();
+    void removeObject(const std::shared_ptr<GameObject>& object);
+    const std::vector<sf::Vector2i>& getDestroyedTileCells() const noexcept {
+        return _worldMap.getDestroyedTileCells();
+    }
+    void restoreDestroyedTileCells(const std::vector<sf::Vector2i>& cells) {
+        _worldMap.restoreDestroyedTileCells(cells);
+    }
+    std::optional<sf::Vector2f> getCheckpointPosition() const noexcept {
+        return _checkpointPos ? std::optional<sf::Vector2f>{*_checkpointPos}
+                              : std::nullopt;
+    }
+    void restoreCheckpoint(std::optional<sf::Vector2f> position) {
+        _checkpointPos = position
+            ? std::make_shared<sf::Vector2f>(*position)
+            : nullptr;
+    }
+    void restoreLevelCleared(bool cleared) noexcept { _levelCleared = cleared; }
 
     int getGridWidth() const { return _worldMap.getGridWidth(); }
     int getGridHeight() const { return _worldMap.getGridHeight(); }
@@ -82,6 +102,7 @@ private:
     float _freezeTimer = 0.0f;
     bool _levelCleared = false;
     std::shared_ptr<sf::Vector2f> _checkpointPos = nullptr;
+    std::uint64_t _nextRuntimeObjectId = 0;
     PhysicsWorld _physicsWorld;
     GameObjectFactory _objectFactory;
     std::array<FireballPool, 2> _fireballPools;

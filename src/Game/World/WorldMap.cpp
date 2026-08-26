@@ -81,6 +81,7 @@ void WorldMap::rebuild(
 
     _background = levelData.background;
     _autotileDefs.clear();
+    _destroyedTileCells.clear();
     objectStore.clear();
     for (FireballPool& pool : fireballPools) {
         pool.initialize(physicsWorld, itemsTexture);
@@ -331,12 +332,42 @@ void WorldMap::cleanupDestroyedTiles() {
     for (TileCollision& tile : _tileCollisionObjects) {
         if (!tile.object || tile.object->isPendingDestroy()) {
             _tileMap.setTile(tile.column, tile.screenRow, '.', nullptr);
+            const bool alreadyRecorded = std::any_of(
+                _destroyedTileCells.begin(),
+                _destroyedTileCells.end(),
+                [&tile](const sf::Vector2i& cell) {
+                    return cell.x == tile.column
+                        && cell.y == tile.screenRow;
+                }
+            );
+            if (!alreadyRecorded) {
+                _destroyedTileCells.emplace_back(
+                    tile.column,
+                    tile.screenRow
+                );
+            }
             continue;
         }
         liveTiles.push_back(std::move(tile));
     }
 
     _tileCollisionObjects = std::move(liveTiles);
+}
+
+void WorldMap::restoreDestroyedTileCells(
+    const std::vector<sf::Vector2i>& cells
+) {
+    for (const sf::Vector2i& cell : cells) {
+        for (TileCollision& tile : _tileCollisionObjects) {
+            if (tile.column == cell.x && tile.screenRow == cell.y) {
+                if (tile.object) {
+                    tile.object->destroy();
+                }
+                break;
+            }
+        }
+    }
+    cleanupDestroyedTiles();
 }
 
 sf::FloatRect WorldMap::getBounds() const {

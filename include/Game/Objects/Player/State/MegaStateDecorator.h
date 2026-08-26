@@ -27,6 +27,10 @@ public:
         return std::make_unique<NoAttackStrategy>();
     }
     bool isExpired() const override { return _remainingTime <= 0.0f; }
+    float getRemainingTime() const noexcept { return _remainingTime; }
+    const PlayerState* getStateToRestore() const noexcept {
+        return _stateToRestore.get();
+    }
     void resetTimer(float durationSeconds = 16.0f) noexcept {
         _remainingTime = durationSeconds;
     }

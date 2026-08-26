@@ -22,6 +22,7 @@ public:
     void popScene();
     void replaceScene(std::unique_ptr<Scene> scene);
     void requestPopScene();
+    void requestReturnToModeMenu();
 
     // Main loop
     void processEvents(const sf::Event& event);
