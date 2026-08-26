@@ -70,6 +70,14 @@ public:
     int getLives() const { return _lives; }
     int getHighScore() const { return _highScore; }
     void setLives(int lives) { _lives = lives; }
+    void restoreState(int score, int coins, int lives, int highScore) {
+        _score = std::max(score, 0);
+        _coins = std::max(coins, 0);
+        _lives = std::max(lives, 0);
+        _highScore = std::max({0, highScore, _score});
+        _stompComboIndex = 0;
+        _floatingTexts.clear();
+    }
 
     const std::vector<FloatingText>& getFloatingTexts() const { return _floatingTexts; }
 

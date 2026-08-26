@@ -18,6 +18,7 @@ public:
     float getJumpSpeedMultiplier() const override;
     bool isInvincible() const override { return true; }
     bool isExpired() const override { return _remainingTime <= 0.0f; }
+    float getRemainingTime() const noexcept { return _remainingTime; }
 
     void handleSuperMushroom(Player& player) override;
     void handleFireFlower(Player& player) override;

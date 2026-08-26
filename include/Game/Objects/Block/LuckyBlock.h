@@ -64,9 +64,12 @@ public:
     void setCapacity(int value) noexcept {
         capacity = value > 0 ? value : 1;
     }
+    int getCapacity() const noexcept { return capacity; }
+    void restoreCapacity(int value) noexcept;
 
     void configureTexture(sf::Texture& texture, bool useBrickAnimation);
     void setVisualVisible(bool visible) noexcept { _visualVisible = visible; }
+    bool isVisualVisible() const noexcept { return _visualVisible; }
 
 protected:
     void onCreateShapeDef(b2ShapeDef& def) override;

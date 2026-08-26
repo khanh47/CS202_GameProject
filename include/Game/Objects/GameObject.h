@@ -3,6 +3,7 @@
 #include <SFML/Graphics.hpp>
 #include <SFML/Graphics/Text.hpp>
 #include <memory>
+#include <string>
 #include <type_traits>
 #include <utility>
 #include <vector>
@@ -29,6 +30,10 @@ public:
     sf::Vector2f getPosition() const;
     virtual sf::Vector2f getVelocity() const;
     void setPosition(sf::Vector2f positionPixels);
+    void setVelocity(sf::Vector2f velocityPixels);
+
+    void setSaveId(std::string saveId) { _saveId = std::move(saveId); }
+    const std::string& getSaveId() const noexcept { return _saveId; }
 
     sf::Vector2f getHitboxPixels() const { return _hitboxPixels; }
     std::shared_ptr<PhysicsBody> getPhysicsBody() const { return _body; }
@@ -93,6 +98,7 @@ protected:
 
     std::shared_ptr<PhysicsBody> _body = nullptr;
     bool _pendingDestroy = false;
+    std::string _saveId;
 
     std::vector<std::unique_ptr<Behaviour>> _behaviours;
 

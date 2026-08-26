@@ -49,6 +49,14 @@ sf::Vector2f gridAlignedPosition(
         cellCenter.y + spec.offset.y + verticalOffset
     };
 }
+
+std::string gridSaveId(int column, int screenRow) {
+    if (column < 0 || screenRow < 0) {
+        return {};
+    }
+    return "cell:" + std::to_string(column) + ":"
+        + std::to_string(screenRow);
+}
 }
 
 PrefabSpawner::PrefabSpawner(
@@ -246,6 +254,13 @@ std::shared_ptr<GameObject> PrefabSpawner::spawnObjectAtPosition(
             return nullptr;
     }
 
+    if (object) {
+        const std::string cellId = gridSaveId(column, screenRow);
+        object->setSaveId(
+            cellId.empty() ? _gameWorld.nextRuntimeSaveId() : cellId
+        );
+    }
+
     _objectStore.addObject(object);
     return object;
 }
@@ -269,6 +284,12 @@ std::shared_ptr<GameObject> PrefabSpawner::spawnPipe(
         spec.pipeIsWarp,
         spec.warpID,
         spec.warpTarget
+    );
+    const std::string pipeCellId = gridSaveId(column, screenRow);
+    pipe->setSaveId(
+        pipeCellId.empty()
+            ? _gameWorld.nextRuntimeSaveId()
+            : pipeCellId
     );
 
     const Pipe::Orientation orientation =
@@ -349,6 +370,9 @@ std::shared_ptr<GameObject> PrefabSpawner::spawnPipe(
 
         const std::shared_ptr<GameObject> contentObject =
             spawnObjectAtPosition(content, contentPosition, -1, -1);
+        if (contentObject) {
+            contentObject->setSaveId(pipe->getSaveId() + ":content");
+        }
         if (!spec.contentsStatic) {
             if (auto plant = std::dynamic_pointer_cast<PiranhaPlant>(
                     contentObject

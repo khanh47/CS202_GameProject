@@ -81,6 +81,26 @@ void TextInput::processEvent(const sf::Event& event) {
     }
 
     if (const auto* keyEvent = event.getIf<sf::Event::KeyPressed>()) {
+        if (keyEvent->code == sf::Keyboard::Key::Enter) {
+            if (_editing) {
+                commit();
+            } else {
+                _editing = true;
+                _replaceOnFirstInput = true;
+            }
+            return;
+        }
+
+        if (keyEvent->code == sf::Keyboard::Key::Up
+            || keyEvent->code == sf::Keyboard::Key::Down
+            || keyEvent->code == sf::Keyboard::Key::Left
+            || keyEvent->code == sf::Keyboard::Key::Right) {
+            if (_editing) {
+                commit();
+            }
+            return;
+        }
+
         if (!_editing) {
             return;
         }
@@ -91,8 +111,7 @@ void TextInput::processEvent(const sf::Event& event) {
                 refreshLabel();
                 notifyValue();
             }
-        } else if (keyEvent->code == sf::Keyboard::Key::Enter
-                   || keyEvent->code == sf::Keyboard::Key::Escape) {
+        } else if (keyEvent->code == sf::Keyboard::Key::Escape) {
             commit();
         } else if (_numericOnly) {
             const auto digitFromKey = [](sf::Keyboard::Key key)

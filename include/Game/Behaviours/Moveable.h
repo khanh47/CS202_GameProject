@@ -41,6 +41,7 @@ public:
     bool isJumping() const { return _jumping; }
 
     bool isFacingLeft() const { return _facingLeft; }
+    void setFacingLeft(bool facingLeft) { _facingLeft = facingLeft; }
     bool isAirbone() const {
         return !_groundTracker.isGrounded();
     }

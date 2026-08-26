@@ -64,6 +64,14 @@ public:
     GameWorld* getGameWorld() { return _world; }
     const std::string& getCharacter() const { return _character; }
     void refreshStatePresentation();
+    std::string getBaseStateNameForSave() const;
+    float getMegaStateTimeRemaining() const noexcept;
+    float getStarManStateTimeRemaining() const noexcept;
+    void restoreSavedState(
+        const std::string& baseStateName,
+        float megaTimeRemaining,
+        float starManTimeRemaining
+    );
     void onContact(GameObject& other, const b2ContactData& contactData, b2ShapeId ownShape) override;
     void finalizeGroundContacts() override;
     bool hasFallenFromHighPlace() const noexcept;
@@ -85,6 +93,13 @@ public:
         }
         return false;
     }
+    void setFacingLeft(bool facingLeft) {
+        if (auto* moveable = getBehaviour<Moveable>()) {
+            moveable->setFacingLeft(facingLeft);
+        }
+    }
+    bool isFlyMode() const noexcept { return _flyMode; }
+    void setFlyMode(bool enabled) noexcept { _flyMode = enabled; }
     void startMoveLeft() {
         if (auto* moveable = getBehaviour<Moveable>()) moveable->startMoveLeft();
     }

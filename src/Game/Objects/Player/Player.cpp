@@ -179,6 +179,76 @@ void Player::refreshStatePresentation() {
     }
 }
 
+std::string Player::getBaseStateNameForSave() const {
+    const PlayerState* current = _state.get();
+    while (current) {
+        if (const auto* star = dynamic_cast<const StarManStateDecorator*>(current)) {
+            current = star->getWrappedState();
+            continue;
+        }
+        if (const auto* mega = dynamic_cast<const MegaStateDecorator*>(current)) {
+            current = mega->getStateToRestore();
+            if (!current) {
+                current = mega->getWrappedState();
+            }
+            continue;
+        }
+        return current->getStateName();
+    }
+    return "Normal";
+}
+
+float Player::getMegaStateTimeRemaining() const noexcept {
+    const PlayerState* current = _state.get();
+    while (current) {
+        if (const auto* mega = dynamic_cast<const MegaStateDecorator*>(current)) {
+            return std::max(mega->getRemainingTime(), 0.0f);
+        }
+        if (const auto* star = dynamic_cast<const StarManStateDecorator*>(current)) {
+            current = star->getWrappedState();
+            continue;
+        }
+        break;
+    }
+    return 0.0f;
+}
+
+float Player::getStarManStateTimeRemaining() const noexcept {
+    const PlayerState* current = _state.get();
+    while (current) {
+        if (const auto* star = dynamic_cast<const StarManStateDecorator*>(current)) {
+            return std::max(star->getRemainingTime(), 0.0f);
+        }
+        if (const auto* mega = dynamic_cast<const MegaStateDecorator*>(current)) {
+            current = mega->getWrappedState();
+            continue;
+        }
+        break;
+    }
+    return 0.0f;
+}
+
+void Player::restoreSavedState(
+    const std::string& baseStateName,
+    float megaTimeRemaining,
+    float starManTimeRemaining
+) {
+    if (baseStateName == "Fire") {
+        changeToFireState();
+    } else if (baseStateName == "Super") {
+        changeToSuperState();
+    } else {
+        changeToNormalState();
+    }
+
+    if (megaTimeRemaining > 0.0f) {
+        applyMegaState(megaTimeRemaining);
+    }
+    if (starManTimeRemaining > 0.0f) {
+        applyStarManState(starManTimeRemaining);
+    }
+}
+
 void Player::attack(GameWorld& world) {
     // Can't shoot fireballs while carrying a shell.
     if (auto* hold = getBehaviour<ShellHoldBehaviour>()) {

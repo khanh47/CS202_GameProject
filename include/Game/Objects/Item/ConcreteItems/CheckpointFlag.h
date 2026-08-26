@@ -22,6 +22,7 @@ public:
     ) override;
 
     bool isTriggered() const noexcept { return _triggered; }
+    void restoreTriggered(bool triggered) noexcept { _triggered = triggered; }
 
 protected:
     void onUpdateVisuals(float deltaTime) override;

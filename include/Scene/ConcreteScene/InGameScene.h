@@ -5,6 +5,8 @@
 #include <string>
 #include <vector>
 
+#include <nlohmann/json.hpp>
+
 #include "Scene/Scene.h"
 #include "Game/World/GameWorld.h"
 #include "Game/Camera.h"
@@ -14,7 +16,10 @@
 
 class InGameScene : public Scene {
 public:
-    explicit InGameScene(const std::string& name);
+    explicit InGameScene(
+        const std::string& name,
+        std::optional<nlohmann::json> initialSaveState = std::nullopt
+    );
     ~InGameScene() override = default;
 
     void init() override;
@@ -25,7 +30,10 @@ public:
     void updateVisuals(float deltaTime) override;
     void render(sf::RenderTarget& target) override;
 
+    nlohmann::json captureSaveState() const;
+
 private:
+    void restoreSaveState(const nlohmann::json& state);
     void _checkGameOver();
     void _checkWin();
     void _checkMinigameResult();
@@ -44,6 +52,9 @@ private:
     const sf::Texture* _gameOverTexture = nullptr;
     std::optional<sf::Text> _winTitle;
     std::optional<sf::Text> _winPrompt;
+
+    std::optional<nlohmann::json> _initialSaveState;
+    bool _saveStateInitialized = false;
 
     GameWorld _gameWorld;
     Camera _camera;

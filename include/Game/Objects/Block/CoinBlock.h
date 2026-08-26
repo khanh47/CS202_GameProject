@@ -54,6 +54,8 @@ public:
     void setCapacity(int value) noexcept {
         capacity = value > 0 ? value : 1;
     }
+    int getCapacity() const noexcept { return capacity; }
+    void restoreCapacity(int value) noexcept;
 
     void onContact(GameObject& other, const b2ContactData& contactData, b2ShapeId ownShape) override;
     bool isRenderedByTileMap() const noexcept override { return false; }

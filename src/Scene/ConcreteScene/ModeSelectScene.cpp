@@ -2,6 +2,7 @@
 #include "Commands/FunctionalCommand.h"
 #include "Game/GameSettings.h"
 #include "ResourceManager.h"
+#include "Scene/ConcreteScene/DefaultGameMenuScene.h"
 #include "Scene/ConcreteScene/MinigameModeScene.h"
 #include "Scene/SceneManager.h"
 
@@ -53,20 +54,10 @@ void ModeSelectScene::_setupButtons() {
         28
     );
 
-    _buttonMenu.addButtonAuto("Solo", std::make_unique<FunctionalCommand>(
-        "Solo", [this]() {
-            GameSettings::getInstance().gameMode = GameMode::Solo;
+    _buttonMenu.addButtonAuto("Default", std::make_unique<FunctionalCommand>(
+        "Default", [this]() {
             if (auto mgr = getSceneManager()) {
-                mgr->pushSceneByName("CHARACTER_SELECT");
-            }
-        }
-    ));
-
-    _buttonMenu.addButtonAuto("Coop", std::make_unique<FunctionalCommand>(
-        "Coop", [this]() {
-            GameSettings::getInstance().gameMode = GameMode::Coop;
-            if (auto mgr = getSceneManager()) {
-                mgr->pushSceneByName("LEVEL_SELECT");
+                mgr->pushSceneByName("DEFAULT_GAME_MENU");
             }
         }
     ));

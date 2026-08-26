@@ -112,21 +112,37 @@ void ButtonMenu::processEvent(const sf::Event& event) {
     }
 
     if (!_mouseOnly) {
+        if (_buttonMenu.empty()) {
+            return;
+        }
+
+        // Give the focused control first chance to consume keyboard input.
+        // This is needed for controls such as TextInput, which receive
+        // TextEntered and editing keys rather than button commands.
+        if (event.is<sf::Event::TextEntered>()) {
+            _buttonMenu[static_cast<std::size_t>(_focusedIndex)]->processEvent(
+                event
+            );
+            return;
+        }
+
         if (auto* keyEvent = event.getIf<sf::Event::KeyPressed>()) {
-            if (_buttonMenu.empty()) {
-                return;
-            }
+            const std::shared_ptr<Button> focusedButton =
+                _buttonMenu[static_cast<std::size_t>(_focusedIndex)];
+            focusedButton->processEvent(event);
 
             if (_layout.horizontal) {
                 if (keyEvent->code == sf::Keyboard::Key::Left
-                    || keyEvent->code == sf::Keyboard::Key::A) {
+                    || (!_arrowKeysOnly
+                        && keyEvent->code == sf::Keyboard::Key::A)) {
                     _focusedIndex = (
                         _focusedIndex - 1
                         + static_cast<int>(_buttonMenu.size())
                     ) % static_cast<int>(_buttonMenu.size());
                     syncFocus();
                 } else if (keyEvent->code == sf::Keyboard::Key::Right
-                           || keyEvent->code == sf::Keyboard::Key::D) {
+                           || (!_arrowKeysOnly
+                               && keyEvent->code == sf::Keyboard::Key::D)) {
                     _focusedIndex = (
                         _focusedIndex + 1
                     ) % static_cast<int>(_buttonMenu.size());
@@ -134,14 +150,16 @@ void ButtonMenu::processEvent(const sf::Event& event) {
                 }
             } else {
                 if (keyEvent->code == sf::Keyboard::Key::Up
-                    || keyEvent->code == sf::Keyboard::Key::W) {
+                    || (!_arrowKeysOnly
+                        && keyEvent->code == sf::Keyboard::Key::W)) {
                     _focusedIndex = (
                         _focusedIndex - 1
                         + static_cast<int>(_buttonMenu.size())
                     ) % static_cast<int>(_buttonMenu.size());
                     syncFocus();
                 } else if (keyEvent->code == sf::Keyboard::Key::Down
-                           || keyEvent->code == sf::Keyboard::Key::S) {
+                           || (!_arrowKeysOnly
+                               && keyEvent->code == sf::Keyboard::Key::S)) {
                     _focusedIndex = (
                         _focusedIndex + 1
                     ) % static_cast<int>(_buttonMenu.size());

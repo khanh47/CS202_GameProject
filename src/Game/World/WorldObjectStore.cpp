@@ -28,6 +28,21 @@ void WorldObjectStore::addObject(std::shared_ptr<GameObject> object) {
     }
 }
 
+void WorldObjectStore::removeObject(
+    const std::shared_ptr<GameObject>& object
+) {
+    if (!object) {
+        return;
+    }
+
+    std::erase_if(
+        _objects,
+        [&object](const std::shared_ptr<GameObject>& candidate) {
+            return candidate == object;
+        }
+    );
+}
+
 void WorldObjectStore::addController(
     std::unique_ptr<PlayerController> controller
 ) {

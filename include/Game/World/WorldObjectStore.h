@@ -16,6 +16,7 @@ public:
 
     void clear();
     void addObject(std::shared_ptr<GameObject> object);
+    void removeObject(const std::shared_ptr<GameObject>& object);
     void addController(std::unique_ptr<PlayerController> controller);
     void addAiController(std::unique_ptr<HeuristicAiController> controller);
 
