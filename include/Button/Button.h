@@ -21,6 +21,9 @@ public:
     void setFocused(bool focused);
     void clearHover() noexcept { _isHovered = false; }
     bool isHovered() const { return _isHovered; }
+    bool contains(sf::Vector2f position) const noexcept {
+        return sf::FloatRect{basePosition, baseSize}.contains(position);
+    }
     virtual void processEvent(const sf::Event& event);
     virtual void updateVisuals(float deltaTime) { (void)deltaTime; }
     virtual void render(sf::RenderTarget& target);

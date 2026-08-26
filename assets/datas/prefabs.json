@@ -220,6 +220,7 @@
             "kind": "block",
             "typeKey": "LuckyBlock",
             "texture": "lucky_block_spritesheet",
+            "luckyTexture": "default",
             "size": [
                 64,
                 64

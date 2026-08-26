@@ -135,6 +135,23 @@ std::shared_ptr<GameObject> PrefabSpawner::spawnObjectAtPosition(
                 coinBlock->setCapacity(spec.coinCapacity);
             }
             if (auto luckyBlock = std::dynamic_pointer_cast<LuckyBlock>(block)) {
+                if (spec.luckyTexture == "invisible") {
+                    // Keep the revealed used frame tied to the current map theme
+                    // while hiding the block until its configured capacity is spent.
+                    luckyBlock->configureTexture(
+                        ResourceManager::getInstance().getTexture(
+                            ThemeAssets::luckyBlockTextureAlias(
+                                _gameWorld.getLevelTheme()
+                            )
+                        ),
+                        false
+                    );
+                    luckyBlock->setVisualVisible(false);
+                } else if (spec.luckyTexture == "brick" && texture != nullptr) {
+                    luckyBlock->configureTexture(*texture, true);
+                } else {
+                    luckyBlock->setVisualVisible(true);
+                }
                 if (!spec.luckyOptions.empty()) {
                     luckyBlock->clearOptions();
                     for (const LuckyOptionSpec& option : spec.luckyOptions) {

@@ -551,6 +551,9 @@ void MapEditorScene::render(sf::RenderTarget& target) {
         if (_coinCapacityDropdown) {
             _coinCapacityDropdown->renderPopup(target);
         }
+        if (_luckyTextureDropdown) {
+            _luckyTextureDropdown->renderPopup(target);
+        }
         if (_luckyCapacityDropdown) {
             _luckyCapacityDropdown->renderPopup(target);
         }
@@ -759,6 +762,7 @@ void MapEditorScene::refreshConfigMenu() {
 
     const sf::Color buttonColor(53, 91, 130);
     _coinCapacityDropdown.reset();
+    _luckyTextureDropdown.reset();
     _luckyCapacityDropdown.reset();
     _luckyOptionChecks.clear();
     _pipeOrientationDropdown.reset();
@@ -941,6 +945,31 @@ void MapEditorScene::refreshConfigMenu() {
             _luckyOptionChecks.push_back(checkbox);
             addControl(checkbox);
         }
+        const std::size_t luckyTextureIndex =
+            _draftPlacement.luckyTexture == "invisible"
+            ? 1
+            : (_draftPlacement.luckyTexture == "brick" ? 2 : 0);
+        _luckyTextureDropdown = std::make_shared<UI::Dropdown>(
+            controlPosition(),
+            sf::Vector2f{680.0f, ConfigButtonHeight},
+            buttonColor,
+            "Texture",
+            18,
+            std::vector<std::string>{
+                "Normal lucky block",
+                "Invisible lucky block",
+                "Brick texture lucky block"
+            },
+            luckyTextureIndex
+        );
+        _luckyTextureDropdown->setSelectionCallback(
+            [this](std::size_t index) {
+                _draftPlacement.luckyTexture = index == 1
+                    ? "invisible"
+                    : (index == 2 ? "brick" : "default");
+            }
+        );
+        addControl(_luckyTextureDropdown);
         _luckyCapacityDropdown = std::make_shared<UI::Dropdown>(
             controlPosition(),
             sf::Vector2f{680.0f, ConfigButtonHeight},
@@ -1189,6 +1218,7 @@ void MapEditorScene::openLuckyBlockConfig() {
         {"FireFlower", 1.0f},
         {"SuperStar", 1.0f}
     };
+    _draftPlacement.luckyTexture = "default";
     _draftPlacement.luckyCapacity = 1;
     _showInstructions = false;
     refreshConfigMenu();
@@ -2310,12 +2340,11 @@ sf::IntRect MapEditorScene::firstAnimationFrame(
     return {};
 }
 
-void MapEditorScene::drawEntrySprite(
+void MapEditorScene::drawPreviewSprite(
     sf::RenderTarget& target,
-    const PaletteEntry& entry,
+    const PreviewSpec& spec,
     sf::Vector2f cellCenter
 ) const {
-    const PreviewSpec spec = previewSpecFor(entry);
     try {
         sf::Texture& texture = ResourceManager::getInstance().getTexture(
             spec.textureKey
@@ -2363,6 +2392,51 @@ void MapEditorScene::drawEntrySprite(
     }
 }
 
+void MapEditorScene::drawEntrySprite(
+    sf::RenderTarget& target,
+    const PaletteEntry& entry,
+    sf::Vector2f cellCenter
+) const {
+    drawPreviewSprite(target, previewSpecFor(entry), cellCenter);
+}
+
+void MapEditorScene::drawInvisibleLuckyBlockMarker(
+    sf::RenderTarget& target,
+    int column,
+    int row
+) const {
+    const sf::Vector2f cellTopLeft{
+        column * CellSize,
+        row * CellSize
+    };
+
+    sf::RectangleShape marker({CellSize - 8.0f, CellSize - 8.0f});
+    marker.setPosition(cellTopLeft + sf::Vector2f{4.0f, 4.0f});
+    marker.setFillColor(sf::Color(80, 180, 255, 35));
+    marker.setOutlineThickness(2.0f);
+    marker.setOutlineColor(sf::Color(150, 220, 255, 220));
+    target.draw(marker);
+
+    sf::Text markerLabel(
+        ResourceManager::getInstance().getFont("moon_get"),
+        "INV",
+        14
+    );
+    const sf::FloatRect labelBounds = markerLabel.getLocalBounds();
+    markerLabel.setOrigin({
+        labelBounds.position.x + labelBounds.size.x * 0.5f,
+        labelBounds.position.y + labelBounds.size.y * 0.5f
+    });
+    markerLabel.setPosition({
+        cellTopLeft.x + CellSize * 0.5f,
+        cellTopLeft.y + CellSize * 0.5f
+    });
+    markerLabel.setFillColor(sf::Color(225, 245, 255));
+    markerLabel.setOutlineColor(sf::Color(10, 35, 60));
+    markerLabel.setOutlineThickness(1.0f);
+    target.draw(markerLabel);
+}
+
 void MapEditorScene::drawPlacement(
     sf::RenderTarget& target,
     const CellPlacement& placement,
@@ -2375,16 +2449,29 @@ void MapEditorScene::drawPlacement(
         return;
     }
     const PaletteEntry* entry = findEntry(symbol);
-    if (entry != nullptr) {
-        drawEntrySprite(
+    if (entry == nullptr) {
+        return;
+    }
+
+    PreviewSpec spec = previewSpecFor(*entry);
+    if (placement.prefabId == "block_lucky") {
+        if (placement.luckyTexture == "invisible") {
+            drawInvisibleLuckyBlockMarker(target, column, row);
+            return;
+        }
+        if (placement.luckyTexture == "brick") {
+            spec.textureKey = ThemeAssets::brickTextureAlias(_themeKey);
+            spec.animationId = "brick";
+        }
+    }
+    drawPreviewSprite(
             target,
-            *entry,
+            spec,
             {
                 column * CellSize + CellSize * 0.5f,
                 row * CellSize + CellSize * 0.5f
             }
-        );
-    }
+    );
 }
 
 void MapEditorScene::drawPipePreview(
@@ -2891,6 +2978,7 @@ bool MapEditorScene::loadSavedMap() {
                 )] = 'B';
             } else if (savedPlacement.spec.typeKey == "LuckyBlock") {
                 placement.prefabId = "block_lucky";
+                placement.luckyTexture = savedPlacement.spec.luckyTexture;
                 placement.luckyCapacity = savedPlacement.spec.luckyCapacity;
                 for (const LuckyOptionSpec& option : savedPlacement.spec.luckyOptions) {
                     placement.luckyOptions.push_back({
@@ -2994,7 +3082,11 @@ bool MapEditorScene::saveMap() {
             spec = {
                 {"kind", "block"},
                 {"typeKey", "LuckyBlock"},
-                {"texture", ThemeAssets::luckyBlockTextureAlias(_themeKey)},
+                {"texture", ThemeAssets::luckyBlockTextureFor(
+                    placement.luckyTexture,
+                    _themeKey
+                )},
+                {"luckyTexture", placement.luckyTexture},
                 {"size", {64, 64}},
                 {"addSeamFilter", true},
                 {"luckyCapacity", placement.luckyCapacity},

@@ -1,4 +1,5 @@
 #include "Button/ButtonMenu.h"
+#include "Button/Dropdown.h"
 #include "Button/ToggleButton.h"
 
 namespace UI {
@@ -77,6 +78,34 @@ void ButtonMenu::processEvent(const sf::Event& event) {
     if (_mouseOnly) {
         // A button command may rebuild the menu while handling a click.
         const std::vector<std::shared_ptr<Button>> buttons = _buttonMenu;
+
+        if (const auto* mouseEvent = event.getIf<sf::Event::MouseButtonPressed>();
+            mouseEvent && mouseEvent->button == sf::Mouse::Button::Left) {
+            const sf::Vector2f mousePosition = {
+                static_cast<float>(mouseEvent->position.x),
+                static_cast<float>(mouseEvent->position.y)
+            };
+
+            // An open dropdown owns the next click, including clicks outside
+            // its list, so the event cannot fall through to another control.
+            for (auto it = buttons.rbegin(); it != buttons.rend(); ++it) {
+                const auto dropdown = std::dynamic_pointer_cast<Dropdown>(*it);
+                if (dropdown && dropdown->isOpen()) {
+                    dropdown->processEvent(event);
+                    return;
+                }
+            }
+
+            // Dispatch a click to only the topmost control under the cursor.
+            // This also prevents overlapping controls from executing twice.
+            for (auto it = buttons.rbegin(); it != buttons.rend(); ++it) {
+                if ((*it)->contains(mousePosition)) {
+                    (*it)->processEvent(event);
+                    return;
+                }
+            }
+        }
+
         for (const std::shared_ptr<Button>& button : buttons) {
             button->processEvent(event);
         }

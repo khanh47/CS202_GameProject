@@ -26,6 +26,19 @@ inline const char* luckyBlockTextureAlias(std::string_view theme) noexcept {
         : "lucky_block_spritesheet";
 }
 
+inline std::string luckyBlockTextureFor(
+    std::string_view textureMode,
+    std::string_view theme
+) {
+    if (textureMode == "invisible") {
+        return {};
+    }
+    if (textureMode == "brick") {
+        return brickTextureAlias(theme);
+    }
+    return luckyBlockTextureAlias(theme);
+}
+
 inline bool isBrickTextureAlias(std::string_view textureKey) noexcept {
     return textureKey == "brick"
         || textureKey == "brick_spritesheet"
@@ -41,8 +54,10 @@ inline std::string textureAliasFor(
     const SpawnSpec& spec,
     std::string_view theme
 ) {
-    if (spec.typeKey == "LuckyBlock"
-        || isLuckyBlockTextureAlias(spec.textureKey)) {
+    if (spec.typeKey == "LuckyBlock") {
+        return luckyBlockTextureFor(spec.luckyTexture, theme);
+    }
+    if (isLuckyBlockTextureAlias(spec.textureKey)) {
         return luckyBlockTextureAlias(theme);
     }
 
