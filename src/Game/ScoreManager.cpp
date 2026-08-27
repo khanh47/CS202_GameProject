@@ -8,6 +8,9 @@ ScoreManager::ScoreManager() {
     _lives = 3;
     _highScore = 0;
     _stompComboIndex = 0;
+    _timeRemaining = 400.0f;
+    _initialTime = 400.0f;
+    _timePaused = false;
 }
 
 void ScoreManager::handleEvent(ScoreEventType event, sf::Vector2f position, int detail) {
@@ -66,10 +69,13 @@ void ScoreManager::handleEvent(ScoreEventType event, sf::Vector2f position, int 
             displayText = "1UP";
             break;
 
-        case ScoreEventType::FlagpoleReached:
-            pointsAwarded = (detail > 0) ? detail : 1000;
+        case ScoreEventType::FlagpoleReached: {
+            int flagpolePoints = (detail > 0) ? detail : 1000;
+            pointsAwarded = flagpolePoints;
             displayText = std::to_string(pointsAwarded);
+            _timePaused = true;
             break;
+        }
 
         case ScoreEventType::LostLive:
             // Reset stomp combo ladder when a life is lost
@@ -95,6 +101,14 @@ void ScoreManager::handleEvent(ScoreEventType event, sf::Vector2f position, int 
 }
 
 void ScoreManager::update(float deltaTime) {
+    // Update level timer
+    if (!_timePaused && _timeRemaining > 0.0f) {
+        _timeRemaining -= deltaTime;
+        if (_timeRemaining < 0.0f) {
+            _timeRemaining = 0.0f;
+        }
+    }
+
     for (auto& popup : _floatingTexts) {
         popup.update(deltaTime);
     }
@@ -121,16 +135,29 @@ void ScoreManager::renderFloatingTexts(sf::RenderTarget& target, const sf::Font&
 }
 
 void ScoreManager::renderHUD(sf::RenderTarget& target, const sf::Font& font, sf::Vector2f hudPosition) const {
-    std::string hudString = "MARIO        COINS        LIVES\n" + 
-                            getFormattedScore() + "       " + getFormattedCoins() + "          x" + std::to_string(_lives);
+    auto drawColumn = [&](const std::string& header, const std::string& value, float x) {
+        std::string colText = header + "\n" + value;
+        sf::Text text(font, colText, 36);
+        text.setPosition({x, hudPosition.y});
+        text.setFillColor(sf::Color::White);
+        text.setOutlineColor(sf::Color::Black);
+        text.setOutlineThickness(2.0f);
+        target.draw(text);
+    };
 
-    sf::Text hudText(font, hudString, 36);
-    hudText.setPosition(hudPosition);
-    hudText.setFillColor(sf::Color::White);
-    hudText.setOutlineColor(sf::Color::Black);
-    hudText.setOutlineThickness(2.0f);
+    // Fixed absolute column positions: Each section stays stuck in place independently
+    drawColumn("MARIO", getFormattedScore(), hudPosition.x);
+    drawColumn("COINS", getFormattedCoins(), hudPosition.x + 360.0f);
+    drawColumn("LIVES", "x" + std::to_string(_lives), hudPosition.x + 700.0f);
+    drawColumn("TIME",  getFormattedTime(), hudPosition.x + 1040.0f);
+}
 
-    target.draw(hudText);
+int ScoreManager::convertRemainingTimeToScore(int pointsPerSecond) {
+    int secondsLeft = getIntTimeRemaining();
+    int bonusScore = secondsLeft * pointsPerSecond;
+    addScore(bonusScore);
+    _timeRemaining = 0.0f;
+    return bonusScore;
 }
 
 int ScoreManager::convertRemainingTimeToScore(int secondsLeft, int pointsPerSecond) {
@@ -167,5 +194,11 @@ std::string ScoreManager::getFormattedScore() const {
 std::string ScoreManager::getFormattedCoins() const {
     std::ostringstream ss;
     ss << "x" << std::setw(2) << std::setfill('0') << _coins;
+    return ss.str();
+}
+
+std::string ScoreManager::getFormattedTime() const {
+    std::ostringstream ss;
+    ss << std::setw(3) << std::setfill('0') << getIntTimeRemaining();
     return ss.str();
 }

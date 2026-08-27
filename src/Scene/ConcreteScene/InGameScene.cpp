@@ -28,6 +28,7 @@
 #include "Game/Objects/Player/Player.h"
 #include "Game/Objects/Projectile/Fireball.h"
 #include "Game/Objects/Projectile/KoopaShell.h"
+#include "Scene/ConcreteScene/ScoreComputationScene.h"
 #include "Game/Snapshot/SaveLoadGame.h"
 #include "ResourceManager.h"
 #include "Audio/MusicManager.h"
@@ -230,6 +231,7 @@ void InGameScene::init() {
         // Ensure title-screen music is stopped and play level theme
         _isActive = true;
         _starmanMusicActive = false;
+        _scoreManager.setTimePaused(false);
         stopTitleScreenMusic();
         Audio::MusicManager::getInstance().setVolume(GameSettings::getInstance().musicVolume);
         Audio::MusicManager::getInstance().play(
@@ -257,20 +259,38 @@ void InGameScene::handleInput(const sf::Event& event) {
         return;
     }
 
-    if (_winActive) {
+    if (_winActive || _gameOverActive) {
         if (event.is<sf::Event::KeyPressed>()
             || event.is<sf::Event::MouseButtonPressed>()
             || event.is<sf::Event::JoystickButtonPressed>()) {
-            requestExit();
-        }
-        return;
-    }
 
-    if (_gameOverActive) {
-        if (event.is<sf::Event::KeyPressed>()
-            || event.is<sf::Event::MouseButtonPressed>()
-            || event.is<sf::Event::JoystickButtonPressed>()) {
-            requestExit();
+            ScoreSummaryData summary;
+            summary.levelPath = _name;
+
+            if (_name.find("map-1") != std::string::npos) {
+                summary.levelName = "WORLD 1 - GRASSLAND";
+            } else if (_name.find("map-2") != std::string::npos) {
+                summary.levelName = "WORLD 2 - UNDERGROUND";
+            } else if (_name.find("map-3") != std::string::npos) {
+                summary.levelName = "WORLD 3 - CASTLE";
+            } else {
+                summary.levelName = "LEVEL RESULTS";
+            }
+
+            if (auto player = std::dynamic_pointer_cast<Player>(_gameWorld.getPrimaryPlayer())) {
+                summary.character = player->getCharacter();
+            }
+            summary.isWin = _winActive;
+            summary.baseScore = _scoreManager.getScore();
+            summary.coinsCollected = _scoreManager.getCoins();
+            summary.timeRemaining = _scoreManager.getIntTimeRemaining();
+            summary.livesRemaining = std::max(0, _scoreManager.getLives());
+            summary.highScore = _scoreManager.getHighScore();
+            summary.returnToMapEditor = _returnToMapEditor;
+
+            if (auto* manager = getSceneManager()) {
+                manager->pushScene(std::make_unique<ScoreComputationScene>(summary));
+            }
         }
         return;
     }
@@ -298,6 +318,14 @@ void InGameScene::requestExit() {
 void InGameScene::updateSimulation(const float &fixedDt) {
     if (_winReactionActive || _gameOverActive || _winActive) {
         return;
+    }
+
+    if (_scoreManager.isTimeUp()) {
+        for (const auto& player : _gameWorld.getLivingPlayers()) {
+            if (player) {
+                player->destroy();
+            }
+        }
     }
 
     _gameWorld.updateSimulation(fixedDt);
@@ -389,7 +417,8 @@ nlohmann::json InGameScene::captureSaveState() const {
         {"points", _scoreManager.getScore()},
         {"coins", _scoreManager.getCoins()},
         {"lives", _scoreManager.getLives()},
-        {"highScore", _scoreManager.getHighScore()}
+        {"highScore", _scoreManager.getHighScore()},
+        {"time", _scoreManager.getTimeRemaining()}
     };
 
     if (const std::optional<sf::Vector2f> checkpoint =
@@ -484,7 +513,8 @@ void InGameScene::restoreSaveState(const nlohmann::json& state) {
         score.value("points", 0),
         score.value("coins", 0),
         score.value("lives", 3),
-        score.value("highScore", 0)
+        score.value("highScore", 0),
+        score.value("time", 400.0f)
     );
 
     if (state.contains("checkpoint") && !state["checkpoint"].is_null()) {
@@ -667,6 +697,7 @@ void InGameScene::_checkWin() {
     }
 
     _winReactionActive = true;
+    _scoreManager.setTimePaused(true);
 
     auto player = std::dynamic_pointer_cast<Player>(_gameWorld.getPrimaryPlayer());
     if (player) {
@@ -749,6 +780,7 @@ void InGameScene::_checkGameOver() {
 void InGameScene::_respawnPlayer() {
     _gameWorld.respawnPlayer();
     _gameWorld.setScoreManager(&_scoreManager);
+    _scoreManager.resetTime(400.0f);
     // Rebind camera tracking to the newly spawned player
     if (auto player = _gameWorld.getPrimaryPlayer()) {
         _camera.setTarget(player);

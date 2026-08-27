@@ -7,6 +7,7 @@
 #include <iomanip>
 #include <sstream>
 #include <algorithm>
+#include <cmath>
 
 // Enum representing score-triggering events in Mario
 enum class ScoreEventType {
@@ -54,15 +55,27 @@ public:
     // Render floating score numbers in world coordinates
     void renderFloatingTexts(sf::RenderTarget& target, const sf::Font& font) const;
 
-    // Render fixed HUD overlay (Score, Coins, Lives)
+    // Render fixed HUD overlay (Score, Coins, Lives, Time)
     void renderHUD(sf::RenderTarget& target, const sf::Font& font, sf::Vector2f hudPosition = {20.f, 20.f}) const;
-
-    // Convert level time left into score bonus
-    int convertRemainingTimeToScore(int secondsLeft, int pointsPerSecond = 50);
 
     // Formatted HUD getters
     std::string getFormattedScore() const;
     std::string getFormattedCoins() const;
+    std::string getFormattedTime() const;
+
+    // Time Management
+    void setTimeRemaining(float seconds) { _timeRemaining = std::max(0.0f, seconds); }
+    void setInitialTime(float seconds) { _initialTime = std::max(0.0f, seconds); }
+    void resetTime(float seconds = -1.0f) { _timeRemaining = (seconds >= 0.0f) ? seconds : _initialTime; _timePaused = false; }
+    float getTimeRemaining() const { return _timeRemaining; }
+    int getIntTimeRemaining() const { return static_cast<int>(std::max(0.0f, std::ceil(_timeRemaining))); }
+    bool isTimeUp() const { return _timeRemaining <= 0.0f; }
+    bool isTimePaused() const { return _timePaused; }
+    void setTimePaused(bool paused) { _timePaused = paused; }
+
+    // Convert level time left into score bonus
+    int convertRemainingTimeToScore(int pointsPerSecond = 50);
+    int convertRemainingTimeToScore(int secondsLeft, int pointsPerSecond);
 
     // Getters & Setters
     int getScore() const { return _score; }
@@ -70,11 +83,13 @@ public:
     int getLives() const { return _lives; }
     int getHighScore() const { return _highScore; }
     void setLives(int lives) { _lives = lives; }
-    void restoreState(int score, int coins, int lives, int highScore) {
+    void restoreState(int score, int coins, int lives, int highScore, float timeRemaining = 400.0f) {
         _score = std::max(score, 0);
         _coins = std::max(coins, 0);
         _lives = std::max(lives, 0);
         _highScore = std::max({0, highScore, _score});
+        _timeRemaining = std::max(0.0f, timeRemaining);
+        _timePaused = false;
         _stompComboIndex = 0;
         _floatingTexts.clear();
     }
@@ -91,6 +106,10 @@ private:
     int _lives = 3;
     int _highScore = 0;
     int _stompComboIndex = 0;
+
+    float _timeRemaining = 400.0f;
+    float _initialTime = 400.0f;
+    bool _timePaused = false;
 
     // Super Mario Bros stomp reward sequence
     const std::vector<std::variant<int, std::string>> _stompSequence = {

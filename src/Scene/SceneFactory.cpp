@@ -11,6 +11,7 @@
 #include "Scene/ConcreteScene/PlayerModeSelectScene.h"
 #include "Scene/ConcreteScene/SaveGameScene.h"
 #include "Scene/ConcreteScene/SettingsScene.h"
+#include "Scene/ConcreteScene/ScoreComputationScene.h"
 #include <iostream>
 
 SceneFactory::SceneFactory() {
@@ -27,6 +28,7 @@ SceneFactory::SceneFactory() {
     registerScene("EXIT_CONFIRM", []() { return std::make_unique<ExitConfirmScene>(); });
     registerScene("MAP_EDITOR", []() { return std::make_unique<MapEditorScene>(); });
     registerScene("IN_GAME", []() { return std::make_unique<InGameScene>("assets/datas/levels/map-1.json"); });
+    registerScene("SCORE_COMPUTATION", []() { return std::make_unique<ScoreComputationScene>(); });
 }
 
 void SceneFactory::registerScene(const std::string& stateName, std::function<std::unique_ptr<Scene>()> factory) {
