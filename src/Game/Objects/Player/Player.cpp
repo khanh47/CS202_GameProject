@@ -755,14 +755,17 @@ void Player::handleMegaEnvironmentContact(
     const b2ContactData& contactData,
     b2ShapeId ownShape
 ) {
-    // Mega destroys solid world obstacles on contact. Slopes and unbreakable
-    // terrain blocks are permanent level geometry and must not be destroyed.
+    // Mega destroys breakable terrain and live block objects (coin/lucky
+    // blocks) on contact. Slopes and unbreakable terrain are permanent level
+    // geometry and must not be destroyed.
     if (auto* block = dynamic_cast<Block*>(&other)) {
         if (dynamic_cast<SlopeBlock*>(block)) {
             return;
         }
 
-        if (block->isBreakable() && !block->isPendingDestroy()) {
+        const bool isLiveBlock = !block->isRenderedByTileMap();
+        if ((block->isBreakable() || isLiveBlock)
+            && !block->isPendingDestroy()) {
             Audio::SoundManager::getInstance().playEffect("break");
             if (_world) {
                 block->spawnBreakEffect(*_world);

@@ -9,6 +9,8 @@ class Player;
  */
 class MegaMushroom : public Item {
 public:
+    static constexpr float emergenceDurationSeconds = 1.0f;
+
     MegaMushroom();
     MegaMushroom(sf::Texture& texture);
     ~MegaMushroom() override = default;
@@ -21,6 +23,9 @@ protected:
     void updateSimulation(const float& fixedDt) override;
 
 private:
+    void enablePickupCollision();
+
     bool _movingRight = true;
+    bool _pickupCollisionEnabled = false;
     static constexpr float _speed = 3.0f;
 };

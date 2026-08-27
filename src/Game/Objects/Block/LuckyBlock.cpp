@@ -4,6 +4,7 @@
 
 #include "Audio/SoundManager.h"
 #include "Game/Behaviours/Animatable.h"
+#include "Game/Objects/Item/ConcreteItems/MegaMushroom.h"
 #include "Game/Objects/Item/Item.h"
 #include "Game/Objects/Player/Player.h"
 #include "Game/World/GameWorld.h"
@@ -171,7 +172,14 @@ void LuckyBlock::onContact(GameObject& other, const b2ContactData& contactData, 
                         )
                     );
                     if (auto* powerup = dynamic_cast<Item*>(item.get())) {
-                        powerup->startEmerging(itemSpawnPos);
+                        if (dynamic_cast<MegaMushroom*>(powerup)) {
+                            powerup->startEmerging(
+                                itemSpawnPos,
+                                MegaMushroom::emergenceDurationSeconds
+                            );
+                        } else {
+                            powerup->startEmerging(itemSpawnPos);
+                        }
                         _emergingPowerup = std::dynamic_pointer_cast<Item>(item);
                         Audio::SoundManager::getInstance().playEffect("sprout");
                     }

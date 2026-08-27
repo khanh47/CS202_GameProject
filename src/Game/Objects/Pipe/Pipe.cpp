@@ -84,7 +84,7 @@ void Pipe::spawn(
     _body->setHibox(b2_nullShapeId);
 
     for (Segment& segment : _segments) {
-        if (segment.quads.empty()) {
+        if (segment.quads.empty() || !segment.active) {
             continue;
         }
 
@@ -151,6 +151,40 @@ void Pipe::flushBrokenSegments() {
 
     _pendingShapeDestruction.clear();
     refreshPrimaryShape();
+}
+
+std::vector<int> Pipe::getBrokenSegmentIndices() const {
+    std::vector<int> brokenSegments;
+    brokenSegments.reserve(_segments.size());
+
+    for (std::size_t index = 0; index < _segments.size(); ++index) {
+        if (!_segments[index].active) {
+            brokenSegments.push_back(static_cast<int>(index));
+        }
+    }
+
+    return brokenSegments;
+}
+
+void Pipe::restoreBrokenSegments(const std::vector<int>& segmentIndices) {
+    for (const int index : segmentIndices) {
+        if (index < 0
+            || index >= static_cast<int>(_segments.size())
+            || !_segments[static_cast<std::size_t>(index)].active) {
+            continue;
+        }
+
+        Segment& segment = _segments[static_cast<std::size_t>(index)];
+        segment.active = false;
+        if (b2Shape_IsValid(segment.shape)) {
+            _pendingShapeDestruction.push_back(segment.shape);
+        }
+        segment.shape = b2_nullShapeId;
+    }
+
+    rebuildVertexArray();
+    refreshPrimaryShape();
+    flushBrokenSegments();
 }
 
 std::optional<Pipe::SegmentBreakData> Pipe::getSegmentBreakData(

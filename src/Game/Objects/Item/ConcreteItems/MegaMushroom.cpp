@@ -35,7 +35,10 @@ void MegaMushroom::onCreateShapeDef(b2ShapeDef& def) {
     def.material.friction = 0.0f;
     def.material.restitution = 0.95f;
     def.filter.categoryBits = CollisionFilter::PICKUP;
-    def.filter.maskBits = CollisionFilter::ENV | CollisionFilter::PLAYER;
+    // The mushroom is spawned at the lucky block's center while it grows.
+    // Keep it completely non-colliding until it has reached its above-block
+    // position so a player standing underneath cannot be touched or pushed.
+    def.filter.maskBits = 0;
 }
 
 void MegaMushroom::updateSimulation(const float& fixedDt) {
@@ -43,6 +46,8 @@ void MegaMushroom::updateSimulation(const float& fixedDt) {
     if (isEmerging()) {
         return;
     }
+
+    enablePickupCollision();
 
     if (!hasValidBody()) {
         return;
@@ -62,4 +67,20 @@ void MegaMushroom::updateSimulation(const float& fixedDt) {
         ? 0.0f
         : _speed;
     b2Body_SetLinearVelocity(body, {horizontalSpeed * direction, velocity.y});
+}
+
+void MegaMushroom::enablePickupCollision() {
+    if (_pickupCollisionEnabled || !hasValidBody()) {
+        return;
+    }
+
+    const b2ShapeId hitbox = _body->getHitbox();
+    if (!b2Shape_IsValid(hitbox)) {
+        return;
+    }
+
+    b2Filter filter = b2Shape_GetFilter(hitbox);
+    filter.maskBits = CollisionFilter::ENV | CollisionFilter::PLAYER;
+    b2Shape_SetFilter(hitbox, filter);
+    _pickupCollisionEnabled = true;
 }

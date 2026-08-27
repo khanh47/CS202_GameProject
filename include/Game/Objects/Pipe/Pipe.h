@@ -48,6 +48,12 @@ public:
     /// Physically removes pipe segments queued during contact callbacks.
     void flushBrokenSegments();
 
+    /// Returns the zero-based indices of segments already destroyed.
+    std::vector<int> getBrokenSegmentIndices() const;
+
+    /// Restores segment damage captured in a save state.
+    void restoreBrokenSegments(const std::vector<int>& segmentIndices);
+
     struct SegmentBreakData {
         sf::Vector2f position;
         sf::Vector2f size;
