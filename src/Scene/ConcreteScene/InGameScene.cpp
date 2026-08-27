@@ -620,7 +620,7 @@ void InGameScene::restoreSaveState(const nlohmann::json& state) {
         );
         const sf::Vector2f size = vectorFromJson(
             snapshot.value("size", nlohmann::json{}),
-            {54.0f, 54.0f}
+            {0.0f, 0.0f}
         );
         const std::shared_ptr<GameObject> item =
             _gameWorld.spawnItem(type, position, size);

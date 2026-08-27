@@ -468,6 +468,10 @@ std::shared_ptr<GameObject> GameWorld::spawnItem(
     sf::Vector2f position,
     sf::Vector2f size
 ) {
+    if (size.x <= 0.0f || size.y <= 0.0f) {
+        size = defaultItemSize(itemTypeKey);
+    }
+
     sf::Texture* texture = nullptr;
     auto& resources = ResourceManager::getInstance();
     if (itemTypeKey == "Coin") {
@@ -517,6 +521,18 @@ void GameWorld::reachFlagpole(sf::Vector2f position) {
         Audio::MusicManager::getInstance().setVolume(GameSettings::getInstance().musicVolume);
         Audio::MusicManager::getInstance().play("course_clear", false);
     }
+}
+
+sf::Vector2f GameWorld::defaultItemSize(
+    const std::string& itemTypeKey
+) noexcept {
+    if (itemTypeKey == "MegaMushroom") {
+        return {384.0f, 308.0f};
+    }
+    if (itemTypeKey == "MegaCoin") {
+        return {96.0f, 96.0f};
+    }
+    return {54.0f, 54.0f};
 }
 
 void GameWorld::syncPlayerControllers() {

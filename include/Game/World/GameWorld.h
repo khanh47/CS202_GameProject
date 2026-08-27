@@ -53,7 +53,14 @@ public:
         const sf::Texture* texture,
         sf::IntRect textureRect
     );
-    std::shared_ptr<GameObject> spawnItem(const std::string& itemTypeKey, sf::Vector2f position, sf::Vector2f size = {54.0f, 54.0f});
+    static sf::Vector2f defaultItemSize(
+        const std::string& itemTypeKey
+    ) noexcept;
+    std::shared_ptr<GameObject> spawnItem(
+        const std::string& itemTypeKey,
+        sf::Vector2f position,
+        sf::Vector2f size = {0.0f, 0.0f}
+    );
     void freeze(float durationSeconds);
     void releaseFreeze();
     bool isFrozen() const { return _freezeTimer > 0.0f; }
