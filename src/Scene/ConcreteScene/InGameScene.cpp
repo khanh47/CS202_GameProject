@@ -141,10 +141,12 @@ std::string levelThemeFor(
 
 InGameScene::InGameScene(
     const std::string& name,
-    std::optional<nlohmann::json> initialSaveState
+    std::optional<nlohmann::json> initialSaveState,
+    bool returnToMapEditor
 )
     : Scene(name),
-      _initialSaveState(std::move(initialSaveState)) {}
+      _initialSaveState(std::move(initialSaveState)),
+      _returnToMapEditor(returnToMapEditor) {}
 
 void InGameScene::init() {
     _winReactionActive = false;
@@ -259,9 +261,7 @@ void InGameScene::handleInput(const sf::Event& event) {
         if (event.is<sf::Event::KeyPressed>()
             || event.is<sf::Event::MouseButtonPressed>()
             || event.is<sf::Event::JoystickButtonPressed>()) {
-            if (auto mgr = getSceneManager()) {
-                mgr->requestReturnToModeMenu();
-            }
+            requestExit();
         }
         return;
     }
@@ -270,23 +270,29 @@ void InGameScene::handleInput(const sf::Event& event) {
         if (event.is<sf::Event::KeyPressed>()
             || event.is<sf::Event::MouseButtonPressed>()
             || event.is<sf::Event::JoystickButtonPressed>()) {
-            if (auto mgr = getSceneManager()) {
-                mgr->requestReturnToModeMenu();
-            }
+            requestExit();
         }
         return;
     }
 
     if (auto* keyEvent = event.getIf<sf::Event::KeyPressed>()) {
         if (keyEvent->code == sf::Keyboard::Key::Escape) {
-            if (auto mgr = getSceneManager()) {
-                mgr->requestReturnToModeMenu();
-                return;
-            }
+            requestExit();
+            return;
         }
     }
 
     _gameWorld.handleInput(event);
+}
+
+void InGameScene::requestExit() {
+    if (auto* manager = getSceneManager()) {
+        if (_returnToMapEditor) {
+            manager->requestPopScene();
+        } else {
+            manager->requestReturnToModeMenu();
+        }
+    }
 }
 
 void InGameScene::updateSimulation(const float &fixedDt) {

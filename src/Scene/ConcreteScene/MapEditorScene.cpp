@@ -3209,7 +3209,11 @@ void MapEditorScene::saveAndPlay() {
 
     if (auto* manager = getSceneManager()) {
         manager->pushScene(
-            std::make_unique<InGameScene>(savedMapPath())
+            std::make_unique<InGameScene>(
+                savedMapPath(),
+                std::nullopt,
+                true
+            )
         );
     }
 }
