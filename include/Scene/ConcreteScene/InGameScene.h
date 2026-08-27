@@ -18,7 +18,8 @@ class InGameScene : public Scene {
 public:
     explicit InGameScene(
         const std::string& name,
-        std::optional<nlohmann::json> initialSaveState = std::nullopt
+        std::optional<nlohmann::json> initialSaveState = std::nullopt,
+        bool returnToMapEditor = false
     );
     ~InGameScene() override = default;
 
@@ -34,6 +35,7 @@ public:
 
 private:
     void restoreSaveState(const nlohmann::json& state);
+    void requestExit();
     void _checkGameOver();
     void _checkWin();
     void _checkMinigameResult();
@@ -55,6 +57,7 @@ private:
 
     std::optional<nlohmann::json> _initialSaveState;
     bool _saveStateInitialized = false;
+    bool _returnToMapEditor = false;
 
     GameWorld _gameWorld;
     Camera _camera;
