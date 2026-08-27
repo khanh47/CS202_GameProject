@@ -460,6 +460,7 @@ nlohmann::json InGameScene::captureSaveState() const {
         if (const auto pipe = std::dynamic_pointer_cast<Pipe>(object)) {
             snapshot["warpID"] = pipe->getWarpID();
             snapshot["warpTarget"] = pipe->getWarpTarget();
+            snapshot["brokenSegments"] = pipe->getBrokenSegmentIndices();
         }
 
         state["objects"].push_back(std::move(snapshot));
@@ -585,6 +586,21 @@ void InGameScene::restoreSaveState(const nlohmann::json& state) {
                 );
             }
         }
+        if (const auto pipe = std::dynamic_pointer_cast<Pipe>(object)) {
+            const nlohmann::json brokenSegments = snapshot.value(
+                "brokenSegments",
+                nlohmann::json::array()
+            );
+            if (brokenSegments.is_array()) {
+                std::vector<int> segmentIndices;
+                for (const nlohmann::json& segment : brokenSegments) {
+                    if (segment.is_number_integer()) {
+                        segmentIndices.push_back(segment.get<int>());
+                    }
+                }
+                pipe->restoreBrokenSegments(segmentIndices);
+            }
+        }
         if (const auto checkpoint =
                 std::dynamic_pointer_cast<CheckpointFlag>(object)) {
             const bool triggered = snapshot.value("triggered", false);
@@ -620,7 +636,7 @@ void InGameScene::restoreSaveState(const nlohmann::json& state) {
         );
         const sf::Vector2f size = vectorFromJson(
             snapshot.value("size", nlohmann::json{}),
-            {54.0f, 54.0f}
+            {0.0f, 0.0f}
         );
         const std::shared_ptr<GameObject> item =
             _gameWorld.spawnItem(type, position, size);

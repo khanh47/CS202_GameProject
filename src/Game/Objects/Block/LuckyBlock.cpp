@@ -4,6 +4,7 @@
 
 #include "Audio/SoundManager.h"
 #include "Game/Behaviours/Animatable.h"
+#include "Game/Objects/Item/ConcreteItems/MegaMushroom.h"
 #include "Game/Objects/Item/Item.h"
 #include "Game/Objects/Player/Player.h"
 #include "Game/World/GameWorld.h"
@@ -131,7 +132,18 @@ void LuckyBlock::onContact(GameObject& other, const b2ContactData& contactData, 
             const ItemOption* chosenOption = selectRandomOption();
 
             sf::Vector2f itemSpawnPos = getPosition();
-            itemSpawnPos.y -= 64.0f; // Spawn above the block
+            if (chosenOption) {
+                const sf::Vector2f itemSize = GameWorld::defaultItemSize(
+                    chosenOption->itemTypeKey
+                );
+                // Keep the pickup's bottom edge at the block's top edge.
+                // The minimum preserves the established offset for normal
+                // 54x54 pickups while allowing large pickups to emerge fully.
+                itemSpawnPos.y -= std::max(
+                    64.0f,
+                    32.0f + itemSize.y * 0.5f
+                );
+            }
 
             if (chosenOption) {
                 if (chosenOption->customSpawner && world) {
@@ -154,10 +166,20 @@ void LuckyBlock::onContact(GameObject& other, const b2ContactData& contactData, 
                     // to the normal above-block position.
                     const std::shared_ptr<GameObject> item = world->spawnItem(
                         chosenOption->itemTypeKey,
-                        getPosition()
+                        getPosition(),
+                        GameWorld::defaultItemSize(
+                            chosenOption->itemTypeKey
+                        )
                     );
                     if (auto* powerup = dynamic_cast<Item*>(item.get())) {
-                        powerup->startEmerging(itemSpawnPos);
+                        if (dynamic_cast<MegaMushroom*>(powerup)) {
+                            powerup->startEmerging(
+                                itemSpawnPos,
+                                MegaMushroom::emergenceDurationSeconds
+                            );
+                        } else {
+                            powerup->startEmerging(itemSpawnPos);
+                        }
                         _emergingPowerup = std::dynamic_pointer_cast<Item>(item);
                         Audio::SoundManager::getInstance().playEffect("sprout");
                     }

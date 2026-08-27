@@ -110,6 +110,12 @@ bool Block::tryBreakOnContact(
 
 bool Block::isBumped(GameObject& other, const b2ContactData& contactData, b2ShapeId ownShape) {
     if (auto* player = dynamic_cast<Player*>(&other)) {
+        // Mega handles destruction directly instead of triggering the
+        // normal block bump/reward interaction.
+        if (player->isMegaState()) {
+            return false;
+        }
+
         if (b2Shape_IsValid(ownShape) && contactData.manifold.pointCount > 0) {
             b2Vec2 normal = contactData.manifold.normal;
             if (!B2_ID_EQUALS(contactData.shapeIdA, ownShape)) {
@@ -120,10 +126,8 @@ bool Block::isBumped(GameObject& other, const b2ContactData& contactData, b2Shap
             if (normal.y >= 0.3f || player->getPosition().y > getPosition().y) {
                 auto* playerAnimatable = player->getBehaviour<Animatable>();
                 auto* holdingShell = player->getBehaviour<ShellHoldBehaviour>();
-                // Mega-state players are too large to react with a bump animation.
                 if (playerAnimatable &&
-                    (!holdingShell || !holdingShell->isHoldingShell()) &&
-                    !player->isMegaState()) {
+                    (!holdingShell || !holdingShell->isHoldingShell())) {
                     playerAnimatable->playAnimation("bump", true);
                 }
                 return true;
