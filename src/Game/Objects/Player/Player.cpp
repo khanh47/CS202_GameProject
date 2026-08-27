@@ -31,6 +31,7 @@
 #include <SFML/System/Clock.hpp>
 #include <algorithm>
 #include <SFML/Graphics/Texture.hpp>
+#include <SFML/Graphics/ConvexShape.hpp>
 #include <SFML/System/Vector2.hpp>
 #include <ctime>
 #include <iostream>
@@ -1145,6 +1146,51 @@ void Player::onRenderVisual(sf::RenderTarget& target, const sf::Vector2f& positi
     // Overlay sparkle particles during StarMan invincibility only.
     if (isStarManState()) {
         _starSparkle.render(target);
+    }
+
+    // Render character name and pointing triangle above player's head (e.g. "MARIO", "LUIGI")
+    if (!_isDying && !isPipeWarping()) {
+        std::string displayName = _character;
+        for (char& c : displayName) {
+            c = static_cast<char>(std::toupper(static_cast<unsigned char>(c)));
+        }
+
+        // Vibrant, bright glowing colors with black outline
+        sf::Color markerColor;
+        if (_character == "luigi") {
+            markerColor = sf::Color(60, 255, 100); // Bright Neon Luigi Green
+        } else if (_character == "mario") {
+            markerColor = sf::Color(255, 65, 65);  // Bright Vivid Mario Red
+        } else {
+            markerColor = sf::Color(255, 235, 70); // Bright Golden Yellow
+        }
+
+        const sf::Vector2f hitbox = getHitboxPixels();
+        const float topY = position.y - hitbox.y * 0.5f - 4.0f;
+
+        // Upside-down triangle pointing down directly to the player's head
+        sf::ConvexShape pointer(3);
+        pointer.setPoint(0, sf::Vector2f(-6.0f, -8.0f)); // Top-left
+        pointer.setPoint(1, sf::Vector2f( 6.0f, -8.0f)); // Top-right
+        pointer.setPoint(2, sf::Vector2f( 0.0f,  0.0f)); // Bottom tip pointing at head
+        pointer.setPosition({position.x, topY});
+        pointer.setFillColor(markerColor);
+        pointer.setOutlineColor(sf::Color::Black);
+        pointer.setOutlineThickness(1.5f);
+
+        // Character name text sitting directly above the pointer triangle
+        const sf::Font& font = ResourceManager::getInstance().getFont("SuperMario");
+        sf::Text nameText(font, displayName, 16);
+        nameText.setFillColor(markerColor);
+        nameText.setOutlineColor(sf::Color::Black);
+        nameText.setOutlineThickness(2.0f);
+
+        const sf::FloatRect bounds = nameText.getLocalBounds();
+        nameText.setOrigin({bounds.position.x + bounds.size.x * 0.5f, bounds.position.y + bounds.size.y});
+        nameText.setPosition({position.x, topY - 10.0f});
+
+        target.draw(pointer);
+        target.draw(nameText);
     }
 }
 
