@@ -335,13 +335,13 @@ void SettingsPanel::handleInput(const sf::Event& event) {
     _subMenu.processEvent(event);
     if (event.is<sf::Event::MouseMoved>()) {
         for (std::size_t index = 0; index < _topMenu.size(); ++index) {
-            if (auto button = _topMenu.getButton(index); button && button->isHovered()) {
+            if (auto button = _topMenu.getButton(index); button && button->isFocused()) {
                 _focus = FocusTarget::TopMenu;
                 break;
             }
         }
         for (std::size_t index = 0; index < _subMenu.size(); ++index) {
-            if (auto button = _subMenu.getButton(index); button && button->isHovered()) {
+            if (auto button = _subMenu.getButton(index); button && button->isFocused()) {
                 _focus = FocusTarget::SubMenu;
                 break;
             }
