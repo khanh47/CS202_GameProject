@@ -8,6 +8,7 @@ public:
     ~LevelSelectionScene() override = default;
 
     void onEnter() override;
+    void onExit() override;
     void handleInput(const sf::Event& event) override;
     void render(sf::RenderTarget& target) override;
 

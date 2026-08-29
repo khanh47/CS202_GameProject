@@ -21,8 +21,9 @@ private:
     std::vector<std::shared_ptr<Button>> _buttonMenu;
     LayoutProperties _layout;
     int _focusedIndex = 0;
-    bool _mouseOnly = false;
-    bool _arrowKeysOnly = false;
+    bool _mouseEnabled = true;
+    bool _keyboardEnabled = true;
+    bool _wasdEnabled = true;
 
     void syncFocus();
     void clearFocus();
@@ -47,9 +48,19 @@ public:
     void updateVisuals(float deltaTime);
     void render(sf::RenderTarget& target);
 
-    void setMouseOnly(bool mouseOnly);
+    void setMouseEnabled(bool enabled);
+    void setKeyboardEnabled(bool enabled);
+    void setWasdEnabled(bool enabled) noexcept {
+        _wasdEnabled = enabled;
+    }
+
+    // Deprecated wrappers for backwards compat
+    void setMouseOnly(bool mouseOnly) {
+        setMouseEnabled(mouseOnly);
+        setKeyboardEnabled(!mouseOnly);
+    }
     void setArrowKeysOnly(bool arrowKeysOnly) noexcept {
-        _arrowKeysOnly = arrowKeysOnly;
+        setWasdEnabled(!arrowKeysOnly);
     }
     void setFocusedIndex(int index);
     int getFocusedIndex() const { return _focusedIndex; }

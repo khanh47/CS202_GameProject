@@ -61,7 +61,19 @@ bool Enemy::isBlockedAhead() const {
         return false;
     }
 
-    return _supportGrid->isCellOccupied(probeColumn(), rowAt(getBodyPositionPixels().y));
+    const int col = probeColumn();
+    if (col < 0) {
+        return false;
+    }
+
+    const float centerY = getBodyPositionPixels().y;
+    const float halfH = _hitboxPixels.y * 0.25f;
+    const int topRow = rowAt(centerY - halfH);
+    const int bottomRow = rowAt(centerY + halfH);
+    if (_supportGrid->isCellOccupied(col, topRow)) return true;
+    if (_supportGrid->isCellOccupied(col, bottomRow)) return true;
+
+    return false;
 }
 
 int Enemy::probeColumn() const {

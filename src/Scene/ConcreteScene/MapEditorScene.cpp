@@ -583,13 +583,13 @@ void MapEditorScene::setupMenus() {
     setupInstructionsMenu();
     setupConfigMenu();
 
-    _categoryMenu.setMouseOnly(true);
-    _paletteMenu.setMouseOnly(true);
-    _generalMapMenu.setMouseOnly(true);
-    _actionMenu.setMouseOnly(true);
-    _mapSizeMenu.setMouseOnly(true);
-    _instructionsMenu.setMouseOnly(true);
-    _configMenu.setMouseOnly(true);
+    _categoryMenu.setMouseEnabled(true); _categoryMenu.setKeyboardEnabled(false);
+    _paletteMenu.setMouseEnabled(true); _paletteMenu.setKeyboardEnabled(false);
+    _generalMapMenu.setMouseEnabled(true); _generalMapMenu.setKeyboardEnabled(false);
+    _actionMenu.setMouseEnabled(true); _actionMenu.setKeyboardEnabled(false);
+    _mapSizeMenu.setMouseEnabled(true); _mapSizeMenu.setKeyboardEnabled(false);
+    _instructionsMenu.setMouseEnabled(true); _instructionsMenu.setKeyboardEnabled(false);
+    _configMenu.setMouseEnabled(true); _configMenu.setKeyboardEnabled(false);
 }
 
 void MapEditorScene::setupCategoryMenu() {

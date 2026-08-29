@@ -18,3 +18,5 @@ cmake-build-*/
 /.antigravityignore
 
 settings.json
+assets/SaveGameFiles/
+assets/datas/levels/custom-map.json

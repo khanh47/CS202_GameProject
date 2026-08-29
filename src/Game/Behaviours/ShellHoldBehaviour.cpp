@@ -159,7 +159,7 @@ void ShellHoldBehaviour::releaseShell(bool throwAway) {
                 const float clearDistance =
                     player->getHitboxPixels().x * 0.5f
                     + shell->getHitboxPixels().x * 0.5f
-                    + 2.0f;
+                    + 5.0f;
                 const sf::Vector2f pos = shell->getPosition();
                 shell->setPosition({pos.x + facing * clearDistance, pos.y});
             }

@@ -80,6 +80,7 @@ void SettingsScene::buildMusicPanel() {
     musicToggle->setToggleCallback([](bool on) {
         GameSettings::getInstance().musicEnabled = on;
         Audio::MusicManager::getInstance().setEnabled(on);
+        GameSettings::getInstance().save();
     });
     _subMenu.addButton(musicToggle);
 
@@ -92,6 +93,7 @@ void SettingsScene::buildMusicPanel() {
         s.musicVolume = std::clamp(value, 0.f, 100.f);
         updateVolumeLabel();
         Audio::MusicManager::getInstance().setVolume(value);
+        GameSettings::getInstance().save();
     });
     _subMenu.addButton(_btnMusicVolume);
 
@@ -102,6 +104,7 @@ void SettingsScene::buildMusicPanel() {
     soundToggle->setToggleCallback([](bool on) {
         GameSettings::getInstance().soundEnabled = on;
         Audio::SoundManager::getInstance().setEnabled(on);
+        GameSettings::getInstance().save();
     });
     _subMenu.addButton(soundToggle);
 
@@ -114,6 +117,7 @@ void SettingsScene::buildMusicPanel() {
         s.soundVolume = std::clamp(value, 0.f, 100.f);
         updateVolumeLabel();
         Audio::SoundManager::getInstance().setGlobalVolume(value);
+        GameSettings::getInstance().save();
     });
     _subMenu.addButton(_btnSoundVolume);
 
@@ -370,6 +374,7 @@ void SettingsScene::handleInput(const sf::Event& event) {
                 } else {
                     GameSettings::getInstance().setKeyForAction(*_rebindingAction, keyEvent->code);
                 }
+                GameSettings::getInstance().save();
                 updateKeybindButtonTexts();
                 _rebindingAction.reset();
                 _activeRebindingButton.reset();
