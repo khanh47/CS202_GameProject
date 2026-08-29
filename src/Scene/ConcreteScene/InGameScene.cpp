@@ -41,6 +41,11 @@
 namespace {
 using json = nlohmann::json;
 
+constexpr sf::IntRect pauseButtonNormalRect({256, 0}, {16, 16});
+constexpr sf::IntRect pauseButtonHoverRect({256, 16}, {16, 16});
+constexpr sf::Vector2f pauseButtonPosition{1824.f, 32.f};
+constexpr sf::Vector2f pauseButtonScale{4.f, 4.f};
+
 json vectorToJson(const sf::Vector2f& value) {
     return {value.x, value.y};
 }
@@ -165,6 +170,13 @@ void InGameScene::init() {
     _minigameParticipantCount = 0;
     _gameOverTexture = &ResourceManager::getInstance().getTexture("game_over");
     _gameOverOverlay.emplace(*_gameOverTexture);
+    sf::Texture& pauseButtonTexture =
+        ResourceManager::getInstance().getTexture("square_premade_buttons");
+    pauseButtonTexture.setSmooth(false);
+    _pauseButton.emplace(pauseButtonTexture, pauseButtonNormalRect);
+    _pauseButton->setPosition(pauseButtonPosition);
+    _pauseButton->setScale(pauseButtonScale);
+    _pauseButtonHovered = false;
     _gameOverPrompt.emplace(
         ResourceManager::getInstance().getFont("SuperMario"),
         "Press any key to continue",
@@ -336,6 +348,10 @@ void InGameScene::handleInput(const sf::Event& event) {
         return;
     }
 
+    if (handlePauseButtonInput(event)) {
+        return;
+    }
+
     if (auto* keyEvent = event.getIf<sf::Event::KeyPressed>()) {
         if (keyEvent->code == sf::Keyboard::Key::Escape) {
             openPauseMenu();
@@ -344,6 +360,61 @@ void InGameScene::handleInput(const sf::Event& event) {
     }
 
     _gameWorld.handleInput(event);
+}
+
+bool InGameScene::handlePauseButtonInput(const sf::Event& event) {
+    if (!isPauseButtonVisible() || !_pauseButton) {
+        return false;
+    }
+
+    if (const auto* mouseMove = event.getIf<sf::Event::MouseMoved>()) {
+        const sf::Vector2f mousePosition{
+            static_cast<float>(mouseMove->position.x),
+            static_cast<float>(mouseMove->position.y)
+        };
+        setPauseButtonHovered(
+            _pauseButton->getGlobalBounds().contains(mousePosition)
+        );
+        return false;
+    }
+
+    if (const auto* mousePress = event.getIf<sf::Event::MouseButtonPressed>();
+        mousePress && mousePress->button == sf::Mouse::Button::Left) {
+        const sf::Vector2f mousePosition{
+            static_cast<float>(mousePress->position.x),
+            static_cast<float>(mousePress->position.y)
+        };
+        if (_pauseButton->getGlobalBounds().contains(mousePosition)) {
+            openPauseMenu();
+            return true;
+        }
+    }
+
+    return false;
+}
+
+bool InGameScene::isPauseButtonVisible() const noexcept {
+    return _pauseOverlay == PauseOverlay::None
+        && !_winReactionActive
+        && !_winActive
+        && !_gameOverActive
+        && _gameWorld.hasLivingPlayers();
+}
+
+void InGameScene::setPauseButtonHovered(bool hovered) {
+    if (!_pauseButton || _pauseButtonHovered == hovered) {
+        return;
+    }
+    _pauseButtonHovered = hovered;
+    _pauseButton->setTextureRect(
+        hovered ? pauseButtonHoverRect : pauseButtonNormalRect
+    );
+}
+
+void InGameScene::drawPauseButton(sf::RenderTarget& target) {
+    if (isPauseButtonVisible() && _pauseButton) {
+        target.draw(*_pauseButton);
+    }
 }
 
 void InGameScene::buildPauseMenu() {
@@ -594,6 +665,7 @@ void InGameScene::render(sf::RenderTarget& target) {
 
     // Render screen HUD overlay
     _scoreManager.renderHUD(target, font, sf::Vector2f(40.f, 30.f));
+    drawPauseButton(target);
 
     if (_gameOverActive) {
         _drawGameOverOverlay(target);

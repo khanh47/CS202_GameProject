@@ -53,6 +53,10 @@ private:
     void buildPauseMenu();
     void buildReturnConfirmation();
     void drawPauseOverlay(sf::RenderTarget& target);
+    bool handlePauseButtonInput(const sf::Event& event);
+    bool isPauseButtonVisible() const noexcept;
+    void setPauseButtonHovered(bool hovered);
+    void drawPauseButton(sf::RenderTarget& target);
     void _checkGameOver();
     void _checkWin();
     void _checkMinigameResult();
@@ -71,6 +75,8 @@ private:
     const sf::Texture* _gameOverTexture = nullptr;
     std::optional<sf::Text> _winTitle;
     std::optional<sf::Text> _winPrompt;
+    std::optional<sf::Sprite> _pauseButton;
+    bool _pauseButtonHovered = false;
 
     std::optional<nlohmann::json> _initialSaveState;
     bool _saveStateInitialized = false;
