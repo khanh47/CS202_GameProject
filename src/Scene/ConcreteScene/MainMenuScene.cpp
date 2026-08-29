@@ -4,10 +4,12 @@
 #include "ResourceManager.h"
 #include "Scene/ConcreteScene/ExitConfirmScene.h"
 #include "Scene/SceneManager.h"
+#include <SFML/Graphics/Rect.hpp>
 
 MainMenuScene::MainMenuScene()
     : Scene("MainMenuScene"),
-      _promptText(ResourceManager::getInstance().getFont("SuperMario"), "Press any key to continue", 48) {
+      _promptText(ResourceManager::getInstance().getFont("SuperMario"), "Press any key to continue", 48),
+      _mainText(ResourceManager::getInstance().getFont("SuperMario"), "SUPER MARIO BROS", 80) {
     sf::FloatRect bounds = _promptText.getLocalBounds();
     _promptText.setOutlineThickness(5.0f);
 
@@ -16,8 +18,19 @@ MainMenuScene::MainMenuScene()
 
     _promptText.setOrigin({bounds.position.x + bounds.size.x / 2.0f,
                            bounds.position.y + bounds.size.y / 2.0f});
-    _promptText.setPosition({960.0f, 900.0f});
+    _promptText.setPosition({960.0f, 450.0f});
     _promptText.setFillColor(sf::Color::White);
+
+    sf::FloatRect mainBounds = _mainText.getLocalBounds();
+    _mainText.setOutlineThickness(5.0f);
+
+    _mainText.setOutlineColor(sf::Color::Black);
+    _mainText.setFillColor(sf::Color::White);
+
+    _mainText.setOrigin({mainBounds.position.x + mainBounds.size.x / 2.0f,
+                           mainBounds.position.y + mainBounds.size.y / 2.0f});
+    _mainText.setPosition({960.0f, 200.0f});
+    _mainText.setFillColor(sf::Color::White);
 }
 
 void MainMenuScene::init() {
@@ -58,6 +71,7 @@ void MainMenuScene::render(sf::RenderTarget& target) {
         return;
     }
 
+    target.draw(_mainText);
     _buttonMenu.render(target);
 }
 
@@ -66,13 +80,13 @@ void MainMenuScene::_setupButtons() {
     _buttonMenu.setLayoutProperties(
         {820.0f, 300.0f},
         {280.0f, 60.0f},
-        65.0f,
+        80.0f,
         false,
         sf::Color(100, 149, 237),
-        28
+        36 
     );
 
-    _buttonMenu.addButtonAuto("Play", std::make_unique<FunctionalCommand>(
+    _buttonMenu.addMainMenuButtonAuto("Play", std::make_unique<FunctionalCommand>(
         "Play", [this]() {
             if (auto mgr = getSceneManager()) {
                 mgr->pushSceneByName("MODE_SELECT");
@@ -80,7 +94,7 @@ void MainMenuScene::_setupButtons() {
         }
     ));
 
-    _buttonMenu.addButtonAuto("Save Game", std::make_unique<FunctionalCommand>(
+    _buttonMenu.addMainMenuButtonAuto("Save Game", std::make_unique<FunctionalCommand>(
         "Save Game", [this]() {
             if (auto mgr = getSceneManager()) {
                 mgr->pushSceneByName("SAVE_GAME");
@@ -88,7 +102,7 @@ void MainMenuScene::_setupButtons() {
         }
     ));
 
-    _buttonMenu.addButtonAuto("Load Game", std::make_unique<FunctionalCommand>(
+    _buttonMenu.addMainMenuButtonAuto("Load Game", std::make_unique<FunctionalCommand>(
         "Load Game", [this]() {
             if (auto mgr = getSceneManager()) {
                 mgr->pushSceneByName("LOAD_GAME");
@@ -96,7 +110,7 @@ void MainMenuScene::_setupButtons() {
         }
     ));
 
-    _buttonMenu.addButtonAuto("Create Map", std::make_unique<FunctionalCommand>(
+    _buttonMenu.addMainMenuButtonAuto("Create Map", std::make_unique<FunctionalCommand>(
         "Create Map", [this]() {
             if (auto mgr = getSceneManager()) {
                 mgr->pushSceneByName("MAP_EDITOR");
@@ -104,7 +118,7 @@ void MainMenuScene::_setupButtons() {
         }
     ));
 
-    _buttonMenu.addButtonAuto("Settings", std::make_unique<FunctionalCommand>(
+    _buttonMenu.addMainMenuButtonAuto("Settings", std::make_unique<FunctionalCommand>(
         "Settings", [this]() {
             if (auto mgr = getSceneManager()) {
                 mgr->pushSceneByName("SETTINGS");
@@ -112,7 +126,7 @@ void MainMenuScene::_setupButtons() {
         }
     ));
 
-    _buttonMenu.addButtonAuto("Exit Game", std::make_unique<FunctionalCommand>(
+    _buttonMenu.addMainMenuButtonAuto("Exit Game", std::make_unique<FunctionalCommand>(
         "Exit Game", [this]() {
             if (auto mgr = getSceneManager()) {
                 if (SaveLoadGame::getInstance().hasUnsavedSession()) {

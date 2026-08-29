@@ -52,13 +52,13 @@ void MinigameModeScene::_setupButtons() {
     _buttonMenu.setLayoutProperties(
         {820.0f, 300.0f},
         {280.0f, 60.0f},
-        75.0f,
+        80.0f,
         false,
         sf::Color(100, 149, 237),
-        28
+        36
     );
 
-    _buttonMenu.addButtonAuto("2 Player", std::make_unique<FunctionalCommand>(
+    _buttonMenu.addMainMenuButtonAuto("2 Player", std::make_unique<FunctionalCommand>(
         "2 Player", [this]() {
             GameSettings::getInstance().minigameMode = MinigameMode::TwoPlayer;
             if (auto mgr = getSceneManager()) {
@@ -68,7 +68,7 @@ void MinigameModeScene::_setupButtons() {
         }
     ));
 
-    _buttonMenu.addButtonAuto("VS AI", std::make_unique<FunctionalCommand>(
+    _buttonMenu.addMainMenuButtonAuto("VS AI", std::make_unique<FunctionalCommand>(
         "VS AI", [this]() {
             GameSettings::getInstance().minigameMode = MinigameMode::VsAi;
             if (auto mgr = getSceneManager()) {
@@ -78,7 +78,7 @@ void MinigameModeScene::_setupButtons() {
         }
     ));
 
-    _buttonMenu.addButtonAuto("Back", std::make_unique<FunctionalCommand>(
+    _buttonMenu.addMainMenuButtonAuto("Back", std::make_unique<FunctionalCommand>(
         "Back", [this]() {
             if (auto mgr = getSceneManager()) {
                 mgr->requestPopScene();

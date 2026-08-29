@@ -189,6 +189,7 @@ ResourceManager::ResourceManager() {
 	_preLoadSound("assets/soundtrack/sfx/coin.mp3", "coin");
 	_preLoadSound("assets/soundtrack/sfx/break.mp3", "break");
 	_preLoadSound("assets/soundtrack/sfx/kill.mp3", "kill");
+	_preLoadSound("assets/soundtrack/sfx/select_button.mp3", "select_button");
 	
 	_preLoadTexture("assets/sprites/Tiles/mario_and_items.png", "mario_and_items");
 	_preLoadTexture("assets/sprites/Tilesets/mutiple_tilesets.png", "mutiple_tilesets");

@@ -59,13 +59,13 @@ void DefaultGameMenuScene::setupButtons() {
     _buttonMenu.setLayoutProperties(
         {820.0f, 330.0f},
         {300.0f, 60.0f},
-        75.0f,
+        80.0f,
         false,
         sf::Color(100, 149, 237),
-        28
+        36
     );
 
-    _buttonMenu.addButtonAuto(
+    _buttonMenu.addMainMenuButtonAuto(
         "New Game",
         std::make_unique<FunctionalCommand>(
             "New Game",
@@ -73,7 +73,7 @@ void DefaultGameMenuScene::setupButtons() {
         )
     );
 
-    _buttonMenu.addButtonAuto(
+    _buttonMenu.addMainMenuButtonAuto(
         "Continue",
         std::make_unique<FunctionalCommand>(
             "Continue",
@@ -110,7 +110,7 @@ void DefaultGameMenuScene::setupButtons() {
         )
     );
 
-    _buttonMenu.addButtonAuto(
+    _buttonMenu.addMainMenuButtonAuto(
         "Back",
         std::make_unique<FunctionalCommand>(
             "Back",

@@ -19,5 +19,6 @@ private:
 
     UI::ButtonMenu _buttonMenu;
     sf::Text _promptText;
+    sf::Text _mainText;
     bool _showPrompt = true;
 };

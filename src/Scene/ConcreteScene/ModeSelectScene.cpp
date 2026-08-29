@@ -48,13 +48,13 @@ void ModeSelectScene::_setupButtons() {
     _buttonMenu.setLayoutProperties(
         {820.0f, 320.0f},
         {280.0f, 60.0f},
-        75.0f,
+        80.0f,
         false,
         sf::Color(100, 149, 237),
-        28
+        36
     );
 
-    _buttonMenu.addButtonAuto("Default", std::make_unique<FunctionalCommand>(
+    _buttonMenu.addMainMenuButtonAuto("Default", std::make_unique<FunctionalCommand>(
         "Default", [this]() {
             if (auto mgr = getSceneManager()) {
                 mgr->pushSceneByName("DEFAULT_GAME_MENU");
@@ -62,7 +62,7 @@ void ModeSelectScene::_setupButtons() {
         }
     ));
 
-    _buttonMenu.addButtonAuto("Minigames", std::make_unique<FunctionalCommand>(
+    _buttonMenu.addMainMenuButtonAuto("Minigames", std::make_unique<FunctionalCommand>(
         "Minigames", [this]() {
             GameSettings::getInstance().gameMode = GameMode::Minigame;
             if (auto mgr = getSceneManager()) {
@@ -71,7 +71,7 @@ void ModeSelectScene::_setupButtons() {
         }
     ));
 
-    _buttonMenu.addButtonAuto("Back", std::make_unique<FunctionalCommand>(
+    _buttonMenu.addMainMenuButtonAuto("Back", std::make_unique<FunctionalCommand>(
         "Back", [this]() {
             if (auto mgr = getSceneManager()) {
                 mgr->requestPopScene();
