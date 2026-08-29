@@ -1,5 +1,6 @@
 #include "Scene/ConcreteScene/LevelSelectionScene.h"
 #include <filesystem>
+#include "Game/GameSettings.h"
 
 #include "Commands/FunctionalCommand.h"
 #include "ResourceManager.h"
@@ -21,7 +22,13 @@ LevelSelectionScene::LevelSelectionScene()
 
 void LevelSelectionScene::onEnter() {
     Scene::onEnter();
+    GameSettings::getInstance().isLevelSelectActive = true;
     _setupButtons();
+}
+
+void LevelSelectionScene::onExit() {
+    GameSettings::getInstance().isLevelSelectActive = false;
+    Scene::onExit();
 }
 
 void LevelSelectionScene::handleInput(const sf::Event& event) {

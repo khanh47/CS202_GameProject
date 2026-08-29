@@ -357,7 +357,8 @@ bool GameWorld::spawnFireball(
     }
     return _fireballPools[playerIndex].spawnFireball(
         spawnPosition,
-        facingRight
+        facingRight,
+        playerIndex
     );
 }
 

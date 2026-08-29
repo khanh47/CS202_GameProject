@@ -108,8 +108,9 @@ void SaveGameScene::setupControls() {
     // Save slots are intentionally keyboard-only. ButtonMenu forwards the
     // focused control's text and editing keys, while mouse events are locked
     // out for this screen.
-    _buttonMenu.setMouseOnly(false);
-    _buttonMenu.setArrowKeysOnly(true);
+    _buttonMenu.setMouseEnabled(false);
+    _buttonMenu.setKeyboardEnabled(true);
+    _buttonMenu.setWasdEnabled(false);
     _buttonMenu.setLayoutProperties(
         {700.0f, 275.0f},
         {520.0f, 58.0f},

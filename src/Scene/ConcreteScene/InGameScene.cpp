@@ -230,6 +230,8 @@ void InGameScene::init() {
     void InGameScene::onEnter() {
         // Ensure title-screen music is stopped and play level theme
         _isActive = true;
+        GameSettings::getInstance().isInGameSceneActive = true;
+        GameSettings::getInstance().isLevelSelectActive = false;
         _starmanMusicActive = false;
         _scoreManager.setTimePaused(false);
         stopTitleScreenMusic();
@@ -250,6 +252,7 @@ void InGameScene::init() {
         }
         // Stop any level music when leaving the scene
         _starmanMusicActive = false;
+        GameSettings::getInstance().isInGameSceneActive = false;
         Audio::MusicManager::getInstance().stop();
         Scene::onExit();
     }

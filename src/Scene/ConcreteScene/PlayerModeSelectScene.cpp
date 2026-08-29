@@ -63,6 +63,7 @@ void PlayerModeSelectScene::setupButtons() {
             "Solo",
             [this]() {
                 GameSettings::getInstance().gameMode = GameMode::Solo;
+                GameSettings::getInstance().isLevelSelectActive = false;
                 if (auto* manager = getSceneManager()) {
                     manager->pushSceneByName("CHARACTER_SELECT");
                 }
@@ -76,6 +77,7 @@ void PlayerModeSelectScene::setupButtons() {
             "Coop",
             [this]() {
                 GameSettings::getInstance().gameMode = GameMode::Coop;
+                GameSettings::getInstance().isLevelSelectActive = true;
                 if (auto* manager = getSceneManager()) {
                     manager->pushSceneByName("LEVEL_SELECT");
                 }
