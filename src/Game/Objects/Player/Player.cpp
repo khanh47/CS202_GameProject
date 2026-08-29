@@ -104,7 +104,7 @@ void Player::destroy() {
 
     b2ShapeId shape = _body->getHitbox();
     b2Filter filter = b2Shape_GetFilter(shape);
-    filter.maskBits ^= CollisionFilter::ENEMY | CollisionFilter::SHELL;
+    filter.maskBits ^= CollisionFilter::ENEMY | CollisionFilter::SHELL | CollisionFilter::PICKUP;
     if (GameSettings::getInstance().gameMode == GameMode::Minigame) {
       filter.maskBits ^= CollisionFilter::MINIGAME_MASK;
     }

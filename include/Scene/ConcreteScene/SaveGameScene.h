@@ -1,5 +1,6 @@
 #pragma once
 
+#include <functional>
 #include <memory>
 #include <vector>
 
@@ -12,7 +13,10 @@ class TextInput;
 
 class SaveGameScene : public Scene {
 public:
-    explicit SaveGameScene(bool exitAfterSave = false);
+    explicit SaveGameScene(
+        bool exitAfterSave = false,
+        std::function<void()> onSuccessfulSave = {}
+    );
     ~SaveGameScene() override = default;
 
     void onEnter() override;
@@ -25,6 +29,7 @@ private:
     void setStatus(const std::string& status, sf::Color color = sf::Color::White);
 
     bool _exitAfterSave = false;
+    std::function<void()> _onSuccessfulSave;
     UI::ButtonMenu _buttonMenu;
     std::vector<std::shared_ptr<UI::TextInput>> _slotInputs;
     sf::Text _titleText;
