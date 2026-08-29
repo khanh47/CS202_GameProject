@@ -1,0 +1,3201 @@
+{
+    "formatVersion": 1,
+    "savedAt": "2026-08-27 15:41",
+    "slotName": "Slot 3",
+    "state": {
+        "checkpoint": null,
+        "destroyedTiles": [],
+        "gameMode": "coop",
+        "levelCleared": false,
+        "levelPath": "assets/datas/levels/map-2.json",
+        "music": "underground_theme",
+        "objects": [
+            {
+                "brokenSegments": [],
+                "id": "cell:32:1",
+                "position": [
+                    2112.0,
+                    160.0
+                ],
+                "size": [
+                    128.0,
+                    192.0
+                ],
+                "type": "pipe",
+                "velocity": [
+                    0.0,
+                    0.0
+                ],
+                "warpID": 2,
+                "warpTarget": 2
+            },
+            {
+                "brokenSegments": [],
+                "id": "cell:290:1",
+                "position": [
+                    18624.0,
+                    160.0
+                ],
+                "size": [
+                    128.0,
+                    192.0
+                ],
+                "type": "pipe",
+                "velocity": [
+                    0.0,
+                    0.0
+                ],
+                "warpID": 5,
+                "warpTarget": 5
+            },
+            {
+                "capacity": 1,
+                "id": "cell:282:4",
+                "position": [
+                    18080.0,
+                    288.0
+                ],
+                "size": [
+                    64.0,
+                    64.0
+                ],
+                "type": "luckyBlock",
+                "velocity": [
+                    0.0,
+                    0.0
+                ],
+                "visualVisible": true
+            },
+            {
+                "character": "mario",
+                "facingLeft": false,
+                "flyMode": false,
+                "health": 100,
+                "id": "cell:1:6",
+                "megaTimeRemaining": 0.0,
+                "position": [
+                    941.8468627929688,
+                    2712.01123046875
+                ],
+                "size": [
+                    36.0,
+                    80.0
+                ],
+                "starManTimeRemaining": 0.0,
+                "state": "Normal",
+                "type": "player",
+                "velocity": [
+                    0.0,
+                    -0.000528417993336916
+                ]
+            },
+            {
+                "character": "luigi",
+                "facingLeft": false,
+                "flyMode": false,
+                "health": 100,
+                "id": "cell:2:6",
+                "megaTimeRemaining": 0.0,
+                "position": [
+                    733.1996459960938,
+                    2776.037841796875
+                ],
+                "size": [
+                    36.0,
+                    80.0
+                ],
+                "starManTimeRemaining": 0.0,
+                "state": "Normal",
+                "type": "player",
+                "velocity": [
+                    0.0,
+                    0.06560161709785461
+                ]
+            },
+            {
+                "emerging": false,
+                "id": "cell:200:24",
+                "position": [
+                    12832.0,
+                    1568.0
+                ],
+                "size": [
+                    64.0,
+                    64.0
+                ],
+                "type": "Coin",
+                "velocity": [
+                    0.0,
+                    0.0
+                ]
+            },
+            {
+                "emerging": false,
+                "id": "cell:201:24",
+                "position": [
+                    12896.0,
+                    1568.0
+                ],
+                "size": [
+                    64.0,
+                    64.0
+                ],
+                "type": "Coin",
+                "velocity": [
+                    0.0,
+                    0.0
+                ]
+            },
+            {
+                "facingRight": true,
+                "health": 50,
+                "id": "cell:223:24",
+                "position": [
+                    14488.9326171875,
+                    1550.0020751953125
+                ],
+                "size": [
+                    64.0,
+                    100.0
+                ],
+                "type": "koopa",
+                "velocity": [
+                    192.0,
+                    -0.00045746011892333627
+                ]
+            },
+            {
+                "capacity": 1,
+                "id": "cell:207:25",
+                "position": [
+                    13280.0,
+                    1632.0
+                ],
+                "size": [
+                    64.0,
+                    64.0
+                ],
+                "type": "luckyBlock",
+                "velocity": [
+                    0.0,
+                    0.0
+                ],
+                "visualVisible": true
+            },
+            {
+                "facingRight": false,
+                "health": 50,
+                "id": "cell:331:25",
+                "position": [
+                    21164.8125,
+                    1631.501953125
+                ],
+                "size": [
+                    50.0,
+                    65.0
+                ],
+                "type": "goomba",
+                "velocity": [
+                    -192.0,
+                    -2.097212927765213e-05
+                ]
+            },
+            {
+                "facingRight": true,
+                "health": 50,
+                "id": "cell:325:26",
+                "position": [
+                    21016.876953125,
+                    1678.0018310546875
+                ],
+                "size": [
+                    64.0,
+                    100.0
+                ],
+                "type": "koopa",
+                "velocity": [
+                    192.0,
+                    3.291024768259376e-05
+                ]
+            },
+            {
+                "facingRight": false,
+                "health": 50,
+                "id": "cell:315:27",
+                "position": [
+                    20133.736328125,
+                    1742.001953125
+                ],
+                "size": [
+                    64.0,
+                    100.0
+                ],
+                "type": "koopa",
+                "velocity": [
+                    -192.0,
+                    1.9044551663682796e-05
+                ]
+            },
+            {
+                "brokenSegments": [],
+                "id": "cell:318:27",
+                "position": [
+                    20416.0,
+                    1696.0
+                ],
+                "size": [
+                    128.0,
+                    192.0
+                ],
+                "type": "pipe",
+                "velocity": [
+                    0.0,
+                    0.0
+                ],
+                "warpID": 12,
+                "warpTarget": 12
+            },
+            {
+                "facingRight": false,
+                "health": 50,
+                "id": "cell:321:27",
+                "position": [
+                    20550.40625,
+                    1759.502685546875
+                ],
+                "size": [
+                    50.0,
+                    65.0
+                ],
+                "type": "goomba",
+                "velocity": [
+                    -192.0,
+                    3.4370896173641086e-05
+                ]
+            },
+            {
+                "facingRight": true,
+                "health": 50,
+                "id": "cell:307:28:content",
+                "position": [
+                    19712.0,
+                    1611.5
+                ],
+                "size": [
+                    78.0,
+                    105.0
+                ],
+                "type": "piranhaPlant",
+                "velocity": [
+                    0.0,
+                    0.0
+                ]
+            },
+            {
+                "brokenSegments": [],
+                "id": "cell:307:28",
+                "position": [
+                    19712.0,
+                    1760.0
+                ],
+                "size": [
+                    128.0,
+                    192.0
+                ],
+                "type": "pipe",
+                "velocity": [
+                    0.0,
+                    0.0
+                ],
+                "warpID": 1,
+                "warpTarget": 2
+            },
+            {
+                "facingRight": true,
+                "health": 50,
+                "id": "cell:312:28:content",
+                "position": [
+                    20032.0,
+                    1483.5
+                ],
+                "size": [
+                    78.0,
+                    105.0
+                ],
+                "type": "piranhaPlant",
+                "velocity": [
+                    0.0,
+                    0.0
+                ]
+            },
+            {
+                "brokenSegments": [],
+                "id": "cell:312:28",
+                "position": [
+                    20032.0,
+                    1696.0
+                ],
+                "size": [
+                    128.0,
+                    320.0
+                ],
+                "type": "pipe",
+                "velocity": [
+                    0.0,
+                    0.0
+                ],
+                "warpID": 1,
+                "warpTarget": 2
+            },
+            {
+                "emerging": false,
+                "id": "cell:277:29",
+                "position": [
+                    17760.0,
+                    1872.0
+                ],
+                "size": [
+                    48.0,
+                    96.0
+                ],
+                "triggered": false,
+                "type": "CheckpointFlag",
+                "velocity": [
+                    0.0,
+                    0.0
+                ]
+            },
+            {
+                "facingRight": true,
+                "health": 50,
+                "id": "cell:290:29:content",
+                "position": [
+                    18624.0,
+                    1675.5
+                ],
+                "size": [
+                    78.0,
+                    105.0
+                ],
+                "type": "piranhaPlant",
+                "velocity": [
+                    0.0,
+                    0.0
+                ]
+            },
+            {
+                "brokenSegments": [],
+                "id": "cell:290:29",
+                "position": [
+                    18624.0,
+                    1824.0
+                ],
+                "size": [
+                    128.0,
+                    192.0
+                ],
+                "type": "pipe",
+                "velocity": [
+                    0.0,
+                    0.0
+                ],
+                "warpID": 8,
+                "warpTarget": 9
+            },
+            {
+                "facingRight": true,
+                "health": 50,
+                "id": "cell:294:29:content",
+                "position": [
+                    18880.0,
+                    1611.5
+                ],
+                "size": [
+                    78.0,
+                    105.0
+                ],
+                "type": "piranhaPlant",
+                "velocity": [
+                    0.0,
+                    0.0
+                ]
+            },
+            {
+                "brokenSegments": [],
+                "id": "cell:294:29",
+                "position": [
+                    18880.0,
+                    1792.0
+                ],
+                "size": [
+                    128.0,
+                    256.0
+                ],
+                "type": "pipe",
+                "velocity": [
+                    0.0,
+                    0.0
+                ],
+                "warpID": 1,
+                "warpTarget": 2
+            },
+            {
+                "facingRight": false,
+                "health": 50,
+                "id": "cell:297:29",
+                "position": [
+                    19014.40625,
+                    1887.502685546875
+                ],
+                "size": [
+                    50.0,
+                    65.0
+                ],
+                "type": "goomba",
+                "velocity": [
+                    -192.0,
+                    3.4370896173641086e-05
+                ]
+            },
+            {
+                "facingRight": true,
+                "health": 50,
+                "id": "cell:300:29:content",
+                "position": [
+                    19264.0,
+                    1675.5
+                ],
+                "size": [
+                    78.0,
+                    105.0
+                ],
+                "type": "piranhaPlant",
+                "velocity": [
+                    0.0,
+                    0.0
+                ]
+            },
+            {
+                "brokenSegments": [],
+                "id": "cell:300:29",
+                "position": [
+                    19264.0,
+                    1824.0
+                ],
+                "size": [
+                    128.0,
+                    192.0
+                ],
+                "type": "pipe",
+                "velocity": [
+                    0.0,
+                    0.0
+                ],
+                "warpID": 1,
+                "warpTarget": 2
+            },
+            {
+                "emerging": false,
+                "id": "cell:191:30",
+                "position": [
+                    12256.0,
+                    1936.0
+                ],
+                "size": [
+                    48.0,
+                    96.0
+                ],
+                "triggered": false,
+                "type": "CheckpointFlag",
+                "velocity": [
+                    0.0,
+                    0.0
+                ]
+            },
+            {
+                "brokenSegments": [],
+                "id": "cell:197:30",
+                "position": [
+                    12672.0,
+                    1888.0
+                ],
+                "size": [
+                    128.0,
+                    192.0
+                ],
+                "type": "pipe",
+                "velocity": [
+                    0.0,
+                    0.0
+                ],
+                "warpID": 7,
+                "warpTarget": 7
+            },
+            {
+                "facingRight": true,
+                "health": 50,
+                "id": "cell:203:30:content",
+                "position": [
+                    13056.0,
+                    1739.5
+                ],
+                "size": [
+                    78.0,
+                    105.0
+                ],
+                "type": "piranhaPlant",
+                "velocity": [
+                    0.0,
+                    0.0
+                ]
+            },
+            {
+                "brokenSegments": [],
+                "id": "cell:203:30",
+                "position": [
+                    13056.0,
+                    1888.0
+                ],
+                "size": [
+                    128.0,
+                    192.0
+                ],
+                "type": "pipe",
+                "velocity": [
+                    0.0,
+                    0.0
+                ],
+                "warpID": 1,
+                "warpTarget": 2
+            },
+            {
+                "facingRight": true,
+                "health": 50,
+                "id": "cell:210:30:content",
+                "position": [
+                    13504.0,
+                    1675.5
+                ],
+                "size": [
+                    78.0,
+                    105.0
+                ],
+                "type": "piranhaPlant",
+                "velocity": [
+                    0.0,
+                    0.0
+                ]
+            },
+            {
+                "brokenSegments": [],
+                "id": "cell:210:30",
+                "position": [
+                    13504.0,
+                    1856.0
+                ],
+                "size": [
+                    128.0,
+                    256.0
+                ],
+                "type": "pipe",
+                "velocity": [
+                    0.0,
+                    0.0
+                ],
+                "warpID": 1,
+                "warpTarget": 2
+            },
+            {
+                "facingRight": false,
+                "health": 50,
+                "id": "cell:236:30",
+                "position": [
+                    15468.8203125,
+                    1951.5020751953125
+                ],
+                "size": [
+                    50.0,
+                    65.0
+                ],
+                "type": "goomba",
+                "velocity": [
+                    -192.0,
+                    -1.6111340300994925e-05
+                ]
+            },
+            {
+                "facingRight": false,
+                "health": 50,
+                "id": "cell:243:30",
+                "position": [
+                    15013.6865234375,
+                    1934.0020751953125
+                ],
+                "size": [
+                    64.0,
+                    100.0
+                ],
+                "type": "koopa",
+                "velocity": [
+                    -192.0,
+                    2.1368468878790736e-05
+                ]
+            },
+            {
+                "brokenSegments": [],
+                "id": "cell:254:32",
+                "position": [
+                    16320.0,
+                    1984.0
+                ],
+                "size": [
+                    128.0,
+                    256.0
+                ],
+                "type": "pipe",
+                "velocity": [
+                    0.0,
+                    0.0
+                ],
+                "warpID": 1,
+                "warpTarget": 2
+            },
+            {
+                "emerging": false,
+                "id": "cell:68:33",
+                "position": [
+                    4384.0,
+                    2128.0
+                ],
+                "size": [
+                    96.0,
+                    96.0
+                ],
+                "type": "MegaCoin",
+                "velocity": [
+                    0.0,
+                    0.0
+                ]
+            },
+            {
+                "emerging": false,
+                "id": "cell:182:33",
+                "position": [
+                    11680.0,
+                    2144.0
+                ],
+                "size": [
+                    64.0,
+                    64.0
+                ],
+                "type": "Coin",
+                "velocity": [
+                    0.0,
+                    0.0
+                ]
+            },
+            {
+                "emerging": false,
+                "id": "cell:183:33",
+                "position": [
+                    11744.0,
+                    2144.0
+                ],
+                "size": [
+                    64.0,
+                    64.0
+                ],
+                "type": "Coin",
+                "velocity": [
+                    0.0,
+                    0.0
+                ]
+            },
+            {
+                "brokenSegments": [],
+                "id": "cell:264:33",
+                "position": [
+                    16960.0,
+                    2080.0
+                ],
+                "size": [
+                    128.0,
+                    192.0
+                ],
+                "type": "pipe",
+                "velocity": [
+                    0.0,
+                    0.0
+                ],
+                "warpID": 1,
+                "warpTarget": 2
+            },
+            {
+                "facingRight": false,
+                "health": 50,
+                "id": "cell:158:36",
+                "position": [
+                    10118.3984375,
+                    2335.5029296875
+                ],
+                "size": [
+                    50.0,
+                    65.0
+                ],
+                "type": "goomba",
+                "velocity": [
+                    -192.0,
+                    4.314933903515339e-05
+                ]
+            },
+            {
+                "emerging": false,
+                "id": "cell:365:36",
+                "position": [
+                    23392.0,
+                    1920.0
+                ],
+                "size": [
+                    16.0,
+                    896.0
+                ],
+                "triggered": false,
+                "type": "Flagpole",
+                "velocity": [
+                    0.0,
+                    0.0
+                ]
+            },
+            {
+                "capacity": 1,
+                "id": "cell:91:37",
+                "position": [
+                    5856.0,
+                    2400.0
+                ],
+                "size": [
+                    64.0,
+                    64.0
+                ],
+                "type": "coinBlock",
+                "velocity": [
+                    0.0,
+                    0.0
+                ]
+            },
+            {
+                "capacity": 1,
+                "id": "cell:60:38",
+                "position": [
+                    3872.0,
+                    2464.0
+                ],
+                "size": [
+                    64.0,
+                    64.0
+                ],
+                "type": "coinBlock",
+                "velocity": [
+                    0.0,
+                    0.0
+                ]
+            },
+            {
+                "capacity": 10,
+                "id": "cell:99:38",
+                "position": [
+                    6368.0,
+                    2464.0
+                ],
+                "size": [
+                    64.0,
+                    64.0
+                ],
+                "type": "coinBlock",
+                "velocity": [
+                    0.0,
+                    0.0
+                ]
+            },
+            {
+                "capacity": 10,
+                "id": "cell:100:38",
+                "position": [
+                    6432.0,
+                    2464.0
+                ],
+                "size": [
+                    64.0,
+                    64.0
+                ],
+                "type": "coinBlock",
+                "velocity": [
+                    0.0,
+                    0.0
+                ]
+            },
+            {
+                "capacity": 10,
+                "id": "cell:101:38",
+                "position": [
+                    6496.0,
+                    2464.0
+                ],
+                "size": [
+                    64.0,
+                    64.0
+                ],
+                "type": "coinBlock",
+                "velocity": [
+                    0.0,
+                    0.0
+                ]
+            },
+            {
+                "facingRight": true,
+                "health": 50,
+                "id": "cell:112:38",
+                "position": [
+                    7135.99609375,
+                    2463.50439453125
+                ],
+                "size": [
+                    50.0,
+                    65.0
+                ],
+                "type": "goomba",
+                "velocity": [
+                    192.0,
+                    0.00018891715444624424
+                ]
+            },
+            {
+                "capacity": 1,
+                "id": "cell:115:38",
+                "position": [
+                    7392.0,
+                    2464.0
+                ],
+                "size": [
+                    64.0,
+                    64.0
+                ],
+                "type": "luckyBlock",
+                "velocity": [
+                    0.0,
+                    0.0
+                ],
+                "visualVisible": false
+            },
+            {
+                "capacity": 1,
+                "id": "cell:116:38",
+                "position": [
+                    7456.0,
+                    2464.0
+                ],
+                "size": [
+                    64.0,
+                    64.0
+                ],
+                "type": "luckyBlock",
+                "velocity": [
+                    0.0,
+                    0.0
+                ],
+                "visualVisible": false
+            },
+            {
+                "emerging": false,
+                "id": "cell:143:38",
+                "position": [
+                    9184.0,
+                    2464.0
+                ],
+                "size": [
+                    64.0,
+                    64.0
+                ],
+                "type": "Coin",
+                "velocity": [
+                    0.0,
+                    0.0
+                ]
+            },
+            {
+                "emerging": false,
+                "id": "cell:144:38",
+                "position": [
+                    9248.0,
+                    2464.0
+                ],
+                "size": [
+                    64.0,
+                    64.0
+                ],
+                "type": "Coin",
+                "velocity": [
+                    0.0,
+                    0.0
+                ]
+            },
+            {
+                "emerging": false,
+                "id": "cell:145:38",
+                "position": [
+                    9312.0,
+                    2464.0
+                ],
+                "size": [
+                    64.0,
+                    64.0
+                ],
+                "type": "Coin",
+                "velocity": [
+                    0.0,
+                    0.0
+                ]
+            },
+            {
+                "emerging": false,
+                "id": "cell:146:38",
+                "position": [
+                    9376.0,
+                    2464.0
+                ],
+                "size": [
+                    64.0,
+                    64.0
+                ],
+                "type": "Coin",
+                "velocity": [
+                    0.0,
+                    0.0
+                ]
+            },
+            {
+                "capacity": 1,
+                "id": "cell:49:39",
+                "position": [
+                    3168.0,
+                    2528.0
+                ],
+                "size": [
+                    64.0,
+                    64.0
+                ],
+                "type": "luckyBlock",
+                "velocity": [
+                    0.0,
+                    0.0
+                ],
+                "visualVisible": false
+            },
+            {
+                "capacity": 1,
+                "id": "cell:50:39",
+                "position": [
+                    3232.0,
+                    2528.0
+                ],
+                "size": [
+                    64.0,
+                    64.0
+                ],
+                "type": "luckyBlock",
+                "velocity": [
+                    0.0,
+                    0.0
+                ],
+                "visualVisible": false
+            },
+            {
+                "capacity": 1,
+                "id": "cell:82:39",
+                "position": [
+                    5280.0,
+                    2528.0
+                ],
+                "size": [
+                    64.0,
+                    64.0
+                ],
+                "type": "coinBlock",
+                "velocity": [
+                    0.0,
+                    0.0
+                ]
+            },
+            {
+                "capacity": 1,
+                "id": "cell:83:39",
+                "position": [
+                    5344.0,
+                    2528.0
+                ],
+                "size": [
+                    64.0,
+                    64.0
+                ],
+                "type": "coinBlock",
+                "velocity": [
+                    0.0,
+                    0.0
+                ]
+            },
+            {
+                "capacity": 1,
+                "id": "cell:84:39",
+                "position": [
+                    5408.0,
+                    2528.0
+                ],
+                "size": [
+                    64.0,
+                    64.0
+                ],
+                "type": "coinBlock",
+                "velocity": [
+                    0.0,
+                    0.0
+                ]
+            },
+            {
+                "capacity": 1,
+                "id": "cell:85:39",
+                "position": [
+                    5472.0,
+                    2528.0
+                ],
+                "size": [
+                    64.0,
+                    64.0
+                ],
+                "type": "coinBlock",
+                "velocity": [
+                    0.0,
+                    0.0
+                ]
+            },
+            {
+                "capacity": 1,
+                "id": "cell:111:39",
+                "position": [
+                    7136.0,
+                    2528.0
+                ],
+                "size": [
+                    64.0,
+                    64.0
+                ],
+                "type": "coinBlock",
+                "velocity": [
+                    0.0,
+                    0.0
+                ]
+            },
+            {
+                "capacity": 1,
+                "id": "cell:112:39",
+                "position": [
+                    7200.0,
+                    2528.0
+                ],
+                "size": [
+                    64.0,
+                    64.0
+                ],
+                "type": "coinBlock",
+                "velocity": [
+                    0.0,
+                    0.0
+                ]
+            },
+            {
+                "brokenSegments": [],
+                "id": "cell:290:39",
+                "position": [
+                    18624.0,
+                    2592.0
+                ],
+                "size": [
+                    128.0,
+                    192.0
+                ],
+                "type": "pipe",
+                "velocity": [
+                    0.0,
+                    0.0
+                ],
+                "warpID": 9,
+                "warpTarget": 9
+            },
+            {
+                "capacity": 1,
+                "id": "cell:41:40",
+                "position": [
+                    2656.0,
+                    2592.0
+                ],
+                "size": [
+                    64.0,
+                    64.0
+                ],
+                "type": "coinBlock",
+                "velocity": [
+                    0.0,
+                    0.0
+                ]
+            },
+            {
+                "capacity": 1,
+                "id": "cell:42:40",
+                "position": [
+                    2720.0,
+                    2592.0
+                ],
+                "size": [
+                    64.0,
+                    64.0
+                ],
+                "type": "coinBlock",
+                "velocity": [
+                    0.0,
+                    0.0
+                ]
+            },
+            {
+                "capacity": 1,
+                "id": "cell:43:40",
+                "position": [
+                    2784.0,
+                    2592.0
+                ],
+                "size": [
+                    64.0,
+                    64.0
+                ],
+                "type": "coinBlock",
+                "velocity": [
+                    0.0,
+                    0.0
+                ]
+            },
+            {
+                "capacity": 1,
+                "id": "cell:44:40",
+                "position": [
+                    2848.0,
+                    2592.0
+                ],
+                "size": [
+                    64.0,
+                    64.0
+                ],
+                "type": "coinBlock",
+                "velocity": [
+                    0.0,
+                    0.0
+                ]
+            },
+            {
+                "capacity": 1,
+                "id": "cell:45:40",
+                "position": [
+                    2912.0,
+                    2592.0
+                ],
+                "size": [
+                    64.0,
+                    64.0
+                ],
+                "type": "coinBlock",
+                "velocity": [
+                    0.0,
+                    0.0
+                ]
+            },
+            {
+                "capacity": 1,
+                "id": "cell:46:40",
+                "position": [
+                    2976.0,
+                    2592.0
+                ],
+                "size": [
+                    64.0,
+                    64.0
+                ],
+                "type": "coinBlock",
+                "velocity": [
+                    0.0,
+                    0.0
+                ]
+            },
+            {
+                "capacity": 1,
+                "id": "cell:75:40",
+                "position": [
+                    4832.0,
+                    2592.0
+                ],
+                "size": [
+                    64.0,
+                    64.0
+                ],
+                "type": "luckyBlock",
+                "velocity": [
+                    0.0,
+                    0.0
+                ],
+                "visualVisible": true
+            },
+            {
+                "capacity": 1,
+                "id": "cell:81:40",
+                "position": [
+                    5216.0,
+                    2592.0
+                ],
+                "size": [
+                    64.0,
+                    64.0
+                ],
+                "type": "coinBlock",
+                "velocity": [
+                    0.0,
+                    0.0
+                ]
+            },
+            {
+                "capacity": 1,
+                "id": "cell:86:40",
+                "position": [
+                    5536.0,
+                    2592.0
+                ],
+                "size": [
+                    64.0,
+                    64.0
+                ],
+                "type": "coinBlock",
+                "velocity": [
+                    0.0,
+                    0.0
+                ]
+            },
+            {
+                "capacity": 1,
+                "id": "cell:110:40",
+                "position": [
+                    7072.0,
+                    2592.0
+                ],
+                "size": [
+                    64.0,
+                    64.0
+                ],
+                "type": "coinBlock",
+                "velocity": [
+                    0.0,
+                    0.0
+                ]
+            },
+            {
+                "emerging": false,
+                "id": "cell:149:40",
+                "position": [
+                    9568.0,
+                    2592.0
+                ],
+                "size": [
+                    64.0,
+                    64.0
+                ],
+                "type": "Coin",
+                "velocity": [
+                    0.0,
+                    0.0
+                ]
+            },
+            {
+                "emerging": false,
+                "id": "cell:150:40",
+                "position": [
+                    9632.0,
+                    2592.0
+                ],
+                "size": [
+                    64.0,
+                    64.0
+                ],
+                "type": "Coin",
+                "velocity": [
+                    0.0,
+                    0.0
+                ]
+            },
+            {
+                "emerging": false,
+                "id": "cell:151:40",
+                "position": [
+                    9696.0,
+                    2592.0
+                ],
+                "size": [
+                    64.0,
+                    64.0
+                ],
+                "type": "Coin",
+                "velocity": [
+                    0.0,
+                    0.0
+                ]
+            },
+            {
+                "emerging": false,
+                "id": "cell:152:40",
+                "position": [
+                    9760.0,
+                    2592.0
+                ],
+                "size": [
+                    64.0,
+                    64.0
+                ],
+                "type": "Coin",
+                "velocity": [
+                    0.0,
+                    0.0
+                ]
+            },
+            {
+                "capacity": 1,
+                "id": "cell:308:40",
+                "position": [
+                    19744.0,
+                    2592.0
+                ],
+                "size": [
+                    64.0,
+                    64.0
+                ],
+                "type": "luckyBlock",
+                "velocity": [
+                    0.0,
+                    0.0
+                ],
+                "visualVisible": false
+            },
+            {
+                "emerging": false,
+                "id": "cell:55:41",
+                "position": [
+                    3552.0,
+                    2656.0
+                ],
+                "size": [
+                    64.0,
+                    64.0
+                ],
+                "type": "Coin",
+                "velocity": [
+                    0.0,
+                    0.0
+                ]
+            },
+            {
+                "emerging": false,
+                "id": "cell:56:41",
+                "position": [
+                    3616.0,
+                    2656.0
+                ],
+                "size": [
+                    64.0,
+                    64.0
+                ],
+                "type": "Coin",
+                "velocity": [
+                    0.0,
+                    0.0
+                ]
+            },
+            {
+                "emerging": false,
+                "id": "cell:57:41",
+                "position": [
+                    3680.0,
+                    2656.0
+                ],
+                "size": [
+                    64.0,
+                    64.0
+                ],
+                "type": "Coin",
+                "velocity": [
+                    0.0,
+                    0.0
+                ]
+            },
+            {
+                "emerging": false,
+                "id": "cell:58:41",
+                "position": [
+                    3744.0,
+                    2656.0
+                ],
+                "size": [
+                    64.0,
+                    64.0
+                ],
+                "type": "Coin",
+                "velocity": [
+                    0.0,
+                    0.0
+                ]
+            },
+            {
+                "emerging": false,
+                "id": "cell:59:41",
+                "position": [
+                    3808.0,
+                    2656.0
+                ],
+                "size": [
+                    64.0,
+                    64.0
+                ],
+                "type": "Coin",
+                "velocity": [
+                    0.0,
+                    0.0
+                ]
+            },
+            {
+                "emerging": false,
+                "id": "cell:60:41",
+                "position": [
+                    3872.0,
+                    2656.0
+                ],
+                "size": [
+                    64.0,
+                    64.0
+                ],
+                "type": "Coin",
+                "velocity": [
+                    0.0,
+                    0.0
+                ]
+            },
+            {
+                "emerging": false,
+                "id": "cell:138:41",
+                "position": [
+                    8864.0,
+                    2656.0
+                ],
+                "size": [
+                    64.0,
+                    64.0
+                ],
+                "type": "Coin",
+                "velocity": [
+                    0.0,
+                    0.0
+                ]
+            },
+            {
+                "emerging": false,
+                "id": "cell:139:41",
+                "position": [
+                    8928.0,
+                    2656.0
+                ],
+                "size": [
+                    64.0,
+                    64.0
+                ],
+                "type": "Coin",
+                "velocity": [
+                    0.0,
+                    0.0
+                ]
+            },
+            {
+                "emerging": false,
+                "id": "cell:140:41",
+                "position": [
+                    8992.0,
+                    2656.0
+                ],
+                "size": [
+                    64.0,
+                    64.0
+                ],
+                "type": "Coin",
+                "velocity": [
+                    0.0,
+                    0.0
+                ]
+            },
+            {
+                "facingRight": false,
+                "health": 50,
+                "id": "cell:48:43",
+                "position": [
+                    2924.802734375,
+                    2783.502197265625
+                ],
+                "size": [
+                    50.0,
+                    65.0
+                ],
+                "type": "goomba",
+                "velocity": [
+                    -192.0,
+                    -1.66671015904285e-05
+                ]
+            },
+            {
+                "facingRight": true,
+                "health": 50,
+                "id": "cell:63:43",
+                "position": [
+                    4768.04052734375,
+                    2783.50341796875
+                ],
+                "size": [
+                    50.0,
+                    65.0
+                ],
+                "type": "goomba",
+                "velocity": [
+                    192.0,
+                    0.000632941722869873
+                ]
+            },
+            {
+                "facingRight": true,
+                "health": 50,
+                "id": "cell:64:43",
+                "position": [
+                    4832.04296875,
+                    2783.50341796875
+                ],
+                "size": [
+                    50.0,
+                    65.0
+                ],
+                "type": "goomba",
+                "velocity": [
+                    192.0,
+                    0.000632941722869873
+                ]
+            },
+            {
+                "facingRight": true,
+                "health": 50,
+                "id": "cell:79:43",
+                "position": [
+                    5784.96435546875,
+                    2766.001953125
+                ],
+                "size": [
+                    64.0,
+                    100.0
+                ],
+                "type": "koopa",
+                "velocity": [
+                    192.0,
+                    -0.0008702587801963091
+                ]
+            },
+            {
+                "facingRight": false,
+                "health": 50,
+                "id": "cell:90:43",
+                "position": [
+                    5228.765625,
+                    2783.502197265625
+                ],
+                "size": [
+                    50.0,
+                    65.0
+                ],
+                "type": "goomba",
+                "velocity": [
+                    -192.0,
+                    -1.6239901015069336e-05
+                ]
+            },
+            {
+                "facingRight": false,
+                "health": 50,
+                "id": "cell:91:43",
+                "position": [
+                    5164.7578125,
+                    2783.502197265625
+                ],
+                "size": [
+                    50.0,
+                    65.0
+                ],
+                "type": "goomba",
+                "velocity": [
+                    -192.0,
+                    -1.6275465895887464e-05
+                ]
+            },
+            {
+                "facingRight": true,
+                "health": 50,
+                "id": "cell:94:43",
+                "position": [
+                    6624.34228515625,
+                    2765.74267578125
+                ],
+                "size": [
+                    64.0,
+                    100.0
+                ],
+                "type": "koopa",
+                "velocity": [
+                    -4.13650369644165,
+                    -1.1706132888793945
+                ]
+            },
+            {
+                "facingRight": false,
+                "health": 50,
+                "id": "cell:109:43",
+                "position": [
+                    6821.71044921875,
+                    2766.001953125
+                ],
+                "size": [
+                    64.0,
+                    100.0
+                ],
+                "type": "koopa",
+                "velocity": [
+                    -192.0,
+                    3.6469835322350264e-05
+                ]
+            },
+            {
+                "facingRight": false,
+                "health": 50,
+                "id": "cell:125:43",
+                "position": [
+                    8357.7412109375,
+                    2766.001953125
+                ],
+                "size": [
+                    64.0,
+                    100.0
+                ],
+                "type": "koopa",
+                "velocity": [
+                    -192.0,
+                    3.6366996937431395e-05
+                ]
+            },
+            {
+                "facingRight": true,
+                "health": 50,
+                "id": "cell:166:43",
+                "position": [
+                    10584.9169921875,
+                    2766.001953125
+                ],
+                "size": [
+                    64.0,
+                    100.0
+                ],
+                "type": "koopa",
+                "velocity": [
+                    192.0,
+                    3.2919415389187634e-05
+                ]
+            },
+            {
+                "facingRight": false,
+                "health": 50,
+                "id": "cell:293:46",
+                "position": [
+                    18725.736328125,
+                    2958.001953125
+                ],
+                "size": [
+                    64.0,
+                    100.0
+                ],
+                "type": "koopa",
+                "velocity": [
+                    -192.0,
+                    3.722644760273397e-05
+                ]
+            },
+            {
+                "facingRight": false,
+                "health": 50,
+                "id": "cell:305:50",
+                "position": [
+                    20140.65625,
+                    3231.502197265625
+                ],
+                "size": [
+                    50.0,
+                    65.0
+                ],
+                "type": "goomba",
+                "velocity": [
+                    -192.0,
+                    -1.6644153220113367e-05
+                ]
+            },
+            {
+                "facingRight": false,
+                "health": 50,
+                "id": "cell:306:50",
+                "position": [
+                    20076.6875,
+                    3231.502197265625
+                ],
+                "size": [
+                    50.0,
+                    65.0
+                ],
+                "type": "goomba",
+                "velocity": [
+                    -192.0,
+                    -1.6547519408049993e-05
+                ]
+            },
+            {
+                "facingRight": false,
+                "health": 50,
+                "id": "cell:307:50",
+                "position": [
+                    20012.71875,
+                    3231.502197265625
+                ],
+                "size": [
+                    50.0,
+                    65.0
+                ],
+                "type": "goomba",
+                "velocity": [
+                    -192.0,
+                    -1.6493000657646917e-05
+                ]
+            },
+            {
+                "facingRight": false,
+                "health": 50,
+                "id": "cell:308:50",
+                "position": [
+                    19948.75,
+                    3231.502197265625
+                ],
+                "size": [
+                    50.0,
+                    65.0
+                ],
+                "type": "goomba",
+                "velocity": [
+                    -192.0,
+                    -1.6783145838417113e-05
+                ]
+            },
+            {
+                "facingRight": false,
+                "health": 50,
+                "id": "cell:311:50",
+                "position": [
+                    19756.84375,
+                    3231.502197265625
+                ],
+                "size": [
+                    50.0,
+                    65.0
+                ],
+                "type": "goomba",
+                "velocity": [
+                    -192.0,
+                    -1.655623782426119e-05
+                ]
+            },
+            {
+                "facingRight": false,
+                "health": 50,
+                "id": "cell:312:50",
+                "position": [
+                    19692.875,
+                    3231.502197265625
+                ],
+                "size": [
+                    50.0,
+                    65.0
+                ],
+                "type": "goomba",
+                "velocity": [
+                    -192.0,
+                    -1.6487048924318515e-05
+                ]
+            },
+            {
+                "facingRight": false,
+                "health": 50,
+                "id": "cell:313:50",
+                "position": [
+                    19628.90625,
+                    3231.502197265625
+                ],
+                "size": [
+                    50.0,
+                    65.0
+                ],
+                "type": "goomba",
+                "velocity": [
+                    -192.0,
+                    -1.6399475498474203e-05
+                ]
+            },
+            {
+                "facingRight": false,
+                "health": 50,
+                "id": "cell:314:50",
+                "position": [
+                    19564.9375,
+                    3231.502197265625
+                ],
+                "size": [
+                    50.0,
+                    65.0
+                ],
+                "type": "goomba",
+                "velocity": [
+                    -192.0,
+                    -1.6312134903273545e-05
+                ]
+            },
+            {
+                "brokenSegments": [],
+                "id": "cell:318:50",
+                "position": [
+                    20320.0,
+                    3200.0
+                ],
+                "size": [
+                    192.0,
+                    128.0
+                ],
+                "type": "pipe",
+                "velocity": [
+                    0.0,
+                    0.0
+                ],
+                "warpID": 10,
+                "warpTarget": 12
+            },
+            {
+                "emerging": false,
+                "id": "cell:217:53",
+                "position": [
+                    13920.0,
+                    3424.0
+                ],
+                "size": [
+                    64.0,
+                    64.0
+                ],
+                "type": "Coin",
+                "velocity": [
+                    0.0,
+                    0.0
+                ]
+            },
+            {
+                "emerging": false,
+                "id": "cell:218:53",
+                "position": [
+                    13984.0,
+                    3424.0
+                ],
+                "size": [
+                    64.0,
+                    64.0
+                ],
+                "type": "Coin",
+                "velocity": [
+                    0.0,
+                    0.0
+                ]
+            },
+            {
+                "emerging": false,
+                "id": "cell:219:53",
+                "position": [
+                    14048.0,
+                    3424.0
+                ],
+                "size": [
+                    64.0,
+                    64.0
+                ],
+                "type": "Coin",
+                "velocity": [
+                    0.0,
+                    0.0
+                ]
+            },
+            {
+                "emerging": false,
+                "id": "cell:222:53",
+                "position": [
+                    14240.0,
+                    3424.0
+                ],
+                "size": [
+                    64.0,
+                    64.0
+                ],
+                "type": "Coin",
+                "velocity": [
+                    0.0,
+                    0.0
+                ]
+            },
+            {
+                "emerging": false,
+                "id": "cell:223:53",
+                "position": [
+                    14304.0,
+                    3424.0
+                ],
+                "size": [
+                    64.0,
+                    64.0
+                ],
+                "type": "Coin",
+                "velocity": [
+                    0.0,
+                    0.0
+                ]
+            },
+            {
+                "emerging": false,
+                "id": "cell:224:53",
+                "position": [
+                    14368.0,
+                    3424.0
+                ],
+                "size": [
+                    64.0,
+                    64.0
+                ],
+                "type": "Coin",
+                "velocity": [
+                    0.0,
+                    0.0
+                ]
+            },
+            {
+                "emerging": false,
+                "id": "cell:227:53",
+                "position": [
+                    14560.0,
+                    3424.0
+                ],
+                "size": [
+                    64.0,
+                    64.0
+                ],
+                "type": "Coin",
+                "velocity": [
+                    0.0,
+                    0.0
+                ]
+            },
+            {
+                "emerging": false,
+                "id": "cell:228:53",
+                "position": [
+                    14624.0,
+                    3424.0
+                ],
+                "size": [
+                    64.0,
+                    64.0
+                ],
+                "type": "Coin",
+                "velocity": [
+                    0.0,
+                    0.0
+                ]
+            },
+            {
+                "emerging": false,
+                "id": "cell:229:53",
+                "position": [
+                    14688.0,
+                    3424.0
+                ],
+                "size": [
+                    64.0,
+                    64.0
+                ],
+                "type": "Coin",
+                "velocity": [
+                    0.0,
+                    0.0
+                ]
+            },
+            {
+                "emerging": false,
+                "id": "cell:232:53",
+                "position": [
+                    14880.0,
+                    3424.0
+                ],
+                "size": [
+                    64.0,
+                    64.0
+                ],
+                "type": "Coin",
+                "velocity": [
+                    0.0,
+                    0.0
+                ]
+            },
+            {
+                "emerging": false,
+                "id": "cell:233:53",
+                "position": [
+                    14944.0,
+                    3424.0
+                ],
+                "size": [
+                    64.0,
+                    64.0
+                ],
+                "type": "Coin",
+                "velocity": [
+                    0.0,
+                    0.0
+                ]
+            },
+            {
+                "emerging": false,
+                "id": "cell:234:53",
+                "position": [
+                    15008.0,
+                    3424.0
+                ],
+                "size": [
+                    64.0,
+                    64.0
+                ],
+                "type": "Coin",
+                "velocity": [
+                    0.0,
+                    0.0
+                ]
+            },
+            {
+                "emerging": false,
+                "id": "cell:9:54",
+                "position": [
+                    608.0,
+                    3488.0
+                ],
+                "size": [
+                    64.0,
+                    64.0
+                ],
+                "type": "Coin",
+                "velocity": [
+                    0.0,
+                    0.0
+                ]
+            },
+            {
+                "emerging": false,
+                "id": "cell:10:54",
+                "position": [
+                    672.0,
+                    3488.0
+                ],
+                "size": [
+                    64.0,
+                    64.0
+                ],
+                "type": "Coin",
+                "velocity": [
+                    0.0,
+                    0.0
+                ]
+            },
+            {
+                "emerging": false,
+                "id": "cell:11:54",
+                "position": [
+                    736.0,
+                    3488.0
+                ],
+                "size": [
+                    64.0,
+                    64.0
+                ],
+                "type": "Coin",
+                "velocity": [
+                    0.0,
+                    0.0
+                ]
+            },
+            {
+                "emerging": false,
+                "id": "cell:12:54",
+                "position": [
+                    800.0,
+                    3488.0
+                ],
+                "size": [
+                    64.0,
+                    64.0
+                ],
+                "type": "Coin",
+                "velocity": [
+                    0.0,
+                    0.0
+                ]
+            },
+            {
+                "emerging": false,
+                "id": "cell:13:54",
+                "position": [
+                    864.0,
+                    3488.0
+                ],
+                "size": [
+                    64.0,
+                    64.0
+                ],
+                "type": "Coin",
+                "velocity": [
+                    0.0,
+                    0.0
+                ]
+            },
+            {
+                "emerging": false,
+                "id": "cell:14:54",
+                "position": [
+                    928.0,
+                    3488.0
+                ],
+                "size": [
+                    64.0,
+                    64.0
+                ],
+                "type": "Coin",
+                "velocity": [
+                    0.0,
+                    0.0
+                ]
+            },
+            {
+                "emerging": false,
+                "id": "cell:15:54",
+                "position": [
+                    992.0,
+                    3488.0
+                ],
+                "size": [
+                    64.0,
+                    64.0
+                ],
+                "type": "Coin",
+                "velocity": [
+                    0.0,
+                    0.0
+                ]
+            },
+            {
+                "emerging": false,
+                "id": "cell:16:54",
+                "position": [
+                    1056.0,
+                    3488.0
+                ],
+                "size": [
+                    64.0,
+                    64.0
+                ],
+                "type": "Coin",
+                "velocity": [
+                    0.0,
+                    0.0
+                ]
+            },
+            {
+                "emerging": false,
+                "id": "cell:17:54",
+                "position": [
+                    1120.0,
+                    3488.0
+                ],
+                "size": [
+                    64.0,
+                    64.0
+                ],
+                "type": "Coin",
+                "velocity": [
+                    0.0,
+                    0.0
+                ]
+            },
+            {
+                "emerging": false,
+                "id": "cell:18:54",
+                "position": [
+                    1184.0,
+                    3488.0
+                ],
+                "size": [
+                    64.0,
+                    64.0
+                ],
+                "type": "Coin",
+                "velocity": [
+                    0.0,
+                    0.0
+                ]
+            },
+            {
+                "emerging": false,
+                "id": "cell:217:54",
+                "position": [
+                    13920.0,
+                    3488.0
+                ],
+                "size": [
+                    64.0,
+                    64.0
+                ],
+                "type": "Coin",
+                "velocity": [
+                    0.0,
+                    0.0
+                ]
+            },
+            {
+                "emerging": false,
+                "id": "cell:224:54",
+                "position": [
+                    14368.0,
+                    3488.0
+                ],
+                "size": [
+                    64.0,
+                    64.0
+                ],
+                "type": "Coin",
+                "velocity": [
+                    0.0,
+                    0.0
+                ]
+            },
+            {
+                "emerging": false,
+                "id": "cell:227:54",
+                "position": [
+                    14560.0,
+                    3488.0
+                ],
+                "size": [
+                    64.0,
+                    64.0
+                ],
+                "type": "Coin",
+                "velocity": [
+                    0.0,
+                    0.0
+                ]
+            },
+            {
+                "emerging": false,
+                "id": "cell:234:54",
+                "position": [
+                    15008.0,
+                    3488.0
+                ],
+                "size": [
+                    64.0,
+                    64.0
+                ],
+                "type": "Coin",
+                "velocity": [
+                    0.0,
+                    0.0
+                ]
+            },
+            {
+                "emerging": false,
+                "id": "cell:9:55",
+                "position": [
+                    608.0,
+                    3552.0
+                ],
+                "size": [
+                    64.0,
+                    64.0
+                ],
+                "type": "Coin",
+                "velocity": [
+                    0.0,
+                    0.0
+                ]
+            },
+            {
+                "emerging": false,
+                "id": "cell:10:55",
+                "position": [
+                    672.0,
+                    3552.0
+                ],
+                "size": [
+                    64.0,
+                    64.0
+                ],
+                "type": "Coin",
+                "velocity": [
+                    0.0,
+                    0.0
+                ]
+            },
+            {
+                "emerging": false,
+                "id": "cell:11:55",
+                "position": [
+                    736.0,
+                    3552.0
+                ],
+                "size": [
+                    64.0,
+                    64.0
+                ],
+                "type": "Coin",
+                "velocity": [
+                    0.0,
+                    0.0
+                ]
+            },
+            {
+                "emerging": false,
+                "id": "cell:12:55",
+                "position": [
+                    800.0,
+                    3552.0
+                ],
+                "size": [
+                    64.0,
+                    64.0
+                ],
+                "type": "Coin",
+                "velocity": [
+                    0.0,
+                    0.0
+                ]
+            },
+            {
+                "emerging": false,
+                "id": "cell:13:55",
+                "position": [
+                    864.0,
+                    3552.0
+                ],
+                "size": [
+                    64.0,
+                    64.0
+                ],
+                "type": "Coin",
+                "velocity": [
+                    0.0,
+                    0.0
+                ]
+            },
+            {
+                "emerging": false,
+                "id": "cell:14:55",
+                "position": [
+                    928.0,
+                    3552.0
+                ],
+                "size": [
+                    64.0,
+                    64.0
+                ],
+                "type": "Coin",
+                "velocity": [
+                    0.0,
+                    0.0
+                ]
+            },
+            {
+                "emerging": false,
+                "id": "cell:15:55",
+                "position": [
+                    992.0,
+                    3552.0
+                ],
+                "size": [
+                    64.0,
+                    64.0
+                ],
+                "type": "Coin",
+                "velocity": [
+                    0.0,
+                    0.0
+                ]
+            },
+            {
+                "emerging": false,
+                "id": "cell:16:55",
+                "position": [
+                    1056.0,
+                    3552.0
+                ],
+                "size": [
+                    64.0,
+                    64.0
+                ],
+                "type": "Coin",
+                "velocity": [
+                    0.0,
+                    0.0
+                ]
+            },
+            {
+                "emerging": false,
+                "id": "cell:17:55",
+                "position": [
+                    1120.0,
+                    3552.0
+                ],
+                "size": [
+                    64.0,
+                    64.0
+                ],
+                "type": "Coin",
+                "velocity": [
+                    0.0,
+                    0.0
+                ]
+            },
+            {
+                "emerging": false,
+                "id": "cell:18:55",
+                "position": [
+                    1184.0,
+                    3552.0
+                ],
+                "size": [
+                    64.0,
+                    64.0
+                ],
+                "type": "Coin",
+                "velocity": [
+                    0.0,
+                    0.0
+                ]
+            },
+            {
+                "emerging": false,
+                "id": "cell:217:55",
+                "position": [
+                    13920.0,
+                    3552.0
+                ],
+                "size": [
+                    64.0,
+                    64.0
+                ],
+                "type": "Coin",
+                "velocity": [
+                    0.0,
+                    0.0
+                ]
+            },
+            {
+                "emerging": false,
+                "id": "cell:218:55",
+                "position": [
+                    13984.0,
+                    3552.0
+                ],
+                "size": [
+                    64.0,
+                    64.0
+                ],
+                "type": "Coin",
+                "velocity": [
+                    0.0,
+                    0.0
+                ]
+            },
+            {
+                "emerging": false,
+                "id": "cell:219:55",
+                "position": [
+                    14048.0,
+                    3552.0
+                ],
+                "size": [
+                    64.0,
+                    64.0
+                ],
+                "type": "Coin",
+                "velocity": [
+                    0.0,
+                    0.0
+                ]
+            },
+            {
+                "emerging": false,
+                "id": "cell:223:55",
+                "position": [
+                    14304.0,
+                    3552.0
+                ],
+                "size": [
+                    64.0,
+                    64.0
+                ],
+                "type": "Coin",
+                "velocity": [
+                    0.0,
+                    0.0
+                ]
+            },
+            {
+                "emerging": false,
+                "id": "cell:227:55",
+                "position": [
+                    14560.0,
+                    3552.0
+                ],
+                "size": [
+                    64.0,
+                    64.0
+                ],
+                "type": "Coin",
+                "velocity": [
+                    0.0,
+                    0.0
+                ]
+            },
+            {
+                "emerging": false,
+                "id": "cell:228:55",
+                "position": [
+                    14624.0,
+                    3552.0
+                ],
+                "size": [
+                    64.0,
+                    64.0
+                ],
+                "type": "Coin",
+                "velocity": [
+                    0.0,
+                    0.0
+                ]
+            },
+            {
+                "emerging": false,
+                "id": "cell:229:55",
+                "position": [
+                    14688.0,
+                    3552.0
+                ],
+                "size": [
+                    64.0,
+                    64.0
+                ],
+                "type": "Coin",
+                "velocity": [
+                    0.0,
+                    0.0
+                ]
+            },
+            {
+                "emerging": false,
+                "id": "cell:233:55",
+                "position": [
+                    14944.0,
+                    3552.0
+                ],
+                "size": [
+                    64.0,
+                    64.0
+                ],
+                "type": "Coin",
+                "velocity": [
+                    0.0,
+                    0.0
+                ]
+            },
+            {
+                "emerging": false,
+                "id": "cell:9:56",
+                "position": [
+                    608.0,
+                    3616.0
+                ],
+                "size": [
+                    64.0,
+                    64.0
+                ],
+                "type": "Coin",
+                "velocity": [
+                    0.0,
+                    0.0
+                ]
+            },
+            {
+                "emerging": false,
+                "id": "cell:10:56",
+                "position": [
+                    672.0,
+                    3616.0
+                ],
+                "size": [
+                    64.0,
+                    64.0
+                ],
+                "type": "Coin",
+                "velocity": [
+                    0.0,
+                    0.0
+                ]
+            },
+            {
+                "emerging": false,
+                "id": "cell:11:56",
+                "position": [
+                    736.0,
+                    3616.0
+                ],
+                "size": [
+                    64.0,
+                    64.0
+                ],
+                "type": "Coin",
+                "velocity": [
+                    0.0,
+                    0.0
+                ]
+            },
+            {
+                "emerging": false,
+                "id": "cell:12:56",
+                "position": [
+                    800.0,
+                    3616.0
+                ],
+                "size": [
+                    64.0,
+                    64.0
+                ],
+                "type": "Coin",
+                "velocity": [
+                    0.0,
+                    0.0
+                ]
+            },
+            {
+                "emerging": false,
+                "id": "cell:13:56",
+                "position": [
+                    864.0,
+                    3616.0
+                ],
+                "size": [
+                    64.0,
+                    64.0
+                ],
+                "type": "Coin",
+                "velocity": [
+                    0.0,
+                    0.0
+                ]
+            },
+            {
+                "emerging": false,
+                "id": "cell:14:56",
+                "position": [
+                    928.0,
+                    3616.0
+                ],
+                "size": [
+                    64.0,
+                    64.0
+                ],
+                "type": "Coin",
+                "velocity": [
+                    0.0,
+                    0.0
+                ]
+            },
+            {
+                "emerging": false,
+                "id": "cell:15:56",
+                "position": [
+                    992.0,
+                    3616.0
+                ],
+                "size": [
+                    64.0,
+                    64.0
+                ],
+                "type": "Coin",
+                "velocity": [
+                    0.0,
+                    0.0
+                ]
+            },
+            {
+                "emerging": false,
+                "id": "cell:16:56",
+                "position": [
+                    1056.0,
+                    3616.0
+                ],
+                "size": [
+                    64.0,
+                    64.0
+                ],
+                "type": "Coin",
+                "velocity": [
+                    0.0,
+                    0.0
+                ]
+            },
+            {
+                "emerging": false,
+                "id": "cell:17:56",
+                "position": [
+                    1120.0,
+                    3616.0
+                ],
+                "size": [
+                    64.0,
+                    64.0
+                ],
+                "type": "Coin",
+                "velocity": [
+                    0.0,
+                    0.0
+                ]
+            },
+            {
+                "emerging": false,
+                "id": "cell:18:56",
+                "position": [
+                    1184.0,
+                    3616.0
+                ],
+                "size": [
+                    64.0,
+                    64.0
+                ],
+                "type": "Coin",
+                "velocity": [
+                    0.0,
+                    0.0
+                ]
+            },
+            {
+                "capacity": 1,
+                "id": "cell:24:56",
+                "position": [
+                    1568.0,
+                    3616.0
+                ],
+                "size": [
+                    64.0,
+                    64.0
+                ],
+                "type": "luckyBlock",
+                "velocity": [
+                    0.0,
+                    0.0
+                ],
+                "visualVisible": true
+            },
+            {
+                "emerging": false,
+                "id": "cell:217:56",
+                "position": [
+                    13920.0,
+                    3616.0
+                ],
+                "size": [
+                    64.0,
+                    64.0
+                ],
+                "type": "Coin",
+                "velocity": [
+                    0.0,
+                    0.0
+                ]
+            },
+            {
+                "emerging": false,
+                "id": "cell:219:56",
+                "position": [
+                    14048.0,
+                    3616.0
+                ],
+                "size": [
+                    64.0,
+                    64.0
+                ],
+                "type": "Coin",
+                "velocity": [
+                    0.0,
+                    0.0
+                ]
+            },
+            {
+                "emerging": false,
+                "id": "cell:223:56",
+                "position": [
+                    14304.0,
+                    3616.0
+                ],
+                "size": [
+                    64.0,
+                    64.0
+                ],
+                "type": "Coin",
+                "velocity": [
+                    0.0,
+                    0.0
+                ]
+            },
+            {
+                "emerging": false,
+                "id": "cell:227:56",
+                "position": [
+                    14560.0,
+                    3616.0
+                ],
+                "size": [
+                    64.0,
+                    64.0
+                ],
+                "type": "Coin",
+                "velocity": [
+                    0.0,
+                    0.0
+                ]
+            },
+            {
+                "emerging": false,
+                "id": "cell:229:56",
+                "position": [
+                    14688.0,
+                    3616.0
+                ],
+                "size": [
+                    64.0,
+                    64.0
+                ],
+                "type": "Coin",
+                "velocity": [
+                    0.0,
+                    0.0
+                ]
+            },
+            {
+                "emerging": false,
+                "id": "cell:233:56",
+                "position": [
+                    14944.0,
+                    3616.0
+                ],
+                "size": [
+                    64.0,
+                    64.0
+                ],
+                "type": "Coin",
+                "velocity": [
+                    0.0,
+                    0.0
+                ]
+            },
+            {
+                "emerging": false,
+                "id": "cell:217:57",
+                "position": [
+                    13920.0,
+                    3680.0
+                ],
+                "size": [
+                    64.0,
+                    64.0
+                ],
+                "type": "Coin",
+                "velocity": [
+                    0.0,
+                    0.0
+                ]
+            },
+            {
+                "emerging": false,
+                "id": "cell:218:57",
+                "position": [
+                    13984.0,
+                    3680.0
+                ],
+                "size": [
+                    64.0,
+                    64.0
+                ],
+                "type": "Coin",
+                "velocity": [
+                    0.0,
+                    0.0
+                ]
+            },
+            {
+                "emerging": false,
+                "id": "cell:219:57",
+                "position": [
+                    14048.0,
+                    3680.0
+                ],
+                "size": [
+                    64.0,
+                    64.0
+                ],
+                "type": "Coin",
+                "velocity": [
+                    0.0,
+                    0.0
+                ]
+            },
+            {
+                "emerging": false,
+                "id": "cell:223:57",
+                "position": [
+                    14304.0,
+                    3680.0
+                ],
+                "size": [
+                    64.0,
+                    64.0
+                ],
+                "type": "Coin",
+                "velocity": [
+                    0.0,
+                    0.0
+                ]
+            },
+            {
+                "emerging": false,
+                "id": "cell:227:57",
+                "position": [
+                    14560.0,
+                    3680.0
+                ],
+                "size": [
+                    64.0,
+                    64.0
+                ],
+                "type": "Coin",
+                "velocity": [
+                    0.0,
+                    0.0
+                ]
+            },
+            {
+                "emerging": false,
+                "id": "cell:228:57",
+                "position": [
+                    14624.0,
+                    3680.0
+                ],
+                "size": [
+                    64.0,
+                    64.0
+                ],
+                "type": "Coin",
+                "velocity": [
+                    0.0,
+                    0.0
+                ]
+            },
+            {
+                "emerging": false,
+                "id": "cell:229:57",
+                "position": [
+                    14688.0,
+                    3680.0
+                ],
+                "size": [
+                    64.0,
+                    64.0
+                ],
+                "type": "Coin",
+                "velocity": [
+                    0.0,
+                    0.0
+                ]
+            },
+            {
+                "emerging": false,
+                "id": "cell:233:57",
+                "position": [
+                    14944.0,
+                    3680.0
+                ],
+                "size": [
+                    64.0,
+                    64.0
+                ],
+                "type": "Coin",
+                "velocity": [
+                    0.0,
+                    0.0
+                ]
+            },
+            {
+                "brokenSegments": [],
+                "id": "cell:31:58",
+                "position": [
+                    1952.0,
+                    3712.0
+                ],
+                "size": [
+                    192.0,
+                    128.0
+                ],
+                "type": "pipe",
+                "velocity": [
+                    0.0,
+                    0.0
+                ],
+                "warpID": 1,
+                "warpTarget": 2
+            },
+            {
+                "brokenSegments": [],
+                "id": "cell:182:58",
+                "position": [
+                    11712.0,
+                    3680.0
+                ],
+                "size": [
+                    128.0,
+                    192.0
+                ],
+                "type": "pipe",
+                "velocity": [
+                    0.0,
+                    0.0
+                ],
+                "warpID": 3,
+                "warpTarget": 6
+            },
+            {
+                "brokenSegments": [],
+                "id": "cell:213:58",
+                "position": [
+                    13696.0,
+                    3680.0
+                ],
+                "size": [
+                    128.0,
+                    192.0
+                ],
+                "type": "pipe",
+                "velocity": [
+                    0.0,
+                    0.0
+                ],
+                "warpID": 6,
+                "warpTarget": 7
+            },
+            {
+                "facingRight": false,
+                "health": 50,
+                "id": "cell:226:58",
+                "position": [
+                    14956.828125,
+                    3743.502197265625
+                ],
+                "size": [
+                    50.0,
+                    65.0
+                ],
+                "type": "goomba",
+                "velocity": [
+                    -192.0,
+                    -1.6083380614873022e-05
+                ]
+            },
+            {
+                "facingRight": true,
+                "health": 50,
+                "id": "cell:284:58",
+                "position": [
+                    18118.421875,
+                    3743.501953125
+                ],
+                "size": [
+                    50.0,
+                    65.0
+                ],
+                "type": "goomba",
+                "velocity": [
+                    192.0,
+                    0.0018309020670130849
+                ]
+            },
+            {
+                "brokenSegments": [],
+                "id": "cell:287:58",
+                "position": [
+                    18336.0,
+                    3712.0
+                ],
+                "size": [
+                    192.0,
+                    128.0
+                ],
+                "type": "pipe",
+                "velocity": [
+                    0.0,
+                    0.0
+                ],
+                "warpID": 4,
+                "warpTarget": 5
+            }
+        ],
+        "player1Character": "mario",
+        "saveVersion": 1,
+        "score": {
+            "coins": 0,
+            "highScore": 0,
+            "lives": 3,
+            "points": 0
+        },
+        "theme": "underground"
+    }
+}
