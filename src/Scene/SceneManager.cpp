@@ -153,6 +153,23 @@ void SceneManager::requestReturnToModeMenu() {
     });
 }
 
+void SceneManager::requestReturnToMainMenu() {
+    requestDeferredAction([this]() {
+        while (!_sceneStack.empty()
+               && _sceneStack.top()->getName() != "MainMenuScene") {
+            if (_sceneStack.size() == 1) {
+                break;
+            }
+            popScene();
+        }
+
+        if (_sceneStack.empty()
+            || _sceneStack.top()->getName() != "MainMenuScene") {
+            pushSceneByName("MAIN_MENU");
+        }
+    });
+}
+
 void SceneManager::processEvents(const sf::Event& event) {
     if (!_sceneStack.empty()) {
         auto &currentScene = _sceneStack.top();

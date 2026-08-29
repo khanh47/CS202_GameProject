@@ -205,6 +205,10 @@ ResourceManager::ResourceManager() {
 	_preLoadTexture("assets/backgrounds/far_underground.png", "far_underground");
 	_preLoadTexture("assets/backgrounds/close_underground.png", "close_underground");
 	_preLoadTexture("assets/guis/game_over.png", "game_over");
+	_preLoadTexture(
+		"assets/guis/Square_premade_buttons_16x16px.png",
+		"square_premade_buttons"
+	);
 	_preLoadTexture("assets/spritesheets/goomba_spritesheet.png", "goomba_spritesheet");
 	_preLoadTexture("assets/spritesheets/koopa_spritesheet.png", "koopa_spritesheet");
 	_preLoadTexture("assets/spritesheets/piranha_plant_spritesheet.png", "piranha_plant_spritesheet");

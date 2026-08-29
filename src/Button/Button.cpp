@@ -154,7 +154,7 @@ void Button::processEvent(const sf::Event& event) {
             // Check click against the static bounds as well to be consistent
             sf::FloatRect staticBounds{basePosition, baseSize};
             if (staticBounds.contains(mousePos)) {
-                if (buttonCommand) buttonCommand->execute();
+                execute();
             }
         }
     }
