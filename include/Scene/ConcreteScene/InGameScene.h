@@ -8,6 +8,8 @@
 #include <nlohmann/json.hpp>
 
 #include "Scene/Scene.h"
+#include "Button/ButtonMenu.h"
+#include "Button/SettingsPanel.h"
 #include "Game/World/GameWorld.h"
 #include "Game/Camera.h"
 #include "Game/ScoreManager.h"
@@ -34,8 +36,23 @@ public:
     nlohmann::json captureSaveState() const;
 
 private:
+    enum class PauseOverlay {
+        None,
+        PauseMenu,
+        Settings,
+        ReturnConfirmation
+    };
+
     void restoreSaveState(const nlohmann::json& state);
-    void requestExit();
+    void openPauseMenu();
+    void openSettings();
+    void resumeGame();
+    void saveGame();
+    void requestReturn();
+    void returnWithoutSaving();
+    void buildPauseMenu();
+    void buildReturnConfirmation();
+    void drawPauseOverlay(sf::RenderTarget& target);
     void _checkGameOver();
     void _checkWin();
     void _checkMinigameResult();
@@ -58,6 +75,12 @@ private:
     std::optional<nlohmann::json> _initialSaveState;
     bool _saveStateInitialized = false;
     bool _returnToMapEditor = false;
+    bool _suppressExitSnapshot = false;
+
+    PauseOverlay _pauseOverlay = PauseOverlay::None;
+    UI::ButtonMenu _pauseMenu;
+    UI::ButtonMenu _returnConfirmationMenu;
+    UI::SettingsPanel _settingsPanel;
 
     GameWorld _gameWorld;
     Camera _camera;

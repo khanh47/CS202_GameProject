@@ -1,14 +1,20 @@
 #include "Scene/ConcreteScene/SaveGameScene.h"
 
+#include <utility>
+
 #include "Button/TextInput.h"
 #include "Commands/FunctionalCommand.h"
 #include "Game/Snapshot/SaveLoadGame.h"
 #include "ResourceManager.h"
 #include "Scene/SceneManager.h"
 
-SaveGameScene::SaveGameScene(bool exitAfterSave)
+SaveGameScene::SaveGameScene(
+    bool exitAfterSave,
+    std::function<void()> onSuccessfulSave
+)
     : Scene("SaveGameScene"),
       _exitAfterSave(exitAfterSave),
+      _onSuccessfulSave(std::move(onSuccessfulSave)),
       _titleText(
           ResourceManager::getInstance().getFont("SuperMario"),
           "SAVE GAME",
@@ -99,6 +105,8 @@ void SaveGameScene::saveToSlot(int index) {
                 window->close();
             }
         }
+    } else if (_onSuccessfulSave) {
+        _onSuccessfulSave();
     }
 }
 

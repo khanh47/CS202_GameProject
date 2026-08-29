@@ -29,6 +29,8 @@
 #include "Game/Objects/Projectile/Fireball.h"
 #include "Game/Objects/Projectile/KoopaShell.h"
 #include "Scene/ConcreteScene/ScoreComputationScene.h"
+#include "Scene/ConcreteScene/SaveGameScene.h"
+#include "Commands/FunctionalCommand.h"
 #include "Game/Snapshot/SaveLoadGame.h"
 #include "ResourceManager.h"
 #include "Audio/MusicManager.h"
@@ -147,9 +149,15 @@ InGameScene::InGameScene(
 )
     : Scene(name),
       _initialSaveState(std::move(initialSaveState)),
-      _returnToMapEditor(returnToMapEditor) {}
+      _returnToMapEditor(returnToMapEditor) {
+    _settingsPanel.setOnBack([this]() {
+        _pauseOverlay = PauseOverlay::PauseMenu;
+    });
+}
 
 void InGameScene::init() {
+    _pauseOverlay = PauseOverlay::None;
+    _suppressExitSnapshot = false;
     _winReactionActive = false;
     _gameOverActive = false;
     _winActive = false;
@@ -175,6 +183,8 @@ void InGameScene::init() {
         67
     );
     _winPrompt->setFillColor(sf::Color::White);
+    buildPauseMenu();
+    buildReturnConfirmation();
 
     if (_initialSaveState) {
         const std::string savedMode = _initialSaveState->value(
@@ -197,7 +207,8 @@ void InGameScene::init() {
     if (_initialSaveState) {
         restoreSaveState(*_initialSaveState);
     }
-    if (GameSettings::getInstance().gameMode != GameMode::Minigame) {
+    if (!_returnToMapEditor
+        && GameSettings::getInstance().gameMode != GameMode::Minigame) {
         SaveLoadGame::getInstance().setCurrentSession(
             captureSaveState(),
             !_initialSaveState.has_value()
@@ -233,7 +244,7 @@ void InGameScene::init() {
         GameSettings::getInstance().isInGameSceneActive = true;
         GameSettings::getInstance().isLevelSelectActive = false;
         _starmanMusicActive = false;
-        _scoreManager.setTimePaused(false);
+        _scoreManager.setTimePaused(_pauseOverlay != PauseOverlay::None);
         stopTitleScreenMusic();
         Audio::MusicManager::getInstance().setVolume(GameSettings::getInstance().musicVolume);
         Audio::MusicManager::getInstance().play(
@@ -243,7 +254,9 @@ void InGameScene::init() {
     }
 
     void InGameScene::onExit() {
-        if (_saveStateInitialized
+        if (!_suppressExitSnapshot
+            && _saveStateInitialized
+            && !_returnToMapEditor
             && GameSettings::getInstance().gameMode != GameMode::Minigame) {
             SaveLoadGame::getInstance().setCurrentSession(
                 captureSaveState(),
@@ -298,9 +311,34 @@ void InGameScene::handleInput(const sf::Event& event) {
         return;
     }
 
+    if (_pauseOverlay == PauseOverlay::Settings) {
+        _settingsPanel.handleInput(event);
+        return;
+    }
+
+    if (_pauseOverlay == PauseOverlay::ReturnConfirmation) {
+        if (const auto* keyEvent = event.getIf<sf::Event::KeyPressed>();
+            keyEvent && keyEvent->code == sf::Keyboard::Key::Escape) {
+            _pauseOverlay = PauseOverlay::PauseMenu;
+            return;
+        }
+        _returnConfirmationMenu.processEvent(event);
+        return;
+    }
+
+    if (_pauseOverlay == PauseOverlay::PauseMenu) {
+        if (const auto* keyEvent = event.getIf<sf::Event::KeyPressed>();
+            keyEvent && keyEvent->code == sf::Keyboard::Key::Escape) {
+            resumeGame();
+            return;
+        }
+        _pauseMenu.processEvent(event);
+        return;
+    }
+
     if (auto* keyEvent = event.getIf<sf::Event::KeyPressed>()) {
         if (keyEvent->code == sf::Keyboard::Key::Escape) {
-            requestExit();
+            openPauseMenu();
             return;
         }
     }
@@ -308,18 +346,165 @@ void InGameScene::handleInput(const sf::Event& event) {
     _gameWorld.handleInput(event);
 }
 
-void InGameScene::requestExit() {
+void InGameScene::buildPauseMenu() {
+    _pauseMenu.clear();
+    _pauseMenu.setLayoutProperties(
+        {710.f, 315.f}, {500.f, 70.f}, 90.f, false,
+        sf::Color(53, 91, 130), 30
+    );
+    _pauseMenu.addButtonAuto(
+        "Resume",
+        std::make_unique<FunctionalCommand>(
+            "Resume", [this]() { resumeGame(); }
+        )
+    );
+    _pauseMenu.addButtonAuto(
+        "Settings",
+        std::make_unique<FunctionalCommand>(
+            "Settings", [this]() { openSettings(); }
+        )
+    );
+
+    const bool canSave = !_returnToMapEditor
+        && GameSettings::getInstance().gameMode != GameMode::Minigame;
+    if (canSave) {
+        _pauseMenu.addButtonAuto(
+            "Save Game",
+            std::make_unique<FunctionalCommand>(
+                "Save Game", [this]() { saveGame(); }
+            )
+        );
+    }
+
+    _pauseMenu.addButtonAuto(
+        _returnToMapEditor ? "Return to Map Editor" : "Return to Main Menu",
+        std::make_unique<FunctionalCommand>(
+            "Return", [this]() { requestReturn(); }
+        )
+    );
+}
+
+void InGameScene::buildReturnConfirmation() {
+    _returnConfirmationMenu.clear();
+    _returnConfirmationMenu.setLayoutProperties(
+        {660.f, 390.f}, {600.f, 70.f}, 90.f, false,
+        sf::Color(53, 91, 130), 27
+    );
+    _returnConfirmationMenu.addButtonAuto(
+        "Save Game",
+        std::make_unique<FunctionalCommand>(
+            "Save and Return",
+            [this]() {
+                SaveLoadGame::getInstance().setCurrentSession(
+                    captureSaveState(), true
+                );
+                if (auto* manager = getSceneManager()) {
+                    manager->pushScene(std::make_unique<SaveGameScene>(
+                        false,
+                        [this]() {
+                            _suppressExitSnapshot = true;
+                            if (auto* sceneManager = getSceneManager()) {
+                                sceneManager->requestReturnToMainMenu();
+                            }
+                        }
+                    ));
+                }
+            }
+        )
+    );
+    _returnConfirmationMenu.addButtonAuto(
+        "Return Without Saving",
+        std::make_unique<FunctionalCommand>(
+            "Discard and Return", [this]() { returnWithoutSaving(); }
+        )
+    );
+    _returnConfirmationMenu.addButtonAuto(
+        "Cancel",
+        std::make_unique<FunctionalCommand>(
+            "Cancel", [this]() { _pauseOverlay = PauseOverlay::PauseMenu; }
+        )
+    );
+}
+
+void InGameScene::openPauseMenu() {
+    buildPauseMenu();
+    _pauseOverlay = PauseOverlay::PauseMenu;
+    _scoreManager.setTimePaused(true);
+}
+
+void InGameScene::openSettings() {
+    _settingsPanel.refresh();
+    _pauseOverlay = PauseOverlay::Settings;
+}
+
+void InGameScene::resumeGame() {
+    _pauseOverlay = PauseOverlay::None;
+    _scoreManager.setTimePaused(false);
+    _gameWorld.syncPlayerControllers();
+}
+
+void InGameScene::saveGame() {
+    SaveLoadGame::getInstance().setCurrentSession(captureSaveState(), true);
+    if (auto* manager = getSceneManager()) {
+        manager->pushScene(std::make_unique<SaveGameScene>());
+    }
+}
+
+void InGameScene::requestReturn() {
     if (auto* manager = getSceneManager()) {
         if (_returnToMapEditor) {
+            _suppressExitSnapshot = true;
             manager->requestPopScene();
+        } else if (GameSettings::getInstance().gameMode == GameMode::Minigame) {
+            _suppressExitSnapshot = true;
+            manager->requestReturnToMainMenu();
         } else {
-            manager->requestReturnToModeMenu();
+            _pauseOverlay = PauseOverlay::ReturnConfirmation;
         }
     }
 }
 
+void InGameScene::returnWithoutSaving() {
+    _suppressExitSnapshot = true;
+    SaveLoadGame::getInstance().clearCurrentSession();
+    if (auto* manager = getSceneManager()) {
+        manager->requestReturnToMainMenu();
+    }
+}
+
+void InGameScene::drawPauseOverlay(sf::RenderTarget& target) {
+    if (_pauseOverlay == PauseOverlay::Settings) {
+        _settingsPanel.render(target);
+        return;
+    }
+
+    const sf::Vector2f viewSize = target.getView().getSize();
+    const sf::Vector2f topLeft = target.getView().getCenter() - viewSize * 0.5f;
+    sf::RectangleShape backdrop(viewSize);
+    backdrop.setPosition(topLeft);
+    backdrop.setFillColor(sf::Color(0, 0, 0, 170));
+    target.draw(backdrop);
+
+    const sf::Font& font = ResourceManager::getInstance().getFont("SuperMario");
+    const std::string titleText = _pauseOverlay == PauseOverlay::ReturnConfirmation
+        ? "RETURN TO MAIN MENU?" : "PAUSED";
+    sf::Text title(font, titleText, 56);
+    title.setFillColor(sf::Color::White);
+    title.setOutlineColor(sf::Color::Black);
+    title.setOutlineThickness(5.f);
+    title.setPosition({960.f - title.getLocalBounds().size.x * 0.5f, 180.f});
+    target.draw(title);
+
+    if (_pauseOverlay == PauseOverlay::ReturnConfirmation) {
+        _returnConfirmationMenu.render(target);
+    } else {
+        _pauseMenu.render(target);
+    }
+}
+
 void InGameScene::updateSimulation(const float &fixedDt) {
-    if (_winReactionActive || _gameOverActive || _winActive) {
+    if (_pauseOverlay != PauseOverlay::None
+        || _winReactionActive || _gameOverActive || _winActive) {
         return;
     }
 
@@ -341,6 +526,17 @@ void InGameScene::updateSimulation(const float &fixedDt) {
 }
 
 void InGameScene::updateVisuals(float deltaTime) {
+    if (_pauseOverlay != PauseOverlay::None) {
+        if (_pauseOverlay == PauseOverlay::Settings) {
+            _settingsPanel.updateVisuals(deltaTime);
+        } else if (_pauseOverlay == PauseOverlay::ReturnConfirmation) {
+            _returnConfirmationMenu.updateVisuals(deltaTime);
+        } else {
+            _pauseMenu.updateVisuals(deltaTime);
+        }
+        return;
+    }
+
     _gameWorld.updateVisuals(deltaTime);
 
     const auto player = std::dynamic_pointer_cast<Player>(_gameWorld.getPrimaryPlayer());
@@ -403,6 +599,10 @@ void InGameScene::render(sf::RenderTarget& target) {
         _drawGameOverOverlay(target);
     } else if (_winActive) {
         _drawWinOverlay(target);
+    }
+
+    if (_pauseOverlay != PauseOverlay::None) {
+        drawPauseOverlay(target);
     }
 }
 
