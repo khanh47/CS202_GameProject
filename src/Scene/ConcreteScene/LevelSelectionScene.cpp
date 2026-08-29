@@ -55,15 +55,15 @@ void LevelSelectionScene::_setupButtons() {
     _buttonMenu.setLayoutProperties(
         {820.0f, 320.0f},
         {280.0f, 60.0f},
-        75.0f,
+        80.0f,
         false,
         sf::Color(100, 149, 237),
-        28
+        36
     );
 
     const std::string base = "assets/datas/levels/map-";
 
-    _buttonMenu.addButtonAuto("Level 1", std::make_unique<FunctionalCommand>(
+    _buttonMenu.addMainMenuButtonAuto("Level 1", std::make_unique<FunctionalCommand>(
         "Level 1", [this, base]() {
             if (auto mgr = getSceneManager()) {
                 mgr->pushScene(std::make_unique<InGameScene>(base + "1.json"));
@@ -71,7 +71,7 @@ void LevelSelectionScene::_setupButtons() {
         }
     ));
 
-    _buttonMenu.addButtonAuto("Level 2", std::make_unique<FunctionalCommand>(
+    _buttonMenu.addMainMenuButtonAuto("Level 2", std::make_unique<FunctionalCommand>(
         "Level 2", [this, base]() {
             if (auto mgr = getSceneManager()) {
                 mgr->pushScene(std::make_unique<InGameScene>(base + "2.json"));
@@ -79,7 +79,7 @@ void LevelSelectionScene::_setupButtons() {
         }
     ));
 
-    _buttonMenu.addButtonAuto("Level 3", std::make_unique<FunctionalCommand>(
+    _buttonMenu.addMainMenuButtonAuto("Level 3", std::make_unique<FunctionalCommand>(
         "Level 3", [this, base]() {
             if (auto mgr = getSceneManager()) {
                 mgr->pushScene(std::make_unique<InGameScene>(base + "3.json"));
@@ -89,7 +89,7 @@ void LevelSelectionScene::_setupButtons() {
 
     const std::string customMap = "assets/datas/levels/custom-map.json";
     if (std::filesystem::exists(customMap)) {
-        _buttonMenu.addButtonAuto("Custom Map", std::make_unique<FunctionalCommand>(
+        _buttonMenu.addMainMenuButtonAuto("Custom Map", std::make_unique<FunctionalCommand>(
             "Custom Map", [this, customMap]() {
                 if (auto mgr = getSceneManager()) {
                     mgr->pushScene(std::make_unique<InGameScene>(customMap));

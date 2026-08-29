@@ -51,13 +51,13 @@ void PlayerModeSelectScene::setupButtons() {
     _buttonMenu.setLayoutProperties(
         {820.0f, 330.0f},
         {300.0f, 60.0f},
-        75.0f,
+        80.0f,
         false,
         sf::Color(100, 149, 237),
-        28
+        36
     );
 
-    _buttonMenu.addButtonAuto(
+    _buttonMenu.addMainMenuButtonAuto(
         "Solo",
         std::make_unique<FunctionalCommand>(
             "Solo",
@@ -71,7 +71,7 @@ void PlayerModeSelectScene::setupButtons() {
         )
     );
 
-    _buttonMenu.addButtonAuto(
+    _buttonMenu.addMainMenuButtonAuto(
         "Coop",
         std::make_unique<FunctionalCommand>(
             "Coop",
@@ -85,7 +85,7 @@ void PlayerModeSelectScene::setupButtons() {
         )
     );
 
-    _buttonMenu.addButtonAuto(
+    _buttonMenu.addMainMenuButtonAuto(
         "Back",
         std::make_unique<FunctionalCommand>(
             "Back",

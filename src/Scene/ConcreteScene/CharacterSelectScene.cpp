@@ -62,13 +62,13 @@ void CharacterSelectScene::_setupButtons() {
     _buttonMenu.setLayoutProperties(
         {820.0f, 360.0f},
         {280.0f, 60.0f},
-        75.0f,
+        80.0f,
         false,
         sf::Color(100, 149, 237),
-        28
+        36 
     );
 
-    _buttonMenu.addButtonAuto("Mario", std::make_unique<FunctionalCommand>(
+    _buttonMenu.addMainMenuButtonAuto("Mario", std::make_unique<FunctionalCommand>(
         "Mario", [this]() {
             GameSettings::getInstance().player1Character = "mario";
             GameSettings::getInstance().characterSelectHovered = "mario";
@@ -78,7 +78,7 @@ void CharacterSelectScene::_setupButtons() {
         }
     ));
 
-    _buttonMenu.addButtonAuto("Luigi", std::make_unique<FunctionalCommand>(
+    _buttonMenu.addMainMenuButtonAuto("Luigi", std::make_unique<FunctionalCommand>(
         "Luigi", [this]() {
             GameSettings::getInstance().player1Character = "luigi";
             GameSettings::getInstance().characterSelectHovered = "luigi";
@@ -88,7 +88,7 @@ void CharacterSelectScene::_setupButtons() {
         }
     ));
 
-    _buttonMenu.addButtonAuto("Back", std::make_unique<FunctionalCommand>(
+    _buttonMenu.addMainMenuButtonAuto("Back", std::make_unique<FunctionalCommand>(
         "Back", [this]() {
             if (auto mgr = getSceneManager()) {
                 mgr->requestPopScene();

@@ -6,10 +6,9 @@ namespace UI {
 
 ToggleButton::ToggleButton(const sf::Vector2f& position, const sf::Vector2f& size, const sf::Color& color,
                            const std::string& labelText, unsigned int charSize,
-                           bool initialState, float cornerRadius,
-                           const std::string& iconAlias)
+                           bool initialState, float cornerRadius)
     : Button(position, size, initialState ? sf::Color(46, 204, 113) : sf::Color(108, 122, 137),
-             labelText, charSize, cornerRadius, iconAlias),
+             labelText, charSize, cornerRadius),
       _isToggled(initialState),
       _labelText(labelText) {
     (void)color;
@@ -45,7 +44,7 @@ void ToggleButton::updateColors() {
     int r = std::min(255, base.r + 35);
     int g = std::min(255, base.g + 35);
     int b = std::min(255, base.b + 35);
-    hoverColor = sf::Color(r, g, b, base.a);
+    focusedColor = sf::Color(r, g, b, base.a);
 
     int fr = std::min(255, base.r + 65);
     int fg = std::min(255, base.g + 65);
@@ -62,7 +61,7 @@ void ToggleButton::render(sf::RenderTarget& target) {
 
     // Calculate vertical hover displacement for precise slider alignment
     sf::Vector2f drawPos = basePosition;
-    if (_isHovered) {
+    if (_isFocused) {
         drawPos.y -= liftAmount;
     }
 

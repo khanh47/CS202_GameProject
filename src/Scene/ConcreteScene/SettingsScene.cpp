@@ -447,13 +447,13 @@ void SettingsScene::handleInput(const sf::Event& event) {
 
     if (event.is<sf::Event::MouseMoved>()) {
         for (std::size_t i = 0; i < _topMenu.size(); ++i) {
-            if (auto button = _topMenu.getButton(i); button && button->isHovered()) {
+            if (auto button = _topMenu.getButton(i); button && button->isFocused()) {
                 _focus = FocusTarget::TopMenu;
                 break;
             }
         }
         for (std::size_t i = 0; i < _subMenu.size(); ++i) {
-            if (auto button = _subMenu.getButton(i); button && button->isHovered()) {
+            if (auto button = _subMenu.getButton(i); button && button->isFocused()) {
                 _focus = FocusTarget::SubMenu;
                 break;
             }

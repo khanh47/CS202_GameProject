@@ -2,6 +2,8 @@
 #include "Button/Dropdown.h"
 #include "Button/TextInput.h"
 #include "Button/ToggleButton.h"
+#include "Button/MainMenuButton.h"
+#include "Audio/SoundManager.h"
 
 namespace UI {
 
@@ -42,34 +44,51 @@ void ButtonMenu::addButton(const std::shared_ptr<Button>& button) {
     }
 }
 
-void ButtonMenu::addButtonAuto(const std::string& text, std::unique_ptr<ICommand> command, const std::string& iconAlias) {
-    addButtonAuto(text, _layout.defaultCharSize, std::move(command), _layout.defaultColor, iconAlias);
+void ButtonMenu::addButtonAuto(const std::string& text, std::unique_ptr<ICommand> command) {
+    addButtonAuto(text, _layout.defaultCharSize, std::move(command), _layout.defaultColor);
 }
 
 void ButtonMenu::addButtonAuto(const std::string& text, unsigned int charSize, 
-                                std::unique_ptr<ICommand> command, 
-                                const sf::Color& color, const std::string& iconAlias) {
+                                std::unique_ptr<ICommand> command, const sf::Color& color) {
     const float offset = static_cast<float>(_buttonMenu.size()) * _layout.spacing;
     const sf::Vector2f position = _layout.horizontal
         ? sf::Vector2f(_layout.startPosition.x + offset, _layout.startPosition.y)
         : sf::Vector2f(_layout.startPosition.x, _layout.startPosition.y + offset);
 
-    // Pass the iconAlias to the Button constructor
     auto button = std::make_shared<Button>(
-        position, _layout.buttonSize, color, text, charSize, 20.0f, iconAlias
+        position, _layout.buttonSize, color, text, charSize, 20.0f
     );
     button->setCommand(std::move(command));
     addButton(button);
 }
 
-void ButtonMenu::addToggleButtonAuto(const std::string& text, bool initialState, std::unique_ptr<ICommand> command, const std::string& iconAlias) {
+void ButtonMenu::addMainMenuButtonAuto(const std::string& text, std::unique_ptr<ICommand> command) {
+    addMainMenuButtonAuto(text, _layout.defaultCharSize, std::move(command), _layout.defaultColor);
+}
+
+void ButtonMenu::addMainMenuButtonAuto(const std::string& text, unsigned int charSize, 
+                                std::unique_ptr<ICommand> command, 
+                                const sf::Color& color) {
+    const float offset = static_cast<float>(_buttonMenu.size()) * _layout.spacing;
+    const sf::Vector2f position = _layout.horizontal
+        ? sf::Vector2f(_layout.startPosition.x + offset, _layout.startPosition.y)
+        : sf::Vector2f(_layout.startPosition.x, _layout.startPosition.y + offset);
+
+    auto button = std::make_shared<MainMenuButton>(
+        position, _layout.buttonSize, color, text, charSize
+    );
+    button->setCommand(std::move(command));
+    addButton(button);
+}
+
+void ButtonMenu::addToggleButtonAuto(const std::string& text, bool initialState, std::unique_ptr<ICommand> command) {
     const float offset = static_cast<float>(_buttonMenu.size()) * _layout.spacing;
     const sf::Vector2f position = _layout.horizontal
         ? sf::Vector2f(_layout.startPosition.x + offset, _layout.startPosition.y)
         : sf::Vector2f(_layout.startPosition.x, _layout.startPosition.y + offset);
 
     auto toggleButton = std::make_shared<ToggleButton>(
-        position, _layout.buttonSize, _layout.defaultColor, text, _layout.defaultCharSize, initialState, 20.0f, iconAlias
+        position, _layout.buttonSize, _layout.defaultColor, text, _layout.defaultCharSize, initialState, 20.0f
     );
     toggleButton->setCommand(std::move(command));
     addButton(toggleButton);
@@ -159,6 +178,7 @@ void ButtonMenu::processEvent(const sf::Event& event) {
 
                 if (keyEvent->code == sf::Keyboard::Key::Enter
                     || keyEvent->code == sf::Keyboard::Key::Space) {
+                    Audio::SoundManager::getInstance().playEffect("select_button");
                     _buttonMenu[_focusedIndex]->execute();
                 }
                 // For keyboard events, stop after handling to avoid double hover sync in same event
@@ -178,7 +198,7 @@ void ButtonMenu::processEvent(const sf::Event& event) {
         }
         bool hoveredButton = false;
         for (std::size_t i = 0; i < _buttonMenu.size(); ++i) {
-            if (_buttonMenu[i]->isHovered()) {
+            if (_buttonMenu[i]->isFocused()) {
                 if (static_cast<int>(i) != _focusedIndex && _keyboardEnabled) {
                     _focusedIndex = static_cast<int>(i);
                     syncFocus();
@@ -220,7 +240,7 @@ void ButtonMenu::setMouseEnabled(bool enabled) {
     } else {
         // keyboard active: ensure focus visible
         if (_mouseEnabled) {
-            for (const auto &b : _buttonMenu) b->clearHover();
+            for (const auto &b : _buttonMenu) b->clearFocus();
         }
         syncFocus();
     }
@@ -232,7 +252,7 @@ void ButtonMenu::setMouseEnabled(bool enabled) {
 void ButtonMenu::setKeyboardEnabled(bool enabled) {
     _keyboardEnabled = enabled;
     if (_keyboardEnabled) {
-        for (const auto &b : _buttonMenu) b->clearHover();
+        for (const auto &b : _buttonMenu) b->clearFocus();
         syncFocus();
     } else {
         if (_mouseEnabled) {

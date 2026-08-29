@@ -1,6 +1,7 @@
 
 #include "Button/Button.h"
 #include "ResourceManager.h"
+#include <SFML/System/String.hpp>
 #include <algorithm>
 #include <cmath> 
 
@@ -10,12 +11,7 @@ Button::Button(const sf::Vector2f& position, const sf::Vector2f& size, const sf:
                const std::string& text, unsigned int charSize, 
                float radius, const std::string& iconAlias)
     : label(ResourceManager::getInstance().getFont("moon_get"), text, charSize),
-      defaultColor(color), cornerRadius(radius),basePosition(position), baseSize(size) {
-      
-    int r = std::min(255, color.r + 40);
-    int g = std::min(255, color.g + 40);
-    int b = std::min(255, color.b + 40);
-    hoverColor = sf::Color(r, g, b, color.a);
+      defaultColor(color), cornerRadius(radius), basePosition(position), baseSize(size) {
 
     int fr = std::min(255, color.r + 80);
     int fg = std::min(255, color.g + 80);
@@ -80,7 +76,6 @@ void Button::updateLayout(const sf::Vector2f& position, const sf::Vector2f& size
     // This ensures all button texts are perfectly aligned horizontally.
     float fixedLabelY = position.y + (size.y * 0.82f);
     label.setPosition({centerX, fixedLabelY});
-
     if (icon.has_value()) {
         sf::FloatRect iconBounds = icon->getLocalBounds();
         
@@ -139,15 +134,13 @@ void Button::processEvent(const sf::Event& event) {
     // 1. HANDLE HOVER (POP-UP EFFECT)
     if (const auto* mouseMove = event.getIf<sf::Event::MouseMoved>()) {
         sf::Vector2f mousePos(static_cast<float>(mouseMove->position.x), static_cast<float>(mouseMove->position.y));
-        bool wasHovered = _isHovered;
-        
         // IMPORTANT: Check collision against the BASE position, NOT the current moving shape.
         // This prevents the button from jittering when the mouse is at the bottom edge.
         sf::FloatRect staticBounds{basePosition, baseSize};
-        _isHovered = staticBounds.contains(mousePos); 
+        _isFocused = staticBounds.contains(mousePos); 
 
-        if (_isHovered) {
-            shape.setFillColor(hoverColor);
+        if (_isFocused) {
+            shape.setFillColor(focusedColor);
         } else {
             shape.setFillColor(defaultColor);
         }
@@ -169,16 +162,14 @@ void Button::processEvent(const sf::Event& event) {
 
 void Button::render(sf::RenderTarget& target) {
     sf::Vector2f drawPos = basePosition;
-    if (_isHovered) {
+    if (_isFocused) {
         drawPos.y -= liftAmount;
     }
 
     shape.setPosition(drawPos);
 
-    if (_isFocused && !_isHovered) {
+    if (_isFocused) {
         shape.setFillColor(focusedColor);
-    } else if (_isHovered) {
-        shape.setFillColor(hoverColor);
     } else {
         shape.setFillColor(defaultColor);
     }

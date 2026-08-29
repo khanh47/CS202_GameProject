@@ -61,13 +61,13 @@ void ExitConfirmScene::setupButtons() {
     _buttonMenu.setLayoutProperties(
         {780.0f, 380.0f},
         {360.0f, 60.0f},
-        75.0f,
+        80.0f,
         false,
         sf::Color(100, 149, 237),
-        26
+        36
     );
 
-    _buttonMenu.addButtonAuto(
+    _buttonMenu.addMainMenuButtonAuto(
         "Save and Exit",
         std::make_unique<FunctionalCommand>(
             "Save and Exit",
@@ -79,7 +79,7 @@ void ExitConfirmScene::setupButtons() {
         )
     );
 
-    _buttonMenu.addButtonAuto(
+    _buttonMenu.addMainMenuButtonAuto(
         "Exit Without Saving",
         std::make_unique<FunctionalCommand>(
             "Exit Without Saving",
@@ -87,7 +87,7 @@ void ExitConfirmScene::setupButtons() {
         )
     );
 
-    _buttonMenu.addButtonAuto(
+    _buttonMenu.addMainMenuButtonAuto(
         "Cancel",
         std::make_unique<FunctionalCommand>(
             "Cancel",
