@@ -26,9 +26,10 @@ Fireball::Fireball(sf::Texture& texture) : GameObject() {
     }
 }
 
-void Fireball::activate(sf::Vector2f spawnPos, bool facingRight) {
+void Fireball::activate(sf::Vector2f spawnPos, bool facingRight, int ownerIndex) {
     _active = true;
     _facingRight = facingRight;
+    _ownerIndex = ownerIndex;
     _distanceTraveled = 0.0f;
     _particleTrail.clear();
 
@@ -45,6 +46,7 @@ void Fireball::activate(sf::Vector2f spawnPos, bool facingRight) {
 
 void Fireball::deactivate() {
     _active = false;
+    _ownerIndex = -1;
     _distanceTraveled = 0.0f;
     _particleTrail.clear();
 
@@ -117,6 +119,14 @@ void Fireball::onContact(GameObject& other, const b2ContactData&, b2ShapeId) {
     }
 
     if (auto* player = dynamic_cast<Player*>(&other)) {
+        // Minigame self-hit immunity: fireball shares PLAYER mask only in Minigame, but owner should not hit self
+        if (GameSettings::getInstance().gameMode == GameMode::Minigame && _ownerIndex != -1) {
+            const int hitIdx = (player->getCharacter() == "mario") ? 0 : 1;
+            if (hitIdx == _ownerIndex) {
+                // deactivate();
+                return;
+            }
+        }
         if (player->getState() && player->getState()->isInvincible()) {
             deactivate();
             return;
