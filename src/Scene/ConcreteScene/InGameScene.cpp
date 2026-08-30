@@ -282,9 +282,17 @@ void InGameScene::handleInput(const sf::Event& event) {
             }
             summary.isWin = _winActive;
             summary.baseScore = _scoreManager.getScore();
-            summary.coinsCollected = _scoreManager.getCoins();
+            if (GameSettings::getInstance().gameMode == GameMode::Coop) {
+                summary.coinsCollected = _scoreManager.getCoins() + _scoreManager.getLuigiCoins();
+                summary.livesRemaining = _scoreManager.getLives() + _scoreManager.getLuigiLives();
+            } else if (GameSettings::getInstance().player1Character == "luigi") {
+                summary.coinsCollected = _scoreManager.getLuigiCoins();
+                summary.livesRemaining = std::max(0, _scoreManager.getLuigiLives());
+            } else {
+                summary.coinsCollected = _scoreManager.getCoins();
+                summary.livesRemaining = std::max(0, _scoreManager.getLives());
+            }
             summary.timeRemaining = _scoreManager.getIntTimeRemaining();
-            summary.livesRemaining = std::max(0, _scoreManager.getLives());
             summary.highScore = _scoreManager.getHighScore();
             summary.returnToMapEditor = _returnToMapEditor;
 
@@ -394,7 +402,7 @@ void InGameScene::render(sf::RenderTarget& target) {
     target.setView(defaultView);
 
     // Render screen HUD overlay
-    _scoreManager.renderHUD(target, font, sf::Vector2f(40.f, 30.f));
+    _scoreManager.renderHUD(target, font, &_gameWorld, sf::Vector2f(40.f, 24.f));
 
     if (_gameOverActive) {
         _drawGameOverOverlay(target);
@@ -417,6 +425,10 @@ nlohmann::json InGameScene::captureSaveState() const {
         {"points", _scoreManager.getScore()},
         {"coins", _scoreManager.getCoins()},
         {"lives", _scoreManager.getLives()},
+        {"luigiCoins", _scoreManager.getLuigiCoins()},
+        {"luigiLives", _scoreManager.getLuigiLives()},
+        {"marioScore", _scoreManager.getMarioScore()},
+        {"luigiScore", _scoreManager.getLuigiScore()},
         {"highScore", _scoreManager.getHighScore()},
         {"time", _scoreManager.getTimeRemaining()}
     };
@@ -514,7 +526,11 @@ void InGameScene::restoreSaveState(const nlohmann::json& state) {
         score.value("coins", 0),
         score.value("lives", 3),
         score.value("highScore", 0),
-        score.value("time", 400.0f)
+        score.value("time", 400.0f),
+        score.value("luigiCoins", 0),
+        score.value("luigiLives", 3),
+        score.value("marioScore", score.value("points", 0)),
+        score.value("luigiScore", 0)
     );
 
     if (state.contains("checkpoint") && !state["checkpoint"].is_null()) {
@@ -761,18 +777,41 @@ void InGameScene::_checkGameOver() {
         return;
     }
 
-    // Mario died! Deduct 1 life from ScoreManager
-    int remainingLives = _scoreManager.getLives() - 1;
-    _scoreManager.setLives(remainingLives);
-    if (remainingLives > 0) {
-        // Player still has lives left -> Respawn Mario / reload level
-        _respawnPlayer();
+    const bool isCoop = GameSettings::getInstance().gameMode == GameMode::Coop;
+    if (isCoop) {
+        if (_scoreManager.getLives() > 0) {
+            _scoreManager.setLives(_scoreManager.getLives() - 1);
+        }
+        if (_scoreManager.getLuigiLives() > 0) {
+            _scoreManager.setLuigiLives(_scoreManager.getLuigiLives() - 1);
+        }
+
+        if (_scoreManager.getLives() > 0 || _scoreManager.getLuigiLives() > 0) {
+            _respawnPlayer();
+        } else {
+            _gameOverActive = true;
+            Audio::MusicManager::getInstance().play("game_over_music", false);
+            if (_gameOverOverlay.has_value() && _gameOverTexture) {
+                _gameOverOverlay->setTexture(*_gameOverTexture);
+            }
+        }
     } else {
-        // 0 lives left -> Trigger Game Over screen
-        _gameOverActive = true;
-        Audio::MusicManager::getInstance().play("game_over_music", false);
-        if (_gameOverOverlay.has_value() && _gameOverTexture) {
-            _gameOverOverlay->setTexture(*_gameOverTexture);
+        const bool isLuigi = (GameSettings::getInstance().player1Character == "luigi");
+        int remainingLives = isLuigi ? (_scoreManager.getLuigiLives() - 1) : (_scoreManager.getLives() - 1);
+        if (isLuigi) {
+            _scoreManager.setLuigiLives(remainingLives);
+        } else {
+            _scoreManager.setLives(remainingLives);
+        }
+
+        if (remainingLives > 0) {
+            _respawnPlayer();
+        } else {
+            _gameOverActive = true;
+            Audio::MusicManager::getInstance().play("game_over_music", false);
+            if (_gameOverOverlay.has_value() && _gameOverTexture) {
+                _gameOverOverlay->setTexture(*_gameOverTexture);
+            }
         }
     }
 }

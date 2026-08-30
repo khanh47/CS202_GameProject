@@ -158,7 +158,9 @@ void LuckyBlock::onContact(GameObject& other, const b2ContactData& contactData, 
                     if (world && world->getScoreManager()) {
                         world->getScoreManager()->handleEvent(
                             ScoreEventType::CoinCollected,
-                            getPosition()
+                            getPosition(),
+                            0,
+                            player ? player->getCharacter() : "mario"
                         );
                     }
                 } else if (world) {

@@ -100,7 +100,9 @@ bool Block::tryBreakOnContact(
         if (world->getScoreManager()) {
             world->getScoreManager()->handleEvent(
                 ScoreEventType::BlockBroken,
-                getPosition()
+                getPosition(),
+                0,
+                player->getCharacter()
             );
         }
     }
