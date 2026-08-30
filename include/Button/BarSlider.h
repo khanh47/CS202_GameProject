@@ -15,15 +15,13 @@ public:
     // Constructor for a simple toggle-style BarSlider
     BarSlider(const sf::Vector2f& position, const sf::Vector2f& size, const sf::Color& color,
                  const std::string& labelText, unsigned int charSize = 24,
-                 bool initialState = false, float cornerRadius = 10.0f,
-                 const std::string& iconAlias = "");
+                 bool initialState = false, float cornerRadius = 10.0f);
 
     // Constructor for a numeric value slider (min/max, initial value)
     BarSlider(const sf::Vector2f& position, const sf::Vector2f& size, const sf::Color& color,
                  const std::string& labelText, unsigned int charSize,
                  float initialValue, float minValue, float maxValue,
-                 bool selected = false, float cornerRadius = 10.0f,
-                 const std::string& iconAlias = "");
+                 bool selected = false, float cornerRadius = 10.0f);
 
     ~BarSlider() override = default;
 

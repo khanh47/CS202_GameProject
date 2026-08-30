@@ -10,8 +10,7 @@ namespace UI {
 class Button {
 public:
     Button(const sf::Vector2f& position, const sf::Vector2f& size, const sf::Color& color, 
-           const std::string& text, unsigned int charSize, 
-           float cornerRadius = 10.0f, const std::string& iconAlias = "");
+           const std::string& text, unsigned int charSize, float cornerRadius = 10.0f, const std::string& iconAlias = "");
     virtual ~Button() = default;
 
     void setCommand(std::unique_ptr<ICommand> command);
@@ -19,8 +18,8 @@ public:
     void setPosition(const sf::Vector2f& position);
     void setSize(const sf::Vector2f& size);
     void setFocused(bool focused);
-    void clearHover() noexcept { _isHovered = false; }
-    bool isHovered() const { return _isHovered; }
+    const bool isFocused() const { return _isFocused; }
+    void clearFocus() { _isFocused = false; }
     bool contains(sf::Vector2f position) const noexcept {
         return sf::FloatRect{basePosition, baseSize}.contains(position);
     }
@@ -41,9 +40,7 @@ protected:
     std::unique_ptr<ICommand> buttonCommand;
 
     sf::Color defaultColor;
-    sf::Color hoverColor;
     sf::Color focusedColor;
-    bool _isHovered = false;
     bool _isFocused = false;
 
     sf::Vector2f basePosition;

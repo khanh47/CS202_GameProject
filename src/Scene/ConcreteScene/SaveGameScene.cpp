@@ -1,14 +1,20 @@
 #include "Scene/ConcreteScene/SaveGameScene.h"
 
+#include <utility>
+
 #include "Button/TextInput.h"
 #include "Commands/FunctionalCommand.h"
 #include "Game/Snapshot/SaveLoadGame.h"
 #include "ResourceManager.h"
 #include "Scene/SceneManager.h"
 
-SaveGameScene::SaveGameScene(bool exitAfterSave)
+SaveGameScene::SaveGameScene(
+    bool exitAfterSave,
+    std::function<void()> onSuccessfulSave
+)
     : Scene("SaveGameScene"),
       _exitAfterSave(exitAfterSave),
+      _onSuccessfulSave(std::move(onSuccessfulSave)),
       _titleText(
           ResourceManager::getInstance().getFont("SuperMario"),
           "SAVE GAME",
@@ -99,6 +105,8 @@ void SaveGameScene::saveToSlot(int index) {
                 window->close();
             }
         }
+    } else if (_onSuccessfulSave) {
+        _onSuccessfulSave();
     }
 }
 
@@ -108,8 +116,9 @@ void SaveGameScene::setupControls() {
     // Save slots are intentionally keyboard-only. ButtonMenu forwards the
     // focused control's text and editing keys, while mouse events are locked
     // out for this screen.
-    _buttonMenu.setMouseOnly(false);
-    _buttonMenu.setArrowKeysOnly(true);
+    _buttonMenu.setMouseEnabled(false);
+    _buttonMenu.setKeyboardEnabled(true);
+    _buttonMenu.setWasdEnabled(false);
     _buttonMenu.setLayoutProperties(
         {700.0f, 275.0f},
         {520.0f, 58.0f},

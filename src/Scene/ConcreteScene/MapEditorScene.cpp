@@ -18,6 +18,9 @@
 #include "Button/Dropdown.h"
 #include "Button/TextInput.h"
 #include "Commands/FunctionalCommand.h"
+#include "Game/GameSettings.h"
+#include "Game/Objects/Enemy/ConcreteEnemy/Koopa.h"
+#include "Game/Objects/Player/Player.h"
 #include "Game/Objects/Pipe/Pipe.h"
 #include "Game/World/LevelDataLoader.h"
 #include "Game/World/ThemeAssets.h"
@@ -583,13 +586,13 @@ void MapEditorScene::setupMenus() {
     setupInstructionsMenu();
     setupConfigMenu();
 
-    _categoryMenu.setMouseOnly(true);
-    _paletteMenu.setMouseOnly(true);
-    _generalMapMenu.setMouseOnly(true);
-    _actionMenu.setMouseOnly(true);
-    _mapSizeMenu.setMouseOnly(true);
-    _instructionsMenu.setMouseOnly(true);
-    _configMenu.setMouseOnly(true);
+    _categoryMenu.setMouseEnabled(true); _categoryMenu.setKeyboardEnabled(false);
+    _paletteMenu.setMouseEnabled(true); _paletteMenu.setKeyboardEnabled(false);
+    _generalMapMenu.setMouseEnabled(true); _generalMapMenu.setKeyboardEnabled(false);
+    _actionMenu.setMouseEnabled(true); _actionMenu.setKeyboardEnabled(false);
+    _mapSizeMenu.setMouseEnabled(true); _mapSizeMenu.setKeyboardEnabled(false);
+    _instructionsMenu.setMouseEnabled(true); _instructionsMenu.setKeyboardEnabled(false);
+    _configMenu.setMouseEnabled(true); _configMenu.setKeyboardEnabled(false);
 }
 
 void MapEditorScene::setupCategoryMenu() {
@@ -2297,25 +2300,42 @@ MapEditorScene::PreviewSpec MapEditorScene::previewSpecFor(
         spec.animationId = "goomba";
         spec.size = {50.0f, 65.0f};
         spec.offset = {0.0f, 5.0f};
+        spec.alignToCellBottom = true;
     } else if (entry.prefabId == "enemy_koopa") {
         spec.textureKey = "koopa_spritesheet";
         spec.animationId = "koopa";
         spec.size = {64.0f, 100.0f};
+        spec.visualScale = {
+            Koopa::defaultVisualScaleX,
+            Koopa::defaultVisualScaleY
+        };
+        spec.alignToCellBottom = true;
     } else if (entry.prefabId == "enemy_piranha_plant") {
         spec.textureKey = "piranha_plant_spritesheet";
         spec.animationId = "piranha_plant";
         spec.size = {78.0f, 105.0f};
         spec.offset = {0.0f, 5.0f};
+        spec.alignToCellBottom = true;
     } else if (entry.prefabId == "player_mario") {
         spec.textureKey = "mario_spritesheet";
         spec.animationId = "mario";
         spec.size = {36.0f, 80.0f};
+        spec.visualScale = {
+            Player::defaultVisualScaleX,
+            Player::defaultVisualScaleY
+        };
         spec.offset = {10.0f, 0.0f};
+        spec.alignToCellBottom = true;
     } else if (entry.prefabId == "player_luigi") {
         spec.textureKey = "luigi_spritesheet";
         spec.animationId = "luigi";
         spec.size = {36.0f, 80.0f};
+        spec.visualScale = {
+            Player::defaultVisualScaleX,
+            Player::defaultVisualScaleY
+        };
         spec.offset = {10.0f, 0.0f};
+        spec.alignToCellBottom = true;
     }
     return spec;
 }
@@ -2372,19 +2392,31 @@ void MapEditorScene::drawPreviewSprite(
             return;
         }
 
+        // Spawn sizes describe the body's dimensions. Some objects, such as
+        // players, intentionally use a separate presentation scale; keep the
+        // body anchor unchanged while rendering the sprite at its actual
+        // in-game size.
+        const sf::Vector2f renderSize{
+            spec.size.x * spec.visualScale.x,
+            spec.size.y * spec.visualScale.y
+        };
         sf::Sprite sprite(texture, frame);
         sprite.setOrigin({
             frame.size.x * 0.5f,
             static_cast<float>(frame.size.y)
         });
         sf::Vector2f bodyCenter = cellCenter + spec.offset;
-        if (spec.centerVertically) {
+        if (spec.alignToCellBottom) {
+            bodyCenter.y = cellCenter.y
+                + CellSize * 0.5f
+                - spec.size.y * 0.5f;
+        } else if (spec.centerVertically) {
             bodyCenter.y += (CellSize - spec.size.y) * 0.5f;
         }
         sprite.setPosition({bodyCenter.x, bodyCenter.y + spec.size.y * 0.5f});
         sprite.setScale({
-            spec.size.x / static_cast<float>(frame.size.x),
-            spec.size.y / static_cast<float>(frame.size.y)
+            renderSize.x / static_cast<float>(frame.size.x),
+            renderSize.y / static_cast<float>(frame.size.y)
         });
         target.draw(sprite);
     } catch (const std::exception&) {
@@ -2924,6 +2956,40 @@ void MapEditorScene::rememberBeforeEdit() {
     _redoHistory.clear();
 }
 
+bool MapEditorScene::canPlayMap() {
+    const bool hasMario = std::find(_cells.begin(), _cells.end(), 'M')
+        != _cells.end();
+    const bool hasLuigi = std::find(_cells.begin(), _cells.end(), 'L')
+        != _cells.end();
+
+    if (!hasMario && !hasLuigi) {
+        setStatus(
+            "Add at least one player (Mario or Luigi) before playing",
+            sf::Color(255, 180, 120)
+        );
+        return false;
+    }
+
+    const GameSettings& settings = GameSettings::getInstance();
+    if (settings.gameMode == GameMode::Solo) {
+        const bool selectedPlayerIsPresent =
+            settings.player1Character == "luigi" ? hasLuigi : hasMario;
+        if (!selectedPlayerIsPresent) {
+            const std::string availablePlayer = hasLuigi
+                ? "Luigi"
+                : "Mario";
+            setStatus(
+                "Select " + availablePlayer
+                + " before playing this one-player map",
+                sf::Color(255, 180, 120)
+            );
+            return false;
+        }
+    }
+
+    return true;
+}
+
 bool MapEditorScene::loadSavedMap() {
     const std::filesystem::path path(savedMapPath());
     if (!std::filesystem::exists(path)) {
@@ -3203,6 +3269,10 @@ bool MapEditorScene::saveMap() {
 }
 
 void MapEditorScene::saveAndPlay() {
+    if (!canPlayMap()) {
+        return;
+    }
+
     if (!saveMap()) {
         return;
     }

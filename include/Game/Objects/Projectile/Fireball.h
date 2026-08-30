@@ -18,11 +18,12 @@ public:
     Fireball(sf::Texture& texture);
     ~Fireball() override = default;
 
-    void activate(sf::Vector2f spawnPos, bool facingRight);
+    void activate(sf::Vector2f spawnPos, bool facingRight, int ownerIndex = -1);
     void deactivate();
 
     bool isActive() const { return _active; }
     float getDistanceTraveled() const { return _distanceTraveled; }
+    int getOwnerIndex() const noexcept { return _ownerIndex; }
 
     void triggerBounce();
     void updateSimulation(const float& fixedDt) override;
@@ -40,6 +41,7 @@ private:
     bool _active = false;
     bool _facingRight = true;
     float _distanceTraveled = 0.0f;
+    int _ownerIndex = -1;
     FireballParticleEffect _particleTrail;
     
     // Movement speeds in Box2D MKS matching original Super Mario Bros NES physics

@@ -1,11 +1,11 @@
 {
     "tileMapping": {
         ".": "empty",
-        "#": "brick",
         "c": "item_coin",
         "B": "block_coin",
         "?": "block_lucky",
         "M": "player_mario_static",
+        "A": "terrain_grassland",
         "L": "player_luigi_static"
     },
     "layer": [
@@ -22,10 +22,18 @@
         "...............................",
         "...............................",
         "...............................",
-        "...............................",
         "........M............L.........",
-        "##############################.",
-        "##############################."
+        "...............................",
+        "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+        "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
     ],
-    "background": "parallax_sky"
+    "background": "parallax_sky",
+    "prefabs": {
+        "terrain_grassland": {
+            "texture": "at_grassland",
+            "solid": true,
+            "autotile": "grassland_terrain",
+            "addSeamFilter": true
+        }
+    }
 }

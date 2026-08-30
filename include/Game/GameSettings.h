@@ -22,6 +22,10 @@ public:
     GameMode gameMode = GameMode::Coop;
     MinigameMode minigameMode = MinigameMode::TwoPlayer;
     std::string player1Character = "mario";
+    std::string characterSelectHovered = "mario";
+    bool isCharacterSelectActive = false;
+    bool isInGameSceneActive = false;
+    bool isLevelSelectActive = false;
 
     bool debugDrawGrid = false;
     bool debugDrawCoordinates = false;

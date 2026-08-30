@@ -15,7 +15,7 @@ void FireballPool::initialize(const PhysicsWorld& physicsWorld, sf::Texture& tex
     }
 }
 
-bool FireballPool::spawnFireball(sf::Vector2f spawnPos, bool facingRight) {
+bool FireballPool::spawnFireball(sf::Vector2f spawnPos, bool facingRight, int ownerIndex) {
     if (getActiveCount() >= MAX_ACTIVE_FIREBALLS) {
         return false;
     }
@@ -23,9 +23,9 @@ bool FireballPool::spawnFireball(sf::Vector2f spawnPos, bool facingRight) {
     for (auto& fireball : _pool) {
         if (fireball && !fireball->isActive()) {
             // Offset spawn position slightly in front of Mario to prevent self-collision
-            const float offsetX = facingRight ? 35.0f : -35.0f;
+            const float offsetX = facingRight ? 45.0f : -45.0f;
             sf::Vector2f adjustedSpawn = {spawnPos.x + offsetX, spawnPos.y};
-            fireball->activate(adjustedSpawn, facingRight);
+            fireball->activate(adjustedSpawn, facingRight, ownerIndex);
             return true;
         }
     }

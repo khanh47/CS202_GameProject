@@ -189,6 +189,7 @@ ResourceManager::ResourceManager() {
 	_preLoadSound("assets/soundtrack/sfx/coin.mp3", "coin");
 	_preLoadSound("assets/soundtrack/sfx/break.mp3", "break");
 	_preLoadSound("assets/soundtrack/sfx/kill.mp3", "kill");
+	_preLoadSound("assets/soundtrack/sfx/select_button.mp3", "select_button");
 	
 	_preLoadTexture("assets/sprites/Tiles/mario_and_items.png", "mario_and_items");
 	_preLoadTexture("assets/sprites/Tilesets/mutiple_tilesets.png", "mutiple_tilesets");
@@ -204,6 +205,10 @@ ResourceManager::ResourceManager() {
 	_preLoadTexture("assets/backgrounds/far_underground.png", "far_underground");
 	_preLoadTexture("assets/backgrounds/close_underground.png", "close_underground");
 	_preLoadTexture("assets/guis/game_over.png", "game_over");
+	_preLoadTexture(
+		"assets/guis/Square_premade_buttons_16x16px.png",
+		"square_premade_buttons"
+	);
 	_preLoadTexture("assets/spritesheets/goomba_spritesheet.png", "goomba_spritesheet");
 	_preLoadTexture("assets/spritesheets/koopa_spritesheet.png", "koopa_spritesheet");
 	_preLoadTexture("assets/spritesheets/piranha_plant_spritesheet.png", "piranha_plant_spritesheet");

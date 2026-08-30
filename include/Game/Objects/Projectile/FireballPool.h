@@ -20,7 +20,7 @@ public:
     ~FireballPool() = default;
 
     void initialize(const PhysicsWorld& physicsWorld, sf::Texture& texture);
-    bool spawnFireball(sf::Vector2f spawnPos, bool facingRight);
+    bool spawnFireball(sf::Vector2f spawnPos, bool facingRight, int ownerIndex = -1);
     
     void updateSimulation(const float& fixedDt, float maxDistancePixels, float voidYThreshold);
     void updateVisuals(float deltaTime);

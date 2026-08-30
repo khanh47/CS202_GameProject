@@ -65,14 +65,16 @@ PrefabSpawner::PrefabSpawner(
     WorldObjectStore& objectStore,
     GameWorld& gameWorld,
     TerrainSeamFilter& terrainSeamFilter,
-    float cellSize
+    float cellSize,
+    std::size_t playerCount
 )
     : _physicsWorld(physicsWorld),
       _objectFactory(objectFactory),
       _objectStore(objectStore),
       _gameWorld(gameWorld),
       _terrainSeamFilter(terrainSeamFilter),
-      _cellSize(cellSize) {}
+      _cellSize(cellSize),
+      _playerCount(playerCount) {}
 
 std::shared_ptr<GameObject> PrefabSpawner::spawnAtGrid(
     const SpawnSpec& spec,
@@ -210,6 +212,7 @@ std::shared_ptr<GameObject> PrefabSpawner::spawnObjectAtPosition(
                     && mario->getCharacter() == "luigi";
                 if (spec.addController && !isAiPlayer) {
                     const bool useWasd = settings.gameMode == GameMode::Solo
+                        || _playerCount == 1
                         || spec.animationId == "mario";
                     _objectStore.addController(
                         std::make_unique<PlayerController>(

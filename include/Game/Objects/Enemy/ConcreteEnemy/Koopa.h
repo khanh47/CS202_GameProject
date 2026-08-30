@@ -5,6 +5,9 @@ class GameWorld;
 
 class Koopa : public Enemy {
 public:
+    static constexpr float defaultVisualScaleX = 1.5f;
+    static constexpr float defaultVisualScaleY = 1.2f;
+
     Koopa();
     Koopa(sf::Texture& texture, const std::string& animationSetId = "koopa", bool isReviving = false);
     ~Koopa() override = default;

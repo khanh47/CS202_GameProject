@@ -19,7 +19,22 @@ CharacterSelectScene::CharacterSelectScene()
 
 void CharacterSelectScene::onEnter() {
     Scene::onEnter();
+    GameSettings::getInstance().isCharacterSelectActive = true;
+    if (GameSettings::getInstance().characterSelectHovered != "luigi" &&
+        GameSettings::getInstance().characterSelectHovered != "mario") {
+        GameSettings::getInstance().characterSelectHovered = GameSettings::getInstance().player1Character;
+        if (GameSettings::getInstance().characterSelectHovered != "luigi" &&
+            GameSettings::getInstance().characterSelectHovered != "mario") {
+            GameSettings::getInstance().characterSelectHovered = "mario";
+        }
+    }
     _setupButtons();
+    _updatePreviewFromFocus();
+}
+
+void CharacterSelectScene::onExit() {
+    GameSettings::getInstance().isCharacterSelectActive = false;
+    Scene::onExit();
 }
 
 void CharacterSelectScene::handleInput(const sf::Event& event) {
@@ -33,6 +48,7 @@ void CharacterSelectScene::handleInput(const sf::Event& event) {
     }
 
     _buttonMenu.processEvent(event);
+    _updatePreviewFromFocus();
 }
 
 void CharacterSelectScene::render(sf::RenderTarget& target) {
@@ -46,35 +62,49 @@ void CharacterSelectScene::_setupButtons() {
     _buttonMenu.setLayoutProperties(
         {820.0f, 360.0f},
         {280.0f, 60.0f},
-        75.0f,
+        80.0f,
         false,
         sf::Color(100, 149, 237),
-        28
+        36 
     );
 
-    _buttonMenu.addButtonAuto("Mario", std::make_unique<FunctionalCommand>(
+    _buttonMenu.addMainMenuButtonAuto("Mario", std::make_unique<FunctionalCommand>(
         "Mario", [this]() {
             GameSettings::getInstance().player1Character = "mario";
+            GameSettings::getInstance().characterSelectHovered = "mario";
             if (auto mgr = getSceneManager()) {
                 mgr->pushSceneByName("LEVEL_SELECT");
             }
         }
     ));
 
-    _buttonMenu.addButtonAuto("Luigi", std::make_unique<FunctionalCommand>(
+    _buttonMenu.addMainMenuButtonAuto("Luigi", std::make_unique<FunctionalCommand>(
         "Luigi", [this]() {
             GameSettings::getInstance().player1Character = "luigi";
+            GameSettings::getInstance().characterSelectHovered = "luigi";
             if (auto mgr = getSceneManager()) {
                 mgr->pushSceneByName("LEVEL_SELECT");
             }
         }
     ));
 
-    _buttonMenu.addButtonAuto("Back", std::make_unique<FunctionalCommand>(
+    _buttonMenu.addMainMenuButtonAuto("Back", std::make_unique<FunctionalCommand>(
         "Back", [this]() {
             if (auto mgr = getSceneManager()) {
                 mgr->requestPopScene();
             }
         }
     ));
+}
+
+void CharacterSelectScene::_updatePreviewFromFocus() {
+    if (_buttonMenu.size() == 0) return;
+    const int idx = _buttonMenu.getFocusedIndex();
+    // Unified hover+keyboard: MouseMoved syncs _focusedIndex to hovered button when mouseEnabled,
+    // so polling getFocusedIndex covers both mouse hover and keyboard Up/Down/W/S.
+    if (idx == 0) {
+        GameSettings::getInstance().characterSelectHovered = "mario";
+    } else if (idx == 1) {
+        GameSettings::getInstance().characterSelectHovered = "luigi";
+    } // Back (2) keeps previous hovered
 }

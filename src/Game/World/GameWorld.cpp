@@ -289,7 +289,8 @@ void GameWorld::respawnPlayer() {
         _objectStore,
         *this,
         _worldMap.getTerrainSeamFilter(),
-        _worldMap.getCellSize()
+        _worldMap.getCellSize(),
+        _worldMap.getPlayerCount()
     );
 
     const std::vector<std::string>& layer = _currentLevelData.layer;
@@ -370,7 +371,8 @@ bool GameWorld::spawnFireball(
     }
     return _fireballPools[playerIndex].spawnFireball(
         spawnPosition,
-        facingRight
+        facingRight,
+        playerIndex
     );
 }
 

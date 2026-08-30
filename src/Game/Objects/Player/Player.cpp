@@ -57,6 +57,14 @@ float smoothStep(float progress) {
     progress = std::clamp(progress, 0.0f, 1.0f);
     return progress * progress * (3.0f - 2.0f * progress);
 }
+
+float moveToward(float current, float target, float maximumDelta) {
+    return current + std::clamp(
+        target - current,
+        -maximumDelta,
+        maximumDelta
+    );
+}
 }
 
 Player::Player() : GameObject() {
@@ -96,7 +104,7 @@ void Player::destroy() {
 
     b2ShapeId shape = _body->getHitbox();
     b2Filter filter = b2Shape_GetFilter(shape);
-    filter.maskBits ^= CollisionFilter::ENEMY | CollisionFilter::SHELL;
+    filter.maskBits ^= CollisionFilter::ENEMY | CollisionFilter::SHELL | CollisionFilter::PICKUP;
     if (GameSettings::getInstance().gameMode == GameMode::Minigame) {
       filter.maskBits ^= CollisionFilter::MINIGAME_MASK;
     }
@@ -433,19 +441,44 @@ void Player::updateSimulation(const float &fixedDt) {
     }
 
     float moveSpeed = _baseMoveSpeed;
+    float acceleration = _baseAcceleration;
+    float traction = _baseTraction;
     float jumpSpeed = _baseJumpSpeed;
+
+    if (_character == "luigi") {
+        moveSpeed *= luigiTopSpeedRatio;
+        acceleration *= luigiAccelerationRatio;
+        traction *= luigiTractionRatio;
+        jumpSpeed *= luigiJumpSpeedRatio;
+    }
 
     if (_state) {
         moveSpeed *= _state->getMoveSpeedMultiplier();
         jumpSpeed *= _state->getJumpSpeedMultiplier();
     }
 
+    float targetVelocityX = 0.0f;
     if (moveable->isMovingLeft() && !moveable->isMovingRight()) {
-        velocity.x = -moveSpeed;
+        targetVelocityX = -moveSpeed;
     } else if (moveable->isMovingRight() && !moveable->isMovingLeft()) {
-        velocity.x = moveSpeed;
-    } else if (!moveable->isMovingLeft() && !moveable->isMovingRight()) {
-        velocity.x = 0.f;
+        targetVelocityX = moveSpeed;
+    }
+
+    const bool reversing = targetVelocityX != 0.0f
+        && velocity.x != 0.0f
+        && (targetVelocityX > 0.0f) != (velocity.x > 0.0f);
+    if (targetVelocityX == 0.0f || reversing) {
+        velocity.x = moveToward(
+            velocity.x,
+            0.0f,
+            traction * fixedDt
+        );
+    } else {
+        velocity.x = moveToward(
+            velocity.x,
+            targetVelocityX,
+            acceleration * fixedDt
+        );
     }
 
     const bool isStartingJump = moveable->isJumping() && !moveable->isAirbone();
@@ -584,7 +617,10 @@ void Player::updatePipeWarpVisuals(float deltaTime) {
     auto* animatable = getBehaviour<Animatable>();
     if (animatable) {
         animatable->playAnimation("idle");
-        animatable->setVisualScale({2.5f, 1.1f});
+        animatable->setVisualScale({
+            Player::defaultVisualScaleX,
+            Player::defaultVisualScaleY
+        });
         animatable->updateVisualState(
             deltaTime,
             _hitboxPixels,
@@ -1075,9 +1111,14 @@ void Player::onUpdateVisuals(float deltaTime) {
         sf::Vector2f scaledHitbox = {_baseHitboxPixels.x * currentScale, _baseHitboxPixels.y * currentScale};
         updateHitboxSize(scaledHitbox);
         if (auto* animatable = getBehaviour<Animatable>()) {
-            sf::Vector2f scale;
-            if(animatable->getActiveAnimationName() == "shoot") scale = {3.75f, 1.1f};
-            else scale = {2.5f, 1.1f};
+            const sf::Vector2f scale =
+                animatable->getActiveAnimationName() == "shoot"
+                ? sf::Vector2f{3.75f, 1.1f}
+                : sf::Vector2f{
+                    Player::defaultVisualScaleX,
+                    Player::defaultVisualScaleY
+                };
+            animatable->setVisualScale(scale);
             animatable->updateVisualState(deltaTime, scaledHitbox, facingLeft);
         }
         return;
@@ -1106,9 +1147,13 @@ void Player::onUpdateVisuals(float deltaTime) {
     sf::Vector2f scaledHitbox = {_baseHitboxPixels.x * scaleMult.x, _baseHitboxPixels.y * scaleMult.y};
     updateHitboxSize(scaledHitbox);
     if (auto* animatable = getBehaviour<Animatable>()) {
-        sf::Vector2f scale;
-        if(animatable->getActiveAnimationName() == "shoot") scale = {3.75f, 1.1f};
-        else scale = {2.5f, 1.1f};
+        const sf::Vector2f scale =
+            animatable->getActiveAnimationName() == "shoot"
+            ? sf::Vector2f{3.75f, 1.1f}
+            : sf::Vector2f{
+                Player::defaultVisualScaleX,
+                Player::defaultVisualScaleY
+            };
         animatable->setVisualScale(scale);
         animatable->updateVisualState(deltaTime, scaledHitbox, facingLeft);
     }
@@ -1149,48 +1194,65 @@ void Player::onRenderVisual(sf::RenderTarget& target, const sf::Vector2f& positi
     }
 
     // Render character name and pointing triangle above player's head (e.g. "MARIO", "LUIGI")
-    if (!_isDying && !isPipeWarping()) {
-        std::string displayName = _character;
-        for (char& c : displayName) {
-            c = static_cast<char>(std::toupper(static_cast<unsigned char>(c)));
+    // Gated: CharacterSelect hover (unified hover+keyboard via characterSelectHovered) and Coop both; otherwise hidden
+    {
+        auto &gs = GameSettings::getInstance();
+        bool shouldDrawTag = false;
+        if (!_isDying && !isPipeWarping()) {
+            if (gs.isCharacterSelectActive) {
+                if (gs.gameMode == GameMode::Coop) {
+                    shouldDrawTag = true; // Coop: both
+                } else {
+                    shouldDrawTag = (getCharacter() == gs.characterSelectHovered);
+                }
+            } else if (gs.isLevelSelectActive) {
+                if (gs.gameMode == GameMode::Coop) {
+                    shouldDrawTag = true; // Coop: both
+                } else {
+                    shouldDrawTag = (getCharacter() == gs.characterSelectHovered);
+                }
+            }
         }
+        if (shouldDrawTag) {
+            std::string displayName = _character;
+            for (char& c : displayName) {
+                c = static_cast<char>(std::toupper(static_cast<unsigned char>(c)));
+            }
 
-        // Vibrant, bright glowing colors with black outline
-        sf::Color markerColor;
-        if (_character == "luigi") {
-            markerColor = sf::Color(60, 255, 100); // Bright Neon Luigi Green
-        } else if (_character == "mario") {
-            markerColor = sf::Color(255, 65, 65);  // Bright Vivid Mario Red
-        } else {
-            markerColor = sf::Color(255, 235, 70); // Bright Golden Yellow
+            sf::Color markerColor;
+            if (_character == "luigi") {
+                markerColor = sf::Color(60, 255, 100);
+            } else if (_character == "mario") {
+                markerColor = sf::Color(255, 65, 65);
+            } else {
+                markerColor = sf::Color(255, 235, 70);
+            }
+
+            const sf::Vector2f hitbox = getHitboxPixels();
+            const float topY = position.y - hitbox.y * 0.5f - 4.0f;
+
+            sf::ConvexShape pointer(3);
+            pointer.setPoint(0, sf::Vector2f(-6.0f, -8.0f));
+            pointer.setPoint(1, sf::Vector2f(6.0f, -8.0f));
+            pointer.setPoint(2, sf::Vector2f(0.0f,  0.0f));
+            pointer.setPosition({position.x, topY});
+            pointer.setFillColor(markerColor);
+            pointer.setOutlineColor(sf::Color::Black);
+            pointer.setOutlineThickness(1.5f);
+
+            const sf::Font& font = ResourceManager::getInstance().getFont("SuperMario");
+            sf::Text nameText(font, displayName, 24);
+            nameText.setFillColor(markerColor);
+            nameText.setOutlineColor(sf::Color::Black);
+            nameText.setOutlineThickness(2.0f);
+
+            const sf::FloatRect bounds = nameText.getLocalBounds();
+            nameText.setOrigin({bounds.position.x + bounds.size.x * 0.5f, bounds.position.y + bounds.size.y});
+            nameText.setPosition({position.x, topY - 10.0f});
+
+            target.draw(pointer);
+            target.draw(nameText);
         }
-
-        const sf::Vector2f hitbox = getHitboxPixels();
-        const float topY = position.y - hitbox.y * 0.5f - 4.0f;
-
-        // Upside-down triangle pointing down directly to the player's head
-        sf::ConvexShape pointer(3);
-        pointer.setPoint(0, sf::Vector2f(-6.0f, -8.0f)); // Top-left
-        pointer.setPoint(1, sf::Vector2f( 6.0f, -8.0f)); // Top-right
-        pointer.setPoint(2, sf::Vector2f( 0.0f,  0.0f)); // Bottom tip pointing at head
-        pointer.setPosition({position.x, topY});
-        pointer.setFillColor(markerColor);
-        pointer.setOutlineColor(sf::Color::Black);
-        pointer.setOutlineThickness(1.5f);
-
-        // Character name text sitting directly above the pointer triangle
-        const sf::Font& font = ResourceManager::getInstance().getFont("SuperMario");
-        sf::Text nameText(font, displayName, 16);
-        nameText.setFillColor(markerColor);
-        nameText.setOutlineColor(sf::Color::Black);
-        nameText.setOutlineThickness(2.0f);
-
-        const sf::FloatRect bounds = nameText.getLocalBounds();
-        nameText.setOrigin({bounds.position.x + bounds.size.x * 0.5f, bounds.position.y + bounds.size.y});
-        nameText.setPosition({position.x, topY - 10.0f});
-
-        target.draw(pointer);
-        target.draw(nameText);
     }
 }
 

@@ -51,8 +51,8 @@
             "texture": "mario_spritesheet",
             "animationId": "mario",
             "size": [
-                54,
-                120
+                67.5,
+                150
             ],
             "offset": [
                 10,
@@ -65,8 +65,8 @@
             "texture": "luigi_spritesheet",
             "animationId": "luigi",
             "size": [
-                54,
-                120
+                67.5,
+                150
             ],
             "offset": [
                 10,

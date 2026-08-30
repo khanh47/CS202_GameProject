@@ -13,8 +13,7 @@ public:
 
     ToggleButton(const sf::Vector2f& position, const sf::Vector2f& size, const sf::Color& color,
                  const std::string& labelText, unsigned int charSize = 24,
-                 bool initialState = false, float cornerRadius = 10.0f,
-                 const std::string& iconAlias = "");
+                 bool initialState = false, float cornerRadius = 10.0f);
 
     ~ToggleButton() override = default;
 

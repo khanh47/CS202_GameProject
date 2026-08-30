@@ -1,7 +1,7 @@
 {
     "tileMapping": {
         ".": "empty",
-        "#": "arena_brick",
+        "A": "terrain_grassland",
         "M": "player_mario",
         "L": "player_luigi"
     },
@@ -20,7 +20,15 @@
         "..............................",
         "..............................",
         "......M................L......",
-        "##############################"
+        "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
     ],
-    "background": "parallax_sky"
+    "background": "parallax_sky",
+    "prefabs": {
+        "terrain_grassland": {
+            "texture": "at_grassland",
+            "solid": true,
+            "autotile": "grassland_terrain",
+            "addSeamFilter": true
+        }
+    }
 }
