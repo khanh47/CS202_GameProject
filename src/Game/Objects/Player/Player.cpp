@@ -65,6 +65,7 @@ float moveToward(float current, float target, float maximumDelta) {
         maximumDelta
     );
 }
+
 }
 
 Player::Player() : GameObject() {
@@ -154,6 +155,28 @@ void Player::finalizeGroundContacts() {
             _world->getScoreManager()->handleEvent(ScoreEventType::MarioLanded, {0.f, 0.f}, 0, _character);
         }
     }
+}
+
+PlayerMovementStats Player::getMovementStats() const noexcept {
+    PlayerMovementStats stats{
+        _baseMoveSpeed,
+        _baseAcceleration,
+        _baseTraction,
+        _baseJumpSpeed
+    };
+
+    if (_character == "luigi") {
+        stats.topSpeedMetersPerSecond *= luigiTopSpeedRatio;
+        stats.accelerationMetersPerSecondSquared *= luigiAccelerationRatio;
+        stats.tractionMetersPerSecondSquared *= luigiTractionRatio;
+        stats.jumpSpeedMetersPerSecond *= luigiJumpSpeedRatio;
+    }
+
+    if (_state) {
+        stats.topSpeedMetersPerSecond *= _state->getMoveSpeedMultiplier();
+        stats.jumpSpeedMetersPerSecond *= _state->getJumpSpeedMultiplier();
+    }
+    return stats;
 }
 
 void Player::setState(std::unique_ptr<PlayerState> newState) {
@@ -440,22 +463,11 @@ void Player::updateSimulation(const float &fixedDt) {
         hold->updateSimulation(fixedDt);
     }
 
-    float moveSpeed = _baseMoveSpeed;
-    float acceleration = _baseAcceleration;
-    float traction = _baseTraction;
-    float jumpSpeed = _baseJumpSpeed;
-
-    if (_character == "luigi") {
-        moveSpeed *= luigiTopSpeedRatio;
-        acceleration *= luigiAccelerationRatio;
-        traction *= luigiTractionRatio;
-        jumpSpeed *= luigiJumpSpeedRatio;
-    }
-
-    if (_state) {
-        moveSpeed *= _state->getMoveSpeedMultiplier();
-        jumpSpeed *= _state->getJumpSpeedMultiplier();
-    }
+    const PlayerMovementStats movement = getMovementStats();
+    const float moveSpeed = movement.topSpeedMetersPerSecond;
+    const float acceleration = movement.accelerationMetersPerSecondSquared;
+    const float traction = movement.tractionMetersPerSecondSquared;
+    const float jumpSpeed = movement.jumpSpeedMetersPerSecond;
 
     float targetVelocityX = 0.0f;
     if (moveable->isMovingLeft() && !moveable->isMovingRight()) {
@@ -467,19 +479,15 @@ void Player::updateSimulation(const float &fixedDt) {
     const bool reversing = targetVelocityX != 0.0f
         && velocity.x != 0.0f
         && (targetVelocityX > 0.0f) != (velocity.x > 0.0f);
-    if (targetVelocityX == 0.0f || reversing) {
-        velocity.x = moveToward(
-            velocity.x,
-            0.0f,
-            traction * fixedDt
-        );
-    } else {
-        velocity.x = moveToward(
-            velocity.x,
-            targetVelocityX,
-            acceleration * fixedDt
-        );
-    }
+    const float velocityChangeRate =
+        targetVelocityX == 0.0f || reversing
+            ? traction
+            : acceleration;
+    velocity.x = moveToward(
+        velocity.x,
+        reversing ? 0.0f : targetVelocityX,
+        velocityChangeRate * fixedDt
+    );
 
     const bool isStartingJump = moveable->isJumping() && !moveable->isAirbone();
     if (isStartingJump) {

@@ -8,15 +8,24 @@ struct AiAction {
     bool jump = false;
 };
 
+struct AiPlayerKinematics {
+    float x = 0.0f;
+    float y = 0.0f;
+    float velocityX = 0.0f;
+    float velocityY = 0.0f;
+    float topSpeed = 0.0f;
+    float acceleration = 0.0f;
+    float traction = 0.0f;
+    float jumpSpeed = 0.0f;
+    float halfWidth = 0.0f;
+    float halfHeight = 0.0f;
+    bool grounded = false;
+};
+
 struct AiObservation {
-    float selfX = 0.0f;
-    float selfY = 0.0f;
-    float opponentX = 0.0f;
-    float opponentY = 0.0f;
-    float opponentVelocityY = 0.0f;
-    float selfGrounded = 0.0f;
+    AiPlayerKinematics self;
+    AiPlayerKinematics opponent;
     float arenaHalfWidth = 0.0f;
-    float selfHalfWidth = 0.0f;
 };
 
 class AiPlayerController {
