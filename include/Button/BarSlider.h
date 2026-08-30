@@ -40,6 +40,8 @@ public:
     // Executes toggle state transition and calls bound commands/callbacks
     void execute() override;
 
+    void processEvent(const sf::Event& event) override;
+
     // Renders button background, label text, and rounded pill slider switch graphics
     void render(sf::RenderTarget& target) override;
 
@@ -51,7 +53,6 @@ public:
 
 private:
     bool _isSelected = false;
-    std::string _labelText;
     SelectCallback _selectCallback;
 
     // Numeric slider state

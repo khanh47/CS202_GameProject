@@ -242,8 +242,14 @@ void InGameScene::init() {
 
     _camera.setConfig(config);
 
-    // Bind camera tracking target to player
-    if (auto player = _gameWorld.getPrimaryPlayer()) {
+    // Bind camera tracking target(s) - 2-player center + zoom
+    const auto players = _gameWorld.getPlayers();
+    if (players.size() >= 2 && GameSettings::getInstance().gameMode != GameMode::Solo) {
+        std::vector<std::shared_ptr<GameObject>> targets;
+        targets.reserve(players.size());
+        for (const auto& p : players) targets.push_back(p);
+        _camera.setTargets(targets);
+    } else if (auto player = _gameWorld.getPrimaryPlayer()) {
         _camera.setTarget(player);
     } else {
         _camera.setCenter({1920.f / 2.f, _gameWorld.getGridHeight() * _gameWorld.getCellSize() - 1080.f / 2.f});
@@ -638,7 +644,12 @@ void InGameScene::updateVisuals(float deltaTime) {
 
     if (!_winReactionActive && !_gameOverActive && !_winActive) {
         _camera.update(deltaTime);
-        if (!_camera.getTarget() && _gameWorld.getPrimaryPlayer()) {
+        const bool needsRebind = [&]() {
+            const auto ps = _gameWorld.getPlayers();
+            const bool isMulti = ps.size() >= 2 && GameSettings::getInstance().gameMode != GameMode::Solo;
+            return !isMulti && !_camera.getTarget() && _gameWorld.getPrimaryPlayer();
+        }();
+        if (needsRebind) {
             _camera.setTarget(_gameWorld.getPrimaryPlayer());
         }
     }
@@ -1056,8 +1067,14 @@ void InGameScene::_respawnPlayer() {
     _gameWorld.respawnPlayer();
     _gameWorld.setScoreManager(&_scoreManager);
     _scoreManager.resetTime(400.0f);
-    // Rebind camera tracking to the newly spawned player
-    if (auto player = _gameWorld.getPrimaryPlayer()) {
+    // Rebind camera tracking to the newly spawned player(s)
+    const auto players = _gameWorld.getPlayers();
+    if (players.size() >= 2 && GameSettings::getInstance().gameMode != GameMode::Solo) {
+        std::vector<std::shared_ptr<GameObject>> targets;
+        targets.reserve(players.size());
+        for (const auto& p : players) targets.push_back(p);
+        _camera.setTargets(targets);
+    } else if (auto player = _gameWorld.getPrimaryPlayer()) {
         _camera.setTarget(player);
     }
 }

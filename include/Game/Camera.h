@@ -2,6 +2,7 @@
 
 #include <SFML/Graphics.hpp>
 #include <memory>
+#include <vector>
 
 class GameObject;
 
@@ -36,6 +37,7 @@ public:
     // Target & Configuration
     void setTarget(std::shared_ptr<GameObject> target);
     std::shared_ptr<GameObject> getTarget() const { return _target; }
+    void setTargets(const std::vector<std::shared_ptr<GameObject>>& targets);
     void setConfig(const CameraConfig& config);
     CameraConfig& getConfig();
     const CameraConfig& getConfig() const;
@@ -60,9 +62,12 @@ public:
 private:
     sf::View _view;
     std::shared_ptr<GameObject> _target;
+    std::vector<std::shared_ptr<GameObject>> _targets;
     CameraConfig _config;
 
     sf::Vector2f _currentCenter{0.0f, 0.0f};
+    sf::Vector2f _currentSize{0.0f, 0.0f};
+    sf::Vector2f _baseSize{0.0f, 0.0f};
     float _currentLookaheadX = 0.0f;
     float _freeMoveSpeed = 2000.0f;
 

@@ -1,4 +1,5 @@
 #include "Button/ToggleButton.h"
+#include "UI/UIHelpers.h"
 #include <algorithm>
 #include <cmath>
 
@@ -9,8 +10,7 @@ ToggleButton::ToggleButton(const sf::Vector2f& position, const sf::Vector2f& siz
                            bool initialState, float cornerRadius)
     : Button(position, size, initialState ? sf::Color(46, 204, 113) : sf::Color(108, 122, 137),
              labelText, charSize, cornerRadius),
-      _isToggled(initialState),
-      _labelText(labelText) {
+      _isToggled(initialState) {
     (void)color;
     updateColors();
 }
@@ -40,70 +40,41 @@ void ToggleButton::execute() {
 void ToggleButton::updateColors() {
     sf::Color base = _isToggled ? _onColor : _offColor;
     defaultColor = base;
-
-    int r = std::min(255, base.r + 35);
-    int g = std::min(255, base.g + 35);
-    int b = std::min(255, base.b + 35);
-    focusedColor = sf::Color(r, g, b, base.a);
-
-    int fr = std::min(255, base.r + 65);
-    int fg = std::min(255, base.g + 65);
-    int fb = std::min(255, base.b + 65);
-    focusedColor = sf::Color(fr, fg, fb, base.a);
-
-    shape.setFillColor(defaultColor);
-    setText(_labelText);
+    focusedColor = UI::Helper::brighten(base, 65);
+    // Pure mode never draws shape — skip shape fill
 }
 
 void ToggleButton::render(sf::RenderTarget& target) {
-    // 1. Render base button background shape and clean label text
-    Button::render(target);
-
-    // Calculate vertical hover displacement for precise slider alignment
+    // Pure toggle: no outer rectangle, left label right pill
     sf::Vector2f drawPos = basePosition;
-    if (_isFocused) {
-        drawPos.y -= liftAmount;
-    }
+    if (_isFocused) drawPos.y -= liftAmount;
 
-    // 2. Render Rounded Pill Slider Track (Fully curved capsule shape on the right edge)
-    const float trackWidth = 44.0f;
+    // Text on left, lift with focus
+    sf::FloatRect tb = label.getLocalBounds();
+    label.setOrigin({tb.position.x, tb.position.y + tb.size.y * 0.5f});
+    label.setPosition({drawPos.x + 16.f, drawPos.y + baseSize.y * 0.5f});
+    if (_isFocused) label.setFillColor(sf::Color(255, 240, 120));
+    else label.setFillColor(sf::Color::White);
+    // Outline for readability
+    label.setOutlineColor(sf::Color(10, 18, 30));
+    label.setOutlineThickness(1.0f);
+    if (!label.getString().isEmpty()) target.draw(label);
+    label.setOutlineThickness(0.f);
+    label.setFillColor(sf::Color::White);
+
+    // 2. Render Rounded Pill Track on right — pure, fits 890 width
+    const float trackWidth = 48.0f;
     const float trackHeight = 22.0f;
-    const float paddingRight = 18.0f;
+    const float paddingRight = 16.0f;
 
     const float trackX = drawPos.x + baseSize.x - trackWidth - paddingRight;
     const float trackY = drawPos.y + (baseSize.y - trackHeight) / 2.0f;
 
-    sf::ConvexShape track;
-    const int pointsPerCorner = 8;
-    track.setPointCount(pointsPerCorner * 4);
-
-    const float radius = trackHeight / 2.0f; // Fully rounded semicircular caps
-    const float pi = 3.141592654f;
-    int pointIndex = 0;
-
-    auto addCorner = [&](float cx, float cy, float startAngle) {
-        for (int i = 0; i < pointsPerCorner; ++i) {
-            float angle = startAngle + (i * (pi / 2.0f) / (pointsPerCorner - 1));
-            float px = cx + radius * std::cos(angle);
-            float py = cy + radius * std::sin(angle);
-            track.setPoint(pointIndex++, sf::Vector2f(px, py));
-        }
-    };
-
-    addCorner(trackWidth - radius, trackHeight - radius, 0.0f);
-    addCorner(radius, trackHeight - radius, pi / 2.0f);
-    addCorner(radius, radius, pi);
-    addCorner(trackWidth - radius, radius, 3.0f * pi / 2.0f);
-
-    track.setPosition({trackX, trackY});
-
-    if (_isToggled) {
-        track.setFillColor(sf::Color(30, 130, 70)); // Dark active green track
-    } else {
-        track.setFillColor(sf::Color(75, 85, 95));   // Dark inactive gray track
-    }
-    track.setOutlineThickness(1.5f);
-    track.setOutlineColor(sf::Color(255, 255, 255, 180));
+    sf::Color trackFill = _isToggled
+        ? (_isFocused ? sf::Color(46, 204, 113) : sf::Color(30, 130, 70))
+        : sf::Color(75, 85, 95);
+    sf::Color outlineCol = _isFocused ? sf::Color(255,255,255,220) : sf::Color(255,255,255,180);
+    sf::ConvexShape track = UI::Helper::makePill({trackX, trackY}, trackWidth, trackHeight, trackFill, outlineCol, _isFocused ? 2.0f : 1.5f, 8);
     target.draw(track);
 
     // 3. Render Slider Knob (Circular thumb indicator inside pill track)
