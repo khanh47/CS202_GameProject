@@ -19,6 +19,6 @@ public:
     void render(sf::RenderTarget& target) override;
     void processEvent(const sf::Event& event) override;
 private:
-    sf::CircleShape triangle;
+    sf::ConvexShape triangle;
 };
 }

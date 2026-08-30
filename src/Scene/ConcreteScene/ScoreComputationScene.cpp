@@ -3,6 +3,7 @@
 #include "Scene/SceneManager.h"
 #include "Audio/SoundManager.h"
 #include "Audio/MusicManager.h"
+#include "Game/LeaderboardManager.h"
 #include <iomanip>
 #include <sstream>
 #include <cmath>
@@ -46,6 +47,15 @@ ScoreComputationScene::ScoreComputationScene(const ScoreSummaryData& data)
     _livesBonus = _data.isWin ? (_data.livesRemaining * POINTS_PER_LIFE) : 0;
     _finalTotalScore = _baseLevelScore + _coinsBonus + _timeBonus + _livesBonus;
     _isNewHighScore = (_finalTotalScore > _data.highScore);
+
+    // Automatically submit score to persistent Leaderboard
+    LeaderboardEntry entry;
+    entry.character = _data.character.empty() ? "mario" : _data.character;
+    entry.playerName = entry.character == "luigi" ? "LUIGI" : "MARIO";
+    entry.score = _finalTotalScore;
+    entry.coins = _data.coinsCollected;
+    entry.timeRemaining = _data.timeRemaining;
+    LeaderboardManager::getInstance().addEntry(_data.levelPath, entry);
 
     init();
 }

@@ -199,4 +199,13 @@ std::string Button::getText() const {
     return label.getString().toAnsiString();
 }
 
+void Button::setColor(const sf::Color& color) {
+    defaultColor = color;
+    int fr = std::min(255, color.r + 80);
+    int fg = std::min(255, color.g + 80);
+    int fb = std::min(255, color.b + 80);
+    focusedColor = sf::Color(fr, fg, fb, color.a);
+    shape.setFillColor(_isFocused ? focusedColor : defaultColor);
+}
+
 } // namespace UI

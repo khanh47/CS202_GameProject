@@ -29,6 +29,7 @@ public:
 
     void setText(const std::string& text);
     std::string getText() const;
+    void setColor(const sf::Color& color);
 
 protected:
     sf::ConvexShape shape;

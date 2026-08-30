@@ -15,9 +15,16 @@ Camera::Camera(const sf::Vector2f& size) {
 }
 
 void Camera::update(float deltaTime) {
+    // Clean up expired targets
     if (_target && _target->isPendingDestroy()) {
         _target.reset();
     }
+    _targets.erase(
+        std::remove_if(_targets.begin(), _targets.end(), [](const auto& t) {
+            return !t || t->isPendingDestroy();
+        }),
+        _targets.end()
+    );
 
     if (deltaTime <= 0.0f) {
         return;
@@ -44,14 +51,73 @@ void Camera::update(float deltaTime) {
         _currentCenter += sf::Vector2f(offsetX, offsetY);
         _currentCenter = clampToBounds(_currentCenter);
         _view.setCenter(_currentCenter);
-    } else if (_target) {
-        const sf::Vector2f targetPos = _target->getPosition();
-        const sf::Vector2f targetVel = _target->getVelocity();
+    } else if (_targets.size() > 1) {
+        // Multi-Target Framing (Co-op Mode)
+        float minX = 1e9f, maxX = -1e9f;
+        float minY = 1e9f, maxY = -1e9f;
+        sf::Vector2f avgVel{0.0f, 0.0f};
 
-        // 1. Deadzone & Y-Stabilization: Calculate base target camera focus position
+        for (const auto& t : _targets) {
+            const sf::Vector2f pos = t->getPosition();
+            const sf::Vector2f vel = t->getVelocity();
+            minX = std::min(minX, pos.x);
+            maxX = std::max(maxX, pos.x);
+            minY = std::min(minY, pos.y);
+            maxY = std::max(maxY, pos.y);
+            avgVel += vel;
+        }
+        avgVel /= static_cast<float>(_targets.size());
+
+        const sf::Vector2f targetPos{(minX + maxX) * 0.5f, (minY + maxY) * 0.5f};
+
+        // Smooth Dynamic Zoom: scale viewport slightly if players move apart
+        const float spanX = (maxX - minX) + 400.0f;
+        const float spanY = (maxY - minY) + 300.0f;
+        const float zoomFactor = std::clamp(
+            std::max(spanX / _baseSize.x, spanY / _baseSize.y),
+            1.0f, 1.25f
+        );
+        const sf::Vector2f desiredViewSize = _baseSize * zoomFactor;
+        const sf::Vector2f currentSize = _view.getSize();
+        const float sizeFactor = 1.0f - std::exp(-3.0f * deltaTime);
+        _view.setSize(currentSize + (desiredViewSize - currentSize) * sizeFactor);
+
+        sf::Vector2f targetFocus = calculateTargetFocus(targetPos, avgVel);
+
+        float targetLookahead = 0.0f;
+        if (avgVel.x > 10.0f) {
+            targetLookahead = _config.lookaheadDistance * 0.75f;
+        } else if (avgVel.x < -10.0f) {
+            targetLookahead = -_config.lookaheadDistance * 0.75f;
+        }
+
+        const float lookaheadFactor = 1.0f - std::exp(-_config.lookaheadSpeed * deltaTime);
+        _currentLookaheadX += (targetLookahead - _currentLookaheadX) * lookaheadFactor;
+        targetFocus.x += _currentLookaheadX;
+
+        const float factorX = 1.0f - std::exp(-_config.dampingX * deltaTime);
+        const float factorY = 1.0f - std::exp(-_config.dampingY * deltaTime);
+
+        _currentCenter.x += (targetFocus.x - _currentCenter.x) * factorX;
+        _currentCenter.y += (targetFocus.y - _currentCenter.y) * factorY;
+
+        _currentCenter = clampToBounds(_currentCenter);
+        _view.setCenter({std::round(_currentCenter.x), std::round(_currentCenter.y)});
+    } else if (_target || !_targets.empty()) {
+        auto currentTarget = _target ? _target : _targets.front();
+        
+        // Smoothly restore base view size if previously zoomed
+        const sf::Vector2f currentSize = _view.getSize();
+        if (std::abs(currentSize.x - _baseSize.x) > 1.0f || std::abs(currentSize.y - _baseSize.y) > 1.0f) {
+            const float sizeFactor = 1.0f - std::exp(-4.0f * deltaTime);
+            _view.setSize(currentSize + (_baseSize - currentSize) * sizeFactor);
+        }
+
+        const sf::Vector2f targetPos = currentTarget->getPosition();
+        const sf::Vector2f targetVel = currentTarget->getVelocity();
+
         sf::Vector2f targetFocus = calculateTargetFocus(targetPos, targetVel);
 
-        // 2. Lookahead (Forward Focus): Anticipate horizontal movement direction
         float targetLookahead = 0.0f;
         if (targetVel.x > 10.0f) {
             targetLookahead = _config.lookaheadDistance;
@@ -59,19 +125,16 @@ void Camera::update(float deltaTime) {
             targetLookahead = -_config.lookaheadDistance;
         }
 
-        // Smoothly interpolate lookahead offset over time using exponential decay
         const float lookaheadFactor = 1.0f - std::exp(-_config.lookaheadSpeed * deltaTime);
         _currentLookaheadX += (targetLookahead - _currentLookaheadX) * lookaheadFactor;
         targetFocus.x += _currentLookaheadX;
 
-        // 3. Smooth Damping (Interpolation): Frame-rate independent exponential lerp
         const float factorX = 1.0f - std::exp(-_config.dampingX * deltaTime);
         const float factorY = 1.0f - std::exp(-_config.dampingY * deltaTime);
 
         _currentCenter.x += (targetFocus.x - _currentCenter.x) * factorX;
         _currentCenter.y += (targetFocus.y - _currentCenter.y) * factorY;
 
-        // 5. Boundary Clamping: Restrict view center to level boundaries
         _currentCenter = clampToBounds(_currentCenter);
         _view.setCenter({std::round(_currentCenter.x), std::round(_currentCenter.y)});
     }
@@ -147,9 +210,39 @@ sf::Vector2f Camera::clampToBounds(const sf::Vector2f& center) const {
 
 void Camera::setTarget(std::shared_ptr<GameObject> target) {
     _target = target;
+    _targets.clear();
     if (_target) {
+        _targets.push_back(_target);
         // Center camera immediately on target when set
         _currentCenter = clampToBounds(_target->getPosition());
+        _view.setCenter(_currentCenter);
+    }
+}
+
+void Camera::setTargets(const std::vector<std::shared_ptr<GameObject>>& targets) {
+    _targets.clear();
+    for (const auto& t : targets) {
+        if (t && !t->isPendingDestroy()) {
+            _targets.push_back(t);
+        }
+    }
+    if (_targets.empty()) {
+        _target.reset();
+    } else {
+        _target = _targets.front();
+        if (_targets.size() == 1) {
+            _currentCenter = clampToBounds(_target->getPosition());
+        } else {
+            float minX = 1e9f, maxX = -1e9f, minY = 1e9f, maxY = -1e9f;
+            for (const auto& t : _targets) {
+                const sf::Vector2f p = t->getPosition();
+                minX = std::min(minX, p.x);
+                maxX = std::max(maxX, p.x);
+                minY = std::min(minY, p.y);
+                maxY = std::max(maxY, p.y);
+            }
+            _currentCenter = clampToBounds({(minX + maxX) * 0.5f, (minY + maxY) * 0.5f});
+        }
         _view.setCenter(_currentCenter);
     }
 }
@@ -217,6 +310,11 @@ void Camera::setSize(const sf::Vector2f& size) {
 
 const sf::View& Camera::getView() const {
     return _view;
+}
+
+sf::FloatRect Camera::getViewBounds() const {
+    const sf::Vector2f viewSize = _view.getSize();
+    return sf::FloatRect(_currentCenter - viewSize * 0.5f, viewSize);
 }
 
 void Camera::renderDebug(sf::RenderTarget& target) const {
