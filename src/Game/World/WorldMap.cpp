@@ -319,7 +319,9 @@ void WorldMap::rebuild(
                         screenRow,
                         symbol,
                         &autotileTexture,
-                        autoRes.texRect
+                        autoRes.texRect,
+                        TileMap::TileAnimation::None,
+                        autoRes.rotationDeg
                     );
                     if (autoRes.hasOverlay) {
                         _tileMap.setOverlayTile(

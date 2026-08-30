@@ -314,6 +314,16 @@ void GameWorld::respawnPlayer() {
                 continue;
             }
 
+            const bool isLuigi = spec.animationId.find("luigi") != std::string::npos;
+            if (_scoreManager) {
+                if (isLuigi && _scoreManager->getLuigiLives() <= 0) {
+                    continue;
+                }
+                if (!isLuigi && _scoreManager->getLives() <= 0) {
+                    continue;
+                }
+            }
+
             const sf::Vector2f cellPosition = _worldMap.mapCellCenter(
                 column,
                 mapRow
@@ -342,6 +352,9 @@ void GameWorld::respawnPlayer() {
                     )
                 );
                 object->addBehaviour<Invincible>(2.0f);
+                if (auto player = std::dynamic_pointer_cast<Player>(object)) {
+                    player->setGameWorld(*this);
+                }
             }
         }
     }

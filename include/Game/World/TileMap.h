@@ -27,7 +27,8 @@ public:
         char tileCharacter,
         const sf::Texture* texture,
         sf::IntRect textureRect = {},
-        TileAnimation animation = TileAnimation::None
+        TileAnimation animation = TileAnimation::None,
+        int rotationDeg = 0
     );
 
     // Sets an overlay texture for a specific grid cell (rendered on front/outer layer).
@@ -36,7 +37,8 @@ public:
         int row,
         char tileCharacter,
         const sf::Texture* texture,
-        sf::IntRect textureRect = {}
+        sf::IntRect textureRect = {},
+        int rotationDeg = 0
     );
 
     // Clears all tile data
@@ -64,6 +66,7 @@ private:
         const sf::Texture* texture = nullptr;
         sf::IntRect textureRect{};
         TileAnimation animation = TileAnimation::None;
+        int rotationDeg = 0;
     };
 
     std::vector<TileInfo> _tiles;

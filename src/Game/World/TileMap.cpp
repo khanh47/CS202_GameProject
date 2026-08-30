@@ -24,7 +24,8 @@ void TileMap::setTile(
     char tileCharacter,
     const sf::Texture* texture,
     sf::IntRect textureRect,
-    TileAnimation animation
+    TileAnimation animation,
+    int rotationDeg
 ) {
     if (row >= 0 && row < _gridHeight && col >= 0 && col < _gridWidth) {
         const std::size_t index = static_cast<std::size_t>(row)
@@ -34,7 +35,8 @@ void TileMap::setTile(
             tileCharacter,
             texture,
             textureRect,
-            animation
+            animation,
+            rotationDeg
         };
     }
 }
@@ -44,13 +46,14 @@ void TileMap::setOverlayTile(
     int row,
     char tileCharacter,
     const sf::Texture* texture,
-    sf::IntRect textureRect
+    sf::IntRect textureRect,
+    int rotationDeg
 ) {
     if (row >= 0 && row < _gridHeight && col >= 0 && col < _gridWidth) {
         const std::size_t index = static_cast<std::size_t>(row)
             * static_cast<std::size_t>(_gridWidth)
             + static_cast<std::size_t>(col);
-        _overlayTiles[index] = TileInfo{tileCharacter, texture, textureRect};
+        _overlayTiles[index] = TileInfo{tileCharacter, texture, textureRect, TileAnimation::None, rotationDeg};
     }
 }
 
@@ -142,14 +145,37 @@ void TileMap::updateVisibleVertices(const sf::View& view) {
                 const float right = left + _cellSize;
                 const float bottom = top + _cellSize;
 
-                // Quad construction using 2 triangles (6 vertices)
-                batch->append(sf::Vertex({left, top}, sf::Color::White, {tu0, tv0}));
-                batch->append(sf::Vertex({right, top}, sf::Color::White, {tu1, tv0}));
-                batch->append(sf::Vertex({right, bottom}, sf::Color::White, {tu1, tv1}));
+                sf::Vector2f uvTL, uvTR, uvBR, uvBL;
+                if (tile.rotationDeg == 90) { // 90 deg clockwise (e.g. Right Wall)
+                    uvTL = {tu0, tv1}; // texture BL -> quad TL
+                    uvTR = {tu0, tv0}; // texture TL -> quad TR
+                    uvBR = {tu1, tv0}; // texture TR -> quad BR
+                    uvBL = {tu1, tv1}; // texture BR -> quad BL
+                } else if (tile.rotationDeg == 270) { // 270 deg clockwise / 90 deg CCW (e.g. Left Wall)
+                    uvTL = {tu1, tv0}; // texture TR -> quad TL
+                    uvTR = {tu1, tv1}; // texture BR -> quad TR
+                    uvBR = {tu0, tv1}; // texture BL -> quad BR
+                    uvBL = {tu0, tv0}; // texture TL -> quad BL
+                } else if (tile.rotationDeg == 180) { // 180 deg (e.g. Underhang / Ceiling)
+                    uvTL = {tu1, tv1};
+                    uvTR = {tu0, tv1};
+                    uvBR = {tu0, tv0};
+                    uvBL = {tu1, tv0};
+                } else { // 0 deg (Normal)
+                    uvTL = {tu0, tv0};
+                    uvTR = {tu1, tv0};
+                    uvBR = {tu1, tv1};
+                    uvBL = {tu0, tv1};
+                }
 
-                batch->append(sf::Vertex({left, top}, sf::Color::White, {tu0, tv0}));
-                batch->append(sf::Vertex({right, bottom}, sf::Color::White, {tu1, tv1}));
-                batch->append(sf::Vertex({left, bottom}, sf::Color::White, {tu0, tv1}));
+                // Quad construction using 2 triangles (6 vertices)
+                batch->append(sf::Vertex({left, top}, sf::Color::White, uvTL));
+                batch->append(sf::Vertex({right, top}, sf::Color::White, uvTR));
+                batch->append(sf::Vertex({right, bottom}, sf::Color::White, uvBR));
+
+                batch->append(sf::Vertex({left, top}, sf::Color::White, uvTL));
+                batch->append(sf::Vertex({right, bottom}, sf::Color::White, uvBR));
+                batch->append(sf::Vertex({left, bottom}, sf::Color::White, uvBL));
             }
         }
     };

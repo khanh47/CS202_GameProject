@@ -151,7 +151,7 @@ void Player::finalizeGroundContacts() {
     }
     if (!moveable->isAirbone()) {
         if (_world && _world->getScoreManager()) {
-            _world->getScoreManager()->handleEvent(ScoreEventType::MarioLanded);
+            _world->getScoreManager()->handleEvent(ScoreEventType::MarioLanded, {0.f, 0.f}, 0, _character);
         }
     }
 }
@@ -931,7 +931,7 @@ void Player::bounce(float verticalVelocity) {
 
 void Player::awardScore(ScoreEventType event, sf::Vector2f position) {
     if (_world && _world->getScoreManager()) {
-        _world->getScoreManager()->handleEvent(event, position);
+        _world->getScoreManager()->handleEvent(event, position, 0, _character);
     }
 }
 

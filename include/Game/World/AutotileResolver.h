@@ -18,6 +18,7 @@ struct AutotileResult {
     sf::IntRect overlayRect{};
     bool        isSlope     = false;
     int         slopeType   = 0;   // 25 = UpRight, 27 = DownRight
+    int         rotationDeg = 0;   // 0, 90, 180, 270 (degrees clockwise)
 };
 
 // ---------------------------------------------------------------------------

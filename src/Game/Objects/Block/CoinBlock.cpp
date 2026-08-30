@@ -66,7 +66,9 @@ void CoinBlock::onContact(GameObject& other, const b2ContactData& contactData, b
             if (player->getGameWorld() && player->getGameWorld()->getScoreManager()) {
                 player->getGameWorld()->getScoreManager()->handleEvent(
                     ScoreEventType::CoinCollected,
-                    getPosition()
+                    getPosition(),
+                    0,
+                    player->getCharacter()
                 );
             }
 
