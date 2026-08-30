@@ -4,6 +4,7 @@
 
 #include <cmath>
 #include <algorithm>
+#include <limits>
 
 Camera::Camera() : Camera(sf::Vector2f(1920.0f, 1080.0f)) {
 }
@@ -11,12 +12,25 @@ Camera::Camera() : Camera(sf::Vector2f(1920.0f, 1080.0f)) {
 Camera::Camera(const sf::Vector2f& size) {
     _view.setSize(size);
     _currentCenter = {size.x / 2.0f, size.y / 2.0f};
+    _currentSize = size;
+    _baseSize = size;
     _view.setCenter(_currentCenter);
 }
 
 void Camera::update(float deltaTime) {
+    // Prune destroyed targets
+    for (auto it = _targets.begin(); it != _targets.end();) {
+        if (!(*it) || (*it)->isPendingDestroy()) {
+            it = _targets.erase(it);
+        } else {
+            ++it;
+        }
+    }
     if (_target && _target->isPendingDestroy()) {
         _target.reset();
+    }
+    if (!_target && !_targets.empty()) {
+        _target = _targets.front();
     }
 
     if (deltaTime <= 0.0f) {
@@ -44,9 +58,57 @@ void Camera::update(float deltaTime) {
         _currentCenter += sf::Vector2f(offsetX, offsetY);
         _currentCenter = clampToBounds(_currentCenter);
         _view.setCenter(_currentCenter);
+    } else if (_targets.size() >= 2) {
+        // Multi-target: center on the midpoint of all targets and zoom out so
+        // every target stays on screen.
+        float minX = std::numeric_limits<float>::max();
+        float maxX = std::numeric_limits<float>::lowest();
+        float minY = std::numeric_limits<float>::max();
+        float maxY = std::numeric_limits<float>::lowest();
+        for (const std::shared_ptr<GameObject>& target : _targets) {
+            if (!target) {
+                continue;
+            }
+            const sf::Vector2f pos = target->getPosition();
+            minX = std::min(minX, pos.x);
+            maxX = std::max(maxX, pos.x);
+            minY = std::min(minY, pos.y);
+            maxY = std::max(maxY, pos.y);
+        }
+
+        constexpr float padding = 180.0f;
+
+        const float spanX = std::max(0.0f, (maxX - minX) + padding * 2.0f);
+        const float spanY = std::max(0.0f, (maxY - minY) + padding * 2.0f);
+
+        // Unlimited zoom out — keep aspect ratio, only floor at 1.0 (never zoom in).
+        const float zoom = std::max(1.0f, std::max(spanX / _baseSize.x, spanY / _baseSize.y));
+
+        const sf::Vector2f desiredSize = {_baseSize.x * zoom, _baseSize.y * zoom};
+
+        const sf::Vector2f midpoint = {(minX + maxX) * 0.5f, (minY + maxY) * 0.5f};
+
+        const float factorCenter = 1.0f - std::exp(-_config.dampingX * deltaTime);
+        _currentCenter.x += (midpoint.x - _currentCenter.x) * factorCenter;
+        _currentCenter.y += (midpoint.y - _currentCenter.y) * factorCenter;
+
+        const float factorSize = 1.0f - std::exp(-2.0f * deltaTime);
+        _currentSize.x += (desiredSize.x - _currentSize.x) * factorSize;
+        _currentSize.y += (desiredSize.y - _currentSize.y) * factorSize;
+
+        _currentCenter = clampToBounds(_currentCenter);
+        _view.setSize(_currentSize);
+        _view.setCenter(_currentCenter);
     } else if (_target) {
         const sf::Vector2f targetPos = _target->getPosition();
         const sf::Vector2f targetVel = _target->getVelocity();
+
+        // Smoothly restore the view size back to base (in case a previous
+        // multi-target session had zoomed out).
+        const float factorSize = 1.0f - std::exp(-2.0f * deltaTime);
+        _currentSize.x += (_baseSize.x - _currentSize.x) * factorSize;
+        _currentSize.y += (_baseSize.y - _currentSize.y) * factorSize;
+        _view.setSize(_currentSize);
 
         // 1. Deadzone & Y-Stabilization: Calculate base target camera focus position
         sf::Vector2f targetFocus = calculateTargetFocus(targetPos, targetVel);
@@ -73,7 +135,8 @@ void Camera::update(float deltaTime) {
 
         // 5. Boundary Clamping: Restrict view center to level boundaries
         _currentCenter = clampToBounds(_currentCenter);
-        _view.setCenter({std::round(_currentCenter.x), std::round(_currentCenter.y)});
+
+        _view.setCenter(_currentCenter);
     }
 }
 
@@ -146,12 +209,46 @@ sf::Vector2f Camera::clampToBounds(const sf::Vector2f& center) const {
 }
 
 void Camera::setTarget(std::shared_ptr<GameObject> target) {
+    _targets.clear();
+    if (target) {
+        _targets.push_back(target);
+    }
     _target = target;
     if (_target) {
         // Center camera immediately on target when set
         _currentCenter = clampToBounds(_target->getPosition());
         _view.setCenter(_currentCenter);
     }
+}
+
+void Camera::setTargets(const std::vector<std::shared_ptr<GameObject>>& targets) {
+    _targets.clear();
+    for (const std::shared_ptr<GameObject>& target : targets) {
+        if (target) {
+            _targets.push_back(target);
+        }
+    }
+    _target = _targets.empty() ? nullptr : _targets.front();
+
+    if (_targets.empty()) {
+        return;
+    }
+
+    float minX = std::numeric_limits<float>::max();
+    float maxX = std::numeric_limits<float>::lowest();
+    float minY = std::numeric_limits<float>::max();
+    float maxY = std::numeric_limits<float>::lowest();
+    for (const std::shared_ptr<GameObject>& target : _targets) {
+        const sf::Vector2f pos = target->getPosition();
+        minX = std::min(minX, pos.x);
+        maxX = std::max(maxX, pos.x);
+        minY = std::min(minY, pos.y);
+        maxY = std::max(maxY, pos.y);
+    }
+
+    const sf::Vector2f midpoint = {(minX + maxX) * 0.5f, (minY + maxY) * 0.5f};
+    _currentCenter = clampToBounds(midpoint);
+    _view.setCenter(_currentCenter);
 }
 
 void Camera::setConfig(const CameraConfig& config) {
@@ -211,6 +308,8 @@ void Camera::setCenter(const sf::Vector2f& center) {
 
 void Camera::setSize(const sf::Vector2f& size) {
     _view.setSize(size);
+    _baseSize = size;
+    _currentSize = size;
     _currentCenter = clampToBounds(_currentCenter);
     _view.setCenter(_currentCenter);
 }

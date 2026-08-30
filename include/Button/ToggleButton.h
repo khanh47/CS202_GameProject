@@ -37,7 +37,6 @@ public:
 
 private:
     bool _isToggled = false;
-    std::string _labelText;
     ToggleCallback _toggleCallback;
 
     // Color palettes for ON/OFF toggle states

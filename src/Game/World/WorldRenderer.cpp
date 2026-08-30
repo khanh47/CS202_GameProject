@@ -125,10 +125,14 @@ void WorldRenderer::renderBackground(
         return;
     }
 
-    const sf::View view = target.getView();
-    const sf::Vector2f viewCenter = view.getCenter();
-    const sf::Vector2f viewSize = view.getSize();
-    const sf::Vector2f viewPosition = viewCenter - viewSize * 0.5f;
+    // Draw the parallax background in screen space (the target's default view)
+    // so it keeps a constant on-screen scale regardless of camera zoom. Only
+    // the camera center is used to drive the parallax offset.
+    const sf::View worldView = target.getView();
+    const sf::Vector2f viewCenter = worldView.getCenter();
+
+    target.setView(target.getDefaultView());
+    const sf::Vector2f screenSize = target.getDefaultView().getSize();
 
     for (const BackgroundLayer& layer : layers) {
         sf::Texture& texture = ResourceManager::getInstance().getTexture(
@@ -149,17 +153,16 @@ void WorldRenderer::renderBackground(
 
         sf::Sprite sprite(texture);
         sprite.setScale({s, s});
-        sprite.setPosition({
-            viewPosition.x - worldOffX,
-            viewPosition.y
-        });
+        sprite.setPosition({-worldOffX, 0.0f});
         sprite.setTextureRect(sf::IntRect(
             {0, 0},
-            {static_cast<int>(viewSize.x / s) + static_cast<int>(texW),
-             static_cast<int>(viewSize.y / s) + static_cast<int>(texH)}
+            {static_cast<int>(screenSize.x / s) + static_cast<int>(texW),
+             static_cast<int>(screenSize.y / s) + static_cast<int>(texH)}
         ));
         target.draw(sprite);
     }
+
+    target.setView(worldView);
 }
 
 void WorldRenderer::renderDebugGrid(
