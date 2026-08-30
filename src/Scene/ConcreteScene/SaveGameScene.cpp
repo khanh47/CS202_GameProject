@@ -57,6 +57,10 @@ void SaveGameScene::handleInput(const sf::Event& event) {
     _buttonMenu.processEvent(event);
 }
 
+void SaveGameScene::updateVisuals(float deltaTime) {
+    _buttonMenu.updateVisuals(deltaTime);
+}
+
 void SaveGameScene::render(sf::RenderTarget& target) {
     Scene::render(target);
     target.draw(_titleText);
@@ -113,10 +117,8 @@ void SaveGameScene::saveToSlot(int index) {
 void SaveGameScene::setupControls() {
     _buttonMenu.clear();
     _slotInputs.clear();
-    // Save slots are intentionally keyboard-only. ButtonMenu forwards the
-    // focused control's text and editing keys, while mouse events are locked
-    // out for this screen.
-    _buttonMenu.setMouseEnabled(false);
+    // Enable mouse alongside keyboard (left label alignment, bar-style) — guard in ButtonMenu commits other TextInputs on click
+    _buttonMenu.setMouseEnabled(true);
     _buttonMenu.setKeyboardEnabled(true);
     _buttonMenu.setWasdEnabled(false);
     _buttonMenu.setLayoutProperties(

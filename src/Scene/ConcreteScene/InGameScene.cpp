@@ -683,7 +683,7 @@ void InGameScene::render(sf::RenderTarget& target) {
     target.setView(defaultView);
 
     // Render screen HUD overlay
-    _scoreManager.renderHUD(target, font, sf::Vector2f(40.f, 30.f));
+    _scoreManager.renderHUD(target, font, &_gameWorld, sf::Vector2f(40.f, 30.f));
     drawPauseButton(target);
 
     if (_gameOverActive) {

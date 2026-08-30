@@ -21,6 +21,7 @@ public:
 
     void onEnter() override;
     void handleInput(const sf::Event& event) override;
+    void updateVisuals(float deltaTime) override;
     void render(sf::RenderTarget& target) override;
 
 private:
