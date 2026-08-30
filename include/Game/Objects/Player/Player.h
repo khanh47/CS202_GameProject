@@ -184,14 +184,10 @@ private:
     void beginMegaEndTransformation();
     void beginStarManEndTransformation();
 
-    static constexpr float luigiTopSpeedRatio = 1.05f;
-    static constexpr float luigiAccelerationRatio = 0.80f;
-    static constexpr float luigiTractionRatio = 0.60f;
+    static constexpr float luigiTopSpeedRatio = 0.9f;
     static constexpr float luigiJumpSpeedRatio = 1.1f;
 
     float _baseMoveSpeed = 8.0f;
-    float _baseAcceleration = 128.0f;
-    float _baseTraction = 64.0f;
     float _baseJumpSpeed = 20.0f;
     std::unique_ptr<PlayerState> _state;
     std::unique_ptr<IAttackStrategy> _attackStrategy;

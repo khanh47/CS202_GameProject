@@ -58,13 +58,6 @@ float smoothStep(float progress) {
     return progress * progress * (3.0f - 2.0f * progress);
 }
 
-float moveToward(float current, float target, float maximumDelta) {
-    return current + std::clamp(
-        target - current,
-        -maximumDelta,
-        maximumDelta
-    );
-}
 }
 
 Player::Player() : GameObject() {
@@ -441,14 +434,10 @@ void Player::updateSimulation(const float &fixedDt) {
     }
 
     float moveSpeed = _baseMoveSpeed;
-    float acceleration = _baseAcceleration;
-    float traction = _baseTraction;
     float jumpSpeed = _baseJumpSpeed;
 
     if (_character == "luigi") {
         moveSpeed *= luigiTopSpeedRatio;
-        acceleration *= luigiAccelerationRatio;
-        traction *= luigiTractionRatio;
         jumpSpeed *= luigiJumpSpeedRatio;
     }
 
@@ -457,28 +446,12 @@ void Player::updateSimulation(const float &fixedDt) {
         jumpSpeed *= _state->getJumpSpeedMultiplier();
     }
 
-    float targetVelocityX = 0.0f;
     if (moveable->isMovingLeft() && !moveable->isMovingRight()) {
-        targetVelocityX = -moveSpeed;
+        velocity.x = -moveSpeed;
     } else if (moveable->isMovingRight() && !moveable->isMovingLeft()) {
-        targetVelocityX = moveSpeed;
-    }
-
-    const bool reversing = targetVelocityX != 0.0f
-        && velocity.x != 0.0f
-        && (targetVelocityX > 0.0f) != (velocity.x > 0.0f);
-    if (targetVelocityX == 0.0f || reversing) {
-        velocity.x = moveToward(
-            velocity.x,
-            0.0f,
-            traction * fixedDt
-        );
+        velocity.x = moveSpeed;
     } else {
-        velocity.x = moveToward(
-            velocity.x,
-            targetVelocityX,
-            acceleration * fixedDt
-        );
+        velocity.x = 0.0f;
     }
 
     const bool isStartingJump = moveable->isJumping() && !moveable->isAirbone();

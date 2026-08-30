@@ -66,10 +66,14 @@ AiAction HeuristicAiController::decide(const AiObservation& observation) {
     const float relativeX = observation.opponentX - observation.selfX;
     const float relativeY = observation.opponentY - observation.selfY;
     const bool aligned = std::abs(relativeX) < alignedThreshold;
+    const bool opponentAbove =
+        relativeY < -stompThreatVerticalDistance;
+    const bool opponentLaunchingNearby =
+        observation.opponentVelocityY < stompThreatRiseSpeed
+        && relativeY < stompThreatLaunchHeightTolerance;
     const bool stompThreat =
-        relativeY < -stompThreatVerticalDistance
-        && std::abs(relativeX) < stompThreatHorizontalDistance
-        && observation.opponentVelocityY > stompThreatFallSpeed;
+        std::abs(relativeX) < stompThreatHorizontalDistance
+        && (opponentAbove || opponentLaunchingNearby);
 
     const float dangerMargin = std::max(
         0.0f,

@@ -26,9 +26,10 @@ private:
     };
 
     static constexpr float alignedThreshold = 48.0f;
-    static constexpr float stompThreatHorizontalDistance = 96.0f;
-    static constexpr float stompThreatVerticalDistance = 24.0f;
-    static constexpr float stompThreatFallSpeed = 20.0f;
+    static constexpr float stompThreatHorizontalDistance = 144.0f;
+    static constexpr float stompThreatVerticalDistance = 16.0f;
+    static constexpr float stompThreatLaunchHeightTolerance = 48.0f;
+    static constexpr float stompThreatRiseSpeed = -80.0f;
     static constexpr float edgeSafetyInset = 32.0f;
     static constexpr float edgeRecoveryDistance = 128.0f;
 
