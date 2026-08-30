@@ -9,33 +9,51 @@
 
 class SaveLoadGame {
 public:
-    static constexpr int SlotCount = 3;
-
-    struct SlotInfo {
-        int index = -1;
-        bool exists = false;
-        std::string name;
-        std::string savedDate;
+    struct SaveInfo {
+        std::string id;          // Unique save ID / filename without extension
+        std::string name;        // User-defined save name
+        std::string savedDate;   // Formatted timestamp
+        std::string levelPath;   // Map level file path
+        std::string filePath;   // Full path on disk
+        int score = 0;           // Optional saved score
+        bool exists = true;
     };
+
+    // Backward compatibility alias
+    using SlotInfo = SaveInfo;
+    static constexpr int SlotCount = 3;
 
     static SaveLoadGame& getInstance();
 
     SaveLoadGame();
     virtual ~SaveLoadGame() = default;
 
-    std::vector<SlotInfo> getSlots() const;
+    // Dynamic Save Management (Infinite saves)
+    std::vector<SaveInfo> getAllSaves() const;
     bool hasAnySave() const;
-    bool saveSlot(
-        int index,
-        const std::string& slotName,
+
+    bool createSave(
+        const std::string& saveName,
         const nlohmann::json& gameState
     );
-    bool loadSlot(
-        int index,
-        SlotInfo& slot,
+
+    bool overwriteSave(
+        const std::string& saveId,
+        const std::string& newName,
+        const nlohmann::json& gameState
+    );
+
+    bool deleteSave(const std::string& saveId);
+
+    bool loadSave(
+        const std::string& saveId,
+        SaveInfo& info,
         nlohmann::json& gameState
     ) const;
 
+    std::string getDefaultSaveName(const nlohmann::json& gameState) const;
+
+    // Session State Management
     void setCurrentSession(
         const nlohmann::json& gameState,
         bool hasUnsavedChanges = true
@@ -52,7 +70,19 @@ public:
     }
     void markSessionSaved() noexcept { _sessionDirty = false; }
 
-    // Compatibility helpers for the original string-based save prototype.
+    // Legacy slot-based API compatibility
+    std::vector<SlotInfo> getSlots() const;
+    bool saveSlot(
+        int index,
+        const std::string& slotName,
+        const nlohmann::json& gameState
+    );
+    bool loadSlot(
+        int index,
+        SlotInfo& slot,
+        nlohmann::json& gameState
+    ) const;
+
     std::string GetFile(int index) const;
     virtual void SaveGame(
         const std::string& saveFileName,
@@ -72,6 +102,7 @@ public:
 private:
     bool isValidSlot(int index) const noexcept;
     std::filesystem::path slotPath(int index) const;
+    std::filesystem::path savePathForId(const std::string& saveId) const;
 
     std::vector<std::string> saveFiles;
     std::filesystem::path saveFilePath = "assets/SaveGameFiles";

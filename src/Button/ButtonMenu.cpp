@@ -95,12 +95,17 @@ void ButtonMenu::addToggleButtonAuto(const std::string& text, bool initialState,
 }
 
 void ButtonMenu::processEvent(const sf::Event& event) {
-    if (_buttonMenu.empty() && !_mouseEnabled) {
-        // Still allow keyboard path to early-out if empty
+    if (_buttonMenu.empty()) {
+        return;
     }
 
-    // 1. Mouse handling (click + hover visuals) if mouse enabled
-    if (_mouseEnabled) {
+    const bool isMouseEvent = event.is<sf::Event::MouseButtonPressed>()
+                           || event.is<sf::Event::MouseButtonReleased>()
+                           || event.is<sf::Event::MouseMoved>()
+                           || event.is<sf::Event::MouseWheelScrolled>();
+
+    // 1. Mouse handling (click + hover visuals) only when event is a mouse event
+    if (_mouseEnabled && isMouseEvent) {
         const std::vector<std::shared_ptr<Button>> buttons = _buttonMenu;
 
         if (const auto* mouseEvent = event.getIf<sf::Event::MouseButtonPressed>();
@@ -141,51 +146,53 @@ void ButtonMenu::processEvent(const sf::Event& event) {
 
     // 2. Keyboard handling if keyboard enabled
     if (_keyboardEnabled) {
-        if (_buttonMenu.empty()) {
-            // Still allow mouse hover handling below
-        } else {
-            if (event.is<sf::Event::TextEntered>()) {
+        if (event.is<sf::Event::TextEntered>()) {
+            if (_focusedIndex >= 0 && _focusedIndex < static_cast<int>(_buttonMenu.size())) {
                 _buttonMenu[static_cast<std::size_t>(_focusedIndex)]->processEvent(event);
-                return;
             }
+            return;
+        }
 
-            if (auto* keyEvent = event.getIf<sf::Event::KeyPressed>()) {
+        if (auto* keyEvent = event.getIf<sf::Event::KeyPressed>()) {
+            if (_focusedIndex >= 0 && _focusedIndex < static_cast<int>(_buttonMenu.size())) {
                 const std::shared_ptr<Button> focusedButton =
                     _buttonMenu[static_cast<std::size_t>(_focusedIndex)];
                 focusedButton->processEvent(event);
+            }
 
-                if (_layout.horizontal) {
-                    if (keyEvent->code == sf::Keyboard::Key::Left
-                        || (_wasdEnabled && keyEvent->code == sf::Keyboard::Key::A)) {
-                        _focusedIndex = (_focusedIndex - 1 + static_cast<int>(_buttonMenu.size())) % static_cast<int>(_buttonMenu.size());
-                        syncFocus();
-                    } else if (keyEvent->code == sf::Keyboard::Key::Right
-                               || (_wasdEnabled && keyEvent->code == sf::Keyboard::Key::D)) {
-                        _focusedIndex = (_focusedIndex + 1) % static_cast<int>(_buttonMenu.size());
-                        syncFocus();
-                    }
-                } else {
-                    if (keyEvent->code == sf::Keyboard::Key::Up
-                        || (_wasdEnabled && keyEvent->code == sf::Keyboard::Key::W)) {
-                        _focusedIndex = (_focusedIndex - 1 + static_cast<int>(_buttonMenu.size())) % static_cast<int>(_buttonMenu.size());
-                        syncFocus();
-                    } else if (keyEvent->code == sf::Keyboard::Key::Down
-                               || (_wasdEnabled && keyEvent->code == sf::Keyboard::Key::S)) {
-                        _focusedIndex = (_focusedIndex + 1) % static_cast<int>(_buttonMenu.size());
-                        syncFocus();
-                    }
+            if (_layout.horizontal) {
+                if (keyEvent->code == sf::Keyboard::Key::Left
+                    || (_wasdEnabled && keyEvent->code == sf::Keyboard::Key::A)) {
+                    _focusedIndex = (_focusedIndex - 1 + static_cast<int>(_buttonMenu.size())) % static_cast<int>(_buttonMenu.size());
+                    syncFocus();
+                } else if (keyEvent->code == sf::Keyboard::Key::Right
+                           || (_wasdEnabled && keyEvent->code == sf::Keyboard::Key::D)) {
+                    _focusedIndex = (_focusedIndex + 1) % static_cast<int>(_buttonMenu.size());
+                    syncFocus();
                 }
-
-                if (keyEvent->code == sf::Keyboard::Key::Enter
-                    || keyEvent->code == sf::Keyboard::Key::Space) {
-                    Audio::SoundManager::getInstance().playEffect("select_button");
-                    _buttonMenu[_focusedIndex]->execute();
-                }
-                // For keyboard events, stop after handling to avoid double hover sync in same event
-                if (event.is<sf::Event::KeyPressed>() || event.is<sf::Event::TextEntered>()) {
-                    return;
+            } else {
+                if (keyEvent->code == sf::Keyboard::Key::Up
+                    || (_wasdEnabled && keyEvent->code == sf::Keyboard::Key::W)) {
+                    _focusedIndex = (_focusedIndex - 1 + static_cast<int>(_buttonMenu.size())) % static_cast<int>(_buttonMenu.size());
+                    syncFocus();
+                } else if (keyEvent->code == sf::Keyboard::Key::Down
+                           || (_wasdEnabled && keyEvent->code == sf::Keyboard::Key::S)) {
+                    _focusedIndex = (_focusedIndex + 1) % static_cast<int>(_buttonMenu.size());
+                    syncFocus();
                 }
             }
+
+            if (keyEvent->code == sf::Keyboard::Key::Enter
+                || keyEvent->code == sf::Keyboard::Key::Space) {
+                if (_focusedIndex >= 0 && _focusedIndex < static_cast<int>(_buttonMenu.size())) {
+                    const auto textInput = std::dynamic_pointer_cast<TextInput>(_buttonMenu[static_cast<std::size_t>(_focusedIndex)]);
+                    if (!textInput) {
+                        Audio::SoundManager::getInstance().playEffect("select_button");
+                        _buttonMenu[static_cast<std::size_t>(_focusedIndex)]->execute();
+                    }
+                }
+            }
+            return;
         }
     }
 

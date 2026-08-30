@@ -2,8 +2,10 @@
 #include "Game/Behaviours/ShellHoldBehaviour.h"
 #include "Audio/SoundManager.h"
 #include "Game/Objects/Player/Player.h"
+#include "Game/Objects/Player/State/NormalState.h"
 #include "Game/Behaviours/Animatable.h"
 #include "Game/World/GameWorld.h"
+#include <cmath>
 
 Block::Block() : GameObject() {
     addBehaviour<Animatable>();
@@ -46,19 +48,34 @@ void Block::spawnBreakEffect(GameWorld& world) const {
 }
 
 void Block::onCreateShapeDef(b2ShapeDef& def) {
+    def.enableContactEvents = true;
     def.density = 10000.0f;
     def.material.friction = 0.0f;
 }
 
 void Block::onUpdateVisuals(float deltaTime) {
+    if (_bumpTimer > 0.0f) {
+        _bumpTimer -= deltaTime;
+        if (_bumpTimer < 0.0f) {
+            _bumpTimer = 0.0f;
+        }
+    }
+
     if (auto* animatable = getBehaviour<Animatable>()) {
         animatable->updateVisualState(deltaTime, _hitboxPixels);
     }
 }
 
 void Block::onRenderVisual(sf::RenderTarget& target, const sf::Vector2f& position, float angleDegrees) {
+    sf::Vector2f renderPos = position;
+    if (_bumpTimer > 0.0f) {
+        const float progress = 1.0f - (_bumpTimer / 0.15f);
+        const float bumpOffset = -std::sin(progress * 3.14159265f) * 12.0f;
+        renderPos.y += bumpOffset;
+    }
+
     if (auto* animatable = getBehaviour<Animatable>()) {
-        animatable->renderVisualState(target, position, angleDegrees);
+        animatable->renderVisualState(target, renderPos, angleDegrees);
     }
 }
 
@@ -89,6 +106,12 @@ bool Block::tryBreakOnContact(
     const bool highFallLanding = blockToPlayer.y <= -0.5f
         && player->hasFallenFromHighPlace();
     if (!hitFromBelow && !highFallLanding) {
+        return false;
+    }
+
+    // Small Mario (NormalState) cannot shatter bricks from below - he only bumps them!
+    // Super, Fire, Mega, and StarMan states can shatter breakable bricks.
+    if (hitFromBelow && dynamic_cast<NormalState*>(player->getState())) {
         return false;
     }
 
@@ -126,6 +149,8 @@ bool Block::isBumped(GameObject& other, const b2ContactData& contactData, b2Shap
 
             // Detect Player hitting from below (upward contact normal or player below block)
             if (normal.y >= 0.3f || player->getPosition().y > getPosition().y) {
+                _bumpTimer = 0.15f;
+                Audio::SoundManager::getInstance().playEffect("bump");
                 auto* playerAnimatable = player->getBehaviour<Animatable>();
                 auto* holdingShell = player->getBehaviour<ShellHoldBehaviour>();
                 if (playerAnimatable &&
