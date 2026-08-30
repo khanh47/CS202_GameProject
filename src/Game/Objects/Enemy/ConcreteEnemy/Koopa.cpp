@@ -21,7 +21,10 @@ void Koopa::onUpdateVisuals(float deltaTime) {
     const bool facingLeft = getMoveDirection() > 0;
     if (auto* animatable = getBehaviour<Animatable>()) {
         animatable->updateVisualState(deltaTime, _hitboxPixels, facingLeft);
-        animatable->setVisualScale({1.5f, 1.2f});
+        animatable->setVisualScale({
+            Koopa::defaultVisualScaleX,
+            Koopa::defaultVisualScaleY
+        });
     }
 }
 

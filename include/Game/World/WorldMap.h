@@ -3,6 +3,7 @@
 #include <SFML/Graphics.hpp>
 #include <array>
 #include <box2d/box2d.h>
+#include <cstddef>
 #include <filesystem>
 #include <memory>
 #include <string>
@@ -75,6 +76,7 @@ public:
     float getCellSize() const noexcept { return _cellSize; }
     int getLoadedRows() const noexcept { return _loadedRows; }
     int getLoadedColumns() const noexcept { return _loadedColumns; }
+    std::size_t getPlayerCount() const noexcept { return _playerCount; }
     const std::string& getBackground() const noexcept { return _background; }
 
 private:
@@ -109,6 +111,7 @@ private:
     float _cellSize;
     int _gridWidth;
     int _gridHeight;
+    std::size_t _playerCount = 0;
     int _loadedColumns = 0;
     int _loadedRows = 0;
     std::string _background;

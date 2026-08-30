@@ -1,11 +1,100 @@
 #include "Scene/ConcreteScene/LevelSelectionScene.h"
+#include <cstddef>
 #include <filesystem>
-#include "Game/GameSettings.h"
+#include <string>
+#include <unordered_map>
 
 #include "Commands/FunctionalCommand.h"
+#include "Game/GameSettings.h"
+#include "Game/World/LevelDataLoader.h"
 #include "ResourceManager.h"
 #include "Scene/ConcreteScene/InGameScene.h"
 #include "Scene/SceneManager.h"
+
+namespace {
+struct LevelPlayers {
+    std::size_t count = 0;
+    bool hasMario = false;
+    bool hasLuigi = false;
+};
+
+LevelPlayers playersInLevel(const LevelData& levelData) {
+    LevelPlayers players;
+    if (levelData.layer.empty() || levelData.layer.front().empty()) {
+        return players;
+    }
+
+    const std::size_t levelWidth = levelData.layer.front().size();
+    std::unordered_map<
+        std::size_t,
+        const LevelData::Placement*
+    > placementsByCell;
+    placementsByCell.reserve(levelData.placements.size());
+    for (const LevelData::Placement& placement : levelData.placements) {
+        placementsByCell.insert_or_assign(
+            static_cast<std::size_t>(placement.row) * levelWidth
+                + static_cast<std::size_t>(placement.column),
+            &placement
+        );
+    }
+
+    for (std::size_t row = 0; row < levelData.layer.size(); ++row) {
+        for (
+            std::size_t column = 0;
+            column < levelData.layer[row].size();
+            ++column
+        ) {
+            const char symbol = levelData.layer[row][column];
+            const auto mappingIt = levelData.tileMapping.find(symbol);
+            if (mappingIt == levelData.tileMapping.end()) {
+                continue;
+            }
+
+            SpawnSpec spec = levelData.prefabs.resolve(mappingIt->second);
+            const auto placementIt = placementsByCell.find(
+                row * levelWidth + column
+            );
+            if (placementIt != placementsByCell.end()) {
+                spec = placementIt->second->spec;
+            }
+
+            if (!spec.objectKind || *spec.objectKind != ObjectKind::Player) {
+                continue;
+            }
+
+            ++players.count;
+            if (spec.animationId.find("luigi") != std::string::npos) {
+                players.hasLuigi = true;
+            } else {
+                players.hasMario = true;
+            }
+        }
+    }
+
+    return players;
+}
+
+bool customMapCanBePlayed(const std::filesystem::path& path) {
+    try {
+        const LevelData levelData = LevelDataLoader::load(path);
+        const LevelPlayers players = playersInLevel(levelData);
+        if (players.count == 0) {
+            return false;
+        }
+
+        const GameSettings& settings = GameSettings::getInstance();
+        if (settings.gameMode != GameMode::Solo) {
+            return true;
+        }
+
+        return settings.player1Character == "luigi"
+            ? players.hasLuigi
+            : players.hasMario;
+    } catch (...) {
+        return false;
+    }
+}
+} // namespace
 
 LevelSelectionScene::LevelSelectionScene()
     : Scene("LevelSelectionScene"),
@@ -88,7 +177,8 @@ void LevelSelectionScene::_setupButtons() {
     ));
 
     const std::string customMap = "assets/datas/levels/custom-map.json";
-    if (std::filesystem::exists(customMap)) {
+    if (std::filesystem::exists(customMap)
+        && customMapCanBePlayed(customMap)) {
         _buttonMenu.addMainMenuButtonAuto("Custom Map", std::make_unique<FunctionalCommand>(
             "Custom Map", [this, customMap]() {
                 if (auto mgr = getSceneManager()) {

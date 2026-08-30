@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstddef>
 #include <memory>
 
 #include <SFML/System/Vector2.hpp>
@@ -24,7 +25,8 @@ public:
         WorldObjectStore& objectStore,
         GameWorld& gameWorld,
         TerrainSeamFilter& terrainSeamFilter,
-        float cellSize
+        float cellSize,
+        std::size_t playerCount
     );
 
     std::shared_ptr<GameObject> spawnAtGrid(
@@ -63,4 +65,5 @@ private:
     GameWorld& _gameWorld;
     TerrainSeamFilter& _terrainSeamFilter;
     float _cellSize;
+    std::size_t _playerCount;
 };

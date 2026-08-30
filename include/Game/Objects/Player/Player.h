@@ -21,6 +21,12 @@ enum class ScoreEventType;
 
 class Player: public GameObject {
 public:
+    // The normal player sprite is intentionally presented larger than its
+    // collision body. The map editor uses these values for an accurate
+    // preview of the in-game player.
+    static constexpr float defaultVisualScaleX = 2.5f;
+    static constexpr float defaultVisualScaleY = 1.1f;
+
     Player();
     Player(sf::Texture &texture);
     Player(sf::Texture &texture, const std::string& animationSetId);
