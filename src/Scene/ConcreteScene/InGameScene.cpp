@@ -34,6 +34,7 @@
 #include "Game/Snapshot/SaveLoadGame.h"
 #include "ResourceManager.h"
 #include "Audio/MusicManager.h"
+#include "Audio/SoundManager.h"
 #include "Scene/SceneManager.h"
 #include "Game/GameSettings.h"
 #include <iostream>
@@ -354,7 +355,7 @@ void InGameScene::handleInput(const sf::Event& event) {
 
     if (_pauseOverlay == PauseOverlay::PauseMenu) {
         if (const auto* keyEvent = event.getIf<sf::Event::KeyPressed>();
-            keyEvent && keyEvent->code == sf::Keyboard::Key::Escape) {
+            keyEvent && (keyEvent->code == sf::Keyboard::Key::Escape || keyEvent->code == sf::Keyboard::Key::P)) {
             resumeGame();
             return;
         }
@@ -367,7 +368,7 @@ void InGameScene::handleInput(const sf::Event& event) {
     }
 
     if (auto* keyEvent = event.getIf<sf::Event::KeyPressed>()) {
-        if (keyEvent->code == sf::Keyboard::Key::Escape) {
+        if (keyEvent->code == sf::Keyboard::Key::Escape || keyEvent->code == sf::Keyboard::Key::P) {
             openPauseMenu();
             return;
         }
@@ -434,16 +435,22 @@ void InGameScene::drawPauseButton(sf::RenderTarget& target) {
 void InGameScene::buildPauseMenu() {
     _pauseMenu.clear();
     _pauseMenu.setLayoutProperties(
-        {710.f, 315.f}, {500.f, 70.f}, 90.f, false,
-        sf::Color(53, 91, 130), 30
+        {710.f, 260.f}, {500.f, 65.f}, 75.f, false,
+        sf::Color(100, 149, 237), 30
     );
-    _pauseMenu.addButtonAuto(
+    _pauseMenu.addMainMenuButtonAuto(
         "Resume",
         std::make_unique<FunctionalCommand>(
             "Resume", [this]() { resumeGame(); }
         )
     );
-    _pauseMenu.addButtonAuto(
+    _pauseMenu.addMainMenuButtonAuto(
+        "Restart Level",
+        std::make_unique<FunctionalCommand>(
+            "Restart Level", [this]() { restartLevel(); }
+        )
+    );
+    _pauseMenu.addMainMenuButtonAuto(
         "Settings",
         std::make_unique<FunctionalCommand>(
             "Settings", [this]() { openSettings(); }
@@ -453,7 +460,7 @@ void InGameScene::buildPauseMenu() {
     const bool canSave = !_returnToMapEditor
         && GameSettings::getInstance().gameMode != GameMode::Minigame;
     if (canSave) {
-        _pauseMenu.addButtonAuto(
+        _pauseMenu.addMainMenuButtonAuto(
             "Save Game",
             std::make_unique<FunctionalCommand>(
                 "Save Game", [this]() { saveGame(); }
@@ -461,8 +468,8 @@ void InGameScene::buildPauseMenu() {
         );
     }
 
-    _pauseMenu.addButtonAuto(
-        _returnToMapEditor ? "Return to Map Editor" : "Return to Main Menu",
+    _pauseMenu.addMainMenuButtonAuto(
+        _returnToMapEditor ? "Return to Map Editor" : "Quit to Main Menu",
         std::make_unique<FunctionalCommand>(
             "Return", [this]() { requestReturn(); }
         )
@@ -472,11 +479,11 @@ void InGameScene::buildPauseMenu() {
 void InGameScene::buildReturnConfirmation() {
     _returnConfirmationMenu.clear();
     _returnConfirmationMenu.setLayoutProperties(
-        {660.f, 390.f}, {600.f, 70.f}, 90.f, false,
-        sf::Color(53, 91, 130), 27
+        {660.f, 360.f}, {600.f, 65.f}, 80.f, false,
+        sf::Color(100, 149, 237), 28
     );
-    _returnConfirmationMenu.addButtonAuto(
-        "Save Game",
+    _returnConfirmationMenu.addMainMenuButtonAuto(
+        "Save and Quit",
         std::make_unique<FunctionalCommand>(
             "Save and Return",
             [this]() {
@@ -497,13 +504,13 @@ void InGameScene::buildReturnConfirmation() {
             }
         )
     );
-    _returnConfirmationMenu.addButtonAuto(
-        "Return Without Saving",
+    _returnConfirmationMenu.addMainMenuButtonAuto(
+        "Quit Without Saving",
         std::make_unique<FunctionalCommand>(
             "Discard and Return", [this]() { returnWithoutSaving(); }
         )
     );
-    _returnConfirmationMenu.addButtonAuto(
+    _returnConfirmationMenu.addMainMenuButtonAuto(
         "Cancel",
         std::make_unique<FunctionalCommand>(
             "Cancel", [this]() { _pauseOverlay = PauseOverlay::PauseMenu; }
@@ -512,20 +519,46 @@ void InGameScene::buildReturnConfirmation() {
 }
 
 void InGameScene::openPauseMenu() {
+    Audio::SoundManager::getInstance().playEffect("select_button");
     buildPauseMenu();
     _pauseOverlay = PauseOverlay::PauseMenu;
     _scoreManager.setTimePaused(true);
 }
 
 void InGameScene::openSettings() {
+    Audio::SoundManager::getInstance().playEffect("select_button");
     _settingsPanel.refresh();
     _pauseOverlay = PauseOverlay::Settings;
 }
 
 void InGameScene::resumeGame() {
+    Audio::SoundManager::getInstance().playEffect("select_button");
     _pauseOverlay = PauseOverlay::None;
     _scoreManager.setTimePaused(false);
     _gameWorld.syncPlayerControllers();
+}
+
+void InGameScene::restartLevel() {
+    Audio::SoundManager::getInstance().playEffect("select_button");
+    _pauseOverlay = PauseOverlay::None;
+    _gameOverActive = false;
+    _winActive = false;
+    _winReactionActive = false;
+    _starmanMusicActive = false;
+
+    _scoreManager.resetTime(400.0f);
+    _scoreManager.restoreState(0, 0, 3, _scoreManager.getHighScore(), 400.0f, 0, 3, 0, 0);
+    _gameWorld.restoreCheckpoint(std::nullopt);
+    _gameWorld.loadLevel(_name);
+    _camera.setCenter({1920.f / 2.f, _gameWorld.getGridHeight() * _gameWorld.getCellSize() - 1080.f / 2.f});
+    if (auto player = _gameWorld.getPrimaryPlayer()) {
+        _camera.setTarget(player);
+    }
+    _scoreManager.setTimePaused(false);
+    Audio::MusicManager::getInstance().play(
+        levelThemeFor(_name, _gameWorld.getLevelMusic()),
+        true
+    );
 }
 
 void InGameScene::saveGame() {
@@ -563,21 +596,22 @@ void InGameScene::drawPauseOverlay(sf::RenderTarget& target) {
         return;
     }
 
-    const sf::Vector2f viewSize = target.getView().getSize();
-    const sf::Vector2f topLeft = target.getView().getCenter() - viewSize * 0.5f;
-    sf::RectangleShape backdrop(viewSize);
-    backdrop.setPosition(topLeft);
-    backdrop.setFillColor(sf::Color(0, 0, 0, 170));
+    const sf::View defaultView = target.getDefaultView();
+    target.setView(defaultView);
+
+    sf::RectangleShape backdrop({1920.f, 1080.f});
+    backdrop.setPosition({0.f, 0.f});
+    backdrop.setFillColor(sf::Color(0, 0, 0, 185));
     target.draw(backdrop);
 
     const sf::Font& font = ResourceManager::getInstance().getFont("SuperMario");
     const std::string titleText = _pauseOverlay == PauseOverlay::ReturnConfirmation
-        ? "RETURN TO MAIN MENU?" : "PAUSED";
-    sf::Text title(font, titleText, 56);
+        ? "QUIT TO MAIN MENU?" : "GAME PAUSED";
+    sf::Text title(font, titleText, 58);
     title.setFillColor(sf::Color::White);
     title.setOutlineColor(sf::Color::Black);
     title.setOutlineThickness(5.f);
-    title.setPosition({960.f - title.getLocalBounds().size.x * 0.5f, 180.f});
+    title.setPosition({960.f - title.getLocalBounds().size.x * 0.5f, 160.f});
     target.draw(title);
 
     if (_pauseOverlay == PauseOverlay::ReturnConfirmation) {
@@ -602,6 +636,7 @@ void InGameScene::updateSimulation(const float &fixedDt) {
     }
 
     _gameWorld.updateSimulation(fixedDt);
+    _gameWorld.enforceCameraScreenBounds(_camera.getViewBounds());
     if (GameSettings::getInstance().gameMode == GameMode::Minigame) {
         _checkMinigameResult();
     } else {
@@ -660,6 +695,7 @@ void InGameScene::updateVisuals(float deltaTime) {
         if (needsRebind) {
             _camera.setTarget(_gameWorld.getPrimaryPlayer());
         }
+        _camera.update(deltaTime);
     }
 
     _scoreManager.update(deltaTime);
@@ -683,7 +719,7 @@ void InGameScene::render(sf::RenderTarget& target) {
     target.setView(defaultView);
 
     // Render screen HUD overlay
-    _scoreManager.renderHUD(target, font, sf::Vector2f(40.f, 30.f));
+    _scoreManager.renderHUD(target, font, &_gameWorld, sf::Vector2f(40.f, 24.f));
     drawPauseButton(target);
 
     if (_gameOverActive) {

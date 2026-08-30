@@ -591,3 +591,38 @@ std::vector<std::shared_ptr<Player>> GameWorld::getLivingPlayers() const {
 sf::FloatRect GameWorld::getBounds() const {
     return _worldMap.getBounds();
 }
+
+void GameWorld::enforceCameraScreenBounds(const sf::FloatRect& viewBounds) {
+    if (GameSettings::getInstance().gameMode != GameMode::Coop) {
+        return;
+    }
+
+    const float leftBound = viewBounds.position.x + 32.0f;
+    const float rightBound = viewBounds.position.x + viewBounds.size.x - 32.0f;
+
+    for (const auto& player : _objectStore.getLivingPlayers()) {
+        if (!player || player->isPendingDestroy()) continue;
+        sf::Vector2f pos = player->getPosition();
+        bool adjusted = false;
+
+        if (pos.x < leftBound) {
+            pos.x = leftBound;
+            adjusted = true;
+            sf::Vector2f vel = player->getVelocity();
+            if (vel.x < 0.0f) {
+                player->setVelocity({0.0f, vel.y});
+            }
+        } else if (pos.x > rightBound) {
+            pos.x = rightBound;
+            adjusted = true;
+            sf::Vector2f vel = player->getVelocity();
+            if (vel.x > 0.0f) {
+                player->setVelocity({0.0f, vel.y});
+            }
+        }
+
+        if (adjusted) {
+            player->setPosition(pos);
+        }
+    }
+}

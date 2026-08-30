@@ -10,16 +10,22 @@ namespace UI {
 
 MainMenuButton::MainMenuButton(const sf::Vector2f& position, const sf::Vector2f& size, const sf::Color& color, 
                const std::string& text, unsigned int charSize)
-    : Button(position, size, color, text, charSize),
-    triangle(10.f, 3) {
+    : Button(position, size, color, text, charSize) {
     defaultColor = sf::Color::White;
     focusedColor = sf::Color::Yellow;
     label.setFont(ResourceManager::getInstance().getFont("SuperMario"));
     label.setOutlineColor(sf::Color::Black);
     label.setOutlineThickness(2.0f);
+    
+    // Create sharp, retro right-pointing triangle cursor
+    triangle.setPointCount(3);
+    const float triHeight = std::max(16.0f, static_cast<float>(charSize) * 0.65f);
+    const float triWidth = triHeight * 0.8f;
+    triangle.setPoint(0, sf::Vector2f(0.0f, -triHeight * 0.5f));
+    triangle.setPoint(1, sf::Vector2f(triWidth, 0.0f));
+    triangle.setPoint(2, sf::Vector2f(0.0f, triHeight * 0.5f));
+    
     triangle.setFillColor(focusedColor);
-    triangle.setRotation(sf::degrees(90.0f)); 
-    triangle.setPosition({position.x, position.y + 20.0f});
     triangle.setOutlineColor(sf::Color::Black);
     triangle.setOutlineThickness(2.0f);
 }
@@ -41,6 +47,11 @@ void MainMenuButton::render(sf::RenderTarget& target) {
         target.draw(label);
     }
     if (_isFocused) {
+        const sf::FloatRect textBounds = label.getGlobalBounds();
+        const float triWidth = triangle.getPoint(1).x;
+        const float cursorX = textBounds.position.x - triWidth - 14.0f;
+        const float cursorY = textBounds.position.y + textBounds.size.y * 0.5f;
+        triangle.setPosition({cursorX, cursorY});
         target.draw(triangle);
     }
 }
