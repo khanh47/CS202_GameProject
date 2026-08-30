@@ -108,15 +108,6 @@ void WorldMap::rebuild(
     createBoundaryWalls(physicsWorld);
     _terrainSeamFilter.setBoundaryColumns(-1, _loadedColumns);
 
-    PrefabSpawner spawner(
-        physicsWorld,
-        objectFactory,
-        objectStore,
-        gameWorld,
-        _terrainSeamFilter,
-        _cellSize
-    );
-
     std::unordered_map<char, SpawnSpec> specsBySymbol;
     bool hasAutotiles = false;
     for (const auto& [symbol, prefabId] : levelData.tileMapping) {
@@ -135,6 +126,44 @@ void WorldMap::rebuild(
             &placement.spec
         );
     }
+
+    _playerCount = 0;
+    for (int mapRow = 0; mapRow < _loadedRows; ++mapRow) {
+        const int columns = std::min(
+            static_cast<int>(layer[mapRow].size()),
+            _gridWidth
+        );
+        for (int column = 0; column < columns; ++column) {
+            const char symbol = layer[mapRow][column];
+            const auto specIt = specsBySymbol.find(symbol);
+            if (specIt == specsBySymbol.end()) {
+                continue;
+            }
+
+            const SpawnSpec* spec = &specIt->second;
+            const auto placementIt = placementByCell.find(
+                mapRow * _gridWidth + column
+            );
+            if (placementIt != placementByCell.end()) {
+                spec = placementIt->second;
+            }
+            if (spec->objectKind
+                && *spec->objectKind == ObjectKind::Player) {
+                ++_playerCount;
+            }
+        }
+    }
+
+    PrefabSpawner spawner(
+        physicsWorld,
+        objectFactory,
+        objectStore,
+        gameWorld,
+        _terrainSeamFilter,
+        _cellSize,
+        _playerCount
+    );
+
     if (hasAutotiles) {
         loadAutotileDefs("assets/datas/autotile_defs.json");
     }

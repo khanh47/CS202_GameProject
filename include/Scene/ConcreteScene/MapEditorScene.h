@@ -94,8 +94,10 @@ private:
         std::string animationId;
         sf::IntRect textureRect{};
         sf::Vector2f size{64.0f, 64.0f};
+        sf::Vector2f visualScale{1.0f, 1.0f};
         sf::Vector2f offset{};
         bool centerVertically = false;
+        bool alignToCellBottom = false;
     };
 
     enum class ConfigMode {
@@ -258,6 +260,7 @@ private:
     void undoLastEdit();
     void redoLastEdit();
     void rememberBeforeEdit();
+    bool canPlayMap();
     bool loadSavedMap();
     bool saveMap();
     void saveAndPlay();
