@@ -35,21 +35,28 @@ private:
     void buildKeybindPanel();
     void buildDevModePanel();
     void setActiveTab(SettingsTab tab);
-    void startRebinding(ActionType action, const std::shared_ptr<Button>& button);
+    void startRebinding(ActionType action, int playerIndex, const std::shared_ptr<Button>& button);
     void updateKeybindButtonTexts();
     void updateVolumeLabels();
     void navigateMenu(ButtonMenu& menu, int delta);
     void goBack();
 
+    // Keybind scroll helpers
+    void handleKeybindScroll(float delta);
+    void ensureKeybindVisible();
+    void applyKeybindScroll();
+
     ButtonMenu _topMenu;
     ButtonMenu _subMenu;
     SettingsTab _activeTab = SettingsTab::Music;
     FocusTarget _focus = FocusTarget::SubMenu;
-    std::vector<std::shared_ptr<Button>> _keybindButtons;
-    std::shared_ptr<ToggleButton> _playerToggle;
+    std::vector<std::shared_ptr<Button>> _keybindButtons; // 12: 0-5 P1, 6-11 P2
+    std::vector<int> _keybindPlayer; // parallel to _keybindButtons
+    std::vector<ActionType> _keybindAction;
     std::shared_ptr<BarSlider> _musicVolume;
     std::shared_ptr<BarSlider> _soundVolume;
-    bool _editingPlayer2 = false;
+    float _keybindScroll = 0.f;
+    int _rebindingPlayer = 1;
     std::optional<ActionType> _rebindingAction;
     std::shared_ptr<Button> _activeRebindingButton;
     BackCallback _onBack;

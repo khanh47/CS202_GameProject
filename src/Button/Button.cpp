@@ -1,6 +1,7 @@
 
 #include "Button/Button.h"
 #include "ResourceManager.h"
+#include "UI/UIHelpers.h"
 #include <SFML/System/String.hpp>
 #include <algorithm>
 #include <cmath> 
@@ -13,10 +14,7 @@ Button::Button(const sf::Vector2f& position, const sf::Vector2f& size, const sf:
     : label(ResourceManager::getInstance().getFont("moon_get"), text, charSize),
       defaultColor(color), cornerRadius(radius), basePosition(position), baseSize(size) {
 
-    int fr = std::min(255, color.r + 80);
-    int fg = std::min(255, color.g + 80);
-    int fb = std::min(255, color.b + 80);
-    focusedColor = sf::Color(fr, fg, fb, color.a);
+    focusedColor = UI::Helper::brighten(color, 80);
 
     label.setFillColor(sf::Color::White);
 
@@ -39,28 +37,7 @@ Button::Button(const sf::Vector2f& position, const sf::Vector2f& size, const sf:
 }
 
 void Button::updateRoundedShape(const sf::Vector2f& position, const sf::Vector2f& size) {
-    const int pointsPerCorner = 10;
-    shape.setPointCount(pointsPerCorner * 4);
-
-    float actualRadius = std::min({cornerRadius, size.x / 2.0f, size.y / 2.0f});
-    const float pi = 3.141592654f;
-    int pointIndex = 0;
-
-    auto addCorner = [&](float cx, float cy, float startAngle) {
-        for (int i = 0; i < pointsPerCorner; ++i) {
-            float angle = startAngle + (i * (pi / 2.0f) / (pointsPerCorner - 1));
-            float px = cx + actualRadius * std::cos(angle);
-            float py = cy + actualRadius * std::sin(angle);
-            shape.setPoint(pointIndex++, sf::Vector2f(px, py));
-        }
-    };
-
-    addCorner(size.x - actualRadius, size.y - actualRadius, 0.0f);
-    addCorner(actualRadius, size.y - actualRadius, pi / 2.0f);
-    addCorner(actualRadius, actualRadius, pi);
-    addCorner(size.x - actualRadius, actualRadius, 3.0f * pi / 2.0f);
-
-    shape.setPosition(position);
+    shape = UI::Helper::makeRoundedRect(position, size, cornerRadius, 10);
 }
 
 void Button::updateLayout(const sf::Vector2f& position, const sf::Vector2f& size) {
