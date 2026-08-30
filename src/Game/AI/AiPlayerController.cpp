@@ -3,6 +3,38 @@
 #include "Game/Behaviours/Moveable.h"
 #include "Game/Objects/Player/Player.h"
 #include "Game/World/GameWorld.h"
+#include "Physics/PhysicsUnits.h"
+
+namespace {
+AiPlayerKinematics observePlayer(
+    const Player& player,
+    float arenaCenterX
+) {
+    const sf::Vector2f position = player.getPosition();
+    const sf::Vector2f velocity = player.getVelocity();
+    const sf::Vector2f hitbox = player.getHitboxPixels();
+    const PlayerMovementStats movement = player.getMovementStats();
+    const Moveable* moveable = player.getBehaviour<Moveable>();
+
+    return {
+        position.x - arenaCenterX,
+        position.y,
+        velocity.x,
+        velocity.y,
+        PhysicsUnits::toPixels(movement.topSpeedMetersPerSecond),
+        PhysicsUnits::toPixels(
+            movement.accelerationMetersPerSecondSquared
+        ),
+        PhysicsUnits::toPixels(
+            movement.tractionMetersPerSecondSquared
+        ),
+        PhysicsUnits::toPixels(movement.jumpSpeedMetersPerSecond),
+        hitbox.x * 0.5f,
+        hitbox.y * 0.5f,
+        moveable && !moveable->isAirbone()
+    };
+}
+}
 
 AiObservation AiPlayerController::observe(
     const Player& self,
@@ -11,18 +43,9 @@ AiObservation AiPlayerController::observe(
 ) {
     const sf::FloatRect bounds = world.getBounds();
     const float arenaCenterX = bounds.position.x + bounds.size.x * 0.5f;
-    const sf::Vector2f selfPosition = self.getPosition();
-    const sf::Vector2f opponentPosition = opponent.getPosition();
-    const Moveable* moveable = self.getBehaviour<Moveable>();
-
     return {
-        selfPosition.x - arenaCenterX,
-        selfPosition.y,
-        opponentPosition.x - arenaCenterX,
-        opponentPosition.y,
-        opponent.getVelocity().y,
-        moveable && !moveable->isAirbone() ? 1.0f : 0.0f,
-        bounds.size.x * 0.5f,
-        self.getHitboxPixels().x * 0.5f
+        observePlayer(self, arenaCenterX),
+        observePlayer(opponent, arenaCenterX),
+        bounds.size.x * 0.5f
     };
 }

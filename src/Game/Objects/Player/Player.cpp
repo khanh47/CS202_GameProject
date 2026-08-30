@@ -58,6 +58,14 @@ float smoothStep(float progress) {
     return progress * progress * (3.0f - 2.0f * progress);
 }
 
+float moveToward(float current, float target, float maximumDelta) {
+    return current + std::clamp(
+        target - current,
+        -maximumDelta,
+        maximumDelta
+    );
+}
+
 }
 
 Player::Player() : GameObject() {
@@ -147,6 +155,28 @@ void Player::finalizeGroundContacts() {
             _world->getScoreManager()->handleEvent(ScoreEventType::MarioLanded);
         }
     }
+}
+
+PlayerMovementStats Player::getMovementStats() const noexcept {
+    PlayerMovementStats stats{
+        _baseMoveSpeed,
+        _baseAcceleration,
+        _baseTraction,
+        _baseJumpSpeed
+    };
+
+    if (_character == "luigi") {
+        stats.topSpeedMetersPerSecond *= luigiTopSpeedRatio;
+        stats.accelerationMetersPerSecondSquared *= luigiAccelerationRatio;
+        stats.tractionMetersPerSecondSquared *= luigiTractionRatio;
+        stats.jumpSpeedMetersPerSecond *= luigiJumpSpeedRatio;
+    }
+
+    if (_state) {
+        stats.topSpeedMetersPerSecond *= _state->getMoveSpeedMultiplier();
+        stats.jumpSpeedMetersPerSecond *= _state->getJumpSpeedMultiplier();
+    }
+    return stats;
 }
 
 void Player::setState(std::unique_ptr<PlayerState> newState) {
@@ -433,26 +463,31 @@ void Player::updateSimulation(const float &fixedDt) {
         hold->updateSimulation(fixedDt);
     }
 
-    float moveSpeed = _baseMoveSpeed;
-    float jumpSpeed = _baseJumpSpeed;
+    const PlayerMovementStats movement = getMovementStats();
+    const float moveSpeed = movement.topSpeedMetersPerSecond;
+    const float acceleration = movement.accelerationMetersPerSecondSquared;
+    const float traction = movement.tractionMetersPerSecondSquared;
+    const float jumpSpeed = movement.jumpSpeedMetersPerSecond;
 
-    if (_character == "luigi") {
-        moveSpeed *= luigiTopSpeedRatio;
-        jumpSpeed *= luigiJumpSpeedRatio;
-    }
-
-    if (_state) {
-        moveSpeed *= _state->getMoveSpeedMultiplier();
-        jumpSpeed *= _state->getJumpSpeedMultiplier();
-    }
-
+    float targetVelocityX = 0.0f;
     if (moveable->isMovingLeft() && !moveable->isMovingRight()) {
-        velocity.x = -moveSpeed;
+        targetVelocityX = -moveSpeed;
     } else if (moveable->isMovingRight() && !moveable->isMovingLeft()) {
-        velocity.x = moveSpeed;
-    } else {
-        velocity.x = 0.0f;
+        targetVelocityX = moveSpeed;
     }
+
+    const bool reversing = targetVelocityX != 0.0f
+        && velocity.x != 0.0f
+        && (targetVelocityX > 0.0f) != (velocity.x > 0.0f);
+    const float velocityChangeRate =
+        targetVelocityX == 0.0f || reversing
+            ? traction
+            : acceleration;
+    velocity.x = moveToward(
+        velocity.x,
+        reversing ? 0.0f : targetVelocityX,
+        velocityChangeRate * fixedDt
+    );
 
     const bool isStartingJump = moveable->isJumping() && !moveable->isAirbone();
     if (isStartingJump) {
