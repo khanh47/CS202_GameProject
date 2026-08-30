@@ -1,0 +1,130 @@
+{
+    "map-1": [
+        {
+            "character": "mario",
+            "coins": 32,
+            "date": "2026-08-20",
+            "playerName": "MARIO",
+            "score": 25000,
+            "timeRemaining": 280
+        },
+        {
+            "character": "luigi",
+            "coins": 24,
+            "date": "2026-08-22",
+            "playerName": "LUIGI",
+            "score": 18500,
+            "timeRemaining": 250
+        },
+        {
+            "character": "mario",
+            "coins": 15,
+            "date": "2026-08-25",
+            "playerName": "PLAYER 1",
+            "score": 12000,
+            "timeRemaining": 210
+        },
+        {
+            "character": "luigi",
+            "coins": 10,
+            "date": "2026-08-28",
+            "playerName": "PLAYER 2",
+            "score": 8500,
+            "timeRemaining": 180
+        }
+    ],
+    "map-2": [
+        {
+            "character": "luigi",
+            "coins": 45,
+            "date": "2026-08-21",
+            "playerName": "LUIGI",
+            "score": 32000,
+            "timeRemaining": 310
+        },
+        {
+            "character": "mario",
+            "coins": 30,
+            "date": "2026-08-23",
+            "playerName": "MARIO",
+            "score": 24000,
+            "timeRemaining": 260
+        },
+        {
+            "character": "mario",
+            "coins": 18,
+            "date": "2026-08-26",
+            "playerName": "SUPER MARIO",
+            "score": 16000,
+            "timeRemaining": 220
+        },
+        {
+            "character": "luigi",
+            "coins": 12,
+            "date": "2026-08-29",
+            "playerName": "PLAYER 2",
+            "score": 11000,
+            "timeRemaining": 190
+        }
+    ],
+    "map-3": [
+        {
+            "character": "mario",
+            "coins": 50,
+            "date": "2026-08-22",
+            "playerName": "MARIO",
+            "score": 45000,
+            "timeRemaining": 340
+        },
+        {
+            "character": "luigi",
+            "coins": 42,
+            "date": "2026-08-24",
+            "playerName": "LUIGI",
+            "score": 38000,
+            "timeRemaining": 320
+        },
+        {
+            "character": "mario",
+            "coins": 28,
+            "date": "2026-08-27",
+            "playerName": "CHAMPION",
+            "score": 28000,
+            "timeRemaining": 270
+        },
+        {
+            "character": "luigi",
+            "coins": 20,
+            "date": "2026-08-30",
+            "playerName": "PLAYER 2",
+            "score": 19500,
+            "timeRemaining": 230
+        }
+    ],
+    "minigame": [
+        {
+            "character": "mario",
+            "coins": 0,
+            "date": "2026-08-30",
+            "playerName": "MARIO",
+            "score": 22700,
+            "timeRemaining": 394
+        },
+        {
+            "character": "mario",
+            "coins": 50,
+            "date": "2026-08-28",
+            "playerName": "MARIO",
+            "score": 15000,
+            "timeRemaining": 60
+        },
+        {
+            "character": "luigi",
+            "coins": 40,
+            "date": "2026-08-29",
+            "playerName": "LUIGI",
+            "score": 12000,
+            "timeRemaining": 60
+        }
+    ]
+}
