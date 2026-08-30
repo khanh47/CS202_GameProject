@@ -210,16 +210,64 @@ sf::IntRect AutotileResolver::resolve(
             rect.position.x = 86;       // col 5: inner-B or top-mid-B
         }
     } else if (def.textureAlias == "at_underground") {
-        // 4-phase continuous undulating wave for top floor surface (y = 18)
-        if (rect.position.y == 18 && rect.position.x >= 18 && rect.position.x <= 69) {
-            const int waveIndex = posInRow % 4;
-            rect.position.x = 18 + waveIndex * 17; // 18 -> 35 -> 52 -> 69
+        const bool SE_solid = isSolid(screenGrid, col + 1, screenRow + 1, gridWidth, gridHeight, solidIds);
+        const bool SW_solid = isSolid(screenGrid, col - 1, screenRow + 1, gridWidth, gridHeight, solidIds);
+
+        // 1. Convex Corners
+        if (!N && !W && S && E) {
+            return sf::IntRect({1, 18}, {16, 16}); // Top-Left Convex Corner
         }
-        // 4-phase continuous wave for ceiling surface (y = 103)
-        else if (rect.position.y == 103 && rect.position.x >= 18 && rect.position.x <= 69) {
-            const int waveIndex = posInRow % 4;
-            rect.position.x = 18 + waveIndex * 17; // 18 -> 35 -> 52 -> 69
+        if (!N && !E && S && W) {
+            return sf::IntRect({86, 18}, {16, 16}); // Top-Right Convex Corner
         }
+        if (!S && !W && N && E) {
+            return sf::IntRect({1, 103}, {16, 16}); // Bottom-Left Corner
+        }
+        if (!S && !E && N && W) {
+            return sf::IntRect({86, 103}, {16, 16}); // Bottom-Right Corner
+        }
+
+        // 2. Top Floor & Bottom/Ceiling Flat Surfaces
+        if (!N && S && (W || E)) {
+            const int waveIndex = posInRow % 4;
+            return sf::IntRect({18 + waveIndex * 17, 18}, {16, 16}); // Top Floor Wave
+        }
+        if (!S && N && (W || E)) {
+            const int waveIndex = posInRow % 4;
+            return sf::IntRect({18 + waveIndex * 17, 103}, {16, 16}); // Ceiling Wave
+        }
+
+        // 3. Vertical Wall Bodies
+        if (!W && E && (N || S)) {
+            const int waveIndex = screenRow % 4;
+            return sf::IntRect({1, 35 + waveIndex * 17}, {16, 16}); // Left Wall Body
+        }
+        if (!E && W && (N || S)) {
+            const int waveIndex = screenRow % 4;
+            return sf::IntRect({86, 35 + waveIndex * 17}, {16, 16}); // Right Wall Body
+        }
+        if (!W && !E && (N || S)) {
+            const int waveIndex = screenRow % 4;
+            return sf::IntRect({1, 35 + waveIndex * 17}, {16, 16}); // 1-wide vertical column
+        }
+
+        // 4. Interior Solid & Concave Inner Turns
+        if (N && S && E && W) {
+            if (!NE_solid && NW_solid && SE_solid && SW_solid) {
+                return sf::IntRect({120, 18}, {16, 16}); // NE Concave Inner Turn
+            }
+            if (!NW_solid && NE_solid && SE_solid && SW_solid) {
+                return sf::IntRect({103, 18}, {16, 16}); // NW Concave Inner Turn
+            }
+            return sf::IntRect({52, 52}, {16, 16}); // Pure Solid Rock Core
+        }
+
+        // Fallback for single isolated blocks
+        if (!N && !S && !W && !E) {
+            return sf::IntRect({18, 18}, {16, 16});
+        }
+
+        return sf::IntRect({52, 52}, {16, 16});
     }
 
     return rect;
@@ -244,6 +292,12 @@ AutotileResult AutotileResolver::resolveDetailed(
         gridWidth, gridHeight,
         solidIds, def
     );
+
+    // Underground theme has custom full-body resolution and no front overlays
+    if (def.textureAlias == "at_underground") {
+        result.rotationDeg = 0;
+        return result;
+    }
 
     // Front Layer overlays apply ONLY to grassland_terrain (at_grassland)
     if (def.textureAlias != "at_grassland") {
