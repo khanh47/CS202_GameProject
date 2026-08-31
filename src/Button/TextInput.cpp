@@ -152,7 +152,11 @@ void TextInput::render(sf::RenderTarget& target) {
 }
 
 void TextInput::refreshLabel() {
-    setText(_labelPrefix + ": " + (_value.empty() ? "_" : _value));
+    if (_labelPrefix.empty()) {
+        setText(_value.empty() ? "_" : _value);
+    } else {
+        setText(_labelPrefix + ": " + (_value.empty() ? "_" : _value));
+    }
 }
 
 void TextInput::notifyValue() {
