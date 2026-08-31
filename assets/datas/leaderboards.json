@@ -44,6 +44,14 @@
         },
         {
             "character": "mario",
+            "coins": 45,
+            "date": "2026-08-31",
+            "playerName": "MARIO",
+            "score": 28700,
+            "timeRemaining": 337
+        },
+        {
+            "character": "mario",
             "coins": 30,
             "date": "2026-08-23",
             "playerName": "MARIO",
@@ -70,6 +78,30 @@
     "map-3": [
         {
             "character": "mario",
+            "coins": 67,
+            "date": "2026-08-31",
+            "playerName": "MARIO",
+            "score": 64800,
+            "timeRemaining": 320
+        },
+        {
+            "character": "luigi",
+            "coins": 28,
+            "date": "2026-08-31",
+            "playerName": "LUIGI",
+            "score": 56850,
+            "timeRemaining": 388
+        },
+        {
+            "character": "mario",
+            "coins": 5,
+            "date": "2026-08-31",
+            "playerName": "MARIO",
+            "score": 53700,
+            "timeRemaining": 382
+        },
+        {
+            "character": "mario",
             "coins": 50,
             "date": "2026-08-22",
             "playerName": "MARIO",
@@ -86,6 +118,14 @@
         },
         {
             "character": "mario",
+            "coins": 57,
+            "date": "2026-08-31",
+            "playerName": "MARIO",
+            "score": 36150,
+            "timeRemaining": 389
+        },
+        {
+            "character": "mario",
             "coins": 28,
             "date": "2026-08-27",
             "playerName": "CHAMPION",
@@ -93,15 +133,23 @@
             "timeRemaining": 270
         },
         {
-            "character": "luigi",
-            "coins": 20,
-            "date": "2026-08-30",
-            "playerName": "PLAYER 2",
-            "score": 19500,
-            "timeRemaining": 230
+            "character": "mario",
+            "coins": 30,
+            "date": "2026-08-31",
+            "playerName": "MARIO",
+            "score": 24550,
+            "timeRemaining": 357
         }
     ],
     "minigame": [
+        {
+            "character": "mario",
+            "coins": 0,
+            "date": "2026-08-31",
+            "playerName": "MARIO",
+            "score": 24400,
+            "timeRemaining": 388
+        },
         {
             "character": "mario",
             "coins": 0,

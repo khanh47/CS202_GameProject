@@ -31,6 +31,16 @@ void PiranhaPlant::setPipeTravel(
     _hasPipeTravel = true;
     _hiddenPosition = hiddenPosition;
     _emergedPosition = emergedPosition;
+
+    if (auto* animatable = getBehaviour<Animatable>()) {
+        sf::Vector2f visualScale = animatable->getVisualScale();
+        const float scaleMagnitude = std::abs(visualScale.y);
+        visualScale.y = emergedPosition.y > hiddenPosition.y
+            ? -scaleMagnitude
+            : scaleMagnitude;
+        animatable->setVisualScale(visualScale);
+    }
+
     beginPhase(PipePhase::Hidden);
     setPosition(_hiddenPosition);
 }
