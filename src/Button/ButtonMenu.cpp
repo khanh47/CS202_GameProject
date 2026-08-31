@@ -125,6 +125,15 @@ void ButtonMenu::processEvent(const sf::Event& event) {
 
             for (auto it = buttons.rbegin(); it != buttons.rend(); ++it) {
                 if ((*it)->contains(mousePosition)) {
+                    // Guard: commit any other TextInput that is editing before switching focus (prevents dual underline)
+                    for (auto &b : _buttonMenu) {
+                        if (b.get() == it->get()) continue;
+                        if (auto ti = std::dynamic_pointer_cast<TextInput>(b); ti && ti->isEditing()) {
+                            sf::Vector2i ipos{static_cast<int>(mousePosition.x), static_cast<int>(mousePosition.y)};
+                            sf::Event commitEvt = sf::Event::MouseButtonPressed{sf::Mouse::Button::Left, ipos};
+                            ti->processEvent(commitEvt);
+                        }
+                    }
                     (*it)->processEvent(event);
                     // Sync focus to clicked button when keyboard also enabled
                     if (_keyboardEnabled) {
