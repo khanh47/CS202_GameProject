@@ -78,12 +78,12 @@ void MainMenuScene::render(sf::RenderTarget& target) {
 void MainMenuScene::_setupButtons() {
     _buttonMenu.clear();
     _buttonMenu.setLayoutProperties(
-        {820.0f, 250.0f},
-        {280.0f, 55.0f},
-        72.0f,
+        {820.0f, 300.0f},
+        {280.0f, 60.0f},
+        80.0f,
         false,
         sf::Color(100, 149, 237),
-        32 
+       36 
     );
 
     _buttonMenu.addMainMenuButtonAuto("Play", std::make_unique<FunctionalCommand>(
