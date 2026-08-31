@@ -435,8 +435,8 @@ void InGameScene::drawPauseButton(sf::RenderTarget& target) {
 void InGameScene::buildPauseMenu() {
     _pauseMenu.clear();
     _pauseMenu.setLayoutProperties(
-        {710.f, 260.f}, {500.f, 65.f}, 75.f, false,
-        sf::Color(100, 149, 237), 30
+        {820.f, 300.f}, {280.f, 60.f}, 80.f, false,
+        sf::Color(100, 149, 237), 36 
     );
     _pauseMenu.addMainMenuButtonAuto(
         "Resume",
@@ -479,8 +479,8 @@ void InGameScene::buildPauseMenu() {
 void InGameScene::buildReturnConfirmation() {
     _returnConfirmationMenu.clear();
     _returnConfirmationMenu.setLayoutProperties(
-        {660.f, 360.f}, {600.f, 65.f}, 80.f, false,
-        sf::Color(100, 149, 237), 28
+        {820.f, 300.f}, {280.f, 60.f}, 80.f, false,
+        sf::Color(100, 149, 237), 36 
     );
     _returnConfirmationMenu.addMainMenuButtonAuto(
         "Save and Quit",
