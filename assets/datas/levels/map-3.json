@@ -2,31 +2,489 @@
     "tileMapping": {
         ".": "empty",
         "#": "brick",
-        "b": "breakable_brick",
+        "A": "terrain_underground",
+        "X": "terrain_castle",
         "M": "player_mario",
         "L": "player_luigi",
         "e": "enemy_goomba",
         "k": "enemy_koopa",
-        "f": "item_fire_flower",
-        "X": "terrain_castle",
-        "c": "item_coin"
+        "c": "item_coin",
+        "?": "block_lucky",
+        "B": "block_coin_single",
+        "o": "item_mega_coin",
+        "T": "item_checkpoint_flag",
+        "D": "item_flagpole"
     },
     "layer": [
-        "..............................................................................................................................................................................................................................................................................................................",
-        "........................XXXX.....................................XXXX.....................................XXXX.....................................XXXX.......................................................XXXX.......................................................XXXX.................................",
-        ".....e...........f............................................................................................................................................................................................................................................................................................",
-        "....XXX..ccc....XXX...............XXXX.......XXX.........XXX...............XXXX.......XXX.........XXX...............XXXX.......XXX.........XXX...............XXXX.......XXX...............XXX.........XXX...............XXXX.......XXX...............XXX.........XXX...............XXXX.......XXX.............",
-        ".........XXX...................XX..........XX...........................XX..........XX...........................XX..........XX...........................XX..........XX........XXXX...........XXX...................XX..........XX........XXXX...........XXX...................XX..........XX........XXXX....",
-        ".............................XXXX........XXXX.........................XXXX........XXXX.........................XXXX........XXXX.........................XXXX........XXXX...........................................XXXX........XXXX...........................................XXXX........XXXX................",
-        "...ML........ccccc....k.....XXXXX.......XXXXX........................XXXXX.......XXXXX........................XXXXX.......XXXXX........................XXXXX.......XXXXX..........................................XXXXX.......XXXXX..........................................XXXXX.......XXXXX................",
-        "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX."
+        "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA............................................................",
+        "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA............................................................",
+        "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA............................................................",
+        "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA............................................................",
+        "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA............................................................",
+        "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA............................................................",
+        "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA............................................................",
+        "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA............................................................",
+        "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA............................................................",
+        "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA............................................................",
+        "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA............................................................AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA............................................................",
+        "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA............................................................AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA.....................................................................AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA............................................................",
+        "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA........................................................................................................................AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA.....................................................................AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA............................................................",
+        "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA........................................................................................................................AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA.....................................................................AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA............................................................",
+        "........................................................AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA..........c.c.c.c.......................................................................................................AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA..............................................c..............c.......AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA............................................................",
+        "...............c.......................c........c.......AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA.....................cc.................................................................................................AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA.....................c.........c............c...c..........c...c.....AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA....................c.c............c........................",
+        ".............c...c...................c........c.........................................................................................c..c..........c...........c...................................................cc............................................................................................c...........c.........c...c.............................................................c..........................c..................................c.....c.........c.c.......................",
+        "...................................c......................................................................................###B?B###.................cB?#c.......c...c......................................c.........c..c.................................................................................c.......c..#B?B#....c...................##B?B##............B?#............................cc...................cc..........c...c............................c....................................XXXX.....",
+        "......................................#....................c.c....................................................................................c.......c.....................................cc.......c...c....B?#....c....................cc....c...........................c.c...........c.........c.......c........................................o..........................c.......c......c..c.......#B#.......c..c.............................cc.........c......................................XXXX.....",
+        "..........#B#?#.....................##.......B?#.........c.....c..........c...........................c....................................#?B.................................................c..c............................c.............c..c.c...c..........c..........................c...c.....................................................................................B?#.........c....c...............c....c...........................c..c......c.....................................XXXXXXXXXX..",
+        "..................................###.......................?...........c...c...........#B#.........c...c......B....................B#........................##B....................#B#......c....c.........................c...c##B.......c.B#.c.............c...c..........#?B...................B#.....................e..............k....................e..........k..T....................................................#?B#.................c....c.........................D.................XXXXXXXXXX..",
+        "...........................k...........................................................................................................................e....................................................k.................................................................................k..............AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA................................e......................................................AAAAAAAAAAAAAAAAAAAAA..........XXXXXXXXXX..",
+        "....................AAAAAAAAAAA..................................................................................................................AAAAAAAAAA...........................................AAAAAAAAAAAAAAAAA...................................................................AAAAAAAAA..........AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA............k..........AAAAAAAAAAAAAAAAAA..........................................AAAAAAAAAAAAAAAAAAAAAAAAAAAAA......XXXXX..XXX..",
+        "...M.L...........e..AAAAAAAAAAA.........AAAAAAAAA..............e..............................k.................................e.............k..AAAAAAAAAA..........T....k.............e.............AAAAAAAAAAAAAAAAA..........e.............................e..........................AAAAAAAAA..........AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA...AAAAAAAAAAAAAAAAAA..............k.......................AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA..XXXXX..XXX..",
+        "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA...AAAAAAAAAAAAAAAAA...AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA...AAAAAAAAAAAAAAAAAA...AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+        "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA...AAAAAAAAAAAAAAAAA...AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA...AAAAAAAAAAAAAAAAAA...AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+        "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA...AAAAAAAAAAAAAAAAA...AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA...AAAAAAAAAAAAAAAAAA...AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+        "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA...AAAAAAAAAAAAAAAAA...AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA...AAAAAAAAAAAAAAAAAA...AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+        "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA...AAAAAAAAAAAAAAAAA...AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA...AAAAAAAAAAAAAAAAAA...AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+        "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA...AAAAAAAAAAAAAAAAA...AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA...AAAAAAAAAAAAAAAAAA...AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+        "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA...AAAAAAAAAAAAAAAAA...AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA...AAAAAAAAAAAAAAAAAA...AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+        "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA...AAAAAAAAAAAAAAAAA...AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA...AAAAAAAAAAAAAAAAAA...AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+    ],
+    "placements": [
+        {
+            "column": 68,
+            "row": 16,
+            "spec": {
+                "kind": "pipe",
+                "typeKey": "Pipe",
+                "texture": "pipes_spritesheet",
+                "pipeOrientation": "vertical",
+                "pipeEndSide": "bottom",
+                "pipeBodyLength": 1,
+                "pipeIsWarp": false,
+                "addSeamFilter": true,
+                "contentsStatic": false,
+                "contents": {
+                    "kind": "enemy",
+                    "typeKey": "PiranhaPlant",
+                    "texture": "piranha_plant_spritesheet",
+                    "animationId": "piranha_plant",
+                    "size": [
+                        78,
+                        105
+                    ],
+                    "offset": [
+                        0,
+                        5
+                    ]
+                }
+            }
+        },
+        {
+            "column": 82,
+            "row": 23,
+            "spec": {
+                "kind": "pipe",
+                "typeKey": "Pipe",
+                "texture": "pipes_spritesheet",
+                "pipeOrientation": "vertical",
+                "pipeEndSide": "top",
+                "pipeBodyLength": 1,
+                "pipeIsWarp": false,
+                "addSeamFilter": true,
+                "contentsStatic": false
+            }
+        },
+        {
+            "column": 98,
+            "row": 16,
+            "spec": {
+                "kind": "pipe",
+                "typeKey": "Pipe",
+                "texture": "pipes_spritesheet",
+                "pipeOrientation": "vertical",
+                "pipeEndSide": "bottom",
+                "pipeBodyLength": 2,
+                "pipeIsWarp": false,
+                "addSeamFilter": true,
+                "contentsStatic": false
+            }
+        },
+        {
+            "column": 108,
+            "row": 23,
+            "spec": {
+                "kind": "pipe",
+                "typeKey": "Pipe",
+                "texture": "pipes_spritesheet",
+                "pipeOrientation": "vertical",
+                "pipeEndSide": "top",
+                "pipeBodyLength": 2,
+                "pipeIsWarp": false,
+                "addSeamFilter": true,
+                "contentsStatic": false,
+                "contents": {
+                    "kind": "enemy",
+                    "typeKey": "PiranhaPlant",
+                    "texture": "piranha_plant_spritesheet",
+                    "animationId": "piranha_plant",
+                    "size": [
+                        78,
+                        105
+                    ],
+                    "offset": [
+                        0,
+                        5
+                    ]
+                }
+            }
+        },
+        {
+            "column": 188,
+            "row": 23,
+            "spec": {
+                "kind": "pipe",
+                "typeKey": "Pipe",
+                "texture": "pipes_spritesheet",
+                "pipeOrientation": "vertical",
+                "pipeEndSide": "top",
+                "pipeBodyLength": 1,
+                "pipeIsWarp": false,
+                "addSeamFilter": true,
+                "contentsStatic": false
+            }
+        },
+        {
+            "column": 228,
+            "row": 23,
+            "spec": {
+                "kind": "pipe",
+                "typeKey": "Pipe",
+                "texture": "pipes_spritesheet",
+                "pipeOrientation": "vertical",
+                "pipeEndSide": "top",
+                "pipeBodyLength": 1,
+                "pipeIsWarp": false,
+                "addSeamFilter": true,
+                "contentsStatic": false,
+                "contents": {
+                    "kind": "enemy",
+                    "typeKey": "PiranhaPlant",
+                    "texture": "piranha_plant_spritesheet",
+                    "animationId": "piranha_plant",
+                    "size": [
+                        78,
+                        105
+                    ],
+                    "offset": [
+                        0,
+                        5
+                    ]
+                }
+            }
+        },
+        {
+            "column": 248,
+            "row": 16,
+            "spec": {
+                "kind": "pipe",
+                "typeKey": "Pipe",
+                "texture": "pipes_spritesheet",
+                "pipeOrientation": "vertical",
+                "pipeEndSide": "bottom",
+                "pipeBodyLength": 1,
+                "pipeIsWarp": false,
+                "addSeamFilter": true,
+                "contentsStatic": false,
+                "contents": {
+                    "kind": "enemy",
+                    "typeKey": "PiranhaPlant",
+                    "texture": "piranha_plant_spritesheet",
+                    "animationId": "piranha_plant",
+                    "size": [
+                        78,
+                        105
+                    ],
+                    "offset": [
+                        0,
+                        5
+                    ]
+                }
+            }
+        },
+        {
+            "column": 262,
+            "row": 23,
+            "spec": {
+                "kind": "pipe",
+                "typeKey": "Pipe",
+                "texture": "pipes_spritesheet",
+                "pipeOrientation": "vertical",
+                "pipeEndSide": "top",
+                "pipeBodyLength": 1,
+                "pipeIsWarp": false,
+                "addSeamFilter": true,
+                "contentsStatic": false
+            }
+        },
+        {
+            "column": 276,
+            "row": 16,
+            "spec": {
+                "kind": "pipe",
+                "typeKey": "Pipe",
+                "texture": "pipes_spritesheet",
+                "pipeOrientation": "vertical",
+                "pipeEndSide": "bottom",
+                "pipeBodyLength": 2,
+                "pipeIsWarp": false,
+                "addSeamFilter": true,
+                "contentsStatic": false,
+                "contents": {
+                    "kind": "enemy",
+                    "typeKey": "PiranhaPlant",
+                    "texture": "piranha_plant_spritesheet",
+                    "animationId": "piranha_plant",
+                    "size": [
+                        78,
+                        105
+                    ],
+                    "offset": [
+                        0,
+                        5
+                    ]
+                }
+            }
+        },
+        {
+            "column": 294,
+            "row": 23,
+            "spec": {
+                "kind": "pipe",
+                "typeKey": "Pipe",
+                "texture": "pipes_spritesheet",
+                "pipeOrientation": "vertical",
+                "pipeEndSide": "top",
+                "pipeBodyLength": 2,
+                "pipeIsWarp": false,
+                "addSeamFilter": true,
+                "contentsStatic": false,
+                "contents": {
+                    "kind": "enemy",
+                    "typeKey": "PiranhaPlant",
+                    "texture": "piranha_plant_spritesheet",
+                    "animationId": "piranha_plant",
+                    "size": [
+                        78,
+                        105
+                    ],
+                    "offset": [
+                        0,
+                        5
+                    ]
+                }
+            }
+        },
+        {
+            "column": 380,
+            "row": 22,
+            "spec": {
+                "kind": "pipe",
+                "typeKey": "Pipe",
+                "texture": "pipes_spritesheet",
+                "pipeOrientation": "vertical",
+                "pipeEndSide": "top",
+                "pipeBodyLength": 1,
+                "pipeIsWarp": false,
+                "addSeamFilter": true,
+                "contentsStatic": false
+            }
+        },
+        {
+            "column": 400,
+            "row": 16,
+            "spec": {
+                "kind": "pipe",
+                "typeKey": "Pipe",
+                "texture": "pipes_spritesheet",
+                "pipeOrientation": "vertical",
+                "pipeEndSide": "bottom",
+                "pipeBodyLength": 1,
+                "pipeIsWarp": false,
+                "addSeamFilter": true,
+                "contentsStatic": false,
+                "contents": {
+                    "kind": "enemy",
+                    "typeKey": "PiranhaPlant",
+                    "texture": "piranha_plant_spritesheet",
+                    "animationId": "piranha_plant",
+                    "size": [
+                        78,
+                        105
+                    ],
+                    "offset": [
+                        0,
+                        5
+                    ]
+                }
+            }
+        },
+        {
+            "column": 422,
+            "row": 23,
+            "spec": {
+                "kind": "pipe",
+                "typeKey": "Pipe",
+                "texture": "pipes_spritesheet",
+                "pipeOrientation": "vertical",
+                "pipeEndSide": "top",
+                "pipeBodyLength": 1,
+                "pipeIsWarp": false,
+                "addSeamFilter": true,
+                "contentsStatic": false,
+                "contents": {
+                    "kind": "enemy",
+                    "typeKey": "PiranhaPlant",
+                    "texture": "piranha_plant_spritesheet",
+                    "animationId": "piranha_plant",
+                    "size": [
+                        78,
+                        105
+                    ],
+                    "offset": [
+                        0,
+                        5
+                    ]
+                }
+            }
+        },
+        {
+            "column": 53,
+            "row": 20,
+            "spec": {
+                "kind": "block",
+                "typeKey": "LuckyBlock",
+                "texture": "",
+                "size": [
+                    64,
+                    64
+                ],
+                "addSeamFilter": true,
+                "luckyTexture": "invisible",
+                "luckyCapacity": 1,
+                "luckyOptions": [
+                    {
+                        "item": "SuperMushroom",
+                        "weight": 1
+                    },
+                    {
+                        "item": "Coin",
+                        "weight": 1
+                    }
+                ]
+            }
+        },
+        {
+            "column": 136,
+            "row": 20,
+            "spec": {
+                "kind": "block",
+                "typeKey": "LuckyBlock",
+                "texture": "",
+                "size": [
+                    64,
+                    64
+                ],
+                "addSeamFilter": true,
+                "luckyTexture": "invisible",
+                "luckyCapacity": 1,
+                "luckyOptions": [
+                    {
+                        "item": "OneUpMushroom",
+                        "weight": 1
+                    }
+                ]
+            }
+        },
+        {
+            "column": 233,
+            "row": 20,
+            "spec": {
+                "kind": "block",
+                "typeKey": "LuckyBlock",
+                "texture": "",
+                "size": [
+                    64,
+                    64
+                ],
+                "addSeamFilter": true,
+                "luckyTexture": "invisible",
+                "luckyCapacity": 1,
+                "luckyOptions": [
+                    {
+                        "item": "SuperStar",
+                        "weight": 1
+                    },
+                    {
+                        "item": "Coin",
+                        "weight": 1
+                    }
+                ]
+            }
+        },
+        {
+            "column": 414,
+            "row": 20,
+            "spec": {
+                "kind": "block",
+                "typeKey": "LuckyBlock",
+                "texture": "",
+                "size": [
+                    64,
+                    64
+                ],
+                "addSeamFilter": true,
+                "luckyTexture": "invisible",
+                "luckyCapacity": 1,
+                "luckyOptions": [
+                    {
+                        "item": "FireFlower",
+                        "weight": 1
+                    },
+                    {
+                        "item": "SuperMushroom",
+                        "weight": 1
+                    }
+                ]
+            }
+        }
     ],
     "background": "parallax_underground",
+    "music": "underground_theme",
+    "theme": "underground",
     "prefabs": {
+        "terrain_underground": {
+            "texture": "at_underground",
+            "solid": true,
+            "autotile": "underground_terrain",
+            "addSeamFilter": true
+        },
         "terrain_castle": {
             "texture": "at_castle",
             "solid": true,
-            "autotile": "castle_terrain"
+            "autotile": "castle_terrain",
+            "addSeamFilter": true
+        },
+        "block_coin_single": {
+            "kind": "block",
+            "typeKey": "CoinBlock",
+            "texture": "underground_brick_spritesheet",
+            "animationId": "coin_block",
+            "size": [
+                64,
+                64
+            ],
+            "addSeamFilter": true,
+            "coinCapacity": 1
         }
     }
 }
