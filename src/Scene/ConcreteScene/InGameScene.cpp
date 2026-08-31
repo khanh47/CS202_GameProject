@@ -550,9 +550,16 @@ void InGameScene::restartLevel() {
     _scoreManager.restoreState(0, 0, 3, _scoreManager.getHighScore(), 400.0f, 0, 3, 0, 0);
     _gameWorld.restoreCheckpoint(std::nullopt);
     _gameWorld.loadLevel(_name);
-    _camera.setCenter({1920.f / 2.f, _gameWorld.getGridHeight() * _gameWorld.getCellSize() - 1080.f / 2.f});
-    if (auto player = _gameWorld.getPrimaryPlayer()) {
+    const auto players = _gameWorld.getPlayers();
+    if (players.size() >= 2 && GameSettings::getInstance().gameMode != GameMode::Solo) {
+        std::vector<std::shared_ptr<GameObject>> targets;
+        targets.reserve(players.size());
+        for (const auto& p : players) targets.push_back(p);
+        _camera.setTargets(targets);
+    } else if (auto player = _gameWorld.getPrimaryPlayer()) {
         _camera.setTarget(player);
+    } else {
+        _camera.setCenter({1920.f / 2.f, _gameWorld.getGridHeight() * _gameWorld.getCellSize() - 1080.f / 2.f});
     }
     _scoreManager.setTimePaused(false);
     Audio::MusicManager::getInstance().play(
@@ -694,7 +701,6 @@ void InGameScene::updateVisuals(float deltaTime) {
         if (needsRebind) {
             _camera.setTarget(_gameWorld.getPrimaryPlayer());
         }
-        _camera.update(deltaTime);
     }
 
     _scoreManager.update(deltaTime);
