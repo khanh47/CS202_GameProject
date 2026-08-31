@@ -2,8 +2,8 @@
     "tileMapping": {
         ".": "empty",
         "A": "terrain_grassland",
-        "M": "player_mario",
-        "L": "player_luigi"
+        "M": "player_mario_large",
+        "L": "player_luigi_large"
     },
     "layer": [
         "..............................",
