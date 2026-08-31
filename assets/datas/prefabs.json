@@ -51,6 +51,36 @@
             ],
             "addController": true
         },
+        "player_mario_large": {
+            "kind": "player",
+            "typeKey": "Player",
+            "texture": "mario_spritesheet",
+            "animationId": "mario",
+            "size": [
+                54,
+                120
+            ],
+            "offset": [
+                10,
+                0
+            ],
+            "addController": true
+        },
+        "player_luigi_large": {
+            "kind": "player",
+            "typeKey": "Player",
+            "texture": "luigi_spritesheet",
+            "animationId": "luigi",
+            "size": [
+                54,
+                120
+            ],
+            "offset": [
+                10,
+                0
+            ],
+            "addController": true
+        },
         "player_mario_static": {
             "kind": "player",
             "typeKey": "Player",

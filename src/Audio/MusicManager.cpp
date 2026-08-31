@@ -17,7 +17,10 @@ MusicManager::MusicManager() {
 MusicManager::~MusicManager() = default;
 
 void MusicManager::play(const std::string &alias, bool loop) {
-    if (!_enabled) return;
+    if (!_enabled) {
+        _lastAlias = alias;
+        return;
+    }
     try {
         auto &music = ResourceManager::getInstance().getMusic(alias);
         if (_currentAlias == alias) {
