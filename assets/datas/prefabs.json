@@ -7,6 +7,12 @@
             "texture": "brick_spritesheet",
             "animationId": "brick",
             "solid": true,
+            "breakable": false
+        },
+        "breakable_brick": {
+            "texture": "brick_spritesheet",
+            "animationId": "brick",
+            "solid": true,
             "breakable": true
         },
         "arena_brick": {

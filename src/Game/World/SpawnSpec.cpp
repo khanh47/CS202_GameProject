@@ -134,6 +134,17 @@ void from_json(const nlohmann::json& json, SpawnSpec& spec) {
     spec.warpID = json.value("warpID", -1);
     spec.warpTarget = json.value("warpTarget", -1);
     spec.contentsStatic = json.value("contentsStatic", false);
+    spec.piranhaMotion = json.value("piranhaMotion", "timed");
+    spec.piranhaWavePeriod = json.value("piranhaWavePeriod", 6.0f);
+    spec.piranhaWavePhase = json.value("piranhaWavePhase", 0.0f);
+    if (spec.piranhaMotion != "timed" && spec.piranhaMotion != "sine") {
+        throw std::runtime_error(
+            "piranhaMotion must be timed or sine"
+        );
+    }
+    if (spec.piranhaWavePeriod <= 0.0f) {
+        throw std::runtime_error("piranhaWavePeriod must be positive");
+    }
 
     if (json.contains("contents")) {
         if (json["contents"].is_null()) {

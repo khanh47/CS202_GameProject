@@ -228,6 +228,12 @@ sf::IntRect AutotileResolver::resolve(
         }
 
         // 2. Top Floor & Bottom/Ceiling Flat Surfaces
+        // A one-tile-thick horizontal platform has neither N nor S, so it
+        // needs an explicit surface rule instead of the interior-rock fallback.
+        if (!N && !S && (W || E)) {
+            const int waveIndex = posInRow % 4;
+            return sf::IntRect({18 + waveIndex * 17, 18}, {16, 16});
+        }
         if (!N && S && (W || E)) {
             const int waveIndex = posInRow % 4;
             return sf::IntRect({18 + waveIndex * 17, 18}, {16, 16}); // Top Floor Wave

@@ -2,6 +2,7 @@
     "tileMapping": {
         ".": "empty",
         "#": "brick",
+        "b": "breakable_brick",
         "M": "player_mario",
         "L": "player_luigi",
         "e": "enemy_goomba",
@@ -34,7 +35,7 @@
         ".........ccc....###..............####........###.........###...............####.......###.........###..............G####.......###.........###...............####.......###...............###.........###...............####.......###...............###.........###...............####.......###.............",
         ".........###B?.............................AA...........................AA..........AA...........................AA..........AA...........................AA..........AA........####...........###...................AA..........AA........####...........###...................AA..........AA........####....",
         ".........................................AAAA........AA..............AAAAA.......AAAAA.........................AAAA........AAAA.........................AAAA........AAAA...........................................AAAA........AAAA...........................................AAAA........AAAA................",
-        ".P.MLcccccccccccccccccccccs.......ek...AAAAAA........AAAAA.........AAAAAAA.....AAAAAAA........Q...........AAAAAAAAA...AAAAAAAAA...................AAAAAAAAAA..AAAAA.AAAA.....................................AAAAAAAAAA..AAAAA.AAAA.....................................AAAAA.AAAA..AAAAA.AAAA...............D",
+        ".P.MLcccccccccccccccccccccs.......ek...AAAAAA....D...AAAAA.........AAAAAAA.....AAAAAAA........Q...........AAAAAAAAA...AAAAAAAAA...................AAAAAAAAAA..AAAAA.AAAA.....................................AAAAAAAAAA..AAAAA.AAAA.....................................AAAAA.AAAA..AAAAA.AAAA................",
         "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA....AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA."
     ],
     "background": "parallax_sky",

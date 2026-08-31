@@ -9,6 +9,7 @@ namespace {
 constexpr float kTravelSpeedPixelsPerSecond = 72.0f;
 constexpr float kHiddenDurationSeconds = 1.0f;
 constexpr float kExposedDurationSeconds = 1.5f;
+constexpr float kSineRetractionWindow = 1.00f;
 }
 
 PiranhaPlant::PiranhaPlant() : Enemy() {}
@@ -31,8 +32,28 @@ void PiranhaPlant::setPipeTravel(
     _hasPipeTravel = true;
     _hiddenPosition = hiddenPosition;
     _emergedPosition = emergedPosition;
+
+    if (auto* animatable = getBehaviour<Animatable>()) {
+        sf::Vector2f visualScale = animatable->getVisualScale();
+        const float scaleMagnitude = std::abs(visualScale.y);
+        visualScale.y = emergedPosition.y > hiddenPosition.y
+            ? -scaleMagnitude
+            : scaleMagnitude;
+        animatable->setVisualScale(visualScale);
+    }
+
     beginPhase(PipePhase::Hidden);
     setPosition(_hiddenPosition);
+}
+
+void PiranhaPlant::configureSineWave(
+    float periodSeconds,
+    float phaseOffset
+) {
+    _usesSineWave = periodSeconds > 0.0f;
+    _wavePeriodSeconds = std::max(periodSeconds, 0.01f);
+    _wavePhaseOffset = phaseOffset - std::floor(phaseOffset);
+    _waveElapsedSeconds = 0.0f;
 }
 
 void PiranhaPlant::onCreateBodyDef(b2BodyDef& def) {
@@ -66,6 +87,34 @@ void PiranhaPlant::updateSimulation(const float &fixedDt) {
     velocity.y = 0.0f;
 
     if (!_hasPipeTravel) {
+        b2Body_SetLinearVelocity(_body->getId(), velocity);
+        return;
+    }
+
+    if (_usesSineWave) {
+        _waveElapsedSeconds = std::fmod(
+            _waveElapsedSeconds + fixedDt,
+            _wavePeriodSeconds
+        );
+        const float angle = 2.0f * B2_PI
+            * (_waveElapsedSeconds / _wavePeriodSeconds
+               + _wavePhaseOffset);
+        // Keep most of the wave hazardous and smoothly retract only near the
+        // sine trough. With evenly spaced phases, this creates one traveling
+        // safe opening instead of leaving half the hallway retracted.
+        const float troughProgress = std::clamp(
+            (std::sin(angle) + 1.0f) / kSineRetractionWindow,
+            0.0f,
+            1.0f
+        );
+        const float extension = troughProgress * troughProgress
+            * (3.0f - 2.0f * troughProgress);
+        setPosition({
+            _hiddenPosition.x
+                + (_emergedPosition.x - _hiddenPosition.x) * extension,
+            _hiddenPosition.y
+                + (_emergedPosition.y - _hiddenPosition.y) * extension
+        });
         b2Body_SetLinearVelocity(_body->getId(), velocity);
         return;
     }

@@ -42,6 +42,7 @@ protected:
 
 private:
     bool _breakable = false;
+    float _bumpTimer = 0.0f;
     const sf::Texture* _breakTexture = nullptr;
     sf::IntRect _breakTextureRect{};
 };

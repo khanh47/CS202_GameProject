@@ -19,6 +19,13 @@ class KoopaShell;
 class Pipe;
 enum class ScoreEventType;
 
+struct PlayerMovementStats {
+    float topSpeedMetersPerSecond = 0.0f;
+    float accelerationMetersPerSecondSquared = 0.0f;
+    float tractionMetersPerSecondSquared = 0.0f;
+    float jumpSpeedMetersPerSecond = 0.0f;
+};
+
 class Player: public GameObject {
 public:
     // The normal player sprite is intentionally presented larger than its
@@ -91,6 +98,7 @@ public:
     bool isEliminated() const noexcept {
         return _pendingDestroy || _isDying;
     }
+    PlayerMovementStats getMovementStats() const noexcept;
 
     // Moveable forwarding (called externally)
     bool isFacingLeft() const {
@@ -184,14 +192,14 @@ private:
     void beginMegaEndTransformation();
     void beginStarManEndTransformation();
 
-    static constexpr float luigiTopSpeedRatio = 1.05f;
+    static constexpr float luigiTopSpeedRatio = 0.9f;
     static constexpr float luigiAccelerationRatio = 0.80f;
     static constexpr float luigiTractionRatio = 0.60f;
     static constexpr float luigiJumpSpeedRatio = 1.1f;
 
     float _baseMoveSpeed = 8.0f;
-    float _baseAcceleration = 128.0f;
-    float _baseTraction = 64.0f;
+    float _baseAcceleration = 256.0f;
+    float _baseTraction = 128.0f;
     float _baseJumpSpeed = 20.0f;
     std::unique_ptr<PlayerState> _state;
     std::unique_ptr<IAttackStrategy> _attackStrategy;

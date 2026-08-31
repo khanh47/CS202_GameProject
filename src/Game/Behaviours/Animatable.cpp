@@ -137,7 +137,12 @@ void Animatable::syncSpriteLayout(const sf::Vector2f& hitboxPixels, bool facingL
         return;
     }
 
-    _sprite->setOrigin({frameSize.x / 2.f, static_cast<float>(frameSize.y)});
+    // A vertically flipped sprite must anchor from its top texture edge so
+    // its world-space bounds remain above the object's feet.
+    const float originY = _visualScale.y < 0.0f
+        ? 0.0f
+        : static_cast<float>(frameSize.y);
+    _sprite->setOrigin({frameSize.x / 2.f, originY});
 
     _spriteOffsetY = hitboxPixels.y / 2.0f;
 

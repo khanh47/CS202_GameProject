@@ -12,12 +12,14 @@
 #include "Scene/ConcreteScene/SaveGameScene.h"
 #include "Scene/ConcreteScene/SettingsScene.h"
 #include "Scene/ConcreteScene/ScoreComputationScene.h"
+#include "Scene/ConcreteScene/LeaderboardScene.h"
 #include <iostream>
 
 SceneFactory::SceneFactory() {
     registerScene("MAIN_MENU", []() { return std::make_unique<MainMenuScene>(); });
     //registerScene("GAME_DATA", []() { return std::make_unique<MenuScene>("Load Game"); });
     registerScene("SETTINGS", []() { return std::make_unique<SettingsScene>(); });
+    registerScene("LEADERBOARD", []() { return std::make_unique<LeaderboardScene>(); });
     registerScene("MODE_SELECT", []() { return std::make_unique<ModeSelectScene>(); });
     registerScene("DEFAULT_GAME_MENU", []() { return std::make_unique<DefaultGameMenuScene>(); });
     registerScene("PLAYER_MODE_SELECT", []() { return std::make_unique<PlayerModeSelectScene>(); });

@@ -47,6 +47,7 @@ private:
     void openPauseMenu();
     void openSettings();
     void resumeGame();
+    void restartLevel();
     void saveGame();
     void requestReturn();
     void returnWithoutSaving();
