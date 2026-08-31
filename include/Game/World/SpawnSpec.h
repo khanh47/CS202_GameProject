@@ -51,6 +51,11 @@ struct SpawnSpec {
     int warpID = -1;
     int warpTarget = -1;
     bool contentsStatic = false;
+
+    // Optional motion configuration for Piranha Plant pipe contents.
+    std::string piranhaMotion = "timed";
+    float piranhaWavePeriod = 6.0f;
+    float piranhaWavePhase = 0.0f;
 };
 
 void from_json(const nlohmann::json& json, SpawnSpec& spec);

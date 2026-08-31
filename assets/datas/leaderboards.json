@@ -109,6 +109,14 @@
             "timeRemaining": 340
         },
         {
+            "character": "mario",
+            "coins": 76,
+            "date": "2026-08-31",
+            "playerName": "MARIO",
+            "score": 40200,
+            "timeRemaining": 384
+        },
+        {
             "character": "luigi",
             "coins": 42,
             "date": "2026-08-24",
@@ -126,19 +134,11 @@
         },
         {
             "character": "mario",
-            "coins": 28,
-            "date": "2026-08-27",
-            "playerName": "CHAMPION",
-            "score": 28000,
-            "timeRemaining": 270
-        },
-        {
-            "character": "mario",
-            "coins": 30,
+            "coins": 43,
             "date": "2026-08-31",
             "playerName": "MARIO",
-            "score": 24550,
-            "timeRemaining": 357
+            "score": 30450,
+            "timeRemaining": 392
         }
     ],
     "minigame": [
