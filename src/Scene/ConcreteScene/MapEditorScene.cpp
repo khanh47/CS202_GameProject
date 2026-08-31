@@ -129,8 +129,8 @@ MapEditorScene::MapEditorScene()
       _configScrollTrack({10.0f, ConfigViewportHeight}),
       _configScrollThumb({10.0f, 70.0f}) {
     _paletteEntries = {
-        {Category::Blocks, "Solid Brick", "brick", '#', sf::Color(183, 111, 46)},
-        {Category::Blocks, "Breakable Brick", "breakable_brick", 'b', sf::Color(215, 130, 55)},
+        {Category::Blocks, "Solid Brick", "brick", 'b', sf::Color(183, 111, 46)},
+        {Category::Blocks, "Breakable Brick", "breakable_brick", '#', sf::Color(215, 130, 55)},
         {Category::Blocks, "Ground", "terrain_grassland", 'A', sf::Color(70, 160, 86)},
         {Category::Blocks, "Coin Block", "block_coin", 'B', sf::Color(205, 157, 45)},
         {Category::Blocks, "Lucky Block", "block_lucky", '?', sf::Color(220, 175, 45)},

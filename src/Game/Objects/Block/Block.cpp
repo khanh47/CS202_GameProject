@@ -2,7 +2,6 @@
 #include "Game/Behaviours/ShellHoldBehaviour.h"
 #include "Audio/SoundManager.h"
 #include "Game/Objects/Player/Player.h"
-#include "Game/Objects/Player/State/NormalState.h"
 #include "Game/Behaviours/Animatable.h"
 #include "Game/World/GameWorld.h"
 #include <cmath>
@@ -106,12 +105,6 @@ bool Block::tryBreakOnContact(
     const bool highFallLanding = blockToPlayer.y <= -0.5f
         && player->hasFallenFromHighPlace();
     if (!hitFromBelow && !highFallLanding) {
-        return false;
-    }
-
-    // Small Mario (NormalState) cannot shatter bricks from below - he only bumps them!
-    // Super, Fire, Mega, and StarMan states can shatter breakable bricks.
-    if (hitFromBelow && dynamic_cast<NormalState*>(player->getState())) {
         return false;
     }
 

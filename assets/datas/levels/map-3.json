@@ -1,7 +1,8 @@
 {
     "tileMapping": {
         ".": "empty",
-        "#": "brick",
+        "#": "breakable_brick",
+        "b": "brick",
         "A": "terrain_underground",
         "X": "terrain_castle",
         "M": "player_mario",

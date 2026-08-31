@@ -1,8 +1,8 @@
 {
     "tileMapping": {
         ".": "empty",
-        "#": "brick",
-        "b": "breakable_brick",
+        "#": "breakable_brick",
+        "b": "brick",
         "M": "player_mario",
         "L": "player_luigi",
         "e": "enemy_goomba",
