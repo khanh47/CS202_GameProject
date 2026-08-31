@@ -36,8 +36,8 @@ public:
 
     // Target & Configuration
     void setTarget(std::shared_ptr<GameObject> target);
-    void setTargets(const std::vector<std::shared_ptr<GameObject>>& targets);
     std::shared_ptr<GameObject> getTarget() const { return _target; }
+    void setTargets(const std::vector<std::shared_ptr<GameObject>>& targets);
     void setConfig(const CameraConfig& config);
     CameraConfig& getConfig();
     const CameraConfig& getConfig() const;
@@ -55,7 +55,6 @@ public:
     void setCenter(const sf::Vector2f& center);
     void setSize(const sf::Vector2f& size);
     const sf::View& getView() const;
-    sf::FloatRect getViewBounds() const;
 
     // Debug Visualization
     void renderDebug(sf::RenderTarget& target) const;
@@ -65,10 +64,10 @@ private:
     std::shared_ptr<GameObject> _target;
     std::vector<std::shared_ptr<GameObject>> _targets;
     CameraConfig _config;
-    sf::Vector2f _baseSize{1920.0f, 1080.0f};
 
     sf::Vector2f _currentCenter{0.0f, 0.0f};
     sf::Vector2f _currentSize{0.0f, 0.0f};
+    sf::Vector2f _baseSize{0.0f, 0.0f};
     float _currentLookaheadX = 0.0f;
     float _freeMoveSpeed = 2000.0f;
 

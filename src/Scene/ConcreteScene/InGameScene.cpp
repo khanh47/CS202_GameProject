@@ -636,7 +636,6 @@ void InGameScene::updateSimulation(const float &fixedDt) {
     }
 
     _gameWorld.updateSimulation(fixedDt);
-    _gameWorld.enforceCameraScreenBounds(_camera.getViewBounds());
     if (GameSettings::getInstance().gameMode == GameMode::Minigame) {
         _checkMinigameResult();
     } else {
