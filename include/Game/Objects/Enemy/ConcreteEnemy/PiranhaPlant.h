@@ -14,6 +14,7 @@ public:
         sf::Vector2f hiddenPosition,
         sf::Vector2f emergedPosition
     );
+    void configureSineWave(float periodSeconds, float phaseOffset);
 
 protected:
     void onCreateBodyDef(b2BodyDef& def) override;
@@ -34,4 +35,8 @@ private:
     float _phaseTimer = 0.0f;
     sf::Vector2f _hiddenPosition{};
     sf::Vector2f _emergedPosition{};
+    bool _usesSineWave = false;
+    float _wavePeriodSeconds = 6.0f;
+    float _wavePhaseOffset = 0.0f;
+    float _waveElapsedSeconds = 0.0f;
 };

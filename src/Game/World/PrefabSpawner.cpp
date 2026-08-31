@@ -381,6 +381,12 @@ std::shared_ptr<GameObject> PrefabSpawner::spawnPipe(
                     contentObject
                 )) {
                 plant->setPipeTravel(hiddenPosition, emergedPosition);
+                if (content.piranhaMotion == "sine") {
+                    plant->configureSineWave(
+                        content.piranhaWavePeriod,
+                        content.piranhaWavePhase
+                    );
+                }
             }
         }
     }
