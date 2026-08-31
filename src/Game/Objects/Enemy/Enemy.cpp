@@ -62,9 +62,6 @@ bool Enemy::isBlockedAhead() const {
     }
 
     const int col = probeColumn();
-    if (col < 0) {
-        return false;
-    }
 
     const float centerY = getBodyPositionPixels().y;
     const float halfH = _hitboxPixels.y * 0.25f;

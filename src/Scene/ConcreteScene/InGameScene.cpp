@@ -435,8 +435,8 @@ void InGameScene::drawPauseButton(sf::RenderTarget& target) {
 void InGameScene::buildPauseMenu() {
     _pauseMenu.clear();
     _pauseMenu.setLayoutProperties(
-        {710.f, 260.f}, {500.f, 65.f}, 75.f, false,
-        sf::Color(100, 149, 237), 30
+        {820.f, 300.f}, {280.f, 60.f}, 80.f, false,
+        sf::Color(100, 149, 237), 36 
     );
     _pauseMenu.addMainMenuButtonAuto(
         "Resume",
@@ -479,8 +479,8 @@ void InGameScene::buildPauseMenu() {
 void InGameScene::buildReturnConfirmation() {
     _returnConfirmationMenu.clear();
     _returnConfirmationMenu.setLayoutProperties(
-        {660.f, 360.f}, {600.f, 65.f}, 80.f, false,
-        sf::Color(100, 149, 237), 28
+        {820.f, 300.f}, {280.f, 60.f}, 80.f, false,
+        sf::Color(100, 149, 237), 36 
     );
     _returnConfirmationMenu.addMainMenuButtonAuto(
         "Save and Quit",
@@ -550,9 +550,16 @@ void InGameScene::restartLevel() {
     _scoreManager.restoreState(0, 0, 3, _scoreManager.getHighScore(), 400.0f, 0, 3, 0, 0);
     _gameWorld.restoreCheckpoint(std::nullopt);
     _gameWorld.loadLevel(_name);
-    _camera.setCenter({1920.f / 2.f, _gameWorld.getGridHeight() * _gameWorld.getCellSize() - 1080.f / 2.f});
-    if (auto player = _gameWorld.getPrimaryPlayer()) {
+    const auto players = _gameWorld.getPlayers();
+    if (players.size() >= 2 && GameSettings::getInstance().gameMode != GameMode::Solo) {
+        std::vector<std::shared_ptr<GameObject>> targets;
+        targets.reserve(players.size());
+        for (const auto& p : players) targets.push_back(p);
+        _camera.setTargets(targets);
+    } else if (auto player = _gameWorld.getPrimaryPlayer()) {
         _camera.setTarget(player);
+    } else {
+        _camera.setCenter({1920.f / 2.f, _gameWorld.getGridHeight() * _gameWorld.getCellSize() - 1080.f / 2.f});
     }
     _scoreManager.setTimePaused(false);
     Audio::MusicManager::getInstance().play(
@@ -636,7 +643,6 @@ void InGameScene::updateSimulation(const float &fixedDt) {
     }
 
     _gameWorld.updateSimulation(fixedDt);
-    _gameWorld.enforceCameraScreenBounds(_camera.getViewBounds());
     if (GameSettings::getInstance().gameMode == GameMode::Minigame) {
         _checkMinigameResult();
     } else {
@@ -695,7 +701,6 @@ void InGameScene::updateVisuals(float deltaTime) {
         if (needsRebind) {
             _camera.setTarget(_gameWorld.getPrimaryPlayer());
         }
-        _camera.update(deltaTime);
     }
 
     _scoreManager.update(deltaTime);
