@@ -41,8 +41,8 @@ namespace {
 constexpr float highFallBreakDistancePixels =
     25.0f * PhysicsUnits::pixelsPerMeter;
 // With the player's current gravity scale, this is approximately the impact
-// speed reached after a 25-cell fall. Capture it before Box2D resolves contact.
-constexpr float highFallBreakVelocityPixelsPerSecond = 2800.0f;
+// speed reached after a 20-cell fall. Capture it before Box2D resolves contact.
+constexpr float highFallBreakVelocityPixelsPerSecond = 2400.0f;
 constexpr float pipeWarpDiveDurationSeconds = 0.65f;
 constexpr float pipeWarpTravelDurationSeconds = 0.35f;
 constexpr float pipeWarpLandingIdleDurationSeconds = 0.18f;
