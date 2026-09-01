@@ -47,6 +47,14 @@ public:
     bool spawnKoopaShell(sf::Vector2f spawnPos, bool facingRight);
     bool spawnKoopa(sf::Vector2f spawnPos, bool facingRight);
     bool tryWarpPlayer(Player& player);
+
+    struct LevelWarpRequest {
+        std::string targetLevel;
+        int targetWarpID = -1;
+        float delaySeconds = 0.70f;
+    };
+    std::optional<LevelWarpRequest> takeLevelWarpRequest();
+    bool emergePlayerFromPipe(int targetWarpID);
     void spawnBlockBreakEffect(
         sf::Vector2f position,
         sf::Vector2f blockSize,
@@ -109,6 +117,7 @@ private:
     float _freezeTimer = 0.0f;
     bool _levelCleared = false;
     std::shared_ptr<sf::Vector2f> _checkpointPos = nullptr;
+    std::optional<LevelWarpRequest> _pendingLevelWarp;
     std::uint64_t _nextRuntimeObjectId = 0;
     PhysicsWorld _physicsWorld;
     GameObjectFactory _objectFactory;

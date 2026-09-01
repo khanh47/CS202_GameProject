@@ -1,13 +1,15 @@
 {
+    "background": "parallax_sky",
+    "theme": "grassland",
+    "music": "ground_theme",
     "tileMapping": {
         ".": "empty",
-        "#": "breakable_brick",
-        "b": "brick",
         "M": "player_mario",
         "L": "player_luigi",
+        "#": "breakable_brick",
+        "b": "brick",
         "e": "enemy_goomba",
         "k": "enemy_koopa",
-        "f": "item_fire_flower",
         "c": "item_coin",
         "u": "item_super_mushroom",
         "i": "item_one_up_mushroom",
@@ -19,32 +21,287 @@
         "T": "item_checkpoint_flag",
         "H": "pipe_horizontal_right",
         "P": "pipe_warp_1",
-        "V": "pipe_vertical_bottom",
-        "Q": "pipe_warp_2",
+        "V": "pipe_basic",
+        "p": "pipe_piranha",
+        "E": "pipe_warp_4",
         "o": "item_mega_coin",
-        "A": "terrain_grassland",
-        "1": "slope_up_right_bottom",
-        "2": "slope_up_right_top",
-        "3": "slope_down_right_top",
-        "4": "slope_down_right_bottom"
+        "A": "terrain_grassland"
     },
     "layer": [
-        ".........o......H........Q....................................................................................................................................................................................................................................................................................",
-        ".....e..................####.....................................####.....................................####.....................................####.......................................................####.......................................................####.................................",
-        "....###..........f.......V.......i.u...............s.....ccc..................................................................................................................................................................................................................................................",
-        ".........ccc....###..............####........###.........###...............####.......###.........###..............G####.......###.........###...............####.......###...............###.........###...............####.......###...............###.........###...............####.......###.............",
-        ".........###B?.............................AA...........................AA..........AA...........................AA..........AA...........................AA..........AA........####...........###...................AA..........AA........####...........###...................AA..........AA........####....",
-        ".........................................AAAA........AA..............AAAAA.......AAAAA.........................AAAA........AAAA.........................AAAA........AAAA...........................................AAAA........AAAA...........................................AAAA........AAAA................",
-        ".P.MLcccccccccccccccccccccs.......ek...AAAAAA....D...AAAAA.........AAAAAAA.....AAAAAAA........Q...........AAAAAAAAA...AAAAAAAAA...................AAAAAAAAAA..AAAAA.AAAA.....................................AAAAAAAAAA..AAAAA.AAAA.....................................AAAAA.AAAA..AAAAA.AAAA................",
-        "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA....AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA."
+        "....................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................",
+        "....................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................",
+        "....................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................",
+        ".............................................................................................................................................................................................................................................................................................................................................................................................................................................................................................AAAAA..................",
+        "............................................................................................................................................................................................................................................................................................................................................................................................................................................................................................AAAAAA.c........bb....bb",
+        "................................................................................................................................................................................................................................................................................?..........................................................................................................................................................................................................AAAAAAA..c.......b.b.b.b.",
+        ".......................................................................................................................................................................................................................................................oc.....................bbbbb.......................................................................................................................................................................................................AAAAAAAA...c......bbbbbbbb",
+        "..........................................................c................................................................................................................................G.........................................................bbbbbb......................................................................................oc......................................o........................ccccccc..............................c.c...............................AAAAAAAAA....c.....bbbbbbbb",
+        ".................c........................................c...ccccccccccc...................................ccccccccc.............................c.c...................................bbbbbbb................c............................................................cc....cc.........................................................#b#b#b#b#.......................c?c.........b........................b#b#b#b............................?.#B#..............................AAAAAAAAAA..........bbbbbbbb",
+        "..............?.#?#?#.B.............................?.........#?#?#?#?#?#.......cc...........?..............bb#bbb#bb...........................?.#B#.?............oc.............................#######......b................oc.........................................bbbbbbbbbb.......................c.......?#B#...................................................bbbbbbb.....c...c...........................................................................................AAAAAAAAAAA..........bbbbbbbb",
+        "................................................................................AA....cc...........................................cc..............................AA.............................#######.....b.b...............AA....................####..................................ccccc..........bbb...................................................ccc...................b...b......ccc..........................................ccc............................oc......AAAAAAAAAAAA..........bbb..bbb",
+        ".............................cc................................................AAAA...bb..........................................AAAA...........................AAAAA............................#######.....................AAAAAA................b......b................................#####...............................................................AAAAA...........................AAAAAAA.......................................AAAAA.........................AAAAAA...AAAAAAAAAAAAA..........bbb..bbb",
+        "...M.L..................e...AAAA......V...e...p...k.......P.......e.e.....p...AAAAAA..............e.e.k...e.....k.......T.......AAAAAAAA..e.e.............k...AAAAAAAAAAA...e..k....E.....k..e....#######.............V.k...AAAAAAAAAA..V..e.e..T..............p..e.e.k.................p...#####..k..V.................e.e...V..k..p...................e.V...AAAAAAAAA.k.......e..k..........AAAAAAAAAAA..e.e..k.........T.......e..k...p..AAAAAAAAA........p...e..e..k..AAAAAAAAA.AAAAAAAAAAAAAA......D...bbb..bbb",
+        "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA....AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA.....AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA......AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA......AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA......AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA.......AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
     ],
-    "background": "parallax_sky",
+    "placements": [
+        {
+            "row": 9,
+            "column": 14,
+            "spec": {
+                "kind": "block",
+                "typeKey": "LuckyBlock",
+                "texture": "lucky_block_spritesheet",
+                "luckyTexture": "default",
+                "luckyCapacity": 1,
+                "luckyOptions": [
+                    {
+                        "item": "Coin",
+                        "weight": 6.0
+                    },
+                    {
+                        "item": "SuperMushroom",
+                        "weight": 4.0
+                    }
+                ]
+            }
+        },
+        {
+            "row": 9,
+            "column": 52,
+            "spec": {
+                "kind": "block",
+                "typeKey": "LuckyBlock",
+                "texture": "lucky_block_spritesheet",
+                "luckyTexture": "invisible",
+                "luckyCapacity": 1,
+                "luckyOptions": [
+                    {
+                        "item": "OneUpMushroom",
+                        "weight": 1.0
+                    }
+                ]
+            }
+        },
+        {
+            "row": 9,
+            "column": 93,
+            "spec": {
+                "kind": "block",
+                "typeKey": "LuckyBlock",
+                "texture": "lucky_block_spritesheet",
+                "luckyTexture": "default",
+                "luckyCapacity": 1,
+                "luckyOptions": [
+                    {
+                        "item": "SuperStar",
+                        "weight": 1.0
+                    }
+                ]
+            }
+        },
+        {
+            "row": 9,
+            "column": 144,
+            "spec": {
+                "kind": "block",
+                "typeKey": "LuckyBlock",
+                "texture": "lucky_block_spritesheet",
+                "luckyTexture": "default",
+                "luckyCapacity": 1,
+                "luckyOptions": [
+                    {
+                        "item": "SuperMushroom",
+                        "weight": 1.0
+                    }
+                ]
+            }
+        },
+        {
+            "row": 9,
+            "column": 147,
+            "spec": {
+                "kind": "block",
+                "typeKey": "CoinBlock",
+                "texture": "brick_spritesheet",
+                "animationId": "coin_block",
+                "size": [
+                    64,
+                    64
+                ],
+                "addSeamFilter": true,
+                "coinCapacity": 10
+            }
+        },
+        {
+            "row": 9,
+            "column": 150,
+            "spec": {
+                "kind": "block",
+                "typeKey": "LuckyBlock",
+                "texture": "lucky_block_spritesheet",
+                "luckyTexture": "default",
+                "luckyCapacity": 1,
+                "luckyOptions": [
+                    {
+                        "item": "FireFlower",
+                        "weight": 1.0
+                    }
+                ]
+            }
+        },
+        {
+            "row": 5,
+            "column": 272,
+            "spec": {
+                "kind": "block",
+                "typeKey": "LuckyBlock",
+                "texture": "lucky_block_spritesheet",
+                "luckyTexture": "default",
+                "luckyCapacity": 1,
+                "luckyOptions": [
+                    {
+                        "item": "SuperStar",
+                        "weight": 1.0
+                    }
+                ]
+            }
+        },
+        {
+            "row": 9,
+            "column": 308,
+            "spec": {
+                "kind": "block",
+                "typeKey": "LuckyBlock",
+                "texture": "lucky_block_spritesheet",
+                "luckyTexture": "default",
+                "luckyCapacity": 1,
+                "luckyOptions": [
+                    {
+                        "item": "FireFlower",
+                        "weight": 1.0
+                    }
+                ]
+            }
+        },
+        {
+            "row": 9,
+            "column": 22,
+            "spec": {
+                "kind": "block",
+                "typeKey": "CoinBlock",
+                "texture": "brick_spritesheet",
+                "animationId": "coin_block",
+                "size": [
+                    64,
+                    64
+                ],
+                "addSeamFilter": true,
+                "coinCapacity": 10
+            }
+        },
+        {
+            "row": 9,
+            "column": 310,
+            "spec": {
+                "kind": "block",
+                "typeKey": "CoinBlock",
+                "texture": "brick_spritesheet",
+                "animationId": "coin_block",
+                "size": [
+                    64,
+                    64
+                ],
+                "addSeamFilter": true,
+                "coinCapacity": 15
+            }
+        },
+        {
+            "row": 8,
+            "column": 366,
+            "spec": {
+                "kind": "block",
+                "typeKey": "LuckyBlock",
+                "texture": "lucky_block_spritesheet",
+                "luckyTexture": "default",
+                "luckyCapacity": 1,
+                "luckyOptions": [
+                    {
+                        "item": "SuperMushroom",
+                        "weight": 1.0
+                    }
+                ]
+            }
+        },
+        {
+            "row": 8,
+            "column": 437,
+            "spec": {
+                "kind": "block",
+                "typeKey": "LuckyBlock",
+                "texture": "lucky_block_spritesheet",
+                "luckyTexture": "default",
+                "luckyCapacity": 1,
+                "luckyOptions": [
+                    {
+                        "item": "SuperStar",
+                        "weight": 1.0
+                    }
+                ]
+            }
+        },
+        {
+            "row": 8,
+            "column": 440,
+            "spec": {
+                "kind": "block",
+                "typeKey": "CoinBlock",
+                "texture": "brick_spritesheet",
+                "animationId": "coin_block",
+                "size": [
+                    64,
+                    64
+                ],
+                "addSeamFilter": true,
+                "coinCapacity": 15
+            }
+        }
+    ],
     "prefabs": {
         "terrain_grassland": {
             "texture": "at_grassland",
             "solid": true,
             "autotile": "grassland_terrain",
             "addSeamFilter": true
+        },
+        "pipe_basic": {
+            "kind": "pipe",
+            "typeKey": "Pipe",
+            "texture": "pipes_spritesheet",
+            "size": [
+                128,
+                192
+            ],
+            "pipeOrientation": "vertical",
+            "pipeEndSide": "top",
+            "pipeBodyLength": 2,
+            "pipeIsWarp": false,
+            "addSeamFilter": true
+        },
+        "pipe_piranha": {
+            "kind": "pipe",
+            "typeKey": "Pipe",
+            "texture": "pipes_spritesheet",
+            "size": [
+                128,
+                192
+            ],
+            "pipeOrientation": "vertical",
+            "pipeEndSide": "top",
+            "pipeBodyLength": 2,
+            "pipeIsWarp": false,
+            "addSeamFilter": true,
+            "contentsStatic": false,
+            "contents": "enemy_piranha_plant"
         },
         "pipe_horizontal_right": {
             "kind": "pipe",
@@ -74,25 +331,10 @@
             "pipeIsWarp": true,
             "warpID": 1,
             "warpTarget": 2,
-            "addSeamFilter": true,
-            "contentsStatic": false,
-            "contents": "enemy_piranha_plant"
-        },
-        "pipe_vertical_bottom": {
-            "kind": "pipe",
-            "typeKey": "Pipe",
-            "texture": "pipes_spritesheet",
-            "size": [
-                128,
-                192
-            ],
-            "pipeOrientation": "vertical",
-            "pipeEndSide": "bottom",
-            "pipeBodyLength": 2,
-            "pipeIsWarp": false,
+            "warpLevel": "assets/datas/levels/map-1-bonus.json",
             "addSeamFilter": true
         },
-        "pipe_warp_2": {
+        "pipe_warp_4": {
             "kind": "pipe",
             "typeKey": "Pipe",
             "texture": "pipes_spritesheet",
@@ -104,57 +346,9 @@
             "pipeEndSide": "top",
             "pipeBodyLength": 3,
             "pipeIsWarp": true,
-            "warpID": 2,
-            "warpTarget": 1,
+            "warpID": 4,
+            "warpTarget": 3,
             "addSeamFilter": true
-        },
-        "slope_up_right_bottom": {
-            "kind": "block",
-            "typeKey": "SlopeBlock",
-            "texture": "at_grassland",
-            "autotile": "grassland_terrain",
-            "size": [
-                64,
-                64
-            ],
-            "addSeamFilter": true,
-            "slopeType": "up_right_bottom"
-        },
-        "slope_up_right_top": {
-            "kind": "block",
-            "typeKey": "SlopeBlock",
-            "texture": "at_grassland",
-            "autotile": "grassland_terrain",
-            "size": [
-                64,
-                64
-            ],
-            "addSeamFilter": true,
-            "slopeType": "up_right_top"
-        },
-        "slope_down_right_top": {
-            "kind": "block",
-            "typeKey": "SlopeBlock",
-            "texture": "at_grassland",
-            "autotile": "grassland_terrain",
-            "size": [
-                64,
-                64
-            ],
-            "addSeamFilter": true,
-            "slopeType": "down_right_top"
-        },
-        "slope_down_right_bottom": {
-            "kind": "block",
-            "typeKey": "SlopeBlock",
-            "texture": "at_grassland",
-            "autotile": "grassland_terrain",
-            "size": [
-                64,
-                64
-            ],
-            "addSeamFilter": true,
-            "slopeType": "down_right_bottom"
         }
     }
 }

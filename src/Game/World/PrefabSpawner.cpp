@@ -140,6 +140,7 @@ std::shared_ptr<GameObject> PrefabSpawner::spawnObjectAtPosition(
             auto block = _objectFactory.createBlock(spec.typeKey, texture);
             if (auto typedBlock = std::dynamic_pointer_cast<Block>(block)) {
                 typedBlock->setBreakable(spec.breakable);
+                typedBlock->setBrick(ThemeAssets::isBrickTextureAlias(spec.textureKey));
             }
             if (auto coinBlock = std::dynamic_pointer_cast<CoinBlock>(block)) {
                 coinBlock->setCapacity(spec.coinCapacity);
@@ -286,7 +287,8 @@ std::shared_ptr<GameObject> PrefabSpawner::spawnPipe(
         spec.pipeBodyLength,
         spec.pipeIsWarp,
         spec.warpID,
-        spec.warpTarget
+        spec.warpTarget,
+        spec.warpLevel
     );
     const std::string pipeCellId = gridSaveId(column, screenRow);
     pipe->setSaveId(

@@ -41,7 +41,8 @@ void drawPipeDebugRect(
 Pipe::Pipe() : GameObject() {}
 
 Pipe::Pipe(sf::Texture& texture, Orientation orientation, EndSide endSide,
-           int bodyLength, bool isWarp, int warpID, int warpTarget)
+           int bodyLength, bool isWarp, int warpID, int warpTarget,
+           std::string warpLevel)
     : GameObject(),
       _orientation(orientation),
       _endSide(endSide),
@@ -49,6 +50,7 @@ Pipe::Pipe(sf::Texture& texture, Orientation orientation, EndSide endSide,
       _isWarp(isWarp),
       _warpID(warpID),
       _warpTarget(warpTarget),
+      _warpLevel(std::move(warpLevel)),
       _texture(&texture) {
     buildVertexArray(kRenderTileSize);
 }

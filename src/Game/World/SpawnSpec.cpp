@@ -133,6 +133,7 @@ void from_json(const nlohmann::json& json, SpawnSpec& spec) {
     spec.pipeIsWarp = json.value("pipeIsWarp", false);
     spec.warpID = json.value("warpID", -1);
     spec.warpTarget = json.value("warpTarget", -1);
+    spec.warpLevel = json.value("warpLevel", "");
     spec.contentsStatic = json.value("contentsStatic", false);
     spec.piranhaMotion = json.value("piranhaMotion", "timed");
     spec.piranhaWavePeriod = json.value("piranhaWavePeriod", 6.0f);
