@@ -1146,7 +1146,6 @@ void InGameScene::_checkGameOver() {
 void InGameScene::_respawnPlayer() {
     _gameWorld.respawnPlayer();
     _gameWorld.setScoreManager(&_scoreManager);
-    _scoreManager.resetTime(400.0f);
     // Rebind camera tracking to the newly spawned player(s)
     const auto players = _gameWorld.getPlayers();
     if (players.size() >= 2 && GameSettings::getInstance().gameMode != GameMode::Solo) {
