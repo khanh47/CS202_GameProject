@@ -16,6 +16,8 @@ public:
 
     void setBreakable(bool breakable) noexcept { _breakable = breakable; }
     bool isBreakable() const noexcept { return _breakable; }
+    void setBrick(bool isBrick) noexcept { _isBrick = isBrick; }
+    bool isBrick() const noexcept { return _isBrick; }
     void setBreakEffectTexture(
         const sf::Texture* texture,
         sf::IntRect textureRect = {}
@@ -42,6 +44,7 @@ protected:
 
 private:
     bool _breakable = false;
+    bool _isBrick = false;
     float _bumpTimer = 0.0f;
     const sf::Texture* _breakTexture = nullptr;
     sf::IntRect _breakTextureRect{};

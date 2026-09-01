@@ -26,7 +26,8 @@ public:
 
     Pipe();
     Pipe(sf::Texture& texture, Orientation orientation, EndSide endSide,
-         int bodyLength, bool isWarp, int warpID, int warpTarget);
+         int bodyLength, bool isWarp, int warpID, int warpTarget,
+         std::string warpLevel = "");
     ~Pipe() override = default;
 
     Orientation getOrientation() const { return _orientation; }
@@ -35,6 +36,7 @@ public:
     bool isWarp() const { return _isWarp; }
     int getWarpID() const { return _warpID; }
     int getWarpTarget() const { return _warpTarget; }
+    const std::string& getWarpLevel() const noexcept { return _warpLevel; }
 
     void spawn(
         const PhysicsWorld& physicsWorld,
@@ -110,6 +112,7 @@ private:
     bool _isWarp = false;
     int _warpID = -1;
     int _warpTarget = -1;
+    std::string _warpLevel;
     sf::Texture* _texture = nullptr;
     sf::VertexArray _vertices{sf::PrimitiveType::Triangles};
     std::vector<Segment> _segments;

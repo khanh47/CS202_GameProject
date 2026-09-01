@@ -50,6 +50,7 @@ struct SpawnSpec {
     bool pipeIsWarp = false;
     int warpID = -1;
     int warpTarget = -1;
+    std::string warpLevel;
     bool contentsStatic = false;
 
     // Optional motion configuration for Piranha Plant pipe contents.

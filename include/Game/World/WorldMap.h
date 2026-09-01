@@ -91,6 +91,7 @@ private:
         int column,
         int screenRow,
         bool breakable,
+        bool isBrick,
         const sf::Texture* texture,
         sf::IntRect textureRect = {}
     );

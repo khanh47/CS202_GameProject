@@ -241,6 +241,7 @@ void WorldMap::rebuild(
                         column,
                         screenRow,
                         spec.breakable,
+                        isAnimatedBrick,
                         texture,
                         isAnimatedBrick
                             ? sf::IntRect({0, 0}, {64, 64})
@@ -423,6 +424,7 @@ void WorldMap::createTileCollision(
     int column,
     int screenRow,
     bool breakable,
+    bool isBrick,
     const sf::Texture* texture,
     sf::IntRect textureRect
 ) {
@@ -439,6 +441,7 @@ void WorldMap::createTileCollision(
         {_cellSize, _cellSize}
     );
     collisionTile->setBreakable(breakable);
+    collisionTile->setBrick(isBrick);
     collisionTile->setBreakEffectTexture(texture, textureRect);
     _terrainSeamFilter.addBlock(
         collisionTile,

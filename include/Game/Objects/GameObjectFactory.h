@@ -15,7 +15,7 @@ public:
     using AnimatedCreator = std::function<std::shared_ptr<GameObject>(sf::Texture* texture, const std::string& animationSetId)>;
     using PipeCreator = std::function<std::shared_ptr<GameObject>(
         sf::Texture* texture, const std::string& orientation, const std::string& endSide,
-        int bodyLength, bool isWarp, int warpID, int warpTarget)>;
+        int bodyLength, bool isWarp, int warpID, int warpTarget, const std::string& warpLevel)>;
 
     template<typename T>
     static std::shared_ptr<GameObject> createAnimated(sf::Texture* texture, const std::string& animId) {
@@ -44,7 +44,8 @@ public:
     std::shared_ptr<GameObject> createPipe(
         const std::string& key, sf::Texture* texture,
         const std::string& orientation, const std::string& endSide,
-        int bodyLength, bool isWarp, int warpID, int warpTarget) const;
+        int bodyLength, bool isWarp, int warpID, int warpTarget,
+        const std::string& warpLevel = "") const;
 private:
     std::unordered_map<std::string, AnimatedCreator> _playerCreators;
     std::unordered_map<std::string, Creator> _blockCreators;

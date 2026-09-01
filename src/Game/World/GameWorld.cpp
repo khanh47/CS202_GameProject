@@ -151,6 +151,10 @@ void GameWorld::updateSimulation(const float& fixedDt) {
 }
 
 void GameWorld::updateVisuals(float deltaTime) {
+    if (_pendingLevelWarp) {
+        _pendingLevelWarp->delaySeconds -= deltaTime;
+    }
+
     _worldMap.updateVisuals(deltaTime);
 
     bool pipeWarpActive = false;
@@ -444,6 +448,23 @@ bool GameWorld::tryWarpPlayer(Player& player) {
     }
     if (!source) return false;
 
+    if (!source->getWarpLevel().empty()) {
+        _pendingLevelWarp = LevelWarpRequest{
+            source->getWarpLevel(),
+            source->getWarpTarget(),
+            0.70f
+        };
+        const PipeWarpPoints sourcePoints = makePipeWarpPoints(*source, playerSize);
+        player.beginPipeWarp(
+            sourcePoints.outside,
+            sourcePoints.inside,
+            sourcePoints.inside,
+            sourcePoints.inside
+        );
+        freeze(Player::pipeWarpDurationSeconds);
+        return true;
+    }
+
     const Pipe* destination = nullptr;
     for (const auto& object : _objectStore.objects()) {
         const auto pipe = std::dynamic_pointer_cast<Pipe>(object);
@@ -468,6 +489,47 @@ bool GameWorld::tryWarpPlayer(Player& player) {
     if (!player.beginPipeWarp(
             sourcePoints.outside,
             sourcePoints.inside,
+            destinationPoints.inside,
+            destinationPoints.outside
+        )) {
+        return false;
+    }
+
+    freeze(Player::pipeWarpDurationSeconds);
+    return true;
+}
+
+std::optional<GameWorld::LevelWarpRequest> GameWorld::takeLevelWarpRequest() {
+    if (_pendingLevelWarp && _pendingLevelWarp->delaySeconds <= 0.0f) {
+        auto req = std::move(_pendingLevelWarp);
+        _pendingLevelWarp.reset();
+        return req;
+    }
+    return std::nullopt;
+}
+
+bool GameWorld::emergePlayerFromPipe(int targetWarpID) {
+    auto player = std::dynamic_pointer_cast<Player>(getPrimaryPlayer());
+    if (!player) return false;
+
+    const Pipe* destination = nullptr;
+    for (const auto& object : _objectStore.objects()) {
+        const auto pipe = std::dynamic_pointer_cast<Pipe>(object);
+        if (pipe && pipe->isWarp() && pipe->getWarpID() == targetWarpID) {
+            destination = pipe.get();
+            break;
+        }
+    }
+    if (!destination) return false;
+
+    const PipeWarpPoints destinationPoints = makePipeWarpPoints(
+        *destination,
+        player->getHitboxPixels()
+    );
+
+    if (!player->beginPipeWarp(
+            destinationPoints.inside,
+            destinationPoints.inside,
             destinationPoints.inside,
             destinationPoints.outside
         )) {

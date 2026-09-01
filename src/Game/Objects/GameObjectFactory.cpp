@@ -43,7 +43,7 @@ GameObjectFactory::GameObjectFactory() {
 
     registerPipe("Pipe", [](sf::Texture* texture, const std::string& orientationStr,
                             const std::string& endSideStr, int bodyLength, bool isWarp,
-                            int warpID, int warpTarget)
+                            int warpID, int warpTarget, const std::string& warpLevel)
         -> std::shared_ptr<GameObject> {
         // Parse orientation
         Pipe::Orientation orientation = Pipe::Orientation::Vertical;
@@ -58,7 +58,7 @@ GameObjectFactory::GameObjectFactory() {
         else if (endSideStr == "right") endSide = Pipe::EndSide::Right;
 
         if (texture) {
-            return std::make_shared<Pipe>(*texture, orientation, endSide, bodyLength, isWarp, warpID, warpTarget);
+            return std::make_shared<Pipe>(*texture, orientation, endSide, bodyLength, isWarp, warpID, warpTarget, warpLevel);
         }
         return std::make_shared<Pipe>();
     });
@@ -123,12 +123,13 @@ std::shared_ptr<GameObject> GameObjectFactory::createItem(const std::string& key
 std::shared_ptr<GameObject> GameObjectFactory::createPipe(
     const std::string& key, sf::Texture* texture,
     const std::string& orientation, const std::string& endSide,
-    int bodyLength, bool isWarp, int warpID, int warpTarget
+    int bodyLength, bool isWarp, int warpID, int warpTarget,
+    const std::string& warpLevel
 ) const {
     const auto it = _pipeCreators.find(key);
     if (it == _pipeCreators.end()) {
         throw std::runtime_error("Unknown pipe type: " + key);
     }
 
-    return it->second(texture, orientation, endSide, bodyLength, isWarp, warpID, warpTarget);
+    return it->second(texture, orientation, endSide, bodyLength, isWarp, warpID, warpTarget, warpLevel);
 }

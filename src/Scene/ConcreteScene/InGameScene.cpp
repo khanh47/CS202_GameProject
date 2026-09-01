@@ -155,7 +155,8 @@ InGameScene::InGameScene(
 )
     : Scene(name),
       _initialSaveState(std::move(initialSaveState)),
-      _returnToMapEditor(returnToMapEditor) {
+      _returnToMapEditor(returnToMapEditor),
+      _currentLoadedLevel(name) {
     _settingsPanel.setOnBack([this]() {
         _pauseOverlay = PauseOverlay::PauseMenu;
     });
@@ -550,6 +551,7 @@ void InGameScene::restartLevel() {
     _scoreManager.restoreState(0, 0, 3, _scoreManager.getHighScore(), 400.0f, 0, 3, 0, 0);
     _gameWorld.restoreCheckpoint(std::nullopt);
     _gameWorld.loadLevel(_name);
+    _currentLoadedLevel = _name;
     const auto players = _gameWorld.getPlayers();
     if (players.size() >= 2 && GameSettings::getInstance().gameMode != GameMode::Solo) {
         std::vector<std::shared_ptr<GameObject>> targets;
@@ -563,7 +565,7 @@ void InGameScene::restartLevel() {
     }
     _scoreManager.setTimePaused(false);
     Audio::MusicManager::getInstance().play(
-        levelThemeFor(_name, _gameWorld.getLevelMusic()),
+        levelThemeFor(_currentLoadedLevel, _gameWorld.getLevelMusic()),
         true
     );
 }
@@ -643,6 +645,11 @@ void InGameScene::updateSimulation(const float &fixedDt) {
     }
 
     _gameWorld.updateSimulation(fixedDt);
+
+    if (auto warpReq = _gameWorld.takeLevelWarpRequest()) {
+        executeSubRoomWarp(warpReq->targetLevel, warpReq->targetWarpID);
+    }
+
     if (GameSettings::getInstance().gameMode == GameMode::Minigame) {
         _checkMinigameResult();
     } else {
@@ -672,7 +679,7 @@ void InGameScene::updateVisuals(float deltaTime) {
         Audio::MusicManager::getInstance().play(
             starmanMusicShouldPlay
                 ? "starman_theme"
-                : levelThemeFor(_name, _gameWorld.getLevelMusic()),
+                : levelThemeFor(_currentLoadedLevel, _gameWorld.getLevelMusic()),
             true
         );
         _starmanMusicActive = starmanMusicShouldPlay;
@@ -1212,4 +1219,34 @@ void InGameScene::_drawGameOverOverlay(sf::RenderTarget& target) {
     _gameOverPrompt->setPosition({viewSize.x * 0.5f, viewSize.y * 0.93f});
     _gameOverPrompt->setFillColor(sf::Color(255, 255, 255, 235));
     target.draw(*_gameOverPrompt);
+}
+
+void InGameScene::executeSubRoomWarp(const std::string& targetLevel, int targetWarpID) {
+    std::string baseState = "normal";
+    float megaTime = 0.0f;
+    float starTime = 0.0f;
+    if (auto player = std::dynamic_pointer_cast<Player>(_gameWorld.getPrimaryPlayer())) {
+        baseState = player->getBaseStateNameForSave();
+        megaTime = player->getMegaStateTimeRemaining();
+        starTime = player->getStarManStateTimeRemaining();
+    }
+
+    _gameWorld.loadLevel(targetLevel);
+    _currentLoadedLevel = targetLevel;
+
+    if (auto player = std::dynamic_pointer_cast<Player>(_gameWorld.getPrimaryPlayer())) {
+        player->restoreSavedState(baseState, megaTime, starTime);
+    }
+
+    _gameWorld.emergePlayerFromPipe(targetWarpID);
+
+    CameraConfig config = _camera.getConfig();
+    config.levelBounds = _gameWorld.getBounds();
+    _camera.setConfig(config);
+    _camera.setTarget(_gameWorld.getPrimaryPlayer());
+
+    Audio::MusicManager::getInstance().play(
+        levelThemeFor(targetLevel, _gameWorld.getLevelMusic()),
+        true
+    );
 }

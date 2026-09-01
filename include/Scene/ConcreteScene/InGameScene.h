@@ -64,11 +64,13 @@ private:
     void _respawnPlayer();
     void _drawGameOverOverlay(sf::RenderTarget& target);
     void _drawWinOverlay(sf::RenderTarget& target);
+    void executeSubRoomWarp(const std::string& targetLevel, int targetWarpID);
 
     bool _winReactionActive = false;
     bool _gameOverActive = false;
     bool _winActive = false;
     bool _starmanMusicActive = false;
+    std::string _currentLoadedLevel;
     std::size_t _minigameParticipantCount = 0;
     std::shared_ptr<Player> _minigameWinner;
     std::optional<sf::Sprite> _gameOverOverlay;
