@@ -217,6 +217,8 @@ void InGameScene::init() {
     _gameWorld.loadLevel(_name);
     if (GameSettings::getInstance().gameMode == GameMode::Minigame) {
         _minigameParticipantCount = _gameWorld.getPlayers().size();
+        _scoreManager.setLives(1);
+        _scoreManager.setLuigiLives(1);
     }
     _gameWorld.setScoreManager(&_scoreManager); // Set score manager for the game world
     _scoreManager.setHighScore(LeaderboardManager::getInstance().getHighScore(_name));
@@ -553,6 +555,10 @@ void InGameScene::restartLevel() {
 
     _scoreManager.resetTime(400.0f);
     _scoreManager.restoreState(0, 0, 3, LeaderboardManager::getInstance().getHighScore(_name), 400.0f, 0, 3, 0, 0);
+    if (GameSettings::getInstance().gameMode == GameMode::Minigame) {
+        _scoreManager.setLives(1);
+        _scoreManager.setLuigiLives(1);
+    }
     _gameWorld.restoreCheckpoint(std::nullopt);
     _gameWorld.loadLevel(_name);
     _currentLoadedLevel = _name;
@@ -1120,22 +1126,54 @@ void InGameScene::_checkGameOver() {
         return;
     }
 
-    if (_gameWorld.hasLivingPlayers()) {
-        return;
-    }
-
     const bool isCoop = GameSettings::getInstance().gameMode == GameMode::Coop;
     if (isCoop) {
-        if (_scoreManager.getLives() > 0) {
-            _scoreManager.setLives(_scoreManager.getLives() - 1);
-        }
-        if (_scoreManager.getLuigiLives() > 0) {
-            _scoreManager.setLuigiLives(_scoreManager.getLuigiLives() - 1);
+        std::shared_ptr<Player> mario;
+        std::shared_ptr<Player> luigi;
+        for (const auto& p : _gameWorld.getPlayers()) {
+            if (p->getCharacter() == "mario") mario = p;
+            else if (p->getCharacter() == "luigi") luigi = p;
         }
 
-        if (_scoreManager.getLives() > 0 || _scoreManager.getLuigiLives() > 0) {
-            _respawnPlayer();
-        } else {
+        // Mario was eliminated and removed from active objects
+        if (!mario) {
+            int lives = _scoreManager.getLives() - 1;
+            if (_returnToMapEditor && lives <= 0) {
+                lives = 3;
+            }
+            _scoreManager.setLives(lives);
+            if (lives > 0) {
+                std::optional<sf::Vector2f> spawnPos;
+                if (luigi && !luigi->isEliminated()) {
+                    spawnPos = luigi->getPosition();
+                    spawnPos->y -= 20.0f;
+                }
+                _gameWorld.respawnPlayer("mario", spawnPos);
+                _gameWorld.setScoreManager(&_scoreManager);
+                _rebindCamera();
+            }
+        }
+
+        // Luigi was eliminated and removed from active objects
+        if (!luigi) {
+            int lives = _scoreManager.getLuigiLives() - 1;
+            if (_returnToMapEditor && lives <= 0) {
+                lives = 3;
+            }
+            _scoreManager.setLuigiLives(lives);
+            if (lives > 0) {
+                std::optional<sf::Vector2f> spawnPos;
+                if (mario && !mario->isEliminated()) {
+                    spawnPos = mario->getPosition();
+                    spawnPos->y -= 20.0f;
+                }
+                _gameWorld.respawnPlayer("luigi", spawnPos);
+                _gameWorld.setScoreManager(&_scoreManager);
+                _rebindCamera();
+            }
+        }
+
+        if (_scoreManager.getLives() <= 0 && _scoreManager.getLuigiLives() <= 0) {
             _gameOverActive = true;
             Audio::MusicManager::getInstance().play("game_over_music", false);
             if (_gameOverOverlay.has_value() && _gameOverTexture) {
@@ -1144,29 +1182,32 @@ void InGameScene::_checkGameOver() {
         }
     } else {
         const bool isLuigi = (GameSettings::getInstance().player1Character == "luigi");
-        int remainingLives = isLuigi ? (_scoreManager.getLuigiLives() - 1) : (_scoreManager.getLives() - 1);
-        if (isLuigi) {
-            _scoreManager.setLuigiLives(remainingLives);
-        } else {
-            _scoreManager.setLives(remainingLives);
-        }
+        const auto players = _gameWorld.getPlayers();
+        if (players.empty()) {
+            int remainingLives = isLuigi ? (_scoreManager.getLuigiLives() - 1) : (_scoreManager.getLives() - 1);
+            if (_returnToMapEditor && remainingLives <= 0) {
+                remainingLives = 3;
+            }
+            if (isLuigi) {
+                _scoreManager.setLuigiLives(remainingLives);
+            } else {
+                _scoreManager.setLives(remainingLives);
+            }
 
-        if (remainingLives > 0) {
-            _respawnPlayer();
-        } else {
-            _gameOverActive = true;
-            Audio::MusicManager::getInstance().play("game_over_music", false);
-            if (_gameOverOverlay.has_value() && _gameOverTexture) {
-                _gameOverOverlay->setTexture(*_gameOverTexture);
+            if (remainingLives > 0) {
+                _respawnPlayer();
+            } else {
+                _gameOverActive = true;
+                Audio::MusicManager::getInstance().play("game_over_music", false);
+                if (_gameOverOverlay.has_value() && _gameOverTexture) {
+                    _gameOverOverlay->setTexture(*_gameOverTexture);
+                }
             }
         }
     }
 }
 
-void InGameScene::_respawnPlayer() {
-    _gameWorld.respawnPlayer();
-    _gameWorld.setScoreManager(&_scoreManager);
-    // Rebind camera tracking to the newly spawned player(s)
+void InGameScene::_rebindCamera() {
     const auto players = _gameWorld.getPlayers();
     if (players.size() >= 2 && GameSettings::getInstance().gameMode != GameMode::Solo) {
         std::vector<std::shared_ptr<GameObject>> targets;
@@ -1176,6 +1217,12 @@ void InGameScene::_respawnPlayer() {
     } else if (auto player = _gameWorld.getPrimaryPlayer()) {
         _camera.setTarget(player);
     }
+}
+
+void InGameScene::_respawnPlayer() {
+    _gameWorld.respawnPlayer();
+    _gameWorld.setScoreManager(&_scoreManager);
+    _rebindCamera();
 }
 
 void InGameScene::_drawWinOverlay(sf::RenderTarget& target) {

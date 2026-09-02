@@ -286,7 +286,10 @@ void GameWorld::saveCheckpoint(sf::Vector2f position) {
     _checkpointPos = make_shared<sf::Vector2f>(position);
 }
 
-void GameWorld::respawnPlayer() {
+void GameWorld::respawnPlayer(
+    const std::string& targetCharacter,
+    std::optional<sf::Vector2f> customSpawnPos
+) {
     PrefabSpawner spawner(
         _physicsWorld,
         _objectFactory,
@@ -319,6 +322,11 @@ void GameWorld::respawnPlayer() {
             }
 
             const bool isLuigi = spec.animationId.find("luigi") != std::string::npos;
+            const std::string charName = isLuigi ? "luigi" : "mario";
+            if (!targetCharacter.empty() && targetCharacter != charName) {
+                continue;
+            }
+
             if (_scoreManager) {
                 if (isLuigi && _scoreManager->getLuigiLives() <= 0) {
                     continue;
@@ -328,12 +336,17 @@ void GameWorld::respawnPlayer() {
                 }
             }
 
+            std::optional<sf::Vector2f> spawnCoord = customSpawnPos;
+            if (!spawnCoord && _checkpointPos) {
+                spawnCoord = *_checkpointPos;
+            }
+
             const sf::Vector2f cellPosition = _worldMap.mapCellCenter(
                 column,
                 mapRow
             );
-            const std::shared_ptr<GameObject> object = _checkpointPos
-                ? spawner.spawnAtPosition(spec, *_checkpointPos)
+            const std::shared_ptr<GameObject> object = spawnCoord
+                ? spawner.spawnAtPosition(spec, *spawnCoord)
                 : spawner.spawnAtGrid(
                     spec,
                     column,
@@ -355,7 +368,7 @@ void GameWorld::respawnPlayer() {
                         )
                     )
                 );
-                object->addBehaviour<Invincible>(2.0f);
+                object->addBehaviour<Invincible>(3.0f);
                 if (auto player = std::dynamic_pointer_cast<Player>(object)) {
                     player->setGameWorld(*this);
                 }

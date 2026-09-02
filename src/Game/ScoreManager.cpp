@@ -186,6 +186,9 @@ void ScoreManager::renderHUD(
     PowerupBadge marioPowerup = PowerupBadge::None;
     PowerupBadge luigiPowerup = PowerupBadge::None;
 
+    bool marioAlive = false;
+    bool luigiAlive = false;
+
     if (gameWorld) {
         for (const auto& player : gameWorld->getPlayers()) {
             if (!player || player->isEliminated()) continue;
@@ -202,8 +205,10 @@ void ScoreManager::renderHUD(
 
             if (player->getCharacter() == "luigi") {
                 luigiPowerup = badge;
+                luigiAlive = true;
             } else {
                 marioPowerup = badge;
+                marioAlive = true;
             }
         }
     }
@@ -238,9 +243,9 @@ void ScoreManager::renderHUD(
 
     const GameMode mode = GameSettings::getInstance().gameMode;
 
-    if (mode == GameMode::Coop) {
+    if (mode == GameMode::Coop || mode == GameMode::Minigame) {
         // ===================================================================
-        // 2-PLAYER CO-OP HUD LAYOUT
+        // 2-PLAYER CO-OP & MINIGAME DUAL HUD LAYOUT
         // ===================================================================
         const float y = hudPosition.y;
 
@@ -271,7 +276,10 @@ void ScoreManager::renderHUD(
                 target.draw(head);
             }
 
-            sf::Text livesText(font, "x" + std::to_string(_marioLives), 26);
+            const int marioLives = (mode == GameMode::Minigame)
+                ? (marioAlive ? 1 : 0)
+                : _marioLives;
+            sf::Text livesText(font, "x" + std::to_string(marioLives), 26);
             livesText.setPosition({startX + 208.0f, y + 4.0f});
             livesText.setFillColor(sf::Color::White);
             livesText.setOutlineColor(sf::Color::Black);
@@ -325,7 +333,10 @@ void ScoreManager::renderHUD(
                 target.draw(head);
             }
 
-            sf::Text livesText(font, "x" + std::to_string(_luigiLives), 26);
+            const int luigiLives = (mode == GameMode::Minigame)
+                ? (luigiAlive ? 1 : 0)
+                : _luigiLives;
+            sf::Text livesText(font, "x" + std::to_string(luigiLives), 26);
             livesText.setPosition({startX + 208.0f, y + 4.0f});
             livesText.setFillColor(sf::Color::White);
             livesText.setOutlineColor(sf::Color::Black);
@@ -368,6 +379,24 @@ void ScoreManager::renderHUD(
             timeText.setOutlineColor(sf::Color::Black);
             timeText.setOutlineThickness(2.0f);
             target.draw(timeText);
+        }
+
+        // 4. SUDDEN DEATH BADGE (FOR MINIGAME MODE)
+        if (mode == GameMode::Minigame) {
+            const float startX = hudPosition.x + 1380.0f;
+            sf::Text duelHeader(font, "DUEL", 32);
+            duelHeader.setPosition({startX, y});
+            duelHeader.setFillColor(sf::Color(255, 215, 0));
+            duelHeader.setOutlineColor(sf::Color::Black);
+            duelHeader.setOutlineThickness(2.0f);
+            target.draw(duelHeader);
+
+            sf::Text duelSub(font, "SUDDEN DEATH", 20);
+            duelSub.setPosition({startX, y + 44.0f});
+            duelSub.setFillColor(sf::Color(255, 120, 120));
+            duelSub.setOutlineColor(sf::Color::Black);
+            duelSub.setOutlineThickness(2.0f);
+            target.draw(duelSub);
         }
     } else {
         // ===================================================================
