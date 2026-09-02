@@ -8,7 +8,6 @@
 #include "Game/Objects/Player/Player.h"
 #include "Game/Objects/Projectile/KoopaShell.h"
 #include "Game/World/GameWorld.h"
-#include "Game/GameSettings.h"
 
 namespace {
 bool aabbOverlap(
@@ -31,48 +30,10 @@ void ShellHoldBehaviour::updateSimulation(const float& fixedDt) {
     }
 
     if (_heldShell) {
-        if (_heldShell->isPendingDestroy()
-            || _heldShell->isDying()
-            || !_heldShell->getPhysicsBody()
-            || !_heldShell->getPhysicsBody()->isValid()) {
-            releaseShell(false);
-            return;
-        }
-
-        // Active poll: if Shift is no longer held, release and throw the shell immediately!
-        const bool physicalKeyPressed =
-            sf::Keyboard::isKeyPressed(sf::Keyboard::Key::LShift)
-            || sf::Keyboard::isKeyPressed(sf::Keyboard::Key::RShift)
-            || sf::Keyboard::isKeyPressed(GameSettings::getInstance().keyInteract)
-            || sf::Keyboard::isKeyPressed(GameSettings::getInstance().key2Interact);
-
-        if (!physicalKeyPressed) {
-            releaseShell(true);
-            return;
-        }
-
-        auto* player = dynamic_cast<Player*>(owner);
-        const bool facingRight = !(player && player->isFacingLeft());
-        const float facing = facingRight ? 1.0f : -1.0f;
-        const float forwardOffset =
-            owner->getHitboxPixels().x * 0.45f
-            + _heldShell->getHitboxPixels().x * 0.4f;
-        const sf::Vector2f holdPos = {
-            owner->getPosition().x + facing * forwardOffset,
-            owner->getPosition().y + 4.0f
-        };
-        _heldShell->setPosition(holdPos);
-        _heldShell->setFacingRight(facingRight);
         return;
     }
 
-    const bool shiftHeld = _interactHeld
-        || sf::Keyboard::isKeyPressed(sf::Keyboard::Key::LShift)
-        || sf::Keyboard::isKeyPressed(sf::Keyboard::Key::RShift)
-        || sf::Keyboard::isKeyPressed(GameSettings::getInstance().keyInteract)
-        || sf::Keyboard::isKeyPressed(GameSettings::getInstance().key2Interact);
-
-    if (shiftHeld) {
+    if (_interactHeld) {
         tryPickUpShell();
     }
 }
@@ -98,19 +59,22 @@ void ShellHoldBehaviour::updateVisuals(float deltaTime) {
         return;
     }
 
-    // Pin the shell in front of the player's hands at waist/torso height
-    auto* player = dynamic_cast<Player*>(owner);
-    const bool facingRight = !(player && player->isFacingLeft());
-    const float facing = facingRight ? 1.0f : -1.0f;
-    const float forwardOffset =
-        owner->getHitboxPixels().x * 0.45f
-        + _heldShell->getHitboxPixels().x * 0.4f;
-    const sf::Vector2f holdPos = {
-        owner->getPosition().x + facing * forwardOffset,
-        owner->getPosition().y + 4.0f
-    };
-    _heldShell->setPosition(holdPos);
-    _heldShell->setFacingRight(facingRight);
+    // Pin the shell to the player's post-physics head position so it never
+    // lags behind their movement. Held slightly lower than the head top for
+    // better visuals (shell floats in front of the player's body).
+    const float offsetY =
+        owner->getHitboxPixels().y * 0.5f
+        + _heldShell->getHitboxPixels().y * 0.5f;
+    const float lowerOffset = owner->getHitboxPixels().y * 0.15f;
+    _heldShell->setPosition({
+        owner->getPosition().x,
+        owner->getPosition().y - offsetY + lowerOffset
+    });
+
+    // Mirror the player's facing so the held shell flips with them.
+    if (auto* player = dynamic_cast<Player*>(owner)) {
+        _heldShell->setFacingRight(!player->isFacingLeft());
+    }
 }
 
 void ShellHoldBehaviour::tryPickUpShell() {
@@ -127,7 +91,6 @@ void ShellHoldBehaviour::tryPickUpShell() {
 
     const sf::Vector2f playerPos = owner->getPosition();
     const sf::Vector2f playerSize = owner->getHitboxPixels();
-    const sf::Vector2f querySize = {playerSize.x + 36.0f, playerSize.y + 12.0f};
 
     KoopaShell* best = nullptr;
     float bestDistance = 0.0f;
@@ -148,7 +111,7 @@ void ShellHoldBehaviour::tryPickUpShell() {
         }
 
         const sf::Vector2f shellPos = shell->getPosition();
-        if (!aabbOverlap(playerPos, querySize, shellPos, shell->getHitboxPixels())) {
+        if (!aabbOverlap(playerPos, playerSize, shellPos, shell->getHitboxPixels())) {
             continue;
         }
 
@@ -167,40 +130,10 @@ void ShellHoldBehaviour::tryPickUpShell() {
 }
 
 void ShellHoldBehaviour::holdShell(KoopaShell* shell) {
-    if (!shell) {
-        return;
-    }
     _heldShell = shell;
-    _interactHeld = true;
     _heldShell->setHeld(true);
     _heldShell->resetReviveTimer();
     _heldShell->stop();
-
-    auto* owner = getOwner();
-    if (owner) {
-        auto* player = dynamic_cast<Player*>(owner);
-        const bool facingRight = !(player && player->isFacingLeft());
-        const float facing = facingRight ? 1.0f : -1.0f;
-        const float forwardOffset =
-            owner->getHitboxPixels().x * 0.45f
-            + _heldShell->getHitboxPixels().x * 0.4f;
-        _heldShell->setPosition({
-            owner->getPosition().x + facing * forwardOffset,
-            owner->getPosition().y + 4.0f
-        });
-        _heldShell->setFacingRight(facingRight);
-    }
-}
-
-bool ShellHoldBehaviour::tryHoldContact(KoopaShell& shell) {
-    if (_heldShell) {
-        return false;
-    }
-    if (shell.isDying() || shell.isPendingDestroy()) {
-        return false;
-    }
-    holdShell(&shell);
-    return true;
 }
 
 void ShellHoldBehaviour::releaseShell(bool throwAway) {
@@ -210,12 +143,12 @@ void ShellHoldBehaviour::releaseShell(bool throwAway) {
 
     KoopaShell* shell = _heldShell;
     _heldShell = nullptr;
-    _interactHeld = false;
 
     if (!shell->isPendingDestroy()
         && !shell->isDying()
         && shell->getPhysicsBody()
         && shell->getPhysicsBody()->isValid()) {
+        shell->setHeld(false);
         if (throwAway) {
             auto* player = dynamic_cast<Player*>(getOwner());
             const bool facingRight = !(player && player->isFacingLeft());
@@ -226,21 +159,16 @@ void ShellHoldBehaviour::releaseShell(bool throwAway) {
                 const float clearDistance =
                     player->getHitboxPixels().x * 0.5f
                     + shell->getHitboxPixels().x * 0.5f
-                    + 16.0f;
-                const sf::Vector2f pos = player->getPosition();
-                shell->setPosition({pos.x + facing * clearDistance, pos.y + 4.0f});
+                    + 5.0f;
+                const sf::Vector2f pos = shell->getPosition();
+                shell->setPosition({pos.x + facing * clearDistance, pos.y});
             }
-            // Set throw immunity before restoring collision with player
-            shell->setThrowImmunity(0.5f);
-            shell->setHeld(false);
             shell->kick(facingRight);
             if (player) {
                 if (auto* animatable = player->getBehaviour<Animatable>()) {
                     animatable->playAnimation("throw", true);
                 }
             }
-        } else {
-            shell->setHeld(false);
         }
     }
 }
@@ -250,7 +178,7 @@ void ShellHoldBehaviour::setInteractHeld(bool held) {
         return;
     }
     _interactHeld = held;
-    if (!held && _heldShell) {
+    if (!held) {
         releaseShell(true);
     }
 }
