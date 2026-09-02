@@ -7,6 +7,7 @@
 #include <memory>
 #include <optional>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 #include "Game/Objects/GameObjectFactory.h"
@@ -40,7 +41,10 @@ public:
     void loadLevel(const std::string& levelPath);
     void loadMap(const LevelData& levelData);
     void saveCheckpoint(sf::Vector2f position);
-    void respawnPlayer();
+    void respawnPlayer(
+        const std::string& targetCharacter = "",
+        std::optional<sf::Vector2f> customSpawnPos = std::nullopt
+    );
     void reachFlagpole(sf::Vector2f position);
 
     bool spawnFireball(sf::Vector2f spawnPos, bool facingRight, int playerIndex);

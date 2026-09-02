@@ -62,6 +62,7 @@ private:
     void _checkWin();
     void _checkMinigameResult();
     void _respawnPlayer();
+    void _rebindCamera();
     void _drawGameOverOverlay(sf::RenderTarget& target);
     void _drawWinOverlay(sf::RenderTarget& target);
     void executeSubRoomWarp(const std::string& targetLevel, int targetWarpID);
