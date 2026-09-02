@@ -205,6 +205,9 @@ void GameSettings::load() {
     keyMoveDown = static_cast<sf::Keyboard::Key>(j.value("keyMoveDown", static_cast<int>(keyMoveDown)));
     keyAttack = static_cast<sf::Keyboard::Key>(j.value("keyAttack", static_cast<int>(keyAttack)));
     keyInteract = static_cast<sf::Keyboard::Key>(j.value("keyInteract", static_cast<int>(keyInteract)));
+    if (static_cast<int>(keyInteract) == 57) {
+        keyInteract = sf::Keyboard::Key::LShift;
+    }
     keyToggleFlyMode = static_cast<sf::Keyboard::Key>(j.value("keyToggleFlyMode", static_cast<int>(keyToggleFlyMode)));
 
     key2MoveLeft = static_cast<sf::Keyboard::Key>(j.value("key2MoveLeft", static_cast<int>(key2MoveLeft)));
@@ -213,6 +216,9 @@ void GameSettings::load() {
     key2MoveDown = static_cast<sf::Keyboard::Key>(j.value("key2MoveDown", static_cast<int>(key2MoveDown)));
     key2Attack = static_cast<sf::Keyboard::Key>(j.value("key2Attack", static_cast<int>(key2Attack)));
     key2Interact = static_cast<sf::Keyboard::Key>(j.value("key2Interact", static_cast<int>(key2Interact)));
+    if (static_cast<int>(key2Interact) == 42) {
+        key2Interact = sf::Keyboard::Key::RShift;
+    }
     key2ToggleFlyMode = static_cast<sf::Keyboard::Key>(j.value("key2ToggleFlyMode", static_cast<int>(key2ToggleFlyMode)));
 
     musicEnabled = j.value("musicEnabled", musicEnabled);

@@ -140,6 +140,16 @@ void PlayerController::syncStateWithKeyboard() {
         }
     }
 
+    if (_controlScheme == ControlScheme::Wasd) {
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::LShift)) {
+            interactPressed = true;
+        }
+    } else {
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::RShift)) {
+            interactPressed = true;
+        }
+    }
+
     _player.setInteractHeld(interactPressed);
     _player.setMoveUpHeld(moveUpPressed);
     _player.setMoveDownHeld(moveDownPressed);

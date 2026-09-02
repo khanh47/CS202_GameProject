@@ -26,6 +26,8 @@ public:
     bool isHeld() const { return _held; }
     bool isDying() const { return _isDying; }
     void resetReviveTimer() { _stopTimer = 0.0f; }
+    bool hasThrowImmunity() const { return _throwImmunityTimer > 0.0f; }
+    void setThrowImmunity(float duration = 0.5f) { _throwImmunityTimer = duration; }
 
     void updateSimulation(const float& fixedDt) override;
     void onContact(GameObject& other, const b2ContactData& contactData, b2ShapeId ownShape) override;
@@ -48,6 +50,7 @@ private:
     bool _isDying = false;
     float _deathTimer = 0.0f;
     float _stopTimer = 0.0f;
+    float _throwImmunityTimer = 0.0f;
 
     b2Filter _savedFilter = {};
     bool _hasSavedFilter = false;

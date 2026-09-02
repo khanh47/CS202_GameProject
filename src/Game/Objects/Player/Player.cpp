@@ -864,18 +864,36 @@ void Player::handleShellContact(
 
     if (!b2Shape_IsValid(ownShape)) return;
 
-    if (isTopContact(contactData, ownShape)) {
-        if (shell.isSliding()) shell.stop();
-        else shell.kick(!isFacingLeft());
-        bounce();
-    } else if (shell.isSliding() && _state) {
-        _state->handleEnemy(*this);
-    } else {
-        if (auto* hold = getBehaviour<ShellHoldBehaviour>()) {
-            if (hold->tryHoldContact(shell)) {
-                return;
-            }
+    // Check if player is holding Shift/Carry key to pick up or catch the shell
+    auto* hold = getBehaviour<ShellHoldBehaviour>();
+    const bool isShiftHeld = (hold && hold->isInteractHeld())
+        || sf::Keyboard::isKeyPressed(sf::Keyboard::Key::LShift)
+        || sf::Keyboard::isKeyPressed(sf::Keyboard::Key::RShift)
+        || sf::Keyboard::isKeyPressed(GameSettings::getInstance().keyInteract)
+        || sf::Keyboard::isKeyPressed(GameSettings::getInstance().key2Interact);
+
+    if (isShiftHeld && hold && !hold->isHoldingShell()) {
+        if (hold->tryHoldContact(shell)) {
+            return;
         }
+    }
+
+    if (isTopContact(contactData, ownShape)) {
+        if (shell.isSliding()) {
+            shell.stop();
+        }
+        bounce();
+        return;
+    }
+
+    if (shell.isSliding()) {
+        if (shell.hasThrowImmunity()) {
+            return;
+        }
+        if (_state) {
+            _state->handleEnemy(*this);
+        }
+    } else {
         shell.kick(!isFacingLeft());
     }
 }
