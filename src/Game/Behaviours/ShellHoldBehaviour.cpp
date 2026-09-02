@@ -8,6 +8,7 @@
 #include "Game/Objects/Player/Player.h"
 #include "Game/Objects/Projectile/KoopaShell.h"
 #include "Game/World/GameWorld.h"
+#include "Game/GameSettings.h"
 
 namespace {
 bool aabbOverlap(
@@ -38,6 +39,18 @@ void ShellHoldBehaviour::updateSimulation(const float& fixedDt) {
             return;
         }
 
+        // Active poll: if Shift is no longer held, release and throw the shell immediately!
+        const bool physicalKeyPressed =
+            sf::Keyboard::isKeyPressed(sf::Keyboard::Key::LShift)
+            || sf::Keyboard::isKeyPressed(sf::Keyboard::Key::RShift)
+            || sf::Keyboard::isKeyPressed(GameSettings::getInstance().keyInteract)
+            || sf::Keyboard::isKeyPressed(GameSettings::getInstance().key2Interact);
+
+        if (!physicalKeyPressed) {
+            releaseShell(true);
+            return;
+        }
+
         auto* player = dynamic_cast<Player*>(owner);
         const bool facingRight = !(player && player->isFacingLeft());
         const float facing = facingRight ? 1.0f : -1.0f;
@@ -55,7 +68,9 @@ void ShellHoldBehaviour::updateSimulation(const float& fixedDt) {
 
     const bool shiftHeld = _interactHeld
         || sf::Keyboard::isKeyPressed(sf::Keyboard::Key::LShift)
-        || sf::Keyboard::isKeyPressed(sf::Keyboard::Key::RShift);
+        || sf::Keyboard::isKeyPressed(sf::Keyboard::Key::RShift)
+        || sf::Keyboard::isKeyPressed(GameSettings::getInstance().keyInteract)
+        || sf::Keyboard::isKeyPressed(GameSettings::getInstance().key2Interact);
 
     if (shiftHeld) {
         tryPickUpShell();
@@ -112,7 +127,7 @@ void ShellHoldBehaviour::tryPickUpShell() {
 
     const sf::Vector2f playerPos = owner->getPosition();
     const sf::Vector2f playerSize = owner->getHitboxPixels();
-    const sf::Vector2f querySize = {playerSize.x + 20.0f, playerSize.y};
+    const sf::Vector2f querySize = {playerSize.x + 36.0f, playerSize.y + 12.0f};
 
     KoopaShell* best = nullptr;
     float bestDistance = 0.0f;
@@ -156,6 +171,7 @@ void ShellHoldBehaviour::holdShell(KoopaShell* shell) {
         return;
     }
     _heldShell = shell;
+    _interactHeld = true;
     _heldShell->setHeld(true);
     _heldShell->resetReviveTimer();
     _heldShell->stop();
@@ -180,13 +196,7 @@ bool ShellHoldBehaviour::tryHoldContact(KoopaShell& shell) {
     if (_heldShell) {
         return false;
     }
-    const bool shiftHeld = _interactHeld
-        || sf::Keyboard::isKeyPressed(sf::Keyboard::Key::LShift)
-        || sf::Keyboard::isKeyPressed(sf::Keyboard::Key::RShift);
-    if (!shiftHeld) {
-        return false;
-    }
-    if (shell.isSliding() || shell.isDying() || shell.isPendingDestroy()) {
+    if (shell.isDying() || shell.isPendingDestroy()) {
         return false;
     }
     holdShell(&shell);
@@ -200,12 +210,12 @@ void ShellHoldBehaviour::releaseShell(bool throwAway) {
 
     KoopaShell* shell = _heldShell;
     _heldShell = nullptr;
+    _interactHeld = false;
 
     if (!shell->isPendingDestroy()
         && !shell->isDying()
         && shell->getPhysicsBody()
         && shell->getPhysicsBody()->isValid()) {
-        shell->setHeld(false);
         if (throwAway) {
             auto* player = dynamic_cast<Player*>(getOwner());
             const bool facingRight = !(player && player->isFacingLeft());
@@ -216,16 +226,21 @@ void ShellHoldBehaviour::releaseShell(bool throwAway) {
                 const float clearDistance =
                     player->getHitboxPixels().x * 0.5f
                     + shell->getHitboxPixels().x * 0.5f
-                    + 10.0f;
+                    + 16.0f;
                 const sf::Vector2f pos = player->getPosition();
                 shell->setPosition({pos.x + facing * clearDistance, pos.y + 4.0f});
             }
+            // Set throw immunity before restoring collision with player
+            shell->setThrowImmunity(0.5f);
+            shell->setHeld(false);
             shell->kick(facingRight);
             if (player) {
                 if (auto* animatable = player->getBehaviour<Animatable>()) {
                     animatable->playAnimation("throw", true);
                 }
             }
+        } else {
+            shell->setHeld(false);
         }
     }
 }

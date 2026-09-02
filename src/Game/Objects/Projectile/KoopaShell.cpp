@@ -97,6 +97,10 @@ void KoopaShell::updateSimulation(const float& fixedDt) {
         return;
     }
 
+    if (_throwImmunityTimer > 0.0f) {
+        _throwImmunityTimer = std::max(0.0f, _throwImmunityTimer - fixedDt);
+    }
+
     auto* animatable = getBehaviour<Animatable>();
 
     if (_isDying) {
