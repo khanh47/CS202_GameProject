@@ -170,6 +170,23 @@ void SceneManager::requestReturnToMainMenu() {
     });
 }
 
+void SceneManager::requestReturnToMapEditor() {
+    requestDeferredAction([this]() {
+        while (!_sceneStack.empty()
+               && _sceneStack.top()->getName() != "MapEditorScene") {
+            if (_sceneStack.size() == 1) {
+                break;
+            }
+            popScene();
+        }
+
+        if (_sceneStack.empty()
+            || _sceneStack.top()->getName() != "MapEditorScene") {
+            pushSceneByName("MAP_EDITOR");
+        }
+    });
+}
+
 void SceneManager::processEvents(const sf::Event& event) {
     if (!_sceneStack.empty()) {
         auto &currentScene = _sceneStack.top();

@@ -34,8 +34,8 @@ void LeaderboardScene::setupUI() {
     // 1. Horizontal Tabs Menu
     _tabMenu.clear();
     _tabMenu.setLayoutProperties(
-        {360.f, 130.f}, {280.f, 50.f}, 310.f, true,
-        sf::Color(45, 75, 115), 24
+        {320.f, 130.f}, {240.f, 50.f}, 260.f, true,
+        sf::Color(45, 75, 115), 22
     );
 
     _tabMenu.addButtonAuto(
@@ -53,6 +53,10 @@ void LeaderboardScene::setupUI() {
     _tabMenu.addButtonAuto(
         "Minigames",
         std::make_unique<FunctionalCommand>("MG", [this]() { selectTab("minigame"); })
+    );
+    _tabMenu.addButtonAuto(
+        "Custom Map",
+        std::make_unique<FunctionalCommand>("CM", [this]() { selectTab("custom-map"); })
     );
 
     // 2. Back Button at Bottom Center
@@ -82,7 +86,7 @@ void LeaderboardScene::selectTab(const std::string& levelKey) {
 }
 
 void LeaderboardScene::updateTabStyles() {
-    const std::vector<std::string> keys = {"map-1", "map-2", "map-3", "minigame"};
+    const std::vector<std::string> keys = {"map-1", "map-2", "map-3", "minigame", "custom-map"};
     for (size_t i = 0; i < keys.size(); ++i) {
         if (auto btn = _tabMenu.getButton(i)) {
             if (keys[i] == _selectedLevelKey) {

@@ -24,6 +24,7 @@ public:
     void requestPopScene();
     void requestReturnToModeMenu();
     void requestReturnToMainMenu();
+    void requestReturnToMapEditor();
 
     // Main loop
     void processEvents(const sf::Event& event);

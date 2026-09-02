@@ -217,7 +217,7 @@ void ScoreComputationScene::_finishTallyInstantly() {
 void ScoreComputationScene::_onContinue() {
     if (auto* mgr = getSceneManager()) {
         if (_data.returnToMapEditor) {
-            mgr->requestPopScene();
+            mgr->requestReturnToMapEditor();
         } else {
             mgr->requestReturnToModeMenu();
         }
