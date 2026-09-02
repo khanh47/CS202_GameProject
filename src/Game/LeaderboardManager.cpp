@@ -33,6 +33,9 @@ std::string normalizeKey(const std::string& key) {
     if (key.find("map-3") != std::string::npos || key.find("Level 3") != std::string::npos || key.find("map3") != std::string::npos) {
         return "map-3";
     }
+    if (key.find("custom-map") != std::string::npos || key.find("Custom Map") != std::string::npos || key.find("custom") != std::string::npos) {
+        return "custom-map";
+    }
     if (key.find("minigame") != std::string::npos) {
         return "minigame";
     }
@@ -77,6 +80,12 @@ void LeaderboardManager::seedDefaults() {
         {"mario", "MARIO", 15000, 50, 60, "2026-08-28"},
         {"luigi", "LUIGI", 12000, 40, 60, "2026-08-29"}
     };
+
+    _leaderboards["custom-map"] = {
+        {"mario", "BUILDER", 20000, 25, 200, "2026-08-30"},
+        {"luigi", "CREATOR", 15000, 18, 180, "2026-08-31"},
+        {"mario", "PLAYER 1", 10000, 12, 150, "2026-09-01"}
+    };
 }
 
 void LeaderboardManager::load(const std::string& filepath) {
@@ -112,6 +121,13 @@ void LeaderboardManager::load(const std::string& filepath) {
 
         if (_leaderboards.empty()) {
             seedDefaults();
+            save(filepath);
+        } else if (_leaderboards.find("custom-map") == _leaderboards.end()) {
+            _leaderboards["custom-map"] = {
+                {"mario", "BUILDER", 20000, 25, 200, "2026-08-30"},
+                {"luigi", "CREATOR", 15000, 18, 180, "2026-08-31"},
+                {"mario", "PLAYER 1", 10000, 12, 150, "2026-09-01"}
+            };
             save(filepath);
         }
     } catch (const std::exception& e) {

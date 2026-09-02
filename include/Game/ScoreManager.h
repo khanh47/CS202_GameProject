@@ -84,6 +84,7 @@ public:
     int getCoins() const { return _marioCoins; }
     int getLives() const { return _marioLives; }
     int getHighScore() const { return _highScore; }
+    void setHighScore(int score) { _highScore = std::max(0, score); }
     void setLives(int lives) { _marioLives = std::max(0, lives); }
     void setCoins(int coins) { _marioCoins = std::max(0, coins); }
 

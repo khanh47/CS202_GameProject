@@ -2239,7 +2239,7 @@ MapEditorScene::PreviewSpec MapEditorScene::previewSpecFor(
     spec.textureKey = "mario_and_items";
     spec.size = {CellSize, CellSize};
 
-    if (entry.prefabId == "brick") {
+    if (entry.prefabId == "brick" || entry.prefabId == "breakable_brick") {
         spec.textureKey = ThemeAssets::brickTextureAlias(_themeKey);
         spec.animationId = "brick";
     } else if (entry.prefabId == "terrain_grassland") {
@@ -2971,23 +2971,6 @@ bool MapEditorScene::canPlayMap() {
         return false;
     }
 
-    const GameSettings& settings = GameSettings::getInstance();
-    if (settings.gameMode == GameMode::Solo) {
-        const bool selectedPlayerIsPresent =
-            settings.player1Character == "luigi" ? hasLuigi : hasMario;
-        if (!selectedPlayerIsPresent) {
-            const std::string availablePlayer = hasLuigi
-                ? "Luigi"
-                : "Mario";
-            setStatus(
-                "Select " + availablePlayer
-                + " before playing this one-player map",
-                sf::Color(255, 180, 120)
-            );
-            return false;
-        }
-    }
-
     return true;
 }
 
@@ -3121,6 +3104,8 @@ bool MapEditorScene::saveMap() {
     document["tileMapping"] = std::move(tileMapping);
     document["layer"] = std::move(layer);
     document["theme"] = _themeKey;
+    document["background"] = _themeKey == "underground" ? "parallax_underground" : "parallax_sky";
+    document["music"] = _themeKey == "underground" ? "underground_theme" : "ground_theme";
     json placements = json::array();
     for (std::size_t index = 0; index < _cellPlacements.size(); ++index) {
         if (!_cellPlacements[index].has_value()) {
@@ -3246,15 +3231,31 @@ bool MapEditorScene::saveMap() {
             std::filesystem::create_directories(path.parent_path());
         }
 
+        const std::string dumpedJson = document.dump(4) + "\n";
+
         std::ofstream output(path);
         if (!output) {
             setStatus("Could not open custom-map.json", sf::Color(255, 130, 130));
             return false;
         }
-        output << document.dump(4) << '\n';
+        output << dumpedJson;
         if (!output) {
             setStatus("Could not write custom-map.json", sf::Color(255, 130, 130));
             return false;
+        }
+
+        std::vector<std::filesystem::path> mirrorPaths = {
+            "build/assets/datas/levels/custom-map.json",
+            "../assets/datas/levels/custom-map.json",
+            "assets/datas/levels/custom-map.json"
+        };
+        for (const auto& mp : mirrorPaths) {
+            if (mp != path && std::filesystem::exists(mp.parent_path())) {
+                std::ofstream mOut(mp);
+                if (mOut) {
+                    mOut << dumpedJson;
+                }
+            }
         }
     } catch (const std::exception& error) {
         setStatus(
@@ -3276,6 +3277,22 @@ void MapEditorScene::saveAndPlay() {
 
     if (!saveMap()) {
         return;
+    }
+
+    const bool hasMario = std::find(_cells.begin(), _cells.end(), 'M')
+        != _cells.end();
+    const bool hasLuigi = std::find(_cells.begin(), _cells.end(), 'L')
+        != _cells.end();
+
+    auto& settings = GameSettings::getInstance();
+    if (hasMario && hasLuigi) {
+        settings.gameMode = GameMode::Coop;
+    } else if (hasLuigi) {
+        settings.gameMode = GameMode::Solo;
+        settings.player1Character = "luigi";
+    } else {
+        settings.gameMode = GameMode::Solo;
+        settings.player1Character = "mario";
     }
 
     if (auto* manager = getSceneManager()) {

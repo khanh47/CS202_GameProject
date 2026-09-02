@@ -37,6 +37,7 @@
 #include "Audio/SoundManager.h"
 #include "Scene/SceneManager.h"
 #include "Game/GameSettings.h"
+#include "Game/LeaderboardManager.h"
 #include <iostream>
 
 namespace {
@@ -218,6 +219,7 @@ void InGameScene::init() {
         _minigameParticipantCount = _gameWorld.getPlayers().size();
     }
     _gameWorld.setScoreManager(&_scoreManager); // Set score manager for the game world
+    _scoreManager.setHighScore(LeaderboardManager::getInstance().getHighScore(_name));
     if (_initialSaveState) {
         restoreSaveState(*_initialSaveState);
     }
@@ -309,6 +311,8 @@ void InGameScene::handleInput(const sf::Event& event) {
                 summary.levelName = "WORLD 2 - UNDERGROUND";
             } else if (_name.find("map-3") != std::string::npos) {
                 summary.levelName = "WORLD 3 - CASTLE";
+            } else if (_name.find("custom-map") != std::string::npos) {
+                summary.levelName = "CUSTOM MAP";
             } else {
                 summary.levelName = "LEVEL RESULTS";
             }
@@ -329,7 +333,7 @@ void InGameScene::handleInput(const sf::Event& event) {
                 summary.livesRemaining = std::max(0, _scoreManager.getLives());
             }
             summary.timeRemaining = _scoreManager.getIntTimeRemaining();
-            summary.highScore = _scoreManager.getHighScore();
+            summary.highScore = LeaderboardManager::getInstance().getHighScore(_name);
             summary.returnToMapEditor = _returnToMapEditor;
 
             if (auto* manager = getSceneManager()) {
@@ -548,7 +552,7 @@ void InGameScene::restartLevel() {
     _starmanMusicActive = false;
 
     _scoreManager.resetTime(400.0f);
-    _scoreManager.restoreState(0, 0, 3, _scoreManager.getHighScore(), 400.0f, 0, 3, 0, 0);
+    _scoreManager.restoreState(0, 0, 3, LeaderboardManager::getInstance().getHighScore(_name), 400.0f, 0, 3, 0, 0);
     _gameWorld.restoreCheckpoint(std::nullopt);
     _gameWorld.loadLevel(_name);
     _currentLoadedLevel = _name;
@@ -581,7 +585,7 @@ void InGameScene::requestReturn() {
     if (auto* manager = getSceneManager()) {
         if (_returnToMapEditor) {
             _suppressExitSnapshot = true;
-            manager->requestPopScene();
+            manager->requestReturnToMapEditor();
         } else if (GameSettings::getInstance().gameMode == GameMode::Minigame) {
             _suppressExitSnapshot = true;
             manager->requestReturnToMainMenu();
@@ -1043,6 +1047,15 @@ void InGameScene::_checkWin() {
     }
 
     if (!_gameWorld.hasWon()) {
+        if (_name.find("custom-map") != std::string::npos) {
+            if (auto player = _gameWorld.getPrimaryPlayer()) {
+                const float levelEndThreshold = static_cast<float>(_gameWorld.getGridWidth() - 2) * _gameWorld.getCellSize();
+                if (player->getPosition().x >= levelEndThreshold) {
+                    _gameWorld.reachFlagpole(player->getPosition());
+                    return;
+                }
+            }
+        }
         return;
     }
 
