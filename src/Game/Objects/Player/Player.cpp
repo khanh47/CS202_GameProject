@@ -871,6 +871,11 @@ void Player::handleShellContact(
     } else if (shell.isSliding() && _state) {
         _state->handleEnemy(*this);
     } else {
+        if (auto* hold = getBehaviour<ShellHoldBehaviour>()) {
+            if (hold->tryHoldContact(shell)) {
+                return;
+            }
+        }
         shell.kick(!isFacingLeft());
     }
 }

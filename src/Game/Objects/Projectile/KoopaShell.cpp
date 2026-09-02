@@ -36,6 +36,7 @@ void KoopaShell::kick(bool facingRight) {
 
 void KoopaShell::stop() {
     _sliding = false;
+    _stopTimer = 0.0f;
     if (auto* animatable = getBehaviour<Animatable>()) {
         animatable->playAnimation("dead");
     }
@@ -110,25 +111,25 @@ void KoopaShell::updateSimulation(const float& fixedDt) {
 
     if (_held) {
         // Held by a player: freeze physics so the shell follows the holder,
-        // but keep the revive timer running so the shell shakes and the Koopa
-        // revives even while it's being carried.
+        // and reset the stationary timer while carried.
         const b2BodyId bodyId = _body->getId();
         b2Vec2 vel = b2Body_GetLinearVelocity(bodyId);
         vel.x = 0.0f;
         vel.y = 0.0f;
         b2Body_SetLinearVelocity(bodyId, vel);
-        _stopTimer += fixedDt;
+        _stopTimer = 0.0f;
     } else if (_sliding) {
         // Maintain constant horizontal slide speed in the current direction
         const b2BodyId bodyId = _body->getId();
         b2Vec2 vel = b2Body_GetLinearVelocity(bodyId);
         vel.x = vel.x < 0.0f ? -_slideSpeedMeters : _slideSpeedMeters;
         b2Body_SetLinearVelocity(bodyId, vel);
+        _stopTimer = 0.0f;
     } else {
         _stopTimer += fixedDt;
     }
 
-    if (_stopTimer >= 10.0f) {
+    if (_stopTimer >= 5.0f) {
         if (_world) {
             _world->spawnKoopa(getPosition(), _facingRight);
         }
@@ -138,8 +139,8 @@ void KoopaShell::updateSimulation(const float& fixedDt) {
         }
         return;
     }
-    if (_stopTimer >= 7.0f && animatable && animatable->getActiveAnimationName() != "shake") {
-        // Shake for the 2s before the Koopa pops back out.
+    if (_stopTimer >= 3.0f && animatable && animatable->getActiveAnimationName() != "shake") {
+        // Shake for 2s before the Koopa pops back out.
         animatable->playAnimation("shake");
     }
 }
