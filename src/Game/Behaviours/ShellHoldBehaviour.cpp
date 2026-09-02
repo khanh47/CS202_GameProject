@@ -30,10 +30,34 @@ void ShellHoldBehaviour::updateSimulation(const float& fixedDt) {
     }
 
     if (_heldShell) {
+        if (_heldShell->isPendingDestroy()
+            || _heldShell->isDying()
+            || !_heldShell->getPhysicsBody()
+            || !_heldShell->getPhysicsBody()->isValid()) {
+            releaseShell(false);
+            return;
+        }
+
+        auto* player = dynamic_cast<Player*>(owner);
+        const bool facingRight = !(player && player->isFacingLeft());
+        const float facing = facingRight ? 1.0f : -1.0f;
+        const float forwardOffset =
+            owner->getHitboxPixels().x * 0.45f
+            + _heldShell->getHitboxPixels().x * 0.4f;
+        const sf::Vector2f holdPos = {
+            owner->getPosition().x + facing * forwardOffset,
+            owner->getPosition().y + 4.0f
+        };
+        _heldShell->setPosition(holdPos);
+        _heldShell->setFacingRight(facingRight);
         return;
     }
 
-    if (_interactHeld) {
+    const bool shiftHeld = _interactHeld
+        || sf::Keyboard::isKeyPressed(sf::Keyboard::Key::LShift)
+        || sf::Keyboard::isKeyPressed(sf::Keyboard::Key::RShift);
+
+    if (shiftHeld) {
         tryPickUpShell();
     }
 }
@@ -59,22 +83,19 @@ void ShellHoldBehaviour::updateVisuals(float deltaTime) {
         return;
     }
 
-    // Pin the shell to the player's post-physics head position so it never
-    // lags behind their movement. Held slightly lower than the head top for
-    // better visuals (shell floats in front of the player's body).
-    const float offsetY =
-        owner->getHitboxPixels().y * 0.5f
-        + _heldShell->getHitboxPixels().y * 0.5f;
-    const float lowerOffset = owner->getHitboxPixels().y * 0.15f;
-    _heldShell->setPosition({
-        owner->getPosition().x,
-        owner->getPosition().y - offsetY + lowerOffset
-    });
-
-    // Mirror the player's facing so the held shell flips with them.
-    if (auto* player = dynamic_cast<Player*>(owner)) {
-        _heldShell->setFacingRight(!player->isFacingLeft());
-    }
+    // Pin the shell in front of the player's hands at waist/torso height
+    auto* player = dynamic_cast<Player*>(owner);
+    const bool facingRight = !(player && player->isFacingLeft());
+    const float facing = facingRight ? 1.0f : -1.0f;
+    const float forwardOffset =
+        owner->getHitboxPixels().x * 0.45f
+        + _heldShell->getHitboxPixels().x * 0.4f;
+    const sf::Vector2f holdPos = {
+        owner->getPosition().x + facing * forwardOffset,
+        owner->getPosition().y + 4.0f
+    };
+    _heldShell->setPosition(holdPos);
+    _heldShell->setFacingRight(facingRight);
 }
 
 void ShellHoldBehaviour::tryPickUpShell() {
@@ -91,6 +112,7 @@ void ShellHoldBehaviour::tryPickUpShell() {
 
     const sf::Vector2f playerPos = owner->getPosition();
     const sf::Vector2f playerSize = owner->getHitboxPixels();
+    const sf::Vector2f querySize = {playerSize.x + 20.0f, playerSize.y};
 
     KoopaShell* best = nullptr;
     float bestDistance = 0.0f;
@@ -111,7 +133,7 @@ void ShellHoldBehaviour::tryPickUpShell() {
         }
 
         const sf::Vector2f shellPos = shell->getPosition();
-        if (!aabbOverlap(playerPos, playerSize, shellPos, shell->getHitboxPixels())) {
+        if (!aabbOverlap(playerPos, querySize, shellPos, shell->getHitboxPixels())) {
             continue;
         }
 
@@ -130,10 +152,45 @@ void ShellHoldBehaviour::tryPickUpShell() {
 }
 
 void ShellHoldBehaviour::holdShell(KoopaShell* shell) {
+    if (!shell) {
+        return;
+    }
     _heldShell = shell;
     _heldShell->setHeld(true);
     _heldShell->resetReviveTimer();
     _heldShell->stop();
+
+    auto* owner = getOwner();
+    if (owner) {
+        auto* player = dynamic_cast<Player*>(owner);
+        const bool facingRight = !(player && player->isFacingLeft());
+        const float facing = facingRight ? 1.0f : -1.0f;
+        const float forwardOffset =
+            owner->getHitboxPixels().x * 0.45f
+            + _heldShell->getHitboxPixels().x * 0.4f;
+        _heldShell->setPosition({
+            owner->getPosition().x + facing * forwardOffset,
+            owner->getPosition().y + 4.0f
+        });
+        _heldShell->setFacingRight(facingRight);
+    }
+}
+
+bool ShellHoldBehaviour::tryHoldContact(KoopaShell& shell) {
+    if (_heldShell) {
+        return false;
+    }
+    const bool shiftHeld = _interactHeld
+        || sf::Keyboard::isKeyPressed(sf::Keyboard::Key::LShift)
+        || sf::Keyboard::isKeyPressed(sf::Keyboard::Key::RShift);
+    if (!shiftHeld) {
+        return false;
+    }
+    if (shell.isSliding() || shell.isDying() || shell.isPendingDestroy()) {
+        return false;
+    }
+    holdShell(&shell);
+    return true;
 }
 
 void ShellHoldBehaviour::releaseShell(bool throwAway) {
@@ -159,9 +216,9 @@ void ShellHoldBehaviour::releaseShell(bool throwAway) {
                 const float clearDistance =
                     player->getHitboxPixels().x * 0.5f
                     + shell->getHitboxPixels().x * 0.5f
-                    + 5.0f;
-                const sf::Vector2f pos = shell->getPosition();
-                shell->setPosition({pos.x + facing * clearDistance, pos.y});
+                    + 10.0f;
+                const sf::Vector2f pos = player->getPosition();
+                shell->setPosition({pos.x + facing * clearDistance, pos.y + 4.0f});
             }
             shell->kick(facingRight);
             if (player) {
@@ -178,7 +235,7 @@ void ShellHoldBehaviour::setInteractHeld(bool held) {
         return;
     }
     _interactHeld = held;
-    if (!held) {
+    if (!held && _heldShell) {
         releaseShell(true);
     }
 }

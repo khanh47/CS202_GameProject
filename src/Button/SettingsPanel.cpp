@@ -27,7 +27,7 @@ constexpr std::array<KeybindDescriptor, 6> keybinds{{
     {"Jump", ActionType::MoveUp},
     {"Pipe Down", ActionType::MoveDown},
     {"Shoot", ActionType::Attack},
-    {"Button", ActionType::Interact}
+    {"Carry / Throw", ActionType::Interact}
 }};
 
 constexpr float kKbBaseY = 330.f;
