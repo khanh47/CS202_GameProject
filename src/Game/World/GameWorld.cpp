@@ -94,7 +94,6 @@ void GameWorld::updateSimulation(const float& fixedDt) {
         return;
     }
 
-    syncPlayerControllers();
     _objectStore.updateSimulation(fixedDt);
 
     // A player can start a pipe warp from inside updateSimulation. Do not

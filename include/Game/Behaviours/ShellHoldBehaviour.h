@@ -22,14 +22,12 @@ public:
     void updateVisuals(float deltaTime);
     void releaseShell(bool throwAway);
 
-    void holdShell(KoopaShell* shell);
-    bool tryHoldContact(KoopaShell& shell);
-
 protected:
     void onDetach() override;
 
 private:
     void tryPickUpShell();
+    void holdShell(KoopaShell* shell);
 
     bool _interactHeld = false;
     KoopaShell* _heldShell = nullptr;
